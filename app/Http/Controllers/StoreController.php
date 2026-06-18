@@ -205,6 +205,11 @@ class StoreController extends Controller
         }
 
         session()->put('cart', $cart);
+
+        if (empty($cart)) {
+            session()->forget('coupon_discount');
+        }
+
         return redirect()->route('store.cart')->with('success', 'Cart updated successfully.');
     }
 
@@ -218,6 +223,10 @@ class StoreController extends Controller
         if (isset($cart[$key])) {
             unset($cart[$key]);
             session()->put('cart', $cart);
+        }
+
+        if (empty($cart)) {
+            session()->forget('coupon_discount');
         }
 
         return redirect()->route('store.cart')->with('success', 'Item removed from cart.');
@@ -244,6 +253,10 @@ class StoreController extends Controller
      */
     public function checkout()
     {
+        if (!auth()->check()) {
+            return redirect()->route('store.login')->with('error', 'Please log in to proceed to checkout.');
+        }
+
         $cart = session()->get('cart', []);
         if (empty($cart)) {
             return redirect()->route('store.shop')->with('error', 'Your cart is empty.');
@@ -266,6 +279,10 @@ class StoreController extends Controller
      */
     public function placeOrder(Request $request)
     {
+        if (!auth()->check()) {
+            return redirect()->route('store.login')->with('error', 'Please log in to proceed to checkout.');
+        }
+
         $request->validate([
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
@@ -328,8 +345,15 @@ class StoreController extends Controller
     /**
      * Account / Profile page.
      */
-    public function account()
+    public function account($tab = 'orders')
     {
+        if (!auth()->check()) {
+            return redirect()->route('store.login')->with('error', 'Please log in to access your account.');
+        }
+
+        $validTabs = ['orders', 'profile', 'address', 'wishlist'];
+        $activeTab = in_array($tab, $validTabs) ? $tab : 'orders';
+
         $orders = session()->get('orders_history', [
             [
                 'id' => 'SGCART-2026-8821',
@@ -351,7 +375,28 @@ class StoreController extends Controller
         $allProducts = self::getProducts();
         $wishlist = array_filter($allProducts, fn($p) => in_array($p['id'], $wishlistIds));
 
-        return view('store.account', compact('orders', 'wishlist'));
+        return view('store.account', compact('orders', 'wishlist', 'activeTab'));
+    }
+
+    /**
+     * Update user profile details.
+     */
+    public function updateProfile(Request $request)
+    {
+        if (!auth()->check()) {
+            return redirect()->route('store.login')->with('error', 'Please log in to update your profile.');
+        }
+
+        $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+        ]);
+
+        $user = auth()->user();
+        $user->name = trim($request->first_name . ' ' . $request->last_name);
+        $user->save();
+
+        return redirect()->route('store.account', 'profile')->with('success', 'Profile details updated successfully!');
     }
 
     /**

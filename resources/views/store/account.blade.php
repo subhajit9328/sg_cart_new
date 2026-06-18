@@ -8,7 +8,7 @@
 <div class="max-w-[1400px] mx-auto px-6 pt-8 pb-12 md:pt-12 md:pb-20">
     
     <!-- Account Wrap -->
-    <div class="grid grid-cols-1 lg:grid-cols-[260px_740px] gap-8 items-start justify-center max-w-[1032px] mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start max-w-[1400px] mx-auto">
         
         <!-- Tab Selectors (Left Sidebar Card) -->
         <div class="bg-white border border-[#e8e4df] rounded-2xl p-5 md:p-6">
@@ -24,18 +24,24 @@
             </div>
 
             <nav class="flex flex-col gap-1.5">
-                <button type="button" class="acc-nav-item px-4 py-3 rounded-lg text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all w-full text-left border-none bg-transparent flex items-center gap-3 active" id="btn-orders" onclick="setTab('orders')">
+                <a href="{{ route('store.account', 'orders') }}" class="acc-nav-item px-4 py-3 rounded-lg text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all w-full text-left flex items-center gap-3 {{ $activeTab === 'orders' ? 'active' : '' }}" style="text-decoration:none" id="btn-orders">
                     <i class="fa-solid fa-box-open text-center w-4 text-sm"></i> My Orders
-                </button>
-                <button type="button" class="acc-nav-item px-4 py-3 rounded-lg text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all w-full text-left border-none bg-transparent flex items-center gap-3" id="btn-profile" onclick="setTab('profile')">
+                </a>
+                <a href="{{ route('store.account', 'profile') }}" class="acc-nav-item px-4 py-3 rounded-lg text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all w-full text-left flex items-center gap-3 {{ $activeTab === 'profile' ? 'active' : '' }}" style="text-decoration:none" id="btn-profile">
                     <i class="fa-regular fa-user text-center w-4 text-sm"></i> Profile Details
-                </button>
-                <button type="button" class="acc-nav-item px-4 py-3 rounded-lg text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all w-full text-left border-none bg-transparent flex items-center gap-3" id="btn-address" onclick="setTab('address')">
+                </a>
+                <a href="{{ route('store.account', 'address') }}" class="acc-nav-item px-4 py-3 rounded-lg text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all w-full text-left flex items-center gap-3 {{ $activeTab === 'address' ? 'active' : '' }}" style="text-decoration:none" id="btn-address">
                     <i class="fa-solid fa-map-location-dot text-center w-4 text-sm"></i> Addresses
-                </button>
-                <button type="button" class="acc-nav-item px-4 py-3 rounded-lg text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all w-full text-left border-none bg-transparent flex items-center gap-3" id="btn-wishlist" onclick="setTab('wishlist')">
+                </a>
+                <a href="{{ route('store.account', 'wishlist') }}" class="acc-nav-item px-4 py-3 rounded-lg text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all w-full text-left flex items-center gap-3 {{ $activeTab === 'wishlist' ? 'active' : '' }}" style="text-decoration:none" id="btn-wishlist">
                     <i class="fa-regular fa-heart text-center w-4 text-sm"></i> Wishlist
-                </button>
+                </a>
+                <form action="{{ route('store.logout') }}" method="POST" id="storeLogoutForm" class="contents">
+                    @csrf
+                    <button type="button" onclick="showConfirm('Are you sure you want to log out?', () => document.getElementById('storeLogoutForm').submit());" class="px-4 py-3 rounded-lg text-sm font-semibold text-rose-500 hover:bg-rose-50/50 hover:text-rose-600 transition-all w-full text-left border-none bg-transparent flex items-center gap-3 cursor-pointer">
+                        <i class="fa-solid fa-right-from-bracket text-center w-4 text-sm"></i> Logout
+                    </button>
+                </form>
             </nav>
         </div>
 
@@ -43,7 +49,7 @@
         <div class="bg-white border border-[#e8e4df] rounded-2xl p-5 md:p-6">
             
             <!-- Orders List Tab -->
-            <div id="tab-orders" class="acc-content active">
+            <div id="tab-orders" class="acc-content {{ $activeTab === 'orders' ? 'active' : '' }}">
                 <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-solid fa-clock-rotate-left text-accent text-sm"></i> Order History</h2>
                 
                 <div class="flex flex-col gap-4">
@@ -86,37 +92,40 @@
             </div>
 
             <!-- Profile Details Tab -->
-            <div id="tab-profile" class="acc-content">
+            <div id="tab-profile" class="acc-content {{ $activeTab === 'profile' ? 'active' : '' }}">
                 <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-regular fa-user text-accent text-sm"></i> Profile Details</h2>
                 
-                <div class="max-w-[520px] flex flex-col gap-4">
+                <form action="{{ route('store.account.profile.update') }}" method="POST" class="w-full flex flex-col gap-4">
+                    @csrf
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1">
                             <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">First Name</label>
-                            <input class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" value="{{ auth()->user() ? explode(' ', auth()->user()->name)[0] : 'John' }}"/>
+                            <input name="first_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" value="{{ auth()->user() ? explode(' ', auth()->user()->name)[0] : 'John' }}"/>
                         </div>
                         <div class="flex flex-col gap-1">
                             <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Last Name</label>
-                            <input class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" value="{{ auth()->user() ? (explode(' ', auth()->user()->name)[1] ?? '') : 'Doe' }}"/>
+                            <input name="last_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" value="{{ auth()->user() ? (explode(' ', auth()->user()->name)[1] ?? '') : 'Doe' }}"/>
                         </div>
                     </div>
-                    <div class="flex flex-col gap-1">
-                        <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Email Address</label>
-                        <input class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5 disabled:bg-[#f8f7f5] disabled:text-slate-400 disabled:cursor-not-allowed" value="{{ auth()->user()?->email ?? 'john.doe@example.com' }}" readonly disabled/>
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Mobile Number</label>
-                        <input class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" placeholder="+1 555 0199" value="+1 (555) 382-0199"/>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Email Address</label>
+                            <input class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5 disabled:bg-[#f8f7f5] disabled:text-slate-400 disabled:cursor-not-allowed" value="{{ auth()->user()?->email ?? 'john.doe@example.com' }}" readonly disabled/>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Mobile Number</label>
+                            <input name="mobile" class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" placeholder="+1 555 0199" value="+1 (555) 382-0199"/>
+                        </div>
                     </div>
                     
-                    <div class="pt-0">
-                        <button type="button" class="btn btn-primary btn-sm" onclick="showToast('Profile details updated!','success')">Save Changes</button>
+                    <div class="pt-2">
+                        <button type="submit" class="btn btn-primary btn-sm px-6">Save Changes</button>
                     </div>
-                </div>
+                </form>
             </div>
 
             <!-- Addresses Tab -->
-            <div id="tab-address" class="acc-content">
+            <div id="tab-address" class="acc-content {{ $activeTab === 'address' ? 'active' : '' }}">
                 <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-solid fa-map-location-dot text-accent text-sm"></i> Manage Addresses</h2>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -138,7 +147,7 @@
             </div>
 
             <!-- Wishlist Tab -->
-            <div id="tab-wishlist" class="acc-content">
+            <div id="tab-wishlist" class="acc-content {{ $activeTab === 'wishlist' ? 'active' : '' }}">
                 <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-regular fa-heart text-accent text-sm"></i> My Wishlist</h2>
                 
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-5">
@@ -177,12 +186,6 @@
 
 @section('scripts')
 <script>
-    function setTab(name) {
-        document.querySelectorAll('.acc-content').forEach(c => c.classList.remove('active'));
-        document.querySelectorAll('.acc-nav-item').forEach(b => b.classList.remove('active'));
-        
-        document.getElementById(`tab-${name}`).classList.add('active');
-        document.getElementById(`btn-${name}`).classList.add('active');
-    }
+    // Tab switching is now routed via URL to preserve state.
 </script>
 @endsection

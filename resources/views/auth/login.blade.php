@@ -110,6 +110,41 @@
             document.getElementById('email').value = email;
             document.getElementById('password').value = 'password';
         }
+
+        // Password visibility toggle
+        document.querySelectorAll('input[type="password"]:not([name="card_cvv"])').forEach(input => {
+            let parent = input.parentNode;
+            if (!parent.classList.contains('relative')) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative w-full flex items-center';
+                parent.insertBefore(wrapper, input);
+                wrapper.appendChild(input);
+                parent = wrapper;
+            } else {
+                parent.classList.add('flex', 'items-center');
+            }
+            
+            input.classList.add('pr-12');
+            
+            const toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.className = 'absolute right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer border-none bg-transparent outline-none focus:outline-none flex items-center justify-center p-1 text-sm z-10';
+            toggleBtn.innerHTML = '<i class="fa-regular fa-eye"></i>';
+            
+            parent.appendChild(toggleBtn);
+            
+            toggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    toggleBtn.innerHTML = '<i class="fa-regular fa-eye-slash"></i>';
+                } else {
+                    input.type = 'password';
+                    toggleBtn.innerHTML = '<i class="fa-regular fa-eye"></i>';
+                }
+            });
+        });
     </script>
 </body>
 </html>

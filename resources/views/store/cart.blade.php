@@ -49,9 +49,9 @@
                                         </div>
                                     @endif
                                 </div>
-                                <a href="{{ route('store.cart.remove', $key) }}" class="text-slate-300 hover:text-rose-500 text-base p-1 shrink-0 transition-colors" style="text-decoration:none">
+                                <button type="button" onclick="confirmRemove('{{ $key }}')" class="text-slate-300 hover:text-rose-500 text-base p-1 shrink-0 transition-colors border-none bg-transparent cursor-pointer" style="text-decoration:none">
                                     <i class="fa-regular fa-trash-can"></i>
-                                </a>
+                                </button>
                             </div>
                             
                             <div class="flex items-center justify-between mt-4">
@@ -126,12 +126,24 @@
 
 @section('scripts')
 <script>
+    // Automatically strip any trailing hash fragment (like #374151) from the browser URL on page load
+    if (window.location.hash) {
+        history.replaceState("", document.title, window.location.pathname + window.location.search);
+    }
+
     function updateQty(key, dir) {
         const inp = document.getElementById(`qtyInput-${key}`);
         let val = parseInt(inp.value) + dir;
         if (val < 1) val = 1;
         inp.value = val;
         document.getElementById(`updateForm-${key}`).submit();
+    }
+
+    function confirmRemove(key) {
+        const url = "{{ route('store.cart.remove', ':key') }}".replace(':key', encodeURIComponent(key));
+        showConfirm('Are you sure you want to remove this item from your shopping bag?', () => {
+            window.location.href = url;
+        });
     }
 </script>
 @endsection
