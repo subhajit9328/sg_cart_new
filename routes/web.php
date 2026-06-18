@@ -2,14 +2,28 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\StoreController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
 
-// Restore the ecommerce welcome view for the main site
-Route::get('/', function () {
-    return view('welcome');
-});
+// Storefront Frontend Routes
+Route::get('/', [StoreController::class, 'home'])->name('store.home');
+Route::get('/shop', [StoreController::class, 'shop'])->name('store.shop');
+Route::get('/product/{id}', [StoreController::class, 'product'])->name('store.product');
+
+Route::get('/cart', [StoreController::class, 'cart'])->name('store.cart');
+Route::post('/cart/add', [StoreController::class, 'addToCart'])->name('store.cart.add');
+Route::post('/cart/update', [StoreController::class, 'updateCart'])->name('store.cart.update');
+Route::get('/cart/remove/{key}', [StoreController::class, 'removeFromCart'])->name('store.cart.remove');
+Route::post('/cart/coupon', [StoreController::class, 'applyCoupon'])->name('store.cart.coupon');
+
+Route::get('/checkout', [StoreController::class, 'checkout'])->name('store.checkout');
+Route::post('/checkout/order', [StoreController::class, 'placeOrder'])->name('store.checkout.order');
+Route::get('/success', [StoreController::class, 'success'])->name('store.success');
+
+Route::get('/account', [StoreController::class, 'account'])->name('store.account');
+Route::post('/wishlist/toggle', [StoreController::class, 'toggleWishlist'])->name('store.wishlist.toggle');
 
 // Admin Routes (prefixed with admin)
 Route::prefix('admin')->group(function () {

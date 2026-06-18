@@ -16,27 +16,6 @@
     <!-- Tailwind compiled by Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <style>
-        body { font-family: 'Inter', system-ui, sans-serif; }
-        .font-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, .35); border-radius: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-
-        /* Sidebar nav links */
-        .nav-link { display: flex; align-items: center; gap: .75rem; padding: .62rem .85rem; border-radius: .6rem; font-size: .86rem; font-weight: 500; color: #94a3b8; cursor: pointer; white-space: nowrap; transition: background .15s, color .15s; text-decoration: none; }
-        .nav-link:hover { background: rgba(255, 255, 255, .06); color: #fff; }
-        .nav-link.active { background: rgba(37, 99, 235, .22); color: #fff; }
-        .nav-link.active i { color: #60a5fa; }
-        .nav-link i { width: 20px; text-align: center; flex-shrink: 0; }
-
-        /* Collapsed (icon-only) sidebar */
-        #sidebar.icon-only .sidebar-text { display: none; }
-        #sidebar.icon-only .nav-link { justify-content: center; }
-        #sidebar.icon-only .section-label { display: none; }
-        #sidebar.icon-only .brand-text { display: none; }
-        #sidebar.icon-only { w: 5rem; }
-    </style>
     <script>
         // Check dark mode preference on load (default to light)
         if (localStorage.getItem('theme') === 'dark') {
@@ -46,7 +25,7 @@
         }
     </script>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200">
+<body class="admin-body bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200">
 
 <div class="flex min-h-screen" id="appShell">
 
@@ -137,7 +116,7 @@
         </header>
 
         <!-- ============ Content ============ -->
-        <main class="pt-24 px-4 lg:px-6 pb-10 w-full">
+        <main class="pt-24 px-4 lg:px-6 pb-10 w-full" style="padding-top: 96px;">
             @if(session('success'))
                 <div class="mb-5 flex items-center gap-3 p-4 text-sm text-emerald-800 border border-emerald-200 dark:border-emerald-800/30 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 dark:text-emerald-400 animate-fadeIn" role="alert">
                     <i class="fa-solid fa-circle-check text-emerald-500 text-base"></i>
