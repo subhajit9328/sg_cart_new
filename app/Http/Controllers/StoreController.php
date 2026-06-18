@@ -131,7 +131,10 @@ class StoreController extends Controller
             $cart[$key]['cat'] = $prod ? $prod['cat'] : 'Fashion';
         }
 
-        $discount = session()->get('coupon_discount', 0);
+        $discount = 0;
+        if (app()->bound('coupon.calculator')) {
+            $discount = app('coupon.calculator')->calculate(session('coupon_code'), $subtotal);
+        }
         $tax = $subtotal * 0.08;
         $total = max(0, $subtotal + $tax - $discount);
 
@@ -207,6 +210,7 @@ class StoreController extends Controller
         session()->put('cart', $cart);
 
         if (empty($cart)) {
+            session()->forget('coupon_code');
             session()->forget('coupon_discount');
         }
 
@@ -226,27 +230,14 @@ class StoreController extends Controller
         }
 
         if (empty($cart)) {
+            session()->forget('coupon_code');
             session()->forget('coupon_discount');
         }
 
         return redirect()->route('store.cart')->with('success', 'Item removed from cart.');
     }
 
-    /**
-     * Apply coupon code.
-     */
-    public function applyCoupon(Request $request)
-    {
-        $request->validate(['code' => 'required|string']);
-        $code = strtoupper($request->code);
 
-        if ($code === 'SGCART20') {
-            session()->put('coupon_discount', 10.00); // Flat $10 off
-            return redirect()->route('store.cart')->with('success', 'Coupon code SGCART20 applied! $10.00 off.');
-        }
-
-        return redirect()->route('store.cart')->with('error', 'Invalid coupon code.');
-    }
 
     /**
      * Checkout page.
@@ -267,7 +258,10 @@ class StoreController extends Controller
             $subtotal += $item['price'] * $item['quantity'];
         }
 
-        $discount = session()->get('coupon_discount', 0);
+        $discount = 0;
+        if (app()->bound('coupon.calculator')) {
+            $discount = app('coupon.calculator')->calculate(session('coupon_code'), $subtotal);
+        }
         $tax = $subtotal * 0.08;
         $total = max(0, $subtotal + $tax - $discount);
 
@@ -305,7 +299,10 @@ class StoreController extends Controller
         foreach ($cart as $item) {
             $subtotal += $item['price'] * $item['quantity'];
         }
-        $discount = session()->get('coupon_discount', 0);
+        $discount = 0;
+        if (app()->bound('coupon.calculator')) {
+            $discount = app('coupon.calculator')->calculate(session('coupon_code'), $subtotal);
+        }
         $tax = $subtotal * 0.08;
         $total = max(0, $subtotal + $tax - $discount);
 
@@ -328,6 +325,7 @@ class StoreController extends Controller
 
         // Clear Cart
         session()->forget('cart');
+        session()->forget('coupon_code');
         session()->forget('coupon_discount');
 
         return redirect()->route('store.success', ['order_id' => $orderId]);

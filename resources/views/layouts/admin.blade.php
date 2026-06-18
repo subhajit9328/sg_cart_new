@@ -57,6 +57,8 @@
                 <span class="sidebar-text">Role Management</span>
             </a>
             @endcan
+
+            @includeIf('coupons::admin-menu')
         </nav>
 
         <div class="border-t border-white/10 p-3 flex-shrink-0">

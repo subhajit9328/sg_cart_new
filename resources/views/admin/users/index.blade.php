@@ -40,11 +40,11 @@
 
         <!-- Submit & Clear Buttons -->
         <div class="flex gap-2">
-            <button type="submit" class="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sm font-medium transition-colors">
+            <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold shadow-lg shadow-blue-600/10 transition-colors">
                 Apply
             </button>
             @if(request()->filled('search') || request()->filled('role'))
-                <a href="{{ route('admin.users.index') }}" class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium transition-colors text-center">
+                <a href="{{ route('admin.users.index') }}" class="px-4 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 dark:bg-rose-950/20 dark:border-rose-900/30 dark:text-rose-400 text-sm font-semibold transition-colors text-center no-underline">
                     Clear
                 </a>
             @endif

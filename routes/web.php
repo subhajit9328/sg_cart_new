@@ -16,7 +16,7 @@ Route::get('/cart', [StoreController::class, 'cart'])->name('store.cart');
 Route::post('/cart/add', [StoreController::class, 'addToCart'])->name('store.cart.add');
 Route::post('/cart/update', [StoreController::class, 'updateCart'])->name('store.cart.update');
 Route::get('/cart/remove/{key}', [StoreController::class, 'removeFromCart'])->name('store.cart.remove');
-Route::post('/cart/coupon', [StoreController::class, 'applyCoupon'])->name('store.cart.coupon');
+
 
 Route::get('/checkout', [StoreController::class, 'checkout'])->name('store.checkout');
 Route::post('/checkout/order', [StoreController::class, 'placeOrder'])->name('store.checkout.order');
@@ -39,10 +39,8 @@ Route::post('/logout', [AuthController::class, 'storefrontLogout'])->name('store
 Route::prefix('admin')->group(function () {
 
     // Guest Auth Routes (admin/login)
-    Route::middleware('guest')->group(function () {
-        Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-        Route::post('/login', [AuthController::class, 'login']);
-    });
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
 
     // Protected Admin Routes
     Route::middleware('auth')->group(function () {

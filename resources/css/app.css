@@ -7,6 +7,7 @@
 @source '../js/**/*.js';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../../packages/sgcart/coupons/resources/views/**/*.blade.php';
 
 @theme {
     --color-ink: #0a0a0a;
@@ -59,16 +60,31 @@ body.storefront {
     }
 }
 .nav-actions {
-    @apply flex items-center gap-1;
+    @apply flex items-center justify-end gap-1;
 }
-.nav-btn {
-    @apply w-10 h-10 flex items-center justify-center rounded-[10px] cursor-pointer text-stone transition-all border-none bg-transparent text-base relative no-underline hover:bg-[#f0ece7] hover:text-ink;
+
+@media (min-width: 769px) {
+    .logo {
+        flex: 1;
+    }
+    .nav-links {
+        flex: 0 0 auto;
+        display: flex;
+        justify-content: center;
+    }
+    .nav-actions {
+        flex: 1;
+    }
 }
+
 .nav-search-wrap {
     @apply flex items-center bg-[#f0ece7] rounded-[10px] px-3 h-9 gap-2;
     & input {
         @apply border-none bg-transparent outline-none text-[13px] font-sans text-ink w-40 placeholder:text-stone;
     }
+}
+.nav-btn {
+    @apply w-10 h-10 flex items-center justify-center rounded-[10px] cursor-pointer text-stone transition-all border-none bg-transparent text-base relative no-underline hover:bg-[#f0ece7] hover:text-ink;
 }
 #cartBadge {
     @apply absolute top-1 right-1 w-4 h-4 bg-accent text-white rounded-full text-[9px] font-bold flex items-center justify-center;
@@ -123,7 +139,9 @@ body.storefront {
     @apply bg-ink text-white px-7 py-3.5 rounded-[10px] hover:bg-[#1f1f1f] hover:-translate-y-px;
 }
 .btn-outline {
-    @apply bg-transparent text-ink px-7 py-[13px] rounded-[10px] border-[1.5px] border-ink hover:bg-ink hover:text-white;
+    @apply bg-transparent text-ink px-7 py-[13px] rounded-[10px] border-[1.5px] hover:bg-ink hover:text-white;
+    border-style: solid !important;
+    border-color: currentColor !important;
 }
 .btn-accent {
     @apply bg-accent text-white px-7 py-3.5 rounded-[10px] hover:bg-[#b8966c];
@@ -623,5 +641,31 @@ body.admin-body {
     & .brand-text {
         @apply hidden;
     }
+}
+
+/* Coupon storefront remove button custom override */
+a[href*="/cart/coupon/remove"] {
+    color: #f43f5e !important; /* rose-500 */
+    border-color: #fecdd3 !important; /* rose-200 */
+    background-color: transparent !important;
+    font-size: 0 !important; /* Hide text */
+    width: 38px !important; /* Perfect square button */
+    padding: 0 !important;
+    position: relative !important;
+}
+a[href*="/cart/coupon/remove"]::before {
+    content: "\f2ed" !important; /* Font Awesome trash-can */
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+    font-size: 13px !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+a[href*="/cart/coupon/remove"]:hover {
+    background-color: #e11d48 !important; /* solid rose-600 */
+    color: #ffffff !important; /* white text */
+    border-color: #e11d48 !important; /* solid rose-600 border */
 }
 

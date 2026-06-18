@@ -94,16 +94,7 @@
                     @endif
                 </div>
                 
-                <!-- Coupon Code Form -->
-                <form action="{{ route('store.cart.coupon') }}" method="POST" class="flex gap-2 mb-4">
-                    @csrf
-                    <input type="text" name="code" placeholder="Coupon code" required class="inp" style="flex:1;padding:10px 14px;font-size:13px;height:38px"/>
-                    <button type="submit" class="btn btn-outline btn-sm" style="height:38px">Apply</button>
-                </form>
-                
-                @if($discount == 0)
-                    <p class="text-[11px] text-slate-400 mt-2 mb-4"><i class="fa-solid fa-circle-info text-[10px] mr-0.5"></i> Enter <strong>SGCART20</strong> for flat $10 off your order.</p>
-                @endif
+                @includeIf('coupons::store-form')
                 
                 <div class="border-t border-slate-100 my-4"></div>
                 <div class="flex justify-between items-baseline font-display font-bold text-slate-900 mb-5">
