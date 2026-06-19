@@ -64,8 +64,35 @@
                 <span class="sidebar-text">Dashboard</span>
             </a>
 
-            @can('manage users')
+            @canany(['manage products', 'manage categories', 'manage manufacturers'])
+            <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Catalogue</p>
+
+            @can('manage products')
+            <a href="{{ route('admin.products.index') }}" class="nav-link {{ Request::is('admin/products*') ? 'active' : '' }}">
+                <i class="fa-solid fa-box-open"></i>
+                <span class="sidebar-text">Products</span>
+            </a>
+            @endcan
+
+            @can('manage products')
+            <a href="{{ route('admin.categories.index') }}" class="nav-link {{ Request::is('admin/categories*') ? 'active' : '' }}">
+                <i class="fa-solid fa-tags"></i>
+                <span class="sidebar-text">Categories</span>
+            </a>
+            @endcan
+
+            @can('manage products')
+            <a href="{{ route('admin.manufacturers.index') }}" class="nav-link {{ Request::is('admin/manufacturers*') ? 'active' : '' }}">
+                <i class="fa-solid fa-industry"></i>
+                <span class="sidebar-text">Manufacturers</span>
+            </a>
+            @endcan
+            @endcanany
+
+            @canany(['manage users', 'manage roles'])
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Access Control</p>
+
+            @can('manage users')
             <a href="{{ route('admin.users.index') }}" class="nav-link {{ Request::is('admin/users*') ? 'active' : '' }}">
                 <i class="fa-solid fa-users-gear"></i>
                 <span class="sidebar-text">User Management</span>
@@ -78,7 +105,9 @@
                 <span class="sidebar-text">Role Management</span>
             </a>
             @endcan
+            @endcanany
         </nav>
+
 
         <div class="border-t border-white/10 p-3 flex-shrink-0">
             <form action="{{ route('logout') }}" method="POST" id="logoutForm" class="hidden">
