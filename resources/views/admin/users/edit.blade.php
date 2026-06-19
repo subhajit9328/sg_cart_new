@@ -1,0 +1,107 @@
+@extends('layouts.admin')
+
+@section('title', 'Edit User — SGCart Admin')
+
+@section('content')
+<!-- Page Header -->
+<div class="flex items-center gap-3 mb-6">
+    <a href="{{ route('admin.users.index') }}" class="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+        <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <div>
+        <h1 class="font-display text-2xl font-bold">Edit User</h1>
+        <p class="text-sm text-slate-400 mt-0.5">Admin / Access Control / Users / Edit / {{ $user->name }}</p>
+    </div>
+</div>
+
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm w-full overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+        <h2 class="font-semibold text-sm">Update Account Information</h2>
+    </div>
+    
+    <form action="{{ route('admin.users.update', $user->id) }}" method="POST" class="p-6 space-y-5">
+        @csrf
+        @method('PUT')
+        
+        <!-- Name Field -->
+        <div>
+            <label for="name" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Full Name</label>
+            <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}" required
+                class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('name') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
+                placeholder="Asha Kapoor">
+            @error('name')
+                <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <!-- Email Field -->
+        <div>
+            <label for="email" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Email Address</label>
+            <input type="email" name="email" id="email" value="{{ old('email', $user->email) }}" required
+                class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('email') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
+                placeholder="example@sgcart.com">
+            @error('email')
+                <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <div class="bg-blue-50/50 dark:bg-blue-950/10 border border-blue-100 dark:border-blue-950/40 p-4 rounded-lg">
+            <h3 class="text-xs font-bold text-blue-800 dark:text-blue-400 uppercase tracking-wider mb-1">Security Update</h3>
+            <p class="text-xs text-slate-400">Leave the password fields blank if you do not wish to modify the user's password.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Password Field -->
+            <div>
+                <label for="password" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">New Password</label>
+                <input type="password" name="password" id="password"
+                    class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('password') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
+                    placeholder="Minimum 8 characters">
+                @error('password')
+                    <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Password Confirmation -->
+            <div>
+                <label for="password_confirmation" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Confirm Password</label>
+                <input type="password" name="password_confirmation" id="password_confirmation"
+                    class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100"
+                    placeholder="Repeat password">
+            </div>
+        </div>
+
+        <!-- Roles Checkbox Grid -->
+        <div>
+            <label class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2.5">Assign Roles</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 rounded-lg">
+                @foreach($roles as $role)
+                    <label class="flex items-start gap-3 cursor-pointer select-none py-1">
+                        <input type="checkbox" name="roles[]" value="{{ $role->id }}" 
+                            {{ in_array($role->id, old('roles', $userRoleIds)) ? 'checked' : '' }}
+                            class="w-4 h-4 rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 cursor-pointer mt-0.5">
+                        <div>
+                            <span class="text-sm font-semibold text-slate-800 dark:text-slate-200 block">{{ $role->name }}</span>
+                            <span class="text-xs text-slate-400 block mt-0.5">Assigned standard Spatie role mapping</span>
+                        </div>
+                    </label>
+                @endforeach
+            </div>
+            @error('roles')
+                <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <a href="{{ route('admin.users.index') }}" class="px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium transition-colors">
+                Cancel
+            </a>
+            <button type="submit" class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium transition-colors shadow-lg shadow-blue-600/10">
+                Update User
+            </button>
+        </div>
+
+    </form>
+</div>
+@endsection
