@@ -105,11 +105,144 @@
 
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script>
         function fillDemo(email) {
-            document.getElementById('email').value = email;
-            document.getElementById('password').value = 'password';
+            $('#email').val(email).trigger('input');
+            $('#password').val('password').trigger('input');
         }
+
+        // Password visibility toggle
+        document.querySelectorAll('input[type="password"]:not([name="card_cvv"])').forEach(input => {
+            let parent = input.parentNode;
+            if (!parent.classList.contains('relative')) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative w-full flex items-center';
+                parent.insertBefore(wrapper, input);
+                wrapper.appendChild(input);
+                parent = wrapper;
+            } else {
+                parent.classList.add('flex', 'items-center');
+            }
+            
+            input.classList.add('pr-12');
+            
+            const toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.className = 'absolute right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer border-none bg-transparent outline-none focus:outline-none flex items-center justify-center p-1 text-sm z-10';
+            toggleBtn.innerHTML = '<i class="fa-regular fa-eye"></i>';
+            
+            parent.appendChild(toggleBtn);
+            
+            toggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    toggleBtn.innerHTML = '<i class="fa-regular fa-eye-slash"></i>';
+                } else {
+                    input.type = 'password';
+                    toggleBtn.innerHTML = '<i class="fa-regular fa-eye"></i>';
+                }
+            });
+        });
+
+        // Inline Form Validation using jQuery
+        $(document).ready(function() {
+            const $form = $('form');
+            const $email = $('#email');
+            const $password = $('#password');
+
+            // Disable standard browser tooltips
+            $form.attr('novalidate', 'novalidate');
+
+            function getErrorElement($input) {
+                const name = $input.attr('name');
+                let $err = $(`.js-error-${name}`);
+                if ($err.length === 0) {
+                    $err = $(`<p class="js-error-${name} text-rose-500 text-xs mt-1.5 font-medium"></p>`);
+                    $input.parent().after($err);
+                }
+                return $err;
+            }
+
+            function showError($input, message) {
+                const $err = getErrorElement($input);
+                $err.text(message).show();
+                $input.addClass('border-rose-500 focus:border-rose-500 focus:ring-rose-500');
+                $input.removeClass('border-slate-800 focus:border-blue-500 focus:ring-blue-500');
+            }
+
+            function clearError($input) {
+                const $err = getErrorElement($input);
+                $err.text('').hide();
+                $input.removeClass('border-rose-500 focus:border-rose-500 focus:ring-rose-500');
+                $input.addClass('border-slate-800 focus:border-blue-500 focus:ring-blue-500');
+            }
+
+            function validateEmail() {
+                const val = $email.val().trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!val) {
+                    showError($email, 'Email address is required.');
+                    return false;
+                } else if (!emailRegex.test(val)) {
+                    showError($email, 'Please enter a valid email address.');
+                    return false;
+                } else {
+                    clearError($email);
+                    return true;
+                }
+            }
+
+            function validatePassword() {
+                const val = $password.val();
+                if (!val) {
+                    showError($password, 'Password is required.');
+                    return false;
+                } else if (val.length < 8) {
+                    showError($password, 'Password must be at least 8 characters.');
+                    return false;
+                } else {
+                    clearError($password);
+                    return true;
+                }
+            }
+
+            // Bind inline listeners
+            $email.on('input blur', validateEmail);
+            $password.on('input blur', validatePassword);
+
+            // Block submit if invalid
+            $form.on('submit', function(e) {
+                const isEmailValid = validateEmail();
+                const isPasswordValid = validatePassword();
+                if (!isEmailValid || !isPasswordValid) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                }
+            });
+        });
+
+        // Global Form Submit Loader
+        document.addEventListener('submit', (e) => {
+            if (e.defaultPrevented) return;
+            const form = e.target;
+            const btn = form.querySelector('button[type="submit"]');
+            if (btn) {
+                // Check if spinner is already added
+                if (!btn.querySelector('.fa-spinner')) {
+                    const spinner = document.createElement('i');
+                    spinner.className = 'fa-solid fa-spinner fa-spin mr-2';
+                    btn.insertBefore(spinner, btn.firstChild);
+                }
+                
+                // Disable button
+                btn.disabled = true;
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.8';
+            }
+        });
     </script>
 </body>
 </html>

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\StoreController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\RoleController;
@@ -9,19 +10,41 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ManufacturerController;
 use App\Http\Controllers\Admin\ProductController;
 
-// Restore the ecommerce welcome view for the main site
-Route::get('/', function () {
-    return view('welcome');
+// Storefront Frontend Routes
+Route::get('/', [StoreController::class, 'home'])->name('store.home');
+Route::get('/shop', [StoreController::class, 'shop'])->name('store.shop');
+Route::get('/search-live', [StoreController::class, 'searchLive'])->name('store.search-live');
+Route::get('/product/{id}', [StoreController::class, 'product'])->name('store.product');
+
+Route::get('/cart', [StoreController::class, 'cart'])->name('store.cart');
+Route::post('/cart/add', [StoreController::class, 'addToCart'])->name('store.cart.add');
+Route::post('/cart/update', [StoreController::class, 'updateCart'])->name('store.cart.update');
+Route::get('/cart/remove/{key}', [StoreController::class, 'removeFromCart'])->name('store.cart.remove');
+
+
+Route::get('/checkout', [StoreController::class, 'checkout'])->name('store.checkout');
+Route::post('/checkout/order', [StoreController::class, 'placeOrder'])->name('store.checkout.order');
+Route::get('/success', [StoreController::class, 'success'])->name('store.success');
+
+Route::get('/account/{tab?}', [StoreController::class, 'account'])->name('store.account');
+Route::post('/account/profile/update', [StoreController::class, 'updateProfile'])->name('store.account.profile.update');
+Route::post('/wishlist/toggle', [StoreController::class, 'toggleWishlist'])->name('store.wishlist.toggle');
+
+// Storefront Auth Routes
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showStorefrontLogin'])->name('store.login');
+    Route::post('/login', [AuthController::class, 'storefrontLogin'])->name('store.login.submit');
+    Route::get('/register', [AuthController::class, 'showStorefrontRegister'])->name('store.register');
+    Route::post('/register', [AuthController::class, 'storefrontRegister'])->name('store.register.submit');
 });
+Route::post('/logout', [AuthController::class, 'storefrontLogout'])->name('store.logout');
 
 // Admin Routes (prefixed with admin)
 Route::prefix('admin')->group(function () {
 
     // Guest Auth Routes (admin/login)
-    Route::middleware('guest')->group(function () {
-        Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-        Route::post('/login', [AuthController::class, 'login']);
-    });
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
 
     // Protected Admin Routes
     Route::middleware('auth')->group(function () {

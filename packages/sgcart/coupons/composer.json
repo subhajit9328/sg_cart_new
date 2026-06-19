@@ -1,0 +1,27 @@
+{
+    "name": "sgcart/coupons",
+    "description": "Dynamic coupon code plugin for SGCart",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "SGCart Team",
+            "email": "support@sgcart.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "SGCart\\Coupons\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SGCart\\Coupons\\Providers\\CouponServiceProvider"
+            ]
+        }
+    }
+}
