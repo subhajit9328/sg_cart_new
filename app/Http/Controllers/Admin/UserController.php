@@ -53,16 +53,16 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'roles' => ['required', 'array'],
-            'roles.*' => ['exists:roles,id'],
+            'roles'    => ['required', 'array'],
+            'roles.*'  => ['exists:roles,id'],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
@@ -76,29 +76,31 @@ class UserController extends Controller
 
     /**
      * Show the form for editing the specified user.
+     * Route model binding resolves by `ulid` column automatically.
      */
     public function edit(User $user)
     {
-        $roles = Role::all();
+        $roles       = Role::all();
         $userRoleIds = $user->roles->pluck('id')->toArray();
-        
+
         return view('admin.users.edit', compact('user', 'roles', 'userRoleIds'));
     }
 
     /**
      * Update the specified user in storage.
+     * Unique-ignore uses the integer `id` internally — never exposed in URL.
      */
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
-            'roles' => ['required', 'array'],
-            'roles.*' => ['exists:roles,id'],
+            'roles'    => ['required', 'array'],
+            'roles.*'  => ['exists:roles,id'],
         ]);
 
-        $user->name = $request->name;
+        $user->name  = $request->name;
         $user->email = $request->email;
 
         if ($request->filled('password')) {

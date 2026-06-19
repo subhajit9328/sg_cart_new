@@ -9,6 +9,7 @@ return new class extends Migration {
     {
         Schema::create('product_variants', function (Blueprint $table) {
             $table->id();
+            $table->string('ulid', 26)->unique();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('sku')->unique();
             $table->string('size')->nullable();

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -22,42 +23,75 @@ class DatabaseSeeder extends Seeder
             'view dashboard',
             'manage users',
             'manage roles',
+            'manage products',
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // Create roles and assign permissions
-        $superAdminRole = Role::create(['name' => 'Super Admin']);
-        $superAdminRole->givePermissionTo(Permission::all());
+        // Create roles and assign permissions (with ULID for URL-safe admin routes)
+        $superAdminRole = Role::firstOrCreate(
+            ['name' => 'Super Admin'],
+            ['guard_name' => 'web', 'ulid' => (string) Str::ulid()]
+        );
+        $superAdminRole->syncPermissions(Permission::all());
 
-        $managerRole = Role::create(['name' => 'Manager']);
-        $managerRole->givePermissionTo(['view dashboard', 'manage users']);
+        $managerRole = Role::firstOrCreate(
+            ['name' => 'Manager'],
+            ['guard_name' => 'web', 'ulid' => (string) Str::ulid()]
+        );
+        $managerRole->syncPermissions(['view dashboard', 'manage users', 'manage products']);
 
-        $userRole = Role::create(['name' => 'User']);
-        $userRole->givePermissionTo(['view dashboard']);
+        $userRole = Role::firstOrCreate(
+            ['name' => 'User'],
+            ['guard_name' => 'web', 'ulid' => (string) Str::ulid()]
+        );
+        $userRole->syncPermissions(['view dashboard']);
+
+        // Back-fill ULID for any role that was created without one
+        Role::whereNull('ulid')->each(function (Role $role) {
+            $role->update(['ulid' => (string) Str::ulid()]);
+        });
 
         // Create default users and assign roles
-        $admin = User::create([
-            'name' => 'Admin Sgcart',
-            'email' => 'admin@sgcart.com',
-            'password' => bcrypt('password'),
-        ]);
-        $admin->assignRole($superAdminRole);
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@sgcart.com'],
+            [
+                'name'     => 'Admin Sgcart',
+                'password' => bcrypt('password'),
+            ]
+        );
+        if (!$admin->hasRole($superAdminRole)) {
+            $admin->assignRole($superAdminRole);
+        }
 
-        $manager = User::create([
-            'name' => 'Manager Sgcart',
-            'email' => 'manager@sgcart.com',
-            'password' => bcrypt('password'),
-        ]);
-        $manager->assignRole($managerRole);
+        $manager = User::firstOrCreate(
+            ['email' => 'manager@sgcart.com'],
+            [
+                'name'     => 'Manager Sgcart',
+                'password' => bcrypt('password'),
+            ]
+        );
+        if (!$manager->hasRole($managerRole)) {
+            $manager->assignRole($managerRole);
+        }
 
-        $regularUser = User::create([
-            'name' => 'User Sgcart',
-            'email' => 'user@sgcart.com',
-            'password' => bcrypt('password'),
+        $regularUser = User::firstOrCreate(
+            ['email' => 'user@sgcart.com'],
+            [
+                'name'     => 'User Sgcart',
+                'password' => bcrypt('password'),
+            ]
+        );
+        if (!$regularUser->hasRole($userRole)) {
+            $regularUser->assignRole($userRole);
+        }
+
+        // Call child seeders
+        $this->call([
+            CategorySeeder::class,
+            ManufacturerSeeder::class,
         ]);
-        $regularUser->assignRole($userRole);
     }
 }

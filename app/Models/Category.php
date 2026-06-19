@@ -2,18 +2,36 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Category extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasUlids;
 
     protected $fillable = [
         'name', 'slug', 'parent_id', 'image',
         'description', 'is_active', 'sort_order',
     ];
+
+    /**
+     * Only auto-generate ULID for the `ulid` column.
+     * The `id` column remains a standard auto-increment integer PK.
+     */
+    public function uniqueIds(): array
+    {
+        return ['ulid'];
+    }
+
+    /**
+     * The column used for route model binding (exposes ULID, not integer id).
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'ulid';
+    }
 
     protected function casts(): array
     {
@@ -41,7 +59,7 @@ class Category extends Model
         return $query->whereNull('parent_id');
     }
 
-    public function scopeActive($query)          // <-- was missing
+    public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }

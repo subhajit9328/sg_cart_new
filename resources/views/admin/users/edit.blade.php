@@ -19,7 +19,7 @@
         <h2 class="font-semibold text-sm">Update Account Information</h2>
     </div>
     
-    <form action="{{ route('admin.users.update', $user->id) }}" method="POST" class="p-6 space-y-5">
+    <form action="{{ route('admin.users.update', $user->ulid) }}" method="POST" class="p-6 space-y-5">
         @csrf
         @method('PUT')
         

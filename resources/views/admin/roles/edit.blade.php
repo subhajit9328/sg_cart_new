@@ -24,7 +24,7 @@
         @endif
     </div>
     
-    <form action="{{ route('admin.roles.update', $role->id) }}" method="POST" class="p-6 space-y-5">
+    <form action="{{ route('admin.roles.update', $role->ulid) }}" method="POST" class="p-6 space-y-5">
         @csrf
         @method('PUT')
         

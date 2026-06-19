@@ -24,7 +24,7 @@ class ProductController extends Controller
             ->when($request->category_id, fn ($q) => $q->where('category_id', $request->category_id))
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
             ->latest()
-            ->paginate(20)
+            ->paginate(10)
             ->withQueryString();
 
         $categories = Category::all();
@@ -44,6 +44,7 @@ class ProductController extends Controller
         $data = $request->validate([
             'name'              => 'required|string|max:255',
             'sku'               => 'required|string|unique:products,sku',
+            // FK exists rules always reference the integer id column — never exposed in URLs
             'category_id'       => 'nullable|exists:categories,id',
             'manufacturer_id'   => 'nullable|exists:manufacturers,id',
             'short_description' => 'nullable|string',
@@ -56,20 +57,20 @@ class ProductController extends Controller
             'weight'            => 'nullable|string',
             'dimensions'        => 'nullable|string',
             // Variants
-            'variants'                  => 'nullable|array',
-            'variants.*.sku'            => 'required_with:variants|string',
-            'variants.*.size'           => 'nullable|string',
-            'variants.*.colour'         => 'nullable|string',
-            'variants.*.weight'         => 'nullable|string',
-            'variants.*.price'          => 'nullable|numeric',
-            'variants.*.stock'          => 'nullable|integer',
+            'variants'              => 'nullable|array',
+            'variants.*.sku'        => 'required_with:variants|string',
+            'variants.*.size'       => 'nullable|string',
+            'variants.*.colour'     => 'nullable|string',
+            'variants.*.weight'     => 'nullable|string',
+            'variants.*.price'      => 'nullable|numeric',
+            'variants.*.stock'      => 'nullable|integer',
             // Specs
             'specs'             => 'nullable|array',
             'specs.*.label'     => 'required_with:specs|string',
             'specs.*.value'     => 'required_with:specs|string',
             // Images
-            'images'            => 'nullable|array',
-            'images.*'          => 'image|max:4096',
+            'images'              => 'nullable|array',
+            'images.*'            => 'image|max:4096',
             'primary_image_index' => 'nullable|integer',
         ]);
 
@@ -105,6 +106,9 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')->with('success', 'Product created.');
     }
 
+    /**
+     * Route model binding resolves Product by `ulid` column automatically.
+     */
     public function edit(Product $product)
     {
         $product->load('variants', 'images', 'specifications');
@@ -117,6 +121,7 @@ class ProductController extends Controller
     {
         $data = $request->validate([
             'name'              => 'required|string|max:255',
+            // Unique ignore-self uses the internal integer id — safe because it never appears in URLs
             'sku'               => 'required|string|unique:products,sku,' . $product->id,
             'category_id'       => 'nullable|exists:categories,id',
             'manufacturer_id'   => 'nullable|exists:manufacturers,id',
@@ -129,20 +134,20 @@ class ProductController extends Controller
             'is_featured'       => 'boolean',
             'weight'            => 'nullable|string',
             'dimensions'        => 'nullable|string',
-            'variants'                  => 'nullable|array',
-            'variants.*.id'             => 'nullable|exists:product_variants,id',
-            'variants.*.sku'            => 'required_with:variants|string',
-            'variants.*.size'           => 'nullable|string',
-            'variants.*.colour'         => 'nullable|string',
-            'variants.*.weight'         => 'nullable|string',
-            'variants.*.price'          => 'nullable|numeric',
-            'variants.*.stock'          => 'nullable|integer',
+            'variants'              => 'nullable|array',
+            'variants.*.id'         => 'nullable|exists:product_variants,id',
+            'variants.*.sku'        => 'required_with:variants|string',
+            'variants.*.size'       => 'nullable|string',
+            'variants.*.colour'     => 'nullable|string',
+            'variants.*.weight'     => 'nullable|string',
+            'variants.*.price'      => 'nullable|numeric',
+            'variants.*.stock'      => 'nullable|integer',
             'specs'             => 'nullable|array',
             'specs.*.label'     => 'required_with:specs|string',
             'specs.*.value'     => 'required_with:specs|string',
-            'images'            => 'nullable|array',
-            'images.*'          => 'image|max:4096',
-            'primary_image_id'  => 'nullable|exists:product_images,id',
+            'images'              => 'nullable|array',
+            'images.*'            => 'image|max:4096',
+            'primary_image_id'    => 'nullable|exists:product_images,id',
         ]);
 
         DB::transaction(function () use ($data, $request, $product) {
@@ -227,7 +232,7 @@ class ProductController extends Controller
             }
         } else {
             // CSV
-            $handle = fopen($file->getRealPath(), 'r');
+            $handle  = fopen($file->getRealPath(), 'r');
             $headers = fgetcsv($handle);
             while (($row = fgetcsv($handle)) !== false) {
                 $rows[] = array_combine($headers, $row);

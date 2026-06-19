@@ -10,9 +10,20 @@ use Illuminate\Support\Facades\Storage;
 
 class ManufacturerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $manufacturers = Manufacturer::paginate(20);
+        $query = Manufacturer::query();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $manufacturers = $query->paginate(10)->withQueryString();
         return view('admin.manufacturers.index', compact('manufacturers'));
     }
 

@@ -12,50 +12,83 @@ class CategorySeeder extends Seeder
     {
         $tree = [
             [
-                'name'        => 'Electronics',
-                'description' => 'Electronic gadgets and devices',
+                'name'        => 'Men\'s Clothing',
+                'description' => 'Apparel and fashion for men',
                 'children'    => [
-                    ['name' => 'Mobile Phones',  'description' => 'Smartphones and feature phones'],
-                    ['name' => 'Laptops',         'description' => 'Laptops and notebooks'],
-                    ['name' => 'Tablets',         'description' => 'Tablets and iPads'],
-                    ['name' => 'Accessories',     'description' => 'Cables, cases, chargers'],
+                    ['name' => 'T-Shirts & Polos',   'description' => 'Casual tees, polo shirts and graphic tops'],
+                    ['name' => 'Shirts',              'description' => 'Formal, casual and linen shirts'],
+                    ['name' => 'Jeans & Trousers',   'description' => 'Denim jeans, chinos and formal trousers'],
+                    ['name' => 'Kurta & Ethnic',      'description' => 'Kurtas, sherwanis and ethnic wear'],
+                    ['name' => 'Jackets & Coats',     'description' => 'Bomber jackets, blazers and winter coats'],
+                    ['name' => 'Activewear',          'description' => 'Gym wear, tracksuits and sports clothing'],
+                    ['name' => 'Innerwear & Socks',   'description' => 'Briefs, boxers, vests and socks'],
                 ],
             ],
             [
-                'name'        => 'Clothing',
-                'description' => 'Apparel and fashion',
+                'name'        => 'Women\'s Clothing',
+                'description' => 'Apparel and fashion for women',
                 'children'    => [
-                    ['name' => 'Men',     'description' => "Men's clothing"],
-                    ['name' => 'Women',   'description' => "Women's clothing"],
-                    ['name' => 'Kids',    'description' => "Children's clothing"],
-                    ['name' => 'Footwear','description' => 'Shoes, sandals, boots'],
+                    ['name' => 'Tops & Blouses',      'description' => 'Casual tops, blouses and shirts'],
+                    ['name' => 'Dresses',             'description' => 'Casual, party and maxi dresses'],
+                    ['name' => 'Sarees & Lehengas',   'description' => 'Traditional sarees, lehengas and ethnic wear'],
+                    ['name' => 'Salwar Kameez',       'description' => 'Salwar suits, churidars and anarkalis'],
+                    ['name' => 'Jeans & Trousers',    'description' => 'Denim jeans, palazzos and formal pants'],
+                    ['name' => 'Jackets & Coats',     'description' => 'Shrugs, blazers and winter jackets'],
+                    ['name' => 'Activewear',          'description' => 'Sports bras, leggings and gym wear'],
+                    ['name' => 'Innerwear & Lingerie','description' => 'Bras, panties and sleepwear'],
                 ],
             ],
             [
-                'name'        => 'Home & Kitchen',
-                'description' => 'Home appliances and kitchenware',
+                'name'        => 'Kids\' Clothing',
+                'description' => 'Clothing for boys, girls and infants',
                 'children'    => [
-                    ['name' => 'Appliances',  'description' => 'Kitchen and home appliances'],
-                    ['name' => 'Furniture',   'description' => 'Tables, chairs, beds'],
-                    ['name' => 'Cookware',    'description' => 'Pots, pans, utensils'],
-                    ['name' => 'Decor',       'description' => 'Home decoration items'],
+                    ['name' => 'Boys\' Clothing',    'description' => 'T-shirts, jeans and ethnic wear for boys'],
+                    ['name' => 'Girls\' Clothing',   'description' => 'Dresses, tops and ethnic wear for girls'],
+                    ['name' => 'Infant & Toddler',   'description' => 'Onesies, rompers and baby clothing'],
+                    ['name' => 'School Uniforms',    'description' => 'Uniforms, ties and accessories'],
                 ],
             ],
             [
-                'name'        => 'Sports & Fitness',
-                'description' => 'Sports equipment and fitness gear',
+                'name'        => 'Footwear',
+                'description' => 'Shoes, sandals and boots for all',
                 'children'    => [
-                    ['name' => 'Exercise Equipment', 'description' => 'Gym and fitness tools'],
-                    ['name' => 'Outdoor Sports',     'description' => 'Cricket, football, etc.'],
-                    ['name' => 'Yoga & Meditation',  'description' => 'Mats, blocks, accessories'],
+                    ['name' => 'Men\'s Footwear',    'description' => 'Sneakers, loafers, formal and sports shoes for men'],
+                    ['name' => 'Women\'s Footwear',  'description' => 'Heels, flats, sandals and boots for women'],
+                    ['name' => 'Kids\' Footwear',    'description' => 'School shoes, sandals and sneakers for kids'],
+                    ['name' => 'Ethnic Footwear',    'description' => 'Juttis, kolhapuris and ethnic sandals'],
                 ],
             ],
             [
-                'name'        => 'Books & Stationery',
-                'description' => 'Books, notebooks, and office supplies',
+                'name'        => 'Accessories',
+                'description' => 'Fashion accessories to complete your look',
                 'children'    => [
-                    ['name' => 'Books',       'description' => 'Fiction, non-fiction, textbooks'],
-                    ['name' => 'Stationery',  'description' => 'Pens, notebooks, art supplies'],
+                    ['name' => 'Bags & Handbags',    'description' => 'Tote bags, backpacks, clutches and sling bags'],
+                    ['name' => 'Belts',              'description' => 'Leather, fabric and casual belts'],
+                    ['name' => 'Scarves & Stoles',   'description' => 'Dupattas, scarves and wraps'],
+                    ['name' => 'Sunglasses',         'description' => 'UV-protected fashion sunglasses'],
+                    ['name' => 'Watches',            'description' => 'Analog, digital and smart fashion watches'],
+                    ['name' => 'Caps & Hats',        'description' => 'Baseball caps, beanies and sun hats'],
+                    ['name' => 'Jewellery',          'description' => 'Earrings, necklaces, bracelets and rings'],
+                ],
+            ],
+            [
+                'name'        => 'Sportswear',
+                'description' => 'Performance and athletic clothing',
+                'children'    => [
+                    ['name' => 'Running & Training', 'description' => 'Running tees, shorts and compression wear'],
+                    ['name' => 'Yoga & Pilates',     'description' => 'Yoga pants, sports bras and tanks'],
+                    ['name' => 'Cricket & Football', 'description' => 'Sports jerseys, shorts and kits'],
+                    ['name' => 'Winter Sports',      'description' => 'Thermal layers, snow jackets and ski gear'],
+                ],
+            ],
+            [
+                'name'        => 'Winter Wear',
+                'description' => 'Warm clothing for cold seasons',
+                'children'    => [
+                    ['name' => 'Sweaters & Pullovers','description' => 'Woollen and fleece sweaters'],
+                    ['name' => 'Hoodies & Sweatshirts','description' => 'Casual hoodies and zip-up sweatshirts'],
+                    ['name' => 'Thermals',           'description' => 'Thermal innerwear and base layers'],
+                    ['name' => 'Shawls & Mufflers',  'description' => 'Warm shawls, mufflers and gloves'],
                 ],
             ],
         ];
@@ -86,6 +119,6 @@ class CategorySeeder extends Seeder
             }
         }
 
-        $this->command->info(' Categories and subcategories seeded.');
+        $this->command->info('✅ Clothing categories and subcategories seeded.');
     }
 }
