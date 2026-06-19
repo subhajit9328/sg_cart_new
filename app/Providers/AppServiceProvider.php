@@ -18,7 +18,7 @@ class AppServiceProvider extends ServiceProvider
         // This means you never need to manually assign every permission
         // to the super-admin role — they always have full access.
         Gate::before(function ($user, $ability) {
-            return $user->hasRole('super-admin') ? true : null;
+            return ($user->hasRole('super-admin') || $user->hasRole('Super Admin')) ? true : null;
         });
     }
 }

@@ -88,6 +88,7 @@
                 <span class="sidebar-text">Role Management</span>
             </a>
             @endcan
+            @endcanany
 
             @includeIf('coupons::admin-menu')
         </nav>
