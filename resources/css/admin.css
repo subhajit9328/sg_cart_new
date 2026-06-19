@@ -16,6 +16,17 @@
     background-color: rgb(30, 41, 59) !important; /* bg-slate-800 */
     border: 1px solid rgb(51, 65, 85) !important; /* border-slate-700 */
 }
+
+/* Rounded corners merging when dropdown is open */
+.select2-container--default.select2-container--open.select2-container--below .select2-selection--single {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+.select2-container--default.select2-container--open.select2-container--above .select2-selection--single {
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+}
+
 .select2-container--default .select2-selection--single .select2-selection__rendered {
     color: rgb(51, 65, 85) !important; /* text-slate-700 */
     font-size: 0.875rem !important; /* text-sm */
@@ -25,16 +36,42 @@
 .dark .select2-container--default .select2-selection--single .select2-selection__rendered {
     color: rgb(203, 213, 225) !important; /* text-slate-300 */
 }
-.select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 40px !important;
-    right: 10px !important;
+
+/* Placeholder text color */
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: rgb(156, 163, 175) !important; /* text-slate-400 */
 }
+.dark .select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: rgb(148, 163, 184) !important; /* text-slate-400 */
+}
+
+/* Hide default Select2 arrow triangle */
 .select2-container--default .select2-selection--single .select2-selection__arrow b {
-    border-color: #64748b transparent transparent transparent !important;
+    display: none !important;
 }
-.select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
-    border-color: transparent transparent #64748b transparent !important;
+
+/* Add custom modern chevron arrow using FontAwesome */
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 100% !important;
+    right: 12px !important;
+    width: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
+.select2-container--default .select2-selection--single .select2-selection__arrow::before {
+    content: "\f078" !important; /* FontAwesome chevron-down */
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+    font-size: 10px !important;
+    color: rgb(156, 163, 175) !important; /* text-slate-400 */
+    transition: transform 0.2s ease-in-out, color 0.2s;
+}
+.select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow::before {
+    transform: rotate(180deg);
+    color: rgb(59, 130, 246) !important; /* blue-500 */
+}
+
 .select2-container--default .select2-selection--single:focus-within,
 .select2-container--default.select2-container--open .select2-selection--single {
     border-color: rgb(59, 130, 246) !important; /* focus:border-blue-500 */
@@ -77,6 +114,8 @@
     background-color: rgb(15, 23, 42) !important; /* bg-slate-900 */
     border: 1px solid rgb(51, 65, 85) !important;
 }
+
+/* Search input field */
 .select2-container--default .select2-search--dropdown .select2-search__field {
     background-color: rgb(248, 250, 252) !important;
     border: 1px solid rgb(226, 232, 240) !important;
@@ -96,6 +135,7 @@
     border-color: rgb(59, 130, 246) !important;
     box-shadow: 0 0 0 1px rgb(59, 130, 246) !important;
 }
+
 .select2-results__options {
     padding: 4px !important;
 }

@@ -10,7 +10,12 @@
     </a>
     <div>
         <h1 class="font-display text-2xl font-bold">Add Product</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Admin / Catalogue / Products / Add</p>
+        <x-breadcrumbs :items="[
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'Catalogue'],
+            ['label' => 'Products', 'url' => route('admin.products.index')],
+            ['label' => 'Add']
+        ]" />
     </div>
 </div>
 
@@ -268,6 +273,7 @@ document.getElementById('imageInput').addEventListener('change', function () {
                 </div>`);
         };
         reader.readAsDataURL(file);
+    });
 });
 </script>
 
@@ -276,14 +282,17 @@ document.getElementById('imageInput').addEventListener('change', function () {
     $(document).ready(function() {
         $('#category_id').select2({
             placeholder: "— Select Category —",
-            allowClear: true
+            allowClear: true,
+            width: '100%'
         });
         $('#manufacturer_id').select2({
             placeholder: "— Select Vendor —",
-            allowClear: true
+            allowClear: true,
+            width: '100%'
         });
         $('#status').select2({
-            minimumResultsForSearch: -1
+            minimumResultsForSearch: -1,
+            width: '100%'
         });
     });
 </script>

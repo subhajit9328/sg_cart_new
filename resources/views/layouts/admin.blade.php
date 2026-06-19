@@ -15,11 +15,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Tailwind compiled by Vite -->
-    @vite(['resources/css/app.css', 'resources/css/admin.css', 'resources/js/app.js'])
-
     <!-- Select2 Searchable Dropdown Styles -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- Tailwind compiled by Vite -->
+    @vite(['resources/css/app.css', 'resources/css/admin.css', 'resources/js/app.js'])
 
     <script>
         // Check dark mode preference on load (default to light)

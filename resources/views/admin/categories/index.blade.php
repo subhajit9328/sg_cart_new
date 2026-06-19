@@ -7,7 +7,11 @@
 <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
     <div>
         <h1 class="font-display text-2xl font-bold">Categories</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Admin / Catalogue / Categories</p>
+        <x-breadcrumbs :items="[
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'Catalogue'],
+            ['label' => 'Categories']
+        ]" />
     </div>
     <a href="{{ route('admin.categories.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium shadow-lg shadow-blue-600/10 no-underline">
         <i class="fa-solid fa-plus"></i> Add Category

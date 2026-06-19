@@ -10,7 +10,12 @@
     </a>
     <div>
         <h1 class="font-display text-2xl font-bold">Add Manufacturer</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Admin / Catalogue / Manufacturers / Add</p>
+        <x-breadcrumbs :items="[
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'Catalogue'],
+            ['label' => 'Manufacturers', 'url' => route('admin.manufacturers.index')],
+            ['label' => 'Add']
+        ]" />
     </div>
 </div>
 

@@ -10,7 +10,13 @@
     </a>
     <div>
         <h1 class="font-display text-2xl font-bold">Edit Category</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Admin / Catalogue / Categories / Edit / {{ $category->name }}</p>
+        <x-breadcrumbs :items="[
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'Catalogue'],
+            ['label' => 'Categories', 'url' => route('admin.categories.index')],
+            ['label' => 'Edit'],
+            ['label' => $category->name, 'mono' => true]
+        ]" />
     </div>
 </div>
 
@@ -112,7 +118,8 @@
     $(document).ready(function() {
         $('#parent_id').select2({
             placeholder: "— Select Parent Category —",
-            allowClear: true
+            allowClear: true,
+            width: '100%'
         });
     });
 </script>

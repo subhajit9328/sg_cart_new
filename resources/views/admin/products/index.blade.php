@@ -7,7 +7,11 @@
 <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
     <div>
         <h1 class="font-display text-2xl font-bold">Products</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Admin / Catalogue / Products</p>
+        <x-breadcrumbs :items="[
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'Catalogue'],
+            ['label' => 'Products']
+        ]" />
     </div>
     <div class="flex gap-3">
         <button onclick="document.getElementById('bulkModal').classList.remove('hidden')"

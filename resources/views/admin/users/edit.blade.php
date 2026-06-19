@@ -10,7 +10,13 @@
     </a>
     <div>
         <h1 class="font-display text-2xl font-bold">Edit User</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Admin / Access Control / Users / Edit / {{ $user->name }}</p>
+        <x-breadcrumbs :items="[
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'Access Control'],
+            ['label' => 'Users', 'url' => route('admin.users.index')],
+            ['label' => 'Edit'],
+            ['label' => $user->name, 'mono' => true]
+        ]" />
     </div>
 </div>
 
