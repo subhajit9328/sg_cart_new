@@ -52,7 +52,7 @@ class CategoryController extends Controller
 
         Category::create($data);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category created.');
+        return redirect()->route('admin.categories.index')->with('success', 'Category is created successfully.');
     }
 
     /**
@@ -84,13 +84,13 @@ class CategoryController extends Controller
 
         $category->update($data);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category updated.');
+        return redirect()->route('admin.categories.edit', $category)->with('success', 'Category is updated successfully.');
     }
 
     public function destroy(Category $category)
     {
         if ($category->image) Storage::disk('public')->delete($category->image);
         $category->delete();
-        return redirect()->route('admin.categories.index')->with('success', 'Category deleted.');
+        return redirect()->route('admin.categories.index')->with('success', 'Category is deleted successfully.');
     }
 }

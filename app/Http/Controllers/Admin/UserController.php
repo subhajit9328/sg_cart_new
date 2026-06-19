@@ -71,7 +71,7 @@ class UserController extends Controller
         $user->syncRoles($roles);
 
         return redirect()->route('admin.users.index')
-            ->with('success', "User '{$user->name}' created successfully.");
+            ->with('success', "User '{$user->name}' is created successfully.");
     }
 
     /**
@@ -113,8 +113,8 @@ class UserController extends Controller
         $roles = Role::whereIn('id', $request->roles)->get();
         $user->syncRoles($roles);
 
-        return redirect()->route('admin.users.index')
-            ->with('success', "User '{$user->name}' updated successfully.");
+        return redirect()->route('admin.users.edit', $user)
+            ->with('success', "User '{$user->name}' is updated successfully.");
     }
 
     /**
@@ -131,6 +131,6 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->route('admin.users.index')
-            ->with('success', "User '{$userName}' deleted successfully.");
+            ->with('success', "User '{$userName}' is deleted successfully.");
     }
 }

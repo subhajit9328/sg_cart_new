@@ -14,7 +14,7 @@
         ]" />
     </div>
     <div class="flex gap-3">
-        <button onclick="document.getElementById('bulkModal').classList.remove('hidden')"
+        <button onclick="showToast('Coming soon', 'warning')"
             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-medium shadow-lg shadow-emerald-600/10 transition-colors cursor-pointer border-none">
             <i class="fa-solid fa-file-import"></i> Bulk Upload
         </button>
@@ -96,8 +96,8 @@
                 @forelse($products as $product)
                 <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/15 transition-colors">
                     <td class="px-5 py-3.5 whitespace-nowrap">
-                        @if($product->primaryImage)
-                            <img src="{{ Storage::url($product->primaryImage->path) }}" class="w-9 h-9 object-cover rounded-lg border border-slate-200 dark:border-slate-800 bg-white">
+                        @if($product->image)
+                            <img src="{{ Storage::url($product->image) }}" class="w-9 h-9 object-cover rounded-lg border border-slate-200 dark:border-slate-800 bg-white">
                         @else
                             <div class="w-9 h-9 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-[9px] text-slate-400 font-bold border border-slate-200 dark:border-slate-700/50">
                                 NO IMG
@@ -173,35 +173,7 @@
     @endif
 </div>
 
-{{-- Bulk Upload Modal --}}
-<div id="bulkModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
-        <div class="flex justify-between items-start mb-4">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white font-display">Bulk Upload Products</h3>
-            <button onclick="document.getElementById('bulkModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer border-none bg-transparent outline-none">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-        </div>
-        <p class="text-sm text-slate-400 mb-4 leading-relaxed">
-            Upload a CSV or Excel file containing product information. Required columns:
-            <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-xs font-mono block mt-2 text-slate-700 dark:text-slate-300 overflow-x-auto whitespace-nowrap">
-                name, sku, category, manufacturer, price, sale_price, stock, status, weight, dimensions, short_description, description
-            </code>
-        </p>
-        <form method="POST" action="{{ route('admin.products.bulk-upload') }}" enctype="multipart/form-data" class="space-y-4">
-            @csrf
-            <div>
-                <input type="file" name="file" accept=".csv,.xlsx,.xls" required
-                    class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm text-slate-800 dark:text-slate-200 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-500/10 dark:file:text-blue-400 hover:file:bg-blue-100">
-            </div>
-            <div class="flex gap-3 justify-end pt-2 border-t border-slate-100 dark:border-slate-800">
-                <button type="button" onclick="document.getElementById('bulkModal').classList.add('hidden')"
-                    class="px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-semibold transition-colors bg-transparent cursor-pointer">Cancel</button>
-                <button type="submit" class="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-semibold shadow-lg shadow-emerald-600/10 transition-colors border-none cursor-pointer">Upload</button>
-            </div>
-        </form>
-    </div>
-</div>
+
 
 <form id="deleteForm" method="POST" class="hidden">
     @csrf

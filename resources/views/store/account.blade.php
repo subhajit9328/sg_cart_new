@@ -99,11 +99,11 @@
                     @csrf
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1">
-                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">First Name</label>
+                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">First Name <span class="text-rose-600">*</span></label>
                             <input name="first_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" value="{{ auth()->user() ? explode(' ', auth()->user()->name)[0] : 'John' }}"/>
                         </div>
                         <div class="flex flex-col gap-1">
-                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Last Name</label>
+                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Last Name <span class="text-rose-600">*</span></label>
                             <input name="last_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" value="{{ auth()->user() ? (explode(' ', auth()->user()->name)[1] ?? '') : 'Doe' }}"/>
                         </div>
                     </div>

@@ -66,7 +66,7 @@ class RoleController extends Controller
         }
 
         return redirect()->route('admin.roles.index')
-            ->with('success', "Role '{$role->name}' created successfully.");
+            ->with('success', "Role '{$role->name}' is created successfully.");
     }
 
     /**
@@ -111,8 +111,8 @@ class RoleController extends Controller
             $role->syncPermissions([]);
         }
 
-        return redirect()->route('admin.roles.index')
-            ->with('success', "Role '{$role->name}' updated successfully.");
+        return redirect()->route('admin.roles.edit', $role->ulid)
+            ->with('success', "Role '{$role->name}' is updated successfully.");
     }
 
     /**
@@ -132,6 +132,6 @@ class RoleController extends Controller
         $role->delete();
 
         return redirect()->route('admin.roles.index')
-            ->with('success', "Role '{$roleName}' deleted successfully.");
+            ->with('success', "Role '{$roleName}' is deleted successfully.");
     }
 }

@@ -31,7 +31,7 @@
 
         <!-- Name Field -->
         <div>
-            <label for="name" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Manufacturer Name *</label>
+            <label for="name" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Manufacturer Name <span class="text-rose-600">*</span></label>
             <input type="text" name="name" id="name" value="{{ old('name', $manufacturer->name) }}" required
                 class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('name') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
                 placeholder="Apple Inc.">

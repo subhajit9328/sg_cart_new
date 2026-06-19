@@ -21,37 +21,37 @@
                     
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="label">First Name *</label>
+                            <label class="label">First Name <span class="text-rose-600">*</span></label>
                             <input type="text" name="first_name" required value="{{ old('first_name') }}" class="inp" placeholder="John"/>
                             @error('first_name') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div>
-                            <label class="label">Last Name *</label>
+                            <label class="label">Last Name <span class="text-rose-600">*</span></label>
                             <input type="text" name="last_name" required value="{{ old('last_name') }}" class="inp" placeholder="Doe"/>
                             @error('last_name') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                     </div>
                     
                     <div class="mb-4">
-                        <label class="label">Email Address *</label>
+                        <label class="label">Email Address <span class="text-rose-600">*</span></label>
                         <input type="email" name="email" required value="{{ old('email') }}" class="inp" placeholder="john.doe@example.com"/>
                         @error('email') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="mb-4">
-                        <label class="label">Street Address *</label>
+                        <label class="label">Street Address <span class="text-rose-600">*</span></label>
                         <input type="text" name="address" required value="{{ old('address') }}" class="inp" placeholder="123 Main Street, Apt 4B"/>
                         @error('address') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="label">City *</label>
+                            <label class="label">City <span class="text-rose-600">*</span></label>
                             <input type="text" name="city" required value="{{ old('city') }}" class="inp" placeholder="New York"/>
                             @error('city') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div>
-                            <label class="label">Zip Code *</label>
+                            <label class="label">Zip Code <span class="text-rose-600">*</span></label>
                             <input type="text" name="zip" required value="{{ old('zip') }}" class="inp" placeholder="10001"/>
                             @error('zip') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
@@ -65,25 +65,25 @@
                     </div>
                     
                     <div class="mb-4">
-                        <label class="label">Name on Card *</label>
+                        <label class="label">Name on Card <span class="text-rose-600">*</span></label>
                         <input type="text" name="card_name" required value="{{ old('card_name') }}" class="inp" placeholder="John Doe"/>
                         @error('card_name') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="mb-4">
-                        <label class="label">Credit Card Number *</label>
+                        <label class="label">Credit Card Number <span class="text-rose-600">*</span></label>
                         <input type="text" name="card_num" required value="{{ old('card_num') }}" class="inp" placeholder="4111 2222 3333 4444"/>
                         @error('card_num') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="label">Expiry Date *</label>
+                            <label class="label">Expiry Date <span class="text-rose-600">*</span></label>
                             <input type="text" name="card_expiry" required value="{{ old('card_expiry') }}" class="inp" placeholder="MM/YY"/>
                             @error('card_expiry') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div>
-                            <label class="label">CVV Code *</label>
+                            <label class="label">CVV Code <span class="text-rose-600">*</span></label>
                             <input type="password" name="card_cvv" required value="{{ old('card_cvv') }}" class="inp" placeholder="123"/>
                             @error('card_cvv') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>

@@ -379,18 +379,20 @@
     }
 
     // Flash Toast triggers
-    @if(session('success'))
-        showToast("{{ session('success') }}", 'success');
-    @endif
-    @if(session('error'))
-        showToast("{{ session('error') }}", 'error');
-    @endif
-    @if(session('warning'))
-        showToast("{{ session('warning') }}", 'warning');
-    @endif
-    @if(session('info'))
-        showToast("{{ session('info') }}", 'info');
-    @endif
+    $(document).ready(function() {
+        @if(session('success'))
+            showToast("{{ session('success') }}", 'success');
+        @endif
+        @if(session('error'))
+            showToast("{{ session('error') }}", 'error');
+        @endif
+        @if(session('warning'))
+            showToast("{{ session('warning') }}", 'warning');
+        @endif
+        @if(session('info'))
+            showToast("{{ session('info') }}", 'info');
+        @endif
+    });
 
     // Global Form Submit Loader
     document.addEventListener('submit', (e) => {
