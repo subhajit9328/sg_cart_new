@@ -6,6 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'SGCart Admin')</title>
 
+    <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%233b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>'>
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
@@ -31,9 +33,11 @@
 
     <!-- ============ Sidebar ============ -->
     <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 flex flex-col -translate-x-full lg:translate-x-0 transition-all duration-200">
-        <div class="h-16 flex items-center gap-3 px-5 border-b border-white/10 flex-shrink-0">
-            <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white font-display flex-shrink-0">S</div>
-            <span class="font-display font-bold text-white text-lg brand-text">SGCart</span>
+        <div class="h-16 flex items-center px-5 border-b border-white/10 flex-shrink-0 logo-container-admin">
+            <a class="logo-admin" href="{{ route('admin.dashboard') }}">
+                <i class="fa-solid fa-cart-shopping logo-icon"></i>
+                <span class="brand-text">sgcart<span>.</span></span>
+            </a>
         </div>
 
         <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
@@ -61,15 +65,7 @@
             @includeIf('coupons::admin-menu')
         </nav>
 
-        <div class="border-t border-white/10 p-3 flex-shrink-0">
-            <form action="{{ route('logout') }}" method="POST" id="logoutForm" class="hidden">
-                @csrf
-            </form>
-            <a onclick="showConfirm('Are you sure you want to sign out?', () => document.getElementById('logoutForm').submit());" class="nav-link hover:text-red-400 cursor-pointer">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                <span class="sidebar-text">Sign out</span>
-            </a>
-        </div>
+
     </aside>
 
     <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-900/50 z-30 hidden"></div>
@@ -83,11 +79,6 @@
             <button id="sidebarToggleBtn" class="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex-shrink-0">
                 <i class="fa-solid fa-bars"></i>
             </button>
-
-            <div class="hidden sm:flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-2 w-full max-w-sm">
-                <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
-                <input type="text" class="bg-transparent outline-none text-sm w-full placeholder:text-slate-400" placeholder="Search dashboard, user, roles…">
-            </div>
 
             <div class="flex items-center gap-2 ml-auto">
                 <button id="themeToggleBtn" class="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
@@ -125,6 +116,7 @@
 </div>
 
 <!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
     // Theme toggle
     const themeToggleBtn = document.getElementById('themeToggleBtn');
@@ -285,6 +277,12 @@
 
     // Global Confirmation Modal
     function showConfirm(text, callback, title='Confirm Action') {
+        const isDelete = title.toLowerCase().includes('delete');
+        const confirmBtnClass = isDelete 
+            ? 'bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white shadow-lg shadow-rose-600/10' 
+            : 'btn btn-primary';
+        const confirmText = isDelete ? 'Delete' : 'Confirm';
+
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn';
         modal.innerHTML = `
@@ -298,7 +296,7 @@
                 <p class="text-sm text-stone dark:text-slate-400 mb-6 leading-relaxed">${text}</p>
                 <div class="flex justify-end gap-3">
                     <button class="modal-cancel border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-colors bg-transparent">Cancel</button>
-                    <button class="modal-confirm btn btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer">Confirm</button>
+                    <button class="modal-confirm ${confirmBtnClass} px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer">${confirmText}</button>
                 </div>
             </div>
         `;
@@ -331,7 +329,21 @@
         
         modal.querySelector('.modal-close').addEventListener('click', () => closeModal(false));
         modal.querySelector('.modal-cancel').addEventListener('click', () => closeModal(false));
-        modal.querySelector('.modal-confirm').addEventListener('click', () => closeModal(true));
+        
+        const confirmBtn = modal.querySelector('.modal-confirm');
+        confirmBtn.addEventListener('click', () => {
+            // Check if spinner is already added
+            if (!confirmBtn.querySelector('.fa-spinner')) {
+                const spinner = document.createElement('i');
+                spinner.className = 'fa-solid fa-spinner fa-spin mr-2';
+                confirmBtn.insertBefore(spinner, confirmBtn.firstChild);
+            }
+            confirmBtn.disabled = true;
+            confirmBtn.style.pointerEvents = 'none';
+            confirmBtn.style.opacity = '0.8';
+            
+            closeModal(true);
+        });
     }
 
     // Flash Toast triggers
@@ -350,18 +362,229 @@
 
     // Global Form Submit Loader
     document.addEventListener('submit', (e) => {
+        if (e.defaultPrevented) return;
+        
         const form = e.target;
+        // Skip logout form
+        if (form.id === 'logoutForm') return;
+
         const submitBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
         submitBtns.forEach(btn => {
-            btn.disabled = true;
-            btn.style.pointerEvents = 'none';
-            btn.style.opacity = '0.8';
-            
             // Check if spinner is already added
             if (!btn.querySelector('.fa-spinner')) {
                 const spinner = document.createElement('i');
                 spinner.className = 'fa-solid fa-spinner fa-spin mr-2';
                 btn.insertBefore(spinner, btn.firstChild);
+            }
+            
+            btn.disabled = true;
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.8';
+        });
+    });
+
+    // Global jQuery Inline Validation
+    $(document).ready(function() {
+        // Target all POST forms (including those with method spoofing)
+        const $forms = $('form').filter(function() {
+            return this.id !== 'logoutForm' && 
+                   (($(this).attr('method') || '').toUpperCase() === 'POST' || $(this).find('input[name="_token"]').length > 0);
+        });
+
+        // Set novalidate to prevent default HTML5 browser tooltips
+        $forms.attr('novalidate', 'novalidate');
+
+        // Helper to get descriptive name for the field
+        function getFieldName($input) {
+            const id = $input.attr('id');
+            let labelText = '';
+            
+            // Try to find label by 'for' attribute
+            if (id) {
+                labelText = $(`label[for="${id}"]`).text().trim();
+            }
+            // Try to find closest label in parent container
+            if (!labelText) {
+                labelText = $input.closest('div').find('label').first().text().trim();
+            }
+            // Fall back to placeholder or name
+            if (!labelText) {
+                labelText = $input.attr('placeholder') || $input.attr('name') || 'Field';
+            }
+            
+            // Clean up common label patterns
+            labelText = labelText.replace(/[:*]/g, '').trim();
+            if (labelText.toLowerCase().startsWith('new ')) {
+                labelText = labelText.substring(4);
+            }
+            return labelText || 'Field';
+        }
+
+        // Helper to get or create error element
+        function getErrorElement($input) {
+            let name = $input.attr('name') || $input.attr('id') || 'field';
+            name = name.replace(/\[\]/g, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+            
+            // Locate existing or create new error sibling
+            let $err = $input.siblings(`.js-error-${name}`);
+            if ($err.length === 0) {
+                $err = $(`<p class="js-error-${name} text-rose-500 text-xs mt-1.5 font-medium hidden"></p>`);
+                
+                // If input has a relative wrapper (e.g. password toggle), insert after the wrapper
+                let $target = $input;
+                if ($input.parent().hasClass('relative')) {
+                    $target = $input.parent();
+                }
+                $target.after($err);
+            }
+            return $err;
+        }
+
+        // Helper to display error
+        function showError($input, message) {
+            const $err = getErrorElement($input);
+            $err.text(message).removeClass('hidden');
+            $input.addClass('border-rose-500 focus:border-rose-500 focus:ring-rose-500');
+            $input.removeClass('border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500');
+            
+            // Hide Laravel server-side error if present
+            $input.siblings('p.text-rose-500').not($err).addClass('hidden');
+            if ($input.parent().hasClass('relative')) {
+                $input.parent().siblings('p.text-rose-500').not($err).addClass('hidden');
+            }
+        }
+
+        // Helper to clear error
+        function clearError($input) {
+            const $err = getErrorElement($input);
+            $err.text('').addClass('hidden');
+            $input.removeClass('border-rose-500 focus:border-rose-500 focus:ring-rose-500');
+            $input.addClass('border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500');
+            
+            // Clear Laravel server-side error if present
+            $input.siblings('p.text-rose-500').not($err).addClass('hidden');
+            if ($input.parent().hasClass('relative')) {
+                $input.parent().siblings('p.text-rose-500').not($err).addClass('hidden');
+            }
+        }
+
+        // Main validation routine for a single field
+        function validateField(inputElement) {
+            const $input = $(inputElement);
+            
+            // Skip hidden, disabled, buttons, or CSRF/method token fields
+            if ($input.is(':hidden') || $input.is(':disabled') || 
+                $input.attr('type') === 'submit' || $input.attr('type') === 'button' ||
+                ['/token', '_token', '_method'].includes($input.attr('name'))) {
+                return true;
+            }
+
+            const type = $input.attr('type');
+            const name = $input.attr('name');
+            const value = $input.val();
+            const isRequired = $input.prop('required') || $input.attr('required') !== undefined;
+            const displayName = getFieldName($input);
+
+            // Required field check
+            if (isRequired) {
+                if (type === 'checkbox' || type === 'radio') {
+                    const checkedName = $input.attr('name');
+                    if (checkedName) {
+                        const $group = $(`input[name="${checkedName}"]`);
+                        if (!$group.is(':checked')) {
+                            showError($group.first(), `At least one ${displayName} is required.`);
+                            return false;
+                        } else {
+                            clearError($group.first());
+                            return true;
+                        }
+                    }
+                } else if (!value || value.trim() === '') {
+                    showError($input, `${displayName} is required.`);
+                    return false;
+                }
+            }
+
+            // Email format validation
+            if (type === 'email' && value && value.trim() !== '') {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(value.trim())) {
+                    showError($input, `Please enter a valid email address.`);
+                    return false;
+                }
+            }
+
+            // Password minimum length validation
+            if (type === 'password' && value) {
+                const minLen = parseInt($input.attr('minlength') || '8');
+                if (value.length < minLen) {
+                    showError($input, `Password must be at least ${minLen} characters.`);
+                    return false;
+                }
+            }
+
+            // Password confirmation matching validation
+            if (name === 'password_confirmation' || $input.attr('id') === 'password_confirmation') {
+                const $pwd = $input.closest('form').find('input[type="password"]').not($input).first();
+                if ($pwd.length > 0 && value !== $pwd.val()) {
+                    showError($input, `Passwords do not match.`);
+                    return false;
+                }
+            }
+
+            // Number validation
+            if (type === 'number' && value && value.trim() !== '') {
+                const num = parseFloat(value);
+                if (isNaN(num)) {
+                    showError($input, `Please enter a valid number.`);
+                    return false;
+                }
+                const min = $input.attr('min');
+                if (min !== undefined && num < parseFloat(min)) {
+                    showError($input, `Value must be at least ${min}.`);
+                    return false;
+                }
+                const max = $input.attr('max');
+                if (max !== undefined && num > parseFloat(max)) {
+                    showError($input, `Value must be at most ${max}.`);
+                    return false;
+                }
+            }
+
+            clearError($input);
+            return true;
+        }
+
+        // Validate fields inline on input, blur, or change
+        $forms.on('input blur change', 'input, select, textarea', function() {
+            validateField(this);
+        });
+
+        // Block form submission and scroll to error if form is invalid
+        $forms.on('submit', function(e) {
+            let isFormValid = true;
+            let $firstInvalid = null;
+
+            $(this).find('input, select, textarea').each(function() {
+                const isValid = validateField(this);
+                if (!isValid) {
+                    isFormValid = false;
+                    if (!$firstInvalid) {
+                        $firstInvalid = $(this);
+                    }
+                }
+            });
+
+            if (!isFormValid) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                
+                if ($firstInvalid) {
+                    $('html, body').animate({
+                        scrollTop: $firstInvalid.offset().top - 120
+                    }, 300);
+                    $firstInvalid.focus();
+                }
             }
         });
     });
@@ -401,6 +624,10 @@
         });
     });
 </script>
+
+<form action="{{ route('logout') }}" method="POST" id="logoutForm" class="hidden">
+    @csrf
+</form>
 
 <!-- TOAST -->
 <div class="toast-wrap" id="toastWrap"></div>

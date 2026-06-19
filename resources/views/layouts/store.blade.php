@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'sgcart — Modern Fashion')</title>
+    <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23c8a97e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>'>
     
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
@@ -27,14 +28,22 @@
 <div class="mobile-nav" id="mobileNav">
     <div class="mobile-nav-bg" onclick="closeMobileNav()"></div>
     <div class="mobile-nav-panel">
-        <a href="{{ route('store.home') }}" class="mobile-nav-link">Home</a>
-        <a href="{{ route('store.shop') }}" class="mobile-nav-link">Shop All</a>
+        <div class="mobile-nav-header">
+            <a class="logo" href="{{ route('store.home') }}" onclick="closeMobileNav()">
+                <i class="fa-solid fa-cart-shopping logo-icon"></i>sgcart<span>.</span>
+            </a>
+            <button class="mobile-nav-close" onclick="closeMobileNav()" aria-label="Close menu">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <a href="{{ route('store.home') }}" class="mobile-nav-link"><i class="fa-solid fa-house mr-3 text-stone" style="font-size:15px"></i>Home</a>
+        <a href="{{ route('store.shop') }}" class="mobile-nav-link"><i class="fa-solid fa-shop mr-3 text-stone" style="font-size:15px"></i>Shop All</a>
         @auth
-            <a href="{{ route('store.account') }}" class="mobile-nav-link">My Account</a>
+            <a href="{{ route('store.account') }}" class="mobile-nav-link"><i class="fa-regular fa-user mr-3 text-stone" style="font-size:15px"></i>My Account</a>
         @else
-            <a href="{{ route('store.login') }}" class="mobile-nav-link">Login</a>
+            <a href="{{ route('store.login') }}" class="mobile-nav-link"><i class="fa-solid fa-arrow-right-to-bracket mr-3 text-stone" style="font-size:15px"></i>Login</a>
         @endauth
-        <a href="{{ route('store.cart') }}" class="mobile-nav-link">Cart</a>
+        <a href="{{ route('store.cart') }}" class="mobile-nav-link"><i class="fa-solid fa-cart-shopping mr-3 text-stone" style="font-size:15px"></i>Cart</a>
     </div>
 </div>
 
@@ -44,7 +53,7 @@
         <button class="hamburger" id="hamburger" onclick="toggleMobileNav()">
             <span></span><span></span><span></span>
         </button>
-        <a class="logo" href="{{ route('store.home') }}">sgcart<span>.</span></a>
+        <a class="logo" href="{{ route('store.home') }}"><i class="fa-solid fa-cart-shopping logo-icon"></i>sgcart</a>
         
         <ul class="nav-links">
             <li><a href="{{ route('store.home') }}" class="{{ Route::is('store.home') ? 'active' : '' }}">Home</a></li>
@@ -57,13 +66,16 @@
         </ul>
         
         <div class="nav-actions">
-            <form action="{{ route('store.shop') }}" method="GET" class="nav-search-wrap">
-                <i class="fa-solid fa-magnifying-glass" style="color:var(--stone);font-size:13px"></i>
-                <input type="text" name="search" placeholder="Search products…" value="{{ request('search') }}"/>
-            </form>
+            <div class="nav-search-container">
+                <form action="{{ route('store.shop') }}" method="GET" class="nav-search-wrap" id="navSearchForm">
+                    <input type="text" name="search" id="navSearchInput" placeholder="Search products…" autocomplete="off" value="{{ request('search') }}"/>
+                    <button type="submit" class="nav-search-btn" aria-label="Search"><i class="fa-solid fa-magnifying-glass" style="font-size:12px"></i></button>
+                </form>
+                <div class="nav-search-dropdown" id="navSearchDropdown"></div>
+            </div>
             <a class="nav-btn" href="{{ route('store.account') }}" title="Account"><i class="fa-regular fa-user"></i></a>
             <a class="nav-btn" href="{{ route('store.cart') }}" title="Cart">
-                <i class="fa-solid fa-bag-shopping"></i>
+                <i class="fa-solid fa-cart-shopping"></i>
                 <span id="cartBadge">{{ count(session('cart', [])) }}</span>
             </a>
         </div>
@@ -79,7 +91,7 @@
 <footer>
     <div class="footer-inner">
         <div>
-            <div class="footer-logo">sgcart<span>.</span></div>
+            <div class="footer-logo"><i class="fa-solid fa-cart-shopping logo-icon"></i>sgcart<span>.</span></div>
             <p class="footer-desc">Curated collections of premium clothing, footwear, and minimal accessories designed for the modern lifestyle.</p>
         </div>
         <div>
@@ -111,7 +123,6 @@
     </div>
     <div class="footer-bottom">
         <p>&copy; {{ date('Y') }} SGCart E-commerce. All rights reserved.</p>
-        <p>Created with premium minimal designs.</p>
     </div>
 </footer>
 
@@ -228,7 +239,8 @@
     }
 
     // Global Confirmation Modal
-    function showConfirm(text, callback, title='Confirm Action') {
+    function showConfirm(text, callback, title='Confirm Action', type='default') {
+        const confirmBtnClass = type === 'danger' ? 'bg-[#dc2626] hover:bg-[#b91c1c] text-white' : 'btn-primary';
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn';
         modal.innerHTML = `
@@ -242,7 +254,7 @@
                 <p class="text-sm text-stone dark:text-slate-400 mb-6 leading-relaxed">${text}</p>
                 <div class="flex justify-end gap-3">
                     <button class="modal-cancel border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-colors bg-transparent">Cancel</button>
-                    <button class="modal-confirm btn btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer">Confirm</button>
+                    <button class="modal-confirm btn ${confirmBtnClass} px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer">Confirm</button>
                 </div>
             </div>
         `;
@@ -294,19 +306,21 @@
 
     // Global Form Submit Loader
     document.addEventListener('submit', (e) => {
+        if (e.defaultPrevented) return;
+
         const form = e.target;
         const submitBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
         submitBtns.forEach(btn => {
-            btn.disabled = true;
-            btn.style.pointerEvents = 'none';
-            btn.style.opacity = '0.8';
-            
             // Check if spinner is already added
             if (!btn.querySelector('.fa-spinner')) {
                 const spinner = document.createElement('i');
                 spinner.className = 'fa-solid fa-spinner fa-spin mr-2';
                 btn.insertBefore(spinner, btn.firstChild);
             }
+
+            btn.disabled = true;
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.8';
         });
     });
 
@@ -344,6 +358,140 @@
             }
         });
     });
+
+    // Live Search with Dropdown
+    const searchInput = document.getElementById('navSearchInput');
+    const searchDropdown = document.getElementById('navSearchDropdown');
+    const searchContainer = document.querySelector('.nav-search-container');
+    const searchButton = searchContainer ? searchContainer.querySelector('.nav-search-btn') : null;
+    let debounceTimer;
+
+    if (searchInput && searchDropdown) {
+        searchInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            const query = searchInput.value.trim();
+
+            if (query.length < 2) {
+                searchDropdown.classList.remove('show');
+                searchDropdown.innerHTML = '';
+                if (searchButton) {
+                    searchButton.innerHTML = '<i class="fa-solid fa-magnifying-glass" style="font-size:12px"></i>';
+                }
+                return;
+            }
+
+            // Show loading state and toggle button icon
+            searchDropdown.classList.add('show');
+            searchDropdown.innerHTML = `
+                <div class="search-loading">
+                    <i class="fa-solid fa-circle-notch fa-spin text-accent text-sm"></i>
+                    <span>Searching...</span>
+                </div>
+            `;
+            if (searchButton) {
+                searchButton.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-accent" style="font-size:12px"></i>';
+            }
+
+            debounceTimer = setTimeout(() => {
+                fetch(`/search-live?q=${encodeURIComponent(query)}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (searchButton) {
+                        searchButton.innerHTML = '<i class="fa-solid fa-magnifying-glass" style="font-size:12px"></i>';
+                    }
+                    if (data.length === 0) {
+                        searchDropdown.innerHTML = `
+                            <div class="search-no-results">
+                                <i class="fa-solid fa-magnifying-glass mb-1"></i>
+                                <span>No products found for "${query}"</span>
+                            </div>
+                        `;
+                    } else {
+                        let html = '<div class="search-results-list">';
+                        data.forEach(item => {
+                            html += `
+                                <a href="${item.url}" class="search-result-item">
+                                    <img src="${item.img}" alt="${item.name}">
+                                    <div class="search-result-info">
+                                        <span class="search-result-cat">${item.cat}</span>
+                                        <span class="search-result-name">${item.name}</span>
+                                        <span class="search-result-price">$${item.price.toFixed(2)}</span>
+                                    </div>
+                                </a>
+                            `;
+                        });
+                        html += '</div>';
+                        html += `
+                            <div class="search-result-footer">
+                                <a href="/shop?search=${encodeURIComponent(query)}">View All Results</a>
+                            </div>
+                        `;
+                        searchDropdown.innerHTML = html;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching search results:', error);
+                    if (searchButton) {
+                        searchButton.innerHTML = '<i class="fa-solid fa-magnifying-glass" style="font-size:12px"></i>';
+                    }
+                    searchDropdown.innerHTML = `
+                        <div class="search-no-results">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-500 mb-1"></i>
+                            <span>Error loading search results</span>
+                        </div>
+                    `;
+                });
+            }, 300);
+        });
+
+        // Hide when click outside
+        document.addEventListener('click', (e) => {
+            if (!searchContainer.contains(e.target)) {
+                searchDropdown.classList.remove('show');
+            }
+        });
+
+        // Show when input focused and has enough text
+        searchInput.addEventListener('focus', () => {
+            if (searchInput.value.trim().length >= 2) {
+                searchDropdown.classList.add('show');
+            }
+        });
+
+        // Keyboard navigation support
+        searchInput.addEventListener('keydown', (e) => {
+            const items = searchDropdown.querySelectorAll('.search-result-item');
+            let activeIndex = Array.from(items).findIndex(item => item.classList.contains('bg-[#f0ece7]'));
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (items.length === 0) return;
+                if (activeIndex > -1) items[activeIndex].classList.remove('bg-[#f0ece7]');
+                activeIndex = (activeIndex + 1) % items.length;
+                items[activeIndex].classList.add('bg-[#f0ece7]');
+                items[activeIndex].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (items.length === 0) return;
+                if (activeIndex > -1) items[activeIndex].classList.remove('bg-[#f0ece7]');
+                activeIndex = (activeIndex - 1 + items.length) % items.length;
+                items[activeIndex].classList.add('bg-[#f0ece7]');
+                items[activeIndex].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'Enter') {
+                if (activeIndex > -1 && items[activeIndex]) {
+                    e.preventDefault();
+                    items[activeIndex].click();
+                }
+            } else if (e.key === 'Escape') {
+                searchDropdown.classList.remove('show');
+                searchInput.blur();
+            }
+        });
+    }
 </script>
 @yield('scripts')
 </body>

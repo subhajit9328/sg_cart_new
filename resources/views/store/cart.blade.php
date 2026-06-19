@@ -134,7 +134,7 @@
         const url = "{{ route('store.cart.remove', ':key') }}".replace(':key', encodeURIComponent(key));
         showConfirm('Are you sure you want to remove this item from your shopping bag?', () => {
             window.location.href = url;
-        });
+        }, 'Remove Item', 'danger');
     }
 </script>
 @endsection

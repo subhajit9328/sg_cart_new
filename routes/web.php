@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\RoleController;
 // Storefront Frontend Routes
 Route::get('/', [StoreController::class, 'home'])->name('store.home');
 Route::get('/shop', [StoreController::class, 'shop'])->name('store.shop');
+Route::get('/search-live', [StoreController::class, 'searchLive'])->name('store.search-live');
 Route::get('/product/{id}', [StoreController::class, 'product'])->name('store.product');
 
 Route::get('/cart', [StoreController::class, 'cart'])->name('store.cart');

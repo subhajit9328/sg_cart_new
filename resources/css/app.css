@@ -42,9 +42,18 @@ body.storefront {
     @apply max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between gap-5;
 }
 .logo {
-    @apply font-display text-[22px] font-extrabold tracking-[-0.5px] text-ink cursor-pointer no-underline;
+    @apply font-display text-[22px] font-extrabold tracking-[-0.5px] text-ink cursor-pointer no-underline inline-flex items-center gap-1.5 transition-opacity duration-200 hover:opacity-90;
+    & .logo-icon {
+        @apply text-accent transition-all duration-300 ease-out;
+        font-size: 16px;
+    }
     & span {
         @apply text-accent;
+    }
+    &:hover {
+        & .logo-icon {
+            transform: translateY(-1.5px) rotate(-8deg);
+        }
     }
 }
 .nav-links {
@@ -78,10 +87,72 @@ body.storefront {
 }
 
 .nav-search-wrap {
-    @apply flex items-center bg-[#f0ece7] rounded-[10px] px-3 h-9 gap-2;
+    @apply flex items-center bg-[#f0ece7] rounded-[10px] pl-3 pr-1 h-9 gap-2;
     & input {
         @apply border-none bg-transparent outline-none text-[13px] font-sans text-ink w-40 placeholder:text-stone;
     }
+}
+.nav-search-btn {
+    @apply w-7 h-7 rounded-lg flex items-center justify-center text-accent hover:text-[#b8966c] hover:bg-silk/60 cursor-pointer transition-colors border-none bg-transparent outline-none;
+}
+
+/* LIVE SEARCH DROPDOWN */
+.nav-search-container {
+    @apply relative;
+}
+
+.nav-search-dropdown {
+    @apply absolute top-[calc(100%+8px)] right-0 w-80 bg-silk border border-border rounded-[12px] shadow-[0_10px_30px_rgba(0,0,0,0.08)] z-50 overflow-hidden hidden;
+}
+
+.nav-search-dropdown.show {
+    @apply block;
+}
+
+.search-results-list {
+    @apply flex flex-col p-2 max-h-[380px] overflow-y-auto;
+}
+
+.search-result-item {
+    @apply flex items-center gap-3 p-2 rounded-[8px] no-underline transition-all hover:bg-[#f0ece7];
+}
+
+.search-result-item img {
+    @apply w-12 h-12 object-cover rounded-[6px] border border-border;
+}
+
+.search-result-info {
+    @apply flex flex-col flex-1 min-w-0;
+}
+
+.search-result-name {
+    @apply text-[13px] font-semibold text-ink truncate mb-0.5;
+}
+
+.search-result-cat {
+    @apply text-[10px] text-stone uppercase tracking-[0.5px] font-semibold mb-0.5;
+}
+
+.search-result-price {
+    @apply text-[12px] font-bold text-accent;
+}
+
+.search-result-footer {
+    @apply border-t border-border p-3 text-center bg-[#fbfaf8];
+    & a {
+        @apply text-[11px] font-bold uppercase tracking-[1px] text-stone hover:text-ink no-underline transition-colors;
+    }
+}
+
+.search-no-results {
+    @apply p-6 text-center text-[13px] text-stone flex flex-col items-center gap-2;
+    & i {
+        @apply text-lg text-stone/50;
+    }
+}
+
+.search-loading {
+    @apply p-6 text-center text-[13px] text-stone flex items-center justify-center gap-2;
 }
 .nav-btn {
     @apply w-10 h-10 flex items-center justify-center rounded-[10px] cursor-pointer text-stone transition-all border-none bg-transparent text-base relative no-underline hover:bg-[#f0ece7] hover:text-ink;
@@ -124,11 +195,18 @@ body.storefront {
     @apply absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300;
 }
 .mobile-nav-panel {
-    @apply absolute top-0 right-0 bottom-0 w-[280px] bg-silk translate-x-full pt-20 px-7 pb-7 flex flex-col gap-1;
+    @apply absolute top-0 left-0 bottom-0 w-[280px] bg-silk -translate-x-full pt-6 px-6 pb-6 flex flex-col gap-1;
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.15);
+}
+.mobile-nav-header {
+    @apply flex items-center justify-between mb-6 pb-4 border-b border-border;
+}
+.mobile-nav-close {
+    @apply text-stone hover:text-ink text-xl cursor-pointer border-none bg-transparent outline-none p-1 flex items-center justify-center;
 }
 .mobile-nav-link {
-    @apply font-display text-2xl font-bold py-2.5 text-ink cursor-pointer border-b border-border transition-colors no-underline hover:text-accent;
+    @apply font-display text-lg font-bold py-3.5 text-ink cursor-pointer border-b border-border/60 transition-colors no-underline hover:text-accent flex items-center;
 }
 
 /* BUTTONS */
@@ -241,12 +319,12 @@ body.storefront {
 
 /* SCROLL TOP */
 .scroll-top {
-    @apply fixed bottom-6 right-6 w-11 h-11 bg-ink text-white border-none rounded-full flex items-center justify-center cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.15)] z-40 opacity-0 translate-y-2.5 transition-all duration-300;
+    @apply fixed bottom-6 right-6 w-11 h-11 bg-accent text-white border-none rounded-full flex items-center justify-center cursor-pointer shadow-[0_4px_20px_rgba(0,0,0,0.15)] z-40 opacity-0 translate-y-2.5 transition-all duration-300;
     &.show {
         @apply opacity-100 translate-y-0;
     }
     &:hover {
-        @apply bg-[#1f1f1f] -translate-y-0.5;
+        @apply bg-[#b8966c] -translate-y-0.5;
     }
 }
 
@@ -285,7 +363,11 @@ footer {
     @apply grid grid-cols-[2fr_1fr_1fr_2fr] gap-12 max-w-[1400px] mx-auto px-6;
 }
 .footer-logo {
-    @apply font-display text-2xl font-extrabold text-white mb-4;
+    @apply font-display text-2xl font-extrabold text-white mb-4 inline-flex items-center gap-1.5;
+    & .logo-icon {
+        @apply text-accent;
+        font-size: 18px;
+    }
     & span {
         @apply text-accent;
     }
@@ -321,6 +403,12 @@ footer {
     }
 }
 @media (max-width: 768px) {
+    .logo {
+        position: static !important;
+        transform: none !important;
+        flex: 1 !important;
+        margin-left: 0.25rem !important;
+    }
     .hamburger {
         @apply flex;
     }
@@ -454,7 +542,20 @@ footer {
     @apply grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-[28px] items-start;
 }
 .sidebar {
-    @apply bg-white border border-border rounded-2xl p-6 sticky top-[80px] hidden lg:block;
+    @apply bg-white border border-border rounded-2xl p-6 sticky top-[80px] block;
+}
+.sidebar-overlay {
+    @apply fixed inset-0 bg-[#0a0a0a]/40 hidden transition-opacity duration-300;
+    z-index: 999 !important;
+}
+.sidebar-overlay.open {
+    @apply block;
+}
+.sidebar-header {
+    display: none !important;
+}
+.sidebar-close-btn {
+    @apply text-stone hover:text-ink text-lg cursor-pointer border-none bg-transparent outline-none p-1 flex items-center justify-center;
 }
 .sidebar-section {
     @apply border-b border-border pb-5 mb-5 last:border-none last:pb-0 last:mb-0;
@@ -463,36 +564,143 @@ footer {
     @apply font-display text-[13px] font-bold tracking-[0.8px] uppercase mb-3.5;
 }
 .cb-label {
-    @apply flex items-center gap-2.5 cursor-pointer py-1.25 text-[13px] text-stone hover:text-ink transition-colors;
+    @apply flex items-center justify-between cursor-pointer py-2 text-[13px] text-stone hover:text-ink transition-colors w-full;
+}
+.custom-cb {
+    @apply relative flex items-center justify-center w-[18px] h-[18px] mr-2.5;
     & input {
-        @apply accent-ink w-[15px] h-[15px];
+        @apply absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10;
+        &:checked + .cb-box {
+            @apply bg-accent border-accent;
+            & i {
+                @apply opacity-100;
+            }
+        }
     }
 }
+.cb-box {
+    @apply w-[18px] h-[18px] border border-border rounded flex items-center justify-center transition-colors bg-white;
+}
+.cb-text {
+    @apply font-medium transition-colors flex-grow text-left;
+}
+.cb-count {
+    @apply text-[10px] text-stone bg-[#f0ece7] px-2 py-0.5 rounded-full font-bold ml-2;
+}
+
+input[type="range"].price-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    @apply w-full bg-[#f0ece7] h-1.5 rounded-lg outline-none cursor-pointer;
+}
+
+input[type="range"].price-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    @apply w-4 h-4 bg-accent rounded-full border border-white shadow-[0_2px_6px_rgba(0,0,0,0.15)] transition-transform duration-150;
+    &:hover {
+        @apply scale-110 bg-[#b8966c];
+    }
+}
+
+input[type="range"].price-slider::-moz-range-thumb {
+    @apply w-4 h-4 bg-accent rounded-full border border-white shadow-[0_2px_6px_rgba(0,0,0,0.15)] transition-transform duration-150 border-none;
+    &:hover {
+        @apply scale-110 bg-[#b8966c];
+    }
+}
+
 .stars-btn {
-    @apply flex items-center gap-1.5 py-1.5 cursor-pointer text-xs text-stone hover:text-ink hover:font-bold transition-all border-none bg-transparent w-full text-left;
+    @apply flex items-center justify-between py-2 px-3 border border-border rounded-xl cursor-pointer text-xs text-stone hover:text-ink hover:border-stone hover:bg-silk transition-all bg-white mb-2 last:mb-0 w-full;
     &.active {
-        @apply text-ink font-semibold;
+        @apply border-accent bg-[#fbfaf8] text-ink font-semibold;
     }
-    & i {
-        @apply text-[#fcd34d];
-    }
+}
+.stars-wrap {
+    @apply flex items-center gap-0.5;
+}
+.stars-text {
+    @apply font-medium text-right;
 }
 .filter-bar {
     @apply bg-white border border-border rounded-2xl px-6 py-4 mb-6 flex flex-wrap gap-4 items-center justify-between;
 }
+.filter-actions {
+    @apply flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto;
+}
+.filter-controls {
+    @apply flex items-center gap-2 w-full md:w-auto justify-between md:justify-start;
+}
 .search-bar {
-    @apply flex items-center bg-silk rounded-xl px-3.5 h-[38px] gap-2 border border-border w-[280px];
+    @apply flex items-center bg-silk rounded-xl pl-3.5 pr-1 h-[38px] gap-2 border border-border w-[280px];
     & input {
         @apply border-none bg-transparent outline-none text-[13px] font-sans text-ink w-full;
     }
 }
+.search-submit-btn {
+    @apply w-8 h-8 rounded-lg flex items-center justify-center text-accent hover:text-[#b8966c] hover:bg-[#f0ece7] cursor-pointer transition-colors border-none bg-transparent outline-none;
+}
 .filter-select {
     @apply px-3.5 py-2 border border-border rounded-xl text-xs font-semibold font-sans text-ink bg-white outline-none cursor-pointer;
+}
+.filter-toggle-btn {
+    display: none !important;
+}
+.filter-indicator-dot {
+    @apply ml-1.5 w-2 h-2 bg-accent rounded-full;
 }
 
 @media(max-width: 1024px) {
     .shop-layout {
         @apply grid-cols-1;
+    }
+    .sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 300px !important;
+        height: 100% !important;
+        z-index: 1000 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: 4px 0 30px rgba(0,0,0,0.15) !important;
+        transition: transform 0.3s ease-in-out !important;
+        transform: translateX(-100%) !important;
+        padding: 2rem !important;
+        overflow-y: auto !important;
+        background-color: #ffffff !important;
+        &.open {
+            transform: translateX(0) !important;
+        }
+    }
+    .sidebar-header {
+        @apply flex items-center justify-between border-b border-border pb-4 mb-6;
+        display: flex !important;
+        & h3 {
+            @apply font-display text-base font-bold text-ink;
+        }
+    }
+    .filter-toggle-btn {
+        display: inline-flex !important;
+    }
+}
+
+@media(max-width: 768px) {
+    .filter-bar {
+        @apply px-4 py-4;
+    }
+    .filter-actions {
+        @apply w-full;
+    }
+    .search-bar {
+        @apply w-full;
+    }
+    .filter-controls {
+        @apply w-full justify-between;
+    }
+    .filter-select, .filter-toggle-btn {
+        @apply flex-grow text-center justify-center;
     }
 }
 
@@ -626,9 +834,32 @@ body.admin-body {
     }
 }
 
+/* Admin Logo */
+.logo-admin {
+    @apply font-display text-[22px] font-extrabold tracking-[-0.5px] text-white cursor-pointer no-underline inline-flex items-center gap-1.5 transition-opacity duration-200 hover:opacity-90;
+    & .logo-icon {
+        @apply text-blue-500 transition-all duration-300 ease-out;
+        font-size: 16px;
+    }
+    & .brand-text {
+        @apply text-white;
+        & span {
+            @apply text-blue-500;
+        }
+    }
+    &:hover {
+        & .logo-icon {
+            transform: translateY(-1.5px) rotate(-8deg);
+        }
+    }
+}
+
 /* Collapsed (icon-only) sidebar */
 #sidebar.icon-only {
     width: 5rem;
+    & .logo-container-admin {
+        @apply justify-center px-0;
+    }
     & .sidebar-text {
         @apply hidden;
     }

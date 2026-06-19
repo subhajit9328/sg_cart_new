@@ -421,4 +421,31 @@ class StoreController extends Controller
 
         return redirect()->back()->with('success', $msg);
     }
+
+    /**
+     * Live search API.
+     */
+    public function searchLive(Request $request)
+    {
+        $query = strtolower($request->input('q', ''));
+        if (empty($query)) {
+            return response()->json([]);
+        }
+
+        $products = collect(self::getProducts());
+        $results = $products->filter(fn($p) => 
+            str_contains(strtolower($p['name']), $query) || 
+            str_contains(strtolower($p['desc']), $query) ||
+            str_contains(strtolower($p['cat']), $query)
+        )->map(fn($p) => [
+            'id' => $p['id'],
+            'name' => $p['name'],
+            'price' => $p['price'],
+            'cat' => $p['cat'],
+            'img' => $p['img'],
+            'url' => route('store.product', $p['id'])
+        ])->values()->take(5);
+
+        return response()->json($results);
+    }
 }
