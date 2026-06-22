@@ -40,20 +40,13 @@
                 <p class="text-xs font-bold text-accent uppercase tracking-widest mb-1.5">{{ $product['cat'] }} Capsule</p>
                 <h1 class="font-display font-extrabold text-3xl text-slate-900 leading-tight mb-2">{{ $product['name'] }}</h1>
                 
-                <!-- Ratings -->
-                <div class="flex items-center gap-2 mb-5">
-                    <span class="text-xs text-amber-500 font-bold flex items-center gap-1">
-                        <i class="fa-solid fa-star text-[11px]"></i> {{ $product['rating'] }}
-                    </span>
-                    <span class="text-slate-300">|</span>
-                    <span class="text-xs text-slate-400 font-medium">32 Customer Reviews</span>
-                </div>
+
 
                 <!-- Pricing -->
                 <div class="flex items-end gap-3 mb-5 pb-5 border-b border-slate-100">
-                    <span class="font-display font-extrabold text-2xl text-slate-900">${{ number_format($product['price'], 2) }}</span>
+                    <span class="font-display font-extrabold text-2xl text-slate-900">₹{{ number_format($product['price'], 2) }}</span>
                     @if($product['old'])
-                        <span class="text-lg text-slate-400 line-through">${{ number_format($product['old'], 2) }}</span>
+                        <span class="text-lg text-slate-400 line-through">₹{{ number_format($product['old'], 2) }}</span>
                         <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Save {{ round((1 - $product['price'] / $product['old']) * 100) }}%</span>
                     @endif
                 </div>
@@ -125,14 +118,49 @@
                 <!-- Product specs tabs -->
                 <div class="mt-6 pt-5 border-t border-slate-100">
                     <div class="flex gap-4 border-b border-slate-100 pb-2 mb-3">
-                        <button type="button" class="tab-btn active" onclick="setSpecTab('details')">Details &amp; Care</button>
+                        <button type="button" class="tab-btn active" onclick="setSpecTab('description')">Description</button>
+                        @if(!empty($product['sku']) || !empty($product['manufacturer']) || !empty($product['weight']) || !empty($product['dimensions']))
+                            <button type="button" class="tab-btn" onclick="setSpecTab('specs')">Specifications</button>
+                        @endif
                         <button type="button" class="tab-btn" onclick="setSpecTab('shipping')">Shipping</button>
                     </div>
-                    <div id="spec-details" class="spec-content">
-                        <p class="text-xs text-slate-400 leading-relaxed">Made from 100% organic cotton and eco-conscious fibers. Recommended to wash on a cold cycle and tumble dry low. Imported under fair-trade labels.</p>
+                    <div id="spec-description" class="spec-content">
+                        <p class="text-xs text-slate-500 leading-relaxed">{!! nl2br(e($product['description'])) !!}</p>
                     </div>
+                    @if(!empty($product['sku']) || !empty($product['manufacturer']) || !empty($product['weight']) || !empty($product['dimensions']))
+                        <div id="spec-specs" class="spec-content" style="display:none">
+                            <table class="w-full text-xs text-left text-slate-500">
+                                <tbody>
+                                    @if(!empty($product['sku']))
+                                        <tr class="border-b border-slate-100/50">
+                                            <td class="py-2 font-bold text-slate-400 w-1/3">SKU</td>
+                                            <td class="py-2 font-mono text-slate-700">{{ $product['sku'] }}</td>
+                                        </tr>
+                                    @endif
+                                    @if(!empty($product['manufacturer']))
+                                        <tr class="border-b border-slate-100/50">
+                                            <td class="py-2 font-bold text-slate-400 w-1/3">Manufacturer</td>
+                                            <td class="py-2 text-slate-700">{{ $product['manufacturer'] }}</td>
+                                        </tr>
+                                    @endif
+                                    @if(!empty($product['weight']))
+                                        <tr class="border-b border-slate-100/50">
+                                            <td class="py-2 font-bold text-slate-400 w-1/3">Weight</td>
+                                            <td class="py-2 text-slate-700">{{ $product['weight'] }}</td>
+                                        </tr>
+                                    @endif
+                                    @if(!empty($product['dimensions']))
+                                        <tr class="border-b border-slate-100/50">
+                                            <td class="py-2 font-bold text-slate-400 w-1/3">Dimensions</td>
+                                            <td class="py-2 text-slate-700">{{ $product['dimensions'] }}</td>
+                                        </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
                     <div id="spec-shipping" class="spec-content" style="display:none">
-                        <p class="text-xs text-slate-400 leading-relaxed">Standard shipping takes between 3 to 7 business days depending on location. Tracking information is sent automatically via email once shipped.</p>
+                        <p class="text-xs text-slate-500 leading-relaxed">Standard shipping takes between 3 to 7 business days depending on location. Tracking information is sent automatically via email once shipped.</p>
                     </div>
                 </div>
             </form>
@@ -161,7 +189,7 @@
                         <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $rel['cat'] }}</p>
                         <h3 class="font-display font-bold text-sm mt-1 text-slate-800 line-clamp-1">{{ $rel['name'] }}</h3>
                         <div class="flex items-center gap-1.5 mt-2">
-                            <span class="font-bold text-sm text-slate-900">${{ number_format($rel['price'], 2) }}</span>
+                            <span class="font-bold text-sm text-slate-900">₹{{ number_format($rel['price'], 2) }}</span>
                         </div>
                     </div>
                 </div>

@@ -10,7 +10,12 @@
     </a>
     <div>
         <h1 class="font-display text-2xl font-bold">Add Role</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Admin / Access Control / Roles / Add</p>
+        <x-breadcrumbs :items="[
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'Access Control'],
+            ['label' => 'Roles', 'url' => route('admin.roles.index')],
+            ['label' => 'Add']
+        ]" />
     </div>
 </div>
 
@@ -24,7 +29,7 @@
         
         <!-- Role Name Field -->
         <div>
-            <label for="name" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Role Name</label>
+            <label for="name" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Role Name <span class="text-rose-600">*</span></label>
             <input type="text" name="name" id="name" value="{{ old('name') }}" required
                 class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('name') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
                 placeholder="Manager">

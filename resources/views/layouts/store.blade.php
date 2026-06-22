@@ -97,10 +97,12 @@
         <div>
             <h4 class="footer-title">Shop</h4>
             <ul class="footer-links">
-                <li><a href="{{ route('store.shop', ['category' => 'Women']) }}">Women</a></li>
-                <li><a href="{{ route('store.shop', ['category' => 'Men']) }}">Men</a></li>
-                <li><a href="{{ route('store.shop', ['category' => 'Accessories']) }}">Accessories</a></li>
-                <li><a href="{{ route('store.shop', ['category' => 'Footwear']) }}">Footwear</a></li>
+                @php
+                    $footerCategories = collect(App\Http\Controllers\StoreController::getProducts())->pluck('cat')->unique()->values()->take(4);
+                @endphp
+                @foreach($footerCategories as $cat)
+                    <li><a href="{{ route('store.shop', ['category' => $cat]) }}">{{ $cat }}</a></li>
+                @endforeach
             </ul>
         </div>
         <div>
@@ -419,7 +421,7 @@
                                     <div class="search-result-info">
                                         <span class="search-result-cat">${item.cat}</span>
                                         <span class="search-result-name">${item.name}</span>
-                                        <span class="search-result-price">$${item.price.toFixed(2)}</span>
+                                        <span class="search-result-price">₹${parseFloat(item.price).toFixed(2)}</span>
                                     </div>
                                 </a>
                             `;

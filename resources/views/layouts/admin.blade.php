@@ -15,8 +15,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+    <!-- Select2 Searchable Dropdown Styles -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     <!-- Tailwind compiled by Vite -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/css/admin.css', 'resources/js/app.js'])
 
     <script>
         // Check dark mode preference on load (default to light)
@@ -36,7 +39,7 @@
         <div class="h-16 flex items-center px-5 border-b border-white/10 flex-shrink-0 logo-container-admin">
             <a class="logo-admin" href="{{ route('admin.dashboard') }}">
                 <i class="fa-solid fa-cart-shopping logo-icon"></i>
-                <span class="brand-text">sgcart<span>.</span></span>
+                <span class="brand-text">sgcart</span>
             </a>
         </div>
 
@@ -137,7 +140,7 @@
         </header>
 
         <!-- ============ Content ============ -->
-        <main class="pt-24 px-4 lg:px-6 pb-10 w-full" style="padding-top: 96px;">
+        <main class="pt-24 px-4 lg:px-6 pb-10 w-full">
             @yield('content')
         </main>
     </div>
@@ -145,6 +148,7 @@
 
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     // Theme toggle
     const themeToggleBtn = document.getElementById('themeToggleBtn');
@@ -375,18 +379,20 @@
     }
 
     // Flash Toast triggers
-    @if(session('success'))
-        showToast("{{ session('success') }}", 'success');
-    @endif
-    @if(session('error'))
-        showToast("{{ session('error') }}", 'error');
-    @endif
-    @if(session('warning'))
-        showToast("{{ session('warning') }}", 'warning');
-    @endif
-    @if(session('info'))
-        showToast("{{ session('info') }}", 'info');
-    @endif
+    $(document).ready(function() {
+        @if(session('success'))
+            showToast("{{ session('success') }}", 'success');
+        @endif
+        @if(session('error'))
+            showToast("{{ session('error') }}", 'error');
+        @endif
+        @if(session('warning'))
+            showToast("{{ session('warning') }}", 'warning');
+        @endif
+        @if(session('info'))
+            showToast("{{ session('info') }}", 'info');
+        @endif
+    });
 
     // Global Form Submit Loader
     document.addEventListener('submit', (e) => {
@@ -659,5 +665,6 @@
 
 <!-- TOAST -->
 <div class="toast-wrap" id="toastWrap"></div>
+@stack('scripts')
 </body>
 </html>

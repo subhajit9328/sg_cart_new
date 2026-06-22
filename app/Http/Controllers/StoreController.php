@@ -8,23 +8,58 @@ use Illuminate\Support\Str;
 class StoreController extends Controller
 {
     /**
-     * Get static products database.
+     * Get products dynamically from database.
      */
     public static function getProducts()
     {
-        return [
-            ['id' => 2, 'name' => 'Slim Stretch Chinos', 'cat' => 'Men', 'price' => 59.99, 'old' => null, 'rating' => 4.5, 'badge' => '', 'sizes' => ['28', '30', '32', '34', '36'], 'colors' => ['#374151', '#92400e', '#1f2937'], 'desc' => 'Modern slim-fit chinos made from stretch-cotton blend. A wardrobe essential that transitions from desk to dinner.', 'img' => 'https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=600&auto=format&fit=crop&q=80', 'images' => ['https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600&auto=format&fit=crop&q=80']],
-            ['id' => 3, 'name' => '18K Gold Hoops', 'cat' => 'Accessories', 'price' => 29.99, 'old' => 39.99, 'rating' => 4.9, 'badge' => 'Hot', 'sizes' => [], 'colors' => ['#fcd34d', '#d1d5db'], 'desc' => 'Elegant 18K gold-plated hoop earrings that elevate any outfit — from casual brunch to formal evening.', 'img' => 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop&q=80', 'images' => ['https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1630019852942-f89202989a59?w=600&auto=format&fit=crop&q=80']],
-            ['id' => 4, 'name' => 'Leather Runner Sneakers', 'cat' => 'Footwear', 'price' => 89.99, 'old' => 119.99, 'rating' => 4.7, 'badge' => 'New', 'sizes' => ['6', '7', '8', '9', '10', '11'], 'colors' => ['#f9fafb', '#374151', '#7c3aed'], 'desc' => 'Premium genuine leather sneakers built for daily wear. Clean silhouette, cushioned sole, lasting comfort.', 'img' => 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=80', 'images' => ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=600&auto=format&fit=crop&q=80']],
-            ['id' => 5, 'name' => 'Floral Midi Dress', 'cat' => 'Women', 'price' => 74.99, 'old' => null, 'rating' => 4.6, 'badge' => 'New', 'sizes' => ['XS', 'S', 'M', 'L'], 'colors' => ['#fde68a', '#fecdd3', '#a7f3d0'], 'desc' => 'A garden-ready midi dress with an easy-to-wear silhouette. Perfect for brunches, weddings, and summer events.', 'img' => 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&auto=format&fit=crop&q=80', 'images' => ['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&auto=format&fit=crop&q=80']],
-            ['id' => 6, 'name' => 'Swiss Minimalist Watch', 'cat' => 'Accessories', 'price' => 129.99, 'old' => 159.99, 'rating' => 4.9, 'badge' => 'Hot', 'sizes' => [], 'colors' => ['#f9fafb', '#374151', '#92400e'], 'desc' => 'Swiss-inspired timepiece with sapphire crystal glass and genuine leather strap. The definition of understated luxury.', 'img' => 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80', 'images' => ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=600&auto=format&fit=crop&q=80']],
-            ['id' => 7, 'name' => 'Oxford Button-Down', 'cat' => 'Men', 'price' => 54.99, 'old' => null, 'rating' => 4.4, 'badge' => '', 'sizes' => ['S', 'M', 'L', 'XL', 'XXL'], 'colors' => ['#dbeafe', '#f9fafb', '#fef3c7'], 'desc' => 'A versatile Oxford button-down shirt crafted from 100% Egyptian cotton. The cornerstone of a smart wardrobe.', 'img' => 'https://images.unsplash.com/photo-1598032895397-b9472444bf93?w=600&auto=format&fit=crop&q=80', 'images' => ['https://images.unsplash.com/photo-1598032895397-b9472444bf93?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1621072156002-e2fcc10d9714?w=600&auto=format&fit=crop&q=80']],
-            ['id' => 8, 'name' => 'Full-Grain Crossbody', 'cat' => 'Accessories', 'price' => 94.99, 'old' => 129.99, 'rating' => 4.8, 'badge' => 'Sale', 'sizes' => [], 'colors' => ['#92400e', '#374151', '#f9fafb'], 'desc' => 'Handcrafted full-grain leather crossbody bag with adjustable strap and structured interior pockets.', 'img' => 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&auto=format&fit=crop&q=80', 'images' => ['https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop&q=80']],
-            ['id' => 9, 'name' => 'Rose Facial Serum', 'cat' => 'Beauty', 'price' => 44.99, 'old' => 59.99, 'rating' => 4.7, 'badge' => 'New', 'sizes' => ['30ml', '50ml'], 'colors' => [], 'desc' => 'Luxurious rose-infused serum with hyaluronic acid for deep hydration, plumpness, and radiant glow.', 'img' => 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&auto=format&fit=crop&q=80', 'images' => ['https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?w=600&auto=format&fit=crop&q=80']],
-            ['id' => 10, 'name' => 'High-Rise Yoga Leggings', 'cat' => 'Women', 'price' => 39.99, 'old' => null, 'rating' => 4.5, 'badge' => '', 'sizes' => ['XS', 'S', 'M', 'L', 'XL'], 'colors' => ['#1f2937', '#7c3aed', '#059669'], 'desc' => '4-way stretch, high-performance leggings with moisture-wicking fabric. Sculpting fit, squat-proof confidence.', 'img' => 'https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=600&auto=format&fit=crop&q=80', 'images' => ['https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1506152983158-b4a74a01c721?w=600&auto=format&fit=crop&q=80']],
-            ['id' => 11, 'name' => 'Suede Chelsea Boots', 'cat' => 'Footwear', 'price' => 109.99, 'old' => 139.99, 'rating' => 4.6, 'badge' => 'Sale', 'sizes' => ['6', '7', '8', '9', '10'], 'colors' => ['#92400e', '#1f2937'], 'desc' => 'Premium suede Chelsea boots with elastic side panels for easy wear. A style investment that works every season.', 'img' => 'https://images.unsplash.com/photo-1595341888016-a392ef81b7de?w=600&auto=format&fit=crop&q=80', 'images' => ['https://images.unsplash.com/photo-1595341888016-a392ef81b7de?w=600&auto=format&fit=crop&q=80', 'https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=600&auto=format&fit=crop&q=80']],
-            ['id' => 12, 'name' => 'Silk Pocket Squares', 'cat' => 'Men', 'price' => 24.99, 'old' => null, 'rating' => 4.3, 'badge' => '', 'sizes' => [], 'colors' => ['#7c3aed', '#ef4444', '#1f2937'], 'desc' => 'A curated set of 3 pure silk pocket squares to elevate any formal or semi-formal look instantly.', 'img' => 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&auto=format&fit=crop&q=80', 'images' => ['https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&auto=format&fit=crop&q=80']],
-        ];
+        return \App\Models\Product::with(['category.parent'])->where('status', 'active')->get()->map(function ($p) {
+            $catName = 'Fashion';
+            if ($p->category) {
+                $topParent = $p->category;
+                while ($topParent->parent) {
+                    $topParent = $topParent->parent;
+                }
+                $name = $topParent->name;
+                if (str_contains($name, 'Men')) $catName = 'Men';
+                elseif (str_contains($name, 'Women')) $catName = 'Women';
+                elseif (str_contains($name, 'Kids')) $catName = 'Kids';
+                elseif (str_contains($name, 'Footwear')) $catName = 'Footwear';
+                elseif (str_contains($name, 'Accessory') || str_contains($name, 'Accessories')) $catName = 'Accessories';
+            }
+
+            // Determine sizes and colors dynamically from database column values if present
+            $sizes = [];
+            if (isset($p->sizes) && !empty($p->sizes)) {
+                $sizes = is_array($p->sizes) ? $p->sizes : array_filter(array_map('trim', explode(',', $p->sizes)));
+            }
+
+            $colors = [];
+            if (isset($p->colors) && !empty($p->colors)) {
+                $colors = is_array($p->colors) ? $p->colors : array_filter(array_map('trim', explode(',', $p->colors)));
+            }
+
+            return [
+                'id' => $p->id,
+                'name' => $p->name,
+                'cat' => $catName,
+                'price' => $p->sale_price ?? $p->price,
+                'old' => $p->sale_price ? $p->price : null,
+                'rating' => 4.5,
+                'badge' => $p->sale_price ? 'Sale' : '',
+                'sizes' => $sizes,
+                'colors' => $colors,
+                'desc' => $p->short_description ?? $p->description ?? 'No description available.',
+                'description' => $p->description ?? 'No detailed description available.',
+                'weight' => $p->weight,
+                'dimensions' => $p->dimensions,
+                'sku' => $p->sku,
+                'manufacturer' => $p->manufacturer ? $p->manufacturer->name : null,
+                'img' => $p->image ? \Illuminate\Support\Facades\Storage::url($p->image) : 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&auto=format&fit=crop&q=80',
+                'images' => [
+                    $p->image ? \Illuminate\Support\Facades\Storage::url($p->image) : 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&auto=format&fit=crop&q=80'
+                ]
+            ];
+        })->toArray();
     }
 
     /**
@@ -33,7 +68,10 @@ class StoreController extends Controller
     public function home()
     {
         $products = collect(self::getProducts())->take(4);
-        $categories = ['Women', 'Men', 'Accessories', 'Footwear', 'Beauty'];
+        $categories = collect(self::getProducts())->pluck('cat')->unique()->values()->toArray();
+        if (empty($categories)) {
+            $categories = ['Women', 'Men', 'Kids', 'Accessories', 'Footwear', 'Beauty'];
+        }
         return view('welcome', compact('products', 'categories'));
     }
 
@@ -48,12 +86,6 @@ class StoreController extends Controller
         if ($request->filled('category')) {
             $categories = (array) $request->input('category');
             $products = $products->filter(fn($p) => in_array($p['cat'], $categories));
-        }
-
-        // Rating filter
-        if ($request->filled('rating')) {
-            $minRating = (float) $request->input('rating');
-            $products = $products->filter(fn($p) => $p['rating'] >= $minRating);
         }
 
         // Price filter
@@ -77,18 +109,18 @@ class StoreController extends Controller
             $products = $products->sortBy('price');
         } elseif ($sort === 'price_desc') {
             $products = $products->sortByDesc('price');
-        } elseif ($sort === 'rating') {
-            $products = $products->sortByDesc('rating');
         }
 
-        $allCategories = ['Women', 'Men', 'Accessories', 'Footwear', 'Beauty'];
+        $allCategories = collect(self::getProducts())->pluck('cat')->unique()->values()->toArray();
+        if (empty($allCategories)) {
+            $allCategories = ['Women', 'Men', 'Accessories', 'Footwear', 'Beauty'];
+        }
 
         return view('store.shop', [
             'products' => $products,
             'allCategories' => $allCategories,
             'selectedCategories' => (array) $request->input('category', []),
-            'selectedRating' => $request->input('rating'),
-            'selectedPriceMax' => $request->input('price_max', 160),
+            'selectedPriceMax' => $request->input('price_max', 10000),
             'selectedSort' => $sort,
             'searchQuery' => $request->input('search')
         ]);
@@ -440,7 +472,7 @@ class StoreController extends Controller
         )->map(fn($p) => [
             'id' => $p['id'],
             'name' => $p['name'],
-            'price' => $p['price'],
+            'price' => (float) $p['price'],
             'cat' => $p['cat'],
             'img' => $p['img'],
             'url' => route('store.product', $p['id'])

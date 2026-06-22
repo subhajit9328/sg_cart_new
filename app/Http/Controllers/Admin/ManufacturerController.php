@@ -10,9 +10,20 @@ use Illuminate\Support\Facades\Storage;
 
 class ManufacturerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $manufacturers = Manufacturer::paginate(20);
+        $query = Manufacturer::query();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $manufacturers = $query->paginate(10)->withQueryString();
         return view('admin.manufacturers.index', compact('manufacturers'));
     }
 
@@ -42,7 +53,7 @@ class ManufacturerController extends Controller
 
         Manufacturer::create($data);
 
-        return redirect()->route('admin.manufacturers.index')->with('success', 'Manufacturer created.');
+        return redirect()->route('admin.manufacturers.index')->with('success', 'Manufacturer is created successfully.');
     }
 
     public function edit(Manufacturer $manufacturer)
@@ -72,13 +83,13 @@ class ManufacturerController extends Controller
 
         $manufacturer->update($data);
 
-        return redirect()->route('admin.manufacturers.index')->with('success', 'Manufacturer updated.');
+        return redirect()->route('admin.manufacturers.edit', $manufacturer)->with('success', 'Manufacturer is updated successfully.');
     }
 
     public function destroy(Manufacturer $manufacturer)
     {
         if ($manufacturer->logo) Storage::disk('public')->delete($manufacturer->logo);
         $manufacturer->delete();
-        return redirect()->route('admin.manufacturers.index')->with('success', 'Manufacturer deleted.');
+        return redirect()->route('admin.manufacturers.index')->with('success', 'Manufacturer is deleted successfully.');
     }
 }

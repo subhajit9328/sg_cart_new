@@ -80,8 +80,8 @@ Route::prefix('admin')->group(function () {
 
             // Extra product sub-routes
             Route::prefix('products')->name('products.')->middleware('permission:manage products')->group(function () {
-                Route::delete('images/{image}', [ProductController::class, 'destroyImage'])->name('images.destroy');
                 Route::post('bulk-upload', [ProductController::class, 'bulkUpload'])->name('bulk-upload');
+                Route::delete('{product}/image', [ProductController::class, 'deleteImage'])->name('delete-image');
             });
         });
     });

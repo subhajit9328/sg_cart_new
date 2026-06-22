@@ -10,7 +10,12 @@
     </a>
     <div>
         <h1 class="font-display text-2xl font-bold">Add User</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Admin / Access Control / Users / Add</p>
+        <x-breadcrumbs :items="[
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'Access Control'],
+            ['label' => 'Users', 'url' => route('admin.users.index')],
+            ['label' => 'Add']
+        ]" />
     </div>
 </div>
 
@@ -24,7 +29,7 @@
         
         <!-- Name Field -->
         <div>
-            <label for="name" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Full Name</label>
+            <label for="name" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Full Name <span class="text-rose-600">*</span></label>
             <input type="text" name="name" id="name" value="{{ old('name') }}" required
                 class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('name') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
                 placeholder="Asha Kapoor">
@@ -35,7 +40,7 @@
 
         <!-- Email Field -->
         <div>
-            <label for="email" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Email Address</label>
+            <label for="email" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Email Address <span class="text-rose-600">*</span></label>
             <input type="email" name="email" id="email" value="{{ old('email') }}" required
                 class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('email') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
                 placeholder="example@sgcart.com">
@@ -47,7 +52,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Password Field -->
             <div>
-                <label for="password" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Password</label>
+                <label for="password" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Password <span class="text-rose-600">*</span></label>
                 <input type="password" name="password" id="password" required
                     class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('password') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
                     placeholder="Minimum 8 characters">
@@ -58,7 +63,7 @@
 
             <!-- Password Confirmation -->
             <div>
-                <label for="password_confirmation" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Confirm Password</label>
+                <label for="password_confirmation" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Confirm Password <span class="text-rose-600">*</span></label>
                 <input type="password" name="password_confirmation" id="password_confirmation" required
                     class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100"
                     placeholder="Repeat password">

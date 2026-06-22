@@ -70,7 +70,7 @@
                             </div>
                             <div class="flex items-center gap-5 w-full sm:w-auto justify-between sm:justify-end">
                                 <div class="text-left sm:text-right">
-                                    <p class="text-sm font-extrabold text-slate-900">${{ number_format($order['amount'], 2) }}</p>
+                                    <p class="text-sm font-extrabold text-slate-900">₹{{ number_format($order['amount'], 2) }}</p>
                                     @if($order['status'] === 'Delivered')
                                         <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 mt-1">Delivered</span>
                                     @else
@@ -99,11 +99,11 @@
                     @csrf
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1">
-                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">First Name</label>
+                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">First Name <span class="text-rose-600">*</span></label>
                             <input name="first_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" value="{{ auth()->user() ? explode(' ', auth()->user()->name)[0] : 'John' }}"/>
                         </div>
                         <div class="flex flex-col gap-1">
-                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Last Name</label>
+                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Last Name <span class="text-rose-600">*</span></label>
                             <input name="last_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" value="{{ auth()->user() ? (explode(' ', auth()->user()->name)[1] ?? '') : 'Doe' }}"/>
                         </div>
                     </div>
@@ -165,7 +165,7 @@
                             </div>
                             <div class="product-card-body" style="padding:10px">
                                 <h3 class="font-display font-bold text-xs text-slate-800 line-clamp-1">{{ $wl['name'] }}</h3>
-                                <p class="font-bold text-xs text-slate-950 mt-1">${{ number_format($wl['price'], 2) }}</p>
+                                <p class="font-bold text-xs text-slate-950 mt-1">₹{{ number_format($wl['price'], 2) }}</p>
                             </div>
                         </div>
                     @empty

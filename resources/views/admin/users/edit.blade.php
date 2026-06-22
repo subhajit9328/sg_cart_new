@@ -10,7 +10,13 @@
     </a>
     <div>
         <h1 class="font-display text-2xl font-bold">Edit User</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Admin / Access Control / Users / Edit / {{ $user->name }}</p>
+        <x-breadcrumbs :items="[
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'Access Control'],
+            ['label' => 'Users', 'url' => route('admin.users.index')],
+            ['label' => 'Edit'],
+            ['label' => $user->name, 'mono' => true]
+        ]" />
     </div>
 </div>
 
@@ -19,13 +25,13 @@
         <h2 class="font-semibold text-sm">Update Account Information</h2>
     </div>
     
-    <form action="{{ route('admin.users.update', $user->id) }}" method="POST" class="p-6 space-y-5">
+    <form action="{{ route('admin.users.update', $user->ulid) }}" method="POST" class="p-6 space-y-5">
         @csrf
         @method('PUT')
         
         <!-- Name Field -->
         <div>
-            <label for="name" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Full Name</label>
+            <label for="name" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Full Name <span class="text-rose-600">*</span></label>
             <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}" required
                 class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('name') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
                 placeholder="Asha Kapoor">
@@ -36,7 +42,7 @@
 
         <!-- Email Field -->
         <div>
-            <label for="email" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Email Address</label>
+            <label for="email" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Email Address <span class="text-rose-600">*</span></label>
             <input type="email" name="email" id="email" value="{{ old('email', $user->email) }}" required
                 class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('email') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
                 placeholder="example@sgcart.com">
