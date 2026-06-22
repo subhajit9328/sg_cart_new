@@ -47,43 +47,95 @@
     </div>
 </div>
 
-<!-- NAVBAR -->
-<nav id="navbar">
-    <div class="nav-inner">
-        <button class="hamburger" id="hamburger" onclick="toggleMobileNav()">
-            <span></span><span></span><span></span>
-        </button>
-        <a class="logo" href="{{ route('store.home') }}"><i class="fa-solid fa-cart-shopping logo-icon"></i>sgcart</a>
-        
-        <ul class="nav-links">
-            <li><a href="{{ route('store.home') }}" class="{{ Route::is('store.home') ? 'active' : '' }}">Home</a></li>
-            <li><a href="{{ route('store.shop') }}" class="{{ Route::is('store.shop') ? 'active' : '' }}">Shop</a></li>
-            @auth
-                <li><a href="{{ route('store.account') }}" class="{{ Route::is('store.account') ? 'active' : '' }}">Account</a></li>
-            @else
-                <li><a href="{{ route('store.login') }}" class="{{ Route::is('store.login') ? 'active' : '' }}">Login</a></li>
-            @endauth
-        </ul>
-        
-        <div class="nav-actions">
-            <div class="nav-search-container">
-                <form action="{{ route('store.shop') }}" method="GET" class="nav-search-wrap" id="navSearchForm">
-                    <input type="text" name="search" id="navSearchInput" placeholder="Search products…" autocomplete="off" value="{{ request('search') }}"/>
-                    <button type="submit" class="nav-search-btn" aria-label="Search"><i class="fa-solid fa-magnifying-glass" style="font-size:12px"></i></button>
+<!-- NAVBAR: Amazon-style double row -->
+@php
+    $navCategories = collect(App\Http\Controllers\StoreController::getProducts())->pluck('cat')->unique()->values();
+@endphp
+
+<header id="siteHeader">
+    <!-- ROW 1: Main Header -->
+    <div class="header-main">
+        <div class="header-main-inner">
+
+            <!-- Logo -->
+            <a class="header-logo" href="{{ route('store.home') }}">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span class="header-logo-text">sgcart</span>
+            </a>
+
+            <!-- Search Bar -->
+            <div class="header-search-wrap">
+                <form action="{{ route('store.shop') }}" method="GET" id="navSearchForm" class="header-search-form">
+                    <input type="text" name="search" id="navSearchInput"
+                           placeholder="Search products, brands and more…"
+                           autocomplete="off"
+                           value="{{ request('search') }}"
+                           class="header-search-input"/>
+                    <button type="submit" class="header-search-btn" aria-label="Search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
                 </form>
                 <div class="nav-search-dropdown" id="navSearchDropdown"></div>
             </div>
-            <a class="nav-btn" href="{{ route('store.account') }}" title="Account"><i class="fa-regular fa-user"></i></a>
-            <a class="nav-btn" href="{{ route('store.cart') }}" title="Cart">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span id="cartBadge">{{ count(session('cart', [])) }}</span>
-            </a>
+
+            <!-- Right Actions -->
+            <div class="header-actions">
+                <!-- Account -->
+                @auth
+                <a href="{{ route('store.account') }}" class="header-account-btn" title="My Account">
+                    <i class="fa-regular fa-circle-user header-account-icon"></i>
+                    <span class="header-account-name">{{ explode(' ', Auth::user()->name)[0] }}</span>
+                </a>
+                @else
+                <a href="{{ route('store.login') }}" class="header-account-btn" title="Sign In">
+                    <i class="fa-regular fa-circle-user header-account-icon"></i>
+                    <span class="header-account-name">Login</span>
+                </a>
+                @endauth
+
+                <!-- Cart -->
+                <a href="{{ route('store.cart') }}" class="header-cart-btn" title="Cart">
+                    <i class="fa-solid fa-cart-shopping header-cart-icon"></i>
+                    <span class="header-cart-label">Cart</span>
+                    <span class="header-cart-count" id="cartBadge">{{ count(session('cart', [])) }}</span>
+                </a>
+            </div>
+
         </div>
     </div>
-</nav>
+
+    <!-- ROW 2: Sub Navigation Bar -->
+    <div class="header-sub">
+        <div class="header-sub-inner">
+
+            <!-- Navigation Links -->
+            <nav class="header-sub-links" aria-label="Category navigation">
+                <a href="{{ route('store.home') }}" class="header-sub-link {{ Route::is('store.home') ? 'active' : '' }}">
+                    <i class="fa-solid fa-house"></i> Home
+                </a>
+                <a href="{{ route('store.shop') }}" class="header-sub-link {{ (Route::is('store.shop') && !request('category')) ? 'active' : '' }}">
+                    <i class="fa-solid fa-store"></i> Shop All
+                </a>
+                @foreach($navCategories->take(6) as $cat)
+                    <a href="{{ route('store.shop', ['category' => $cat]) }}"
+                       class="header-sub-link {{ request('category') === $cat ? 'active' : '' }}">
+                        {{ $cat }}
+                    </a>
+                @endforeach
+            </nav>
+
+            <!-- Promo strip (right-aligned) -->
+            <div class="header-sub-promo">
+                <i class="fa-solid fa-truck-fast"></i>
+                <span>Free shipping on orders over ₹999</span>
+            </div>
+
+        </div>
+    </div>
+</header>
 
 <!-- MAIN CONTENT -->
-<div class="min-h-screen" style="padding-top: 64px; padding-bottom: 48px;">
+<div class="min-h-screen" style="padding-top: 116px; padding-bottom: 48px;">
     @yield('content')
 </div>
 
@@ -364,8 +416,8 @@
     // Live Search with Dropdown
     const searchInput = document.getElementById('navSearchInput');
     const searchDropdown = document.getElementById('navSearchDropdown');
-    const searchContainer = document.querySelector('.nav-search-container');
-    const searchButton = searchContainer ? searchContainer.querySelector('.nav-search-btn') : null;
+    const searchContainer = document.querySelector('.header-search-wrap');
+    const searchButton = searchContainer ? searchContainer.querySelector('.header-search-btn') : null;
     let debounceTimer;
 
     if (searchInput && searchDropdown) {
@@ -377,7 +429,7 @@
                 searchDropdown.classList.remove('show');
                 searchDropdown.innerHTML = '';
                 if (searchButton) {
-                    searchButton.innerHTML = '<i class="fa-solid fa-magnifying-glass" style="font-size:12px"></i>';
+                    searchButton.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
                 }
                 return;
             }
@@ -391,7 +443,7 @@
                 </div>
             `;
             if (searchButton) {
-                searchButton.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-accent" style="font-size:12px"></i>';
+                searchButton.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-accent"></i>';
             }
 
             debounceTimer = setTimeout(() => {
@@ -403,7 +455,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (searchButton) {
-                        searchButton.innerHTML = '<i class="fa-solid fa-magnifying-glass" style="font-size:12px"></i>';
+                        searchButton.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
                     }
                     if (data.length === 0) {
                         searchDropdown.innerHTML = `
@@ -438,7 +490,7 @@
                 .catch(error => {
                     console.error('Error fetching search results:', error);
                     if (searchButton) {
-                        searchButton.innerHTML = '<i class="fa-solid fa-magnifying-glass" style="font-size:12px"></i>';
+                        searchButton.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
                     }
                     searchDropdown.innerHTML = `
                         <div class="search-no-results">

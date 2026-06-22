@@ -14,7 +14,7 @@
     }
 @endphp
 
-<div class="section-inner pt-8 md:pt-12">
+<div class="section-inner pt-5 md:pt-6">
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileFilters()"></div>
 
     <div class="shop-layout">
@@ -88,14 +88,6 @@
                 </div>
 
                 <div class="filter-actions">
-                    <form action="{{ route('store.shop') }}" method="GET" class="search-bar">
-
-                        @foreach($selectedCategories as $cat) <input type="hidden" name="category[]" value="{{ $cat }}"/> @endforeach
-                        <input type="hidden" name="price_max" value="{{ $selectedPriceMax }}"/>
-                        <input type="text" name="search" placeholder="Search catalogue…" value="{{ $searchQuery }}"/>
-                        <button type="submit" class="search-submit-btn" aria-label="Search"><i class="fa-solid fa-magnifying-glass text-xs"></i></button>
-                    </form>
-
                     <div class="filter-controls">
                         <button type="button" class="btn btn-outline btn-sm filter-toggle-btn lg:hidden" onclick="toggleMobileFilters()">
                             <i class="fa-solid fa-sliders"></i> Filters
