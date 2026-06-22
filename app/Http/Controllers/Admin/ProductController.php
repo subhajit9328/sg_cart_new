@@ -76,7 +76,7 @@ class ProductController extends Controller
     {
         $data = $request->validate([
             'name'              => 'required|string|max:255',
-            'sku'               => 'required|string|unique:products,sku,' . $product->id,
+            'sku'               => ['required', 'string', \Illuminate\Validation\Rule::unique('products', 'sku')->ignore($product->id)],
             'category_id'       => 'nullable|exists:categories,id',
             'manufacturer_id'   => 'nullable|exists:manufacturers,id',
             'short_description' => 'nullable|string',
@@ -101,7 +101,7 @@ class ProductController extends Controller
             $product->update($data);
         });
 
-        return redirect()->route('admin.products.edit', $product)->with('success', 'Product is updated successfully.');
+        return redirect()->route('admin.products.index')->with('success', 'Product is updated successfully.');
     }
 
     public function destroy(Product $product)

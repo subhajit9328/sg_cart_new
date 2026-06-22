@@ -144,6 +144,15 @@
                     </td>
                     <td class="px-5 py-3.5 text-right whitespace-nowrap">
                         <div class="inline-flex gap-1.5 justify-end">
+                            @if($product->status === 'active')
+                                <a href="{{ route('store.product', $product->id) }}" target="_blank" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors" title="View Product on Storefront">
+                                    <i class="fa-solid fa-eye text-slate-500 dark:text-slate-400 text-xs"></i>
+                                </a>
+                            @else
+                                <span class="w-8 h-8 rounded-lg border border-slate-100 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/30 flex items-center justify-center text-slate-300 dark:text-slate-600 cursor-not-allowed" title="Product must be active to view on storefront">
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </span>
+                            @endif
                             <a href="{{ route('admin.products.edit', $product->ulid) }}" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors" title="Edit Product">
                                 <i class="fa-solid fa-pen text-slate-500 dark:text-slate-400 text-xs"></i>
                             </a>

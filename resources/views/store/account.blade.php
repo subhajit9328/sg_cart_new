@@ -70,7 +70,7 @@
                             </div>
                             <div class="flex items-center gap-5 w-full sm:w-auto justify-between sm:justify-end">
                                 <div class="text-left sm:text-right">
-                                    <p class="text-sm font-extrabold text-slate-900">${{ number_format($order['amount'], 2) }}</p>
+                                    <p class="text-sm font-extrabold text-slate-900">₹{{ number_format($order['amount'], 2) }}</p>
                                     @if($order['status'] === 'Delivered')
                                         <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 mt-1">Delivered</span>
                                     @else
@@ -165,7 +165,7 @@
                             </div>
                             <div class="product-card-body" style="padding:10px">
                                 <h3 class="font-display font-bold text-xs text-slate-800 line-clamp-1">{{ $wl['name'] }}</h3>
-                                <p class="font-bold text-xs text-slate-950 mt-1">${{ number_format($wl['price'], 2) }}</p>
+                                <p class="font-bold text-xs text-slate-950 mt-1">₹{{ number_format($wl['price'], 2) }}</p>
                             </div>
                         </div>
                     @empty

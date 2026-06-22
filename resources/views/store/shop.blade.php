@@ -9,10 +9,7 @@
     if (!empty($selectedCategories)) {
         $activeFilterCount += count($selectedCategories);
     }
-    if (!empty($selectedRating)) {
-        $activeFilterCount += 1;
-    }
-    if (request()->filled('price_max') && request('price_max') < 200) {
+    if (request()->filled('price_max') && request('price_max') < 10000) {
         $activeFilterCount += 1;
     }
 @endphp
@@ -57,51 +54,16 @@
                 <div class="sidebar-section">
                     <h4 class="sidebar-title">Max Price</h4>
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-                        <span class="text-xs text-slate-400">$0</span>
-                        <span class="text-xs font-bold" id="priceLabel">${{ $selectedPriceMax }}</span>
+                        <span class="text-xs text-slate-400">₹0</span>
+                        <span class="text-xs font-bold" id="priceLabel">₹{{ $selectedPriceMax }}</span>
                     </div>
-                    <input type="range" name="price_max" min="10" max="200" step="5" value="{{ $selectedPriceMax }}"
+                    <input type="range" name="price_max" min="100" max="10000" step="100" value="{{ $selectedPriceMax }}"
                         class="w-full price-slider cursor-pointer"
                         onchange="document.getElementById('filterForm').submit()"
-                        oninput="document.getElementById('priceLabel').textContent = '$' + this.value"/>
+                        oninput="document.getElementById('priceLabel').textContent = '₹' + this.value"/>
                 </div>
 
-                <!-- Rating Filter -->
-                <div class="sidebar-section">
-                    <h4 class="sidebar-title">Rating</h4>
-                    <input type="hidden" name="rating" id="ratingInput" value="{{ $selectedRating }}"/>
-                    
-                    <button type="button" class="stars-btn {{ $selectedRating == 4.5 ? 'active' : '' }}" onclick="setRatingFilter(4.5)">
-                        <span class="stars-wrap">
-                            <i class="fa-solid fa-star text-amber-500"></i>
-                            <i class="fa-solid fa-star text-amber-500"></i>
-                            <i class="fa-solid fa-star text-amber-500"></i>
-                            <i class="fa-solid fa-star text-amber-500"></i>
-                            <i class="fa-solid fa-star-half-stroke text-amber-500"></i>
-                        </span>
-                        <span class="stars-text">4.5 &amp; Up</span>
-                    </button>
-                    <button type="button" class="stars-btn {{ $selectedRating == 4.0 ? 'active' : '' }}" onclick="setRatingFilter(4.0)">
-                        <span class="stars-wrap">
-                            <i class="fa-solid fa-star text-amber-500"></i>
-                            <i class="fa-solid fa-star text-amber-500"></i>
-                            <i class="fa-solid fa-star text-amber-500"></i>
-                            <i class="fa-solid fa-star text-amber-500"></i>
-                            <i class="fa-regular fa-star text-slate-300"></i>
-                        </span>
-                        <span class="stars-text">4.0 &amp; Up</span>
-                    </button>
-                    <button type="button" class="stars-btn {{ !$selectedRating ? 'active' : '' }}" onclick="setRatingFilter('')">
-                        <span class="stars-wrap">
-                            <i class="fa-solid fa-star text-amber-500"></i>
-                            <i class="fa-solid fa-star text-amber-500"></i>
-                            <i class="fa-solid fa-star text-amber-500"></i>
-                            <i class="fa-solid fa-star text-amber-500"></i>
-                            <i class="fa-solid fa-star text-amber-500"></i>
-                        </span>
-                        <span class="stars-text">All Ratings</span>
-                    </button>
-                </div>
+
                 
                 <a href="{{ route('store.shop') }}" class="btn btn-outline btn-sm w-full text-center mt-4 h-10 flex items-center justify-center uppercase tracking-wider font-bold text-[11px]">Reset Filters</a>
             </form>
@@ -127,7 +89,7 @@
 
                 <div class="filter-actions">
                     <form action="{{ route('store.shop') }}" method="GET" class="search-bar">
-                        @if($selectedRating) <input type="hidden" name="rating" value="{{ $selectedRating }}"/> @endif
+
                         @foreach($selectedCategories as $cat) <input type="hidden" name="category[]" value="{{ $cat }}"/> @endforeach
                         <input type="hidden" name="price_max" value="{{ $selectedPriceMax }}"/>
                         <input type="text" name="search" placeholder="Search catalogue…" value="{{ $searchQuery }}"/>
@@ -147,7 +109,6 @@
                             <option value="default" {{ $selectedSort == 'default' ? 'selected' : '' }}>Featured</option>
                             <option value="price_asc" {{ $selectedSort == 'price_asc' ? 'selected' : '' }}>Price: Low to High</option>
                             <option value="price_desc" {{ $selectedSort == 'price_desc' ? 'selected' : '' }}>Price: High to Low</option>
-                            <option value="rating" {{ $selectedSort == 'rating' ? 'selected' : '' }}>Top Rated</option>
                         </select>
                     </div>
                 </div>
@@ -167,15 +128,12 @@
                             </div>
                         </div>
                         <div class="product-card-body">
-                            <div style="display:flex;align-items:center;justify-content:space-between">
-                                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $product['cat'] }}</p>
-                                <span class="text-xs text-amber-500 font-semibold"><i class="fa-solid fa-star text-[10px]"></i> {{ $product['rating'] }}</span>
-                            </div>
+                            <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $product['cat'] }}</p>
                             <h3 class="font-display font-bold text-sm mt-1 text-slate-800 line-clamp-1">{{ $product['name'] }}</h3>
                             <div class="flex items-center gap-1.5 mt-2">
-                                <span class="font-bold text-sm text-slate-900">${{ number_format($product['price'], 2) }}</span>
+                                <span class="font-bold text-sm text-slate-900">₹{{ number_format($product['price'], 2) }}</span>
                                 @if($product['old'])
-                                    <span class="text-xs text-slate-400 line-through">${{ number_format($product['old'], 2) }}</span>
+                                    <span class="text-xs text-slate-400 line-through">₹{{ number_format($product['old'], 2) }}</span>
                                 @endif
                             </div>
                         </div>
@@ -196,10 +154,7 @@
 
 @section('scripts')
 <script>
-    function setRatingFilter(val) {
-        document.getElementById('ratingInput').value = val;
-        document.getElementById('filterForm').submit();
-    }
+
 
     function applySort(val) {
         const urlParams = new URLSearchParams(window.location.search);

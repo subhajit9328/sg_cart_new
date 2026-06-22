@@ -63,7 +63,7 @@
                                         <button type="button" class="w-9 h-9 text-base text-slate-400 hover:bg-[#e8e4df] hover:text-slate-800 transition-colors border-none background-none cursor-pointer" onclick="updateQty('{{ $key }}', 1)">+</button>
                                     </div>
                                 </form>
-                                <span class="font-display font-bold text-base text-slate-900">${{ number_format($item['price'] * $item['quantity'], 2) }}</span>
+                                <span class="font-display font-bold text-base text-slate-900">₹{{ number_format($item['price'] * $item['quantity'], 2) }}</span>
                             </div>
                         </div>
                     </div>
@@ -76,7 +76,7 @@
                 <div class="flex flex-col gap-2.5 mb-4 text-xs text-slate-500">
                     <div class="flex justify-between">
                         <span>Subtotal</span>
-                        <span class="text-slate-900 font-semibold">${{ number_format($subtotal, 2) }}</span>
+                        <span class="text-slate-900 font-semibold">₹{{ number_format($subtotal, 2) }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Shipping</span>
@@ -84,12 +84,12 @@
                     </div>
                     <div class="flex justify-between">
                         <span>Tax (8%)</span>
-                        <span class="text-slate-900 font-semibold">${{ number_format($tax, 2) }}</span>
+                        <span class="text-slate-900 font-semibold">₹{{ number_format($tax, 2) }}</span>
                     </div>
                     @if($discount > 0)
                         <div class="flex justify-between text-emerald-600 font-semibold">
                             <span>Discount</span>
-                            <span>-${{ number_format($discount, 2) }}</span>
+                            <span>-₹{{ number_format($discount, 2) }}</span>
                         </div>
                     @endif
                 </div>
@@ -99,7 +99,7 @@
                 <div class="border-t border-slate-100 my-4"></div>
                 <div class="flex justify-between items-baseline font-display font-bold text-slate-900 mb-5">
                     <span class="text-sm">Total</span>
-                    <span class="text-xl font-extrabold">${{ number_format($total, 2) }}</span>
+                    <span class="text-xl font-extrabold">₹{{ number_format($total, 2) }}</span>
                 </div>
                 
                 <a href="{{ route('store.checkout') }}" class="btn btn-primary w-full py-3.5 flex justify-center gap-2 items-center">

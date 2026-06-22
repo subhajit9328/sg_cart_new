@@ -112,20 +112,20 @@
                             <p class="font-semibold text-slate-800 truncate">{{ $item['name'] }}</p>
                             <p class="text-slate-400 mt-0.5">Qty: {{ $item['quantity'] }} @if($item['size']) · Sz: {{ $item['size'] }} @endif</p>
                         </div>
-                        <span class="font-semibold text-xs text-slate-900 ml-2">${{ number_format($item['price'] * $item['quantity'], 2) }}</span>
+                        <span class="font-semibold text-xs text-slate-900 ml-2">₹{{ number_format($item['price'] * $item['quantity'], 2) }}</span>
                     </div>
                 @endforeach
             </div>
 
             <div class="flex flex-col gap-2.5 text-xs border-t border-slate-100 pt-4">
-                <div class="flex justify-between text-slate-500"><span>Bag Subtotal</span><span>${{ number_format($subtotal, 2) }}</span></div>
+                <div class="flex justify-between text-slate-500"><span>Bag Subtotal</span><span>₹{{ number_format($subtotal, 2) }}</span></div>
                 @if($discount > 0)
-                    <div class="flex justify-between text-emerald-600 font-semibold"><span>Promo Discount</span><span>-${{ number_format($discount, 2) }}</span></div>
+                    <div class="flex justify-between text-emerald-600 font-semibold"><span>Promo Discount</span><span>-₹{{ number_format($discount, 2) }}</span></div>
                 @endif
-                <div class="flex justify-between text-slate-500"><span>Tax (8%)</span><span>${{ number_format($tax, 2) }}</span></div>
+                <div class="flex justify-between text-slate-500"><span>Tax (8%)</span><span>₹{{ number_format($tax, 2) }}</span></div>
                 <div class="flex justify-between text-slate-500"><span>Shipping</span><span class="text-emerald-600 font-semibold">Free</span></div>
                 <div class="flex justify-between font-bold text-slate-900 text-sm border-t border-slate-100 pt-3 mt-1">
-                    <span>Order Total</span><span>${{ number_format($total, 2) }}</span>
+                    <span>Order Total</span><span>₹{{ number_format($total, 2) }}</span>
                 </div>
             </div>
         </div>

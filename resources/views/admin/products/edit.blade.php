@@ -4,19 +4,34 @@
 
 @section('content')
 <!-- Page Header -->
-<div class="flex items-center gap-3 mb-6">
-    <a href="{{ route('admin.products.index') }}" class="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors no-underline">
-        <i class="fa-solid fa-arrow-left"></i>
-    </a>
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div class="flex items-center gap-3">
+        <a href="{{ route('admin.products.index') }}" class="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors no-underline">
+            <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+            <h1 class="font-display text-2xl font-bold">Edit Product</h1>
+            <x-breadcrumbs :items="[
+                ['label' => 'Admin', 'url' => route('admin.dashboard')],
+                ['label' => 'Catalogue'],
+                ['label' => 'Products', 'url' => route('admin.products.index')],
+                ['label' => 'Edit'],
+                ['label' => $product->name, 'mono' => true]
+            ]" />
+        </div>
+    </div>
     <div>
-        <h1 class="font-display text-2xl font-bold">Edit Product</h1>
-        <x-breadcrumbs :items="[
-            ['label' => 'Admin', 'url' => route('admin.dashboard')],
-            ['label' => 'Catalogue'],
-            ['label' => 'Products', 'url' => route('admin.products.index')],
-            ['label' => 'Edit'],
-            ['label' => $product->name, 'mono' => true]
-        ]" />
+        @if($product->status === 'active')
+            <a href="{{ route('store.product', $product->id) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-semibold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm">
+                <i class="fa-solid fa-eye text-slate-500 dark:text-slate-400"></i>
+                <span>View Product</span>
+            </a>
+        @else
+            <span class="inline-flex items-center gap-2 px-4 py-2 border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-slate-400 dark:text-slate-600 rounded-lg text-sm font-semibold cursor-not-allowed shadow-sm" title="Product must be active to view on storefront">
+                <i class="fa-solid fa-eye text-slate-400 dark:text-slate-600"></i>
+                <span>View Product</span>
+            </span>
+        @endif
     </div>
 </div>
 
@@ -159,11 +174,6 @@
                         <i class="fa-solid fa-trash-can text-sm"></i>
                     </button>
                 </div>
-
-                <form id="deleteImageForm" action="{{ route('admin.products.delete-image', $product->ulid) }}" method="POST" class="hidden">
-                    @csrf
-                    @method('DELETE')
-                </form>
             @endif
 
             <div class="p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 rounded-lg space-y-3">
@@ -189,6 +199,13 @@
 
     </form>
 </div>
+
+@if($product->image)
+    <form id="deleteImageForm" action="{{ route('admin.products.delete-image', $product->ulid) }}" method="POST" class="hidden">
+        @csrf
+        @method('DELETE')
+    </form>
+@endif
 
 <script>
 // ── Image Preview ──

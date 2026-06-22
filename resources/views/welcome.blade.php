@@ -53,7 +53,8 @@
                             'Men' => 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=400&auto=format&fit=crop&q=80',
                             'Accessories' => 'https://images.unsplash.com/photo-1509319117193-57bab727e09d?w=400&auto=format&fit=crop&q=80',
                             'Footwear' => 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&auto=format&fit=crop&q=80',
-                            'Beauty' => 'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?w=400&auto=format&fit=crop&q=80'
+                            'Beauty' => 'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?w=400&auto=format&fit=crop&q=80',
+                            'Kids' => 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=400&auto=format&fit=crop&q=80'
                         ];
                     @endphp
                     <img src="{{ $catImgs[$cat] ?? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&auto=format&fit=crop&q=80' }}" alt="{{ $cat }}"/>
@@ -94,9 +95,9 @@
                         <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $product['cat'] }}</p>
                         <h3 class="font-display font-bold text-sm mt-1 text-slate-800 line-clamp-1">{{ $product['name'] }}</h3>
                         <div class="flex items-center gap-1.5 mt-2">
-                            <span class="font-bold text-sm text-slate-900">${{ number_format($product['price'], 2) }}</span>
+                            <span class="font-bold text-sm text-slate-900">₹{{ number_format($product['price'], 2) }}</span>
                             @if($product['old'])
-                                <span class="text-xs text-slate-400 line-through">${{ number_format($product['old'], 2) }}</span>
+                                <span class="text-xs text-slate-400 line-through">₹{{ number_format($product['old'], 2) }}</span>
                             @endif
                         </div>
                     </div>
