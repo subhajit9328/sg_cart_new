@@ -3,7 +3,7 @@
 @section('title', 'Checkout — sgcart')
 
 @section('content')
-<div class="max-w-[1400px] mx-auto px-6 pt-8 pb-12 md:pt-12 md:pb-20">
+<div class="storefront-container">
     <h1 class="font-display font-extrabold text-3xl md:text-4xl tracking-tight mb-8">Checkout</h1>
     
     <div class="grid grid-cols-1 md:grid-cols-[1fr_360px] gap-6 items-start">

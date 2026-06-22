@@ -5,7 +5,7 @@
 @section('content')
 
 
-<div class="section-inner pt-8 md:pt-12">
+<div class="section-inner pt-5 md:pt-6">
     
     <!-- PRODUCT PANEL -->
     <div class="pd-layout">

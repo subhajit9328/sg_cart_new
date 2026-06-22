@@ -5,10 +5,10 @@
 @section('content')
 
 
-<div class="max-w-[1400px] mx-auto px-6 pt-8 pb-12 md:pt-12 md:pb-20">
+<div class="storefront-container">
     
     <!-- Account Wrap -->
-    <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start max-w-[1400px] mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
         
         <!-- Tab Selectors (Left Sidebar Card) -->
         <div class="bg-white border border-[#e8e4df] rounded-2xl p-5 md:p-6">
