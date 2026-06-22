@@ -12,7 +12,7 @@ class StoreController extends Controller
      */
     public static function getProducts()
     {
-        return \App\Models\Product::with(['category.parent'])->where('status', 'active')->get()->map(function ($p) {
+        return \App\Models\Product::with(['category.parent', 'images'])->where('status', 'active')->get()->map(function ($p) {
             $catName = 'Fashion';
             if ($p->category) {
                 $topParent = $p->category;
@@ -55,9 +55,9 @@ class StoreController extends Controller
                 'sku' => $p->sku,
                 'manufacturer' => $p->manufacturer ? $p->manufacturer->name : null,
                 'img' => $p->image ? \Illuminate\Support\Facades\Storage::url($p->image) : 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&auto=format&fit=crop&q=80',
-                'images' => [
-                    $p->image ? \Illuminate\Support\Facades\Storage::url($p->image) : 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&auto=format&fit=crop&q=80'
-                ]
+                'images' => $p->images->isNotEmpty()
+                    ? $p->images->sortByDesc('is_default')->map(fn($img) => \Illuminate\Support\Facades\Storage::url($img->image_path))->values()->toArray()
+                    : ['https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&auto=format&fit=crop&q=80']
             ];
         })->toArray();
     }

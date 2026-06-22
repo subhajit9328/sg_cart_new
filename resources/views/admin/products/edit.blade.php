@@ -154,36 +154,47 @@
 
 
 
-           {{-- ── Product Image Section ── --}}
+            {{-- ── Product Image Section ── --}}
         <div class="space-y-4">
-            <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">Product Image</h3>
+            <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">Product Images</h3>
             
-            @if($product->image)
-                <div class="relative flex items-center gap-4 p-4 border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl w-fit pr-12">
-                    <div class="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm w-24 h-24 bg-slate-950 flex items-center justify-center">
-                        <img src="{{ Storage::url($product->image) }}" class="w-full h-full object-cover">
+            <div class="p-5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 rounded-xl space-y-4">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Manage product images below. Choose a default image using the radio button on the image card.</p>
+                
+                <div id="imageGallery" class="flex flex-wrap gap-4">
+                    <!-- Existing Images -->
+                    @if($product->images && $product->images->count() > 0)
+                        @foreach($product->images as $img)
+                            <div class="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm w-32 h-32 bg-slate-950 flex flex-col justify-between group">
+                                <img src="{{ Storage::url($img->image_path) }}" class="w-full h-full object-cover absolute inset-0">
+                                
+                                <!-- Delete Button -->
+                                <div class="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button type="button" onclick="showConfirm('Are you sure you want to delete this product image?', () => document.getElementById('deleteImageForm_{{ $img->id }}').submit(), 'Delete Image')" 
+                                        class="text-rose-500 hover:text-rose-700 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full p-1.5 transition-colors outline-none cursor-pointer flex items-center justify-center w-7 h-7 shadow-sm" 
+                                        title="Delete Image">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Default Selector -->
+                                <div class="absolute bottom-2 left-2 right-2 bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-lg p-1.5 flex items-center gap-1.5 shadow-sm z-10">
+                                    <input type="radio" name="default_image" value="existing_{{ $img->id }}" id="radio_existing_{{ $img->id }}" {{ $img->is_default ? 'checked' : '' }} class="accent-blue-600 cursor-pointer">
+                                    <label for="radio_existing_{{ $img->id }}" class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer select-none">Default</label>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+                    
+                    <!-- Add Image Button Card -->
+                    <div id="addImageCard" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-xl w-32 h-32 flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-slate-100/50 dark:hover:bg-slate-800/30 gap-1.5 group select-none" onclick="triggerAddImage()">
+                        <i class="fa-solid fa-circle-plus text-2xl text-slate-400 dark:text-slate-600 group-hover:text-blue-500 transition-colors"></i>
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors">Add Image</span>
                     </div>
-                    <div class="flex flex-col gap-1">
-                        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Product Image</span>
-                        <span class="text-xs text-slate-500">Current active upload</span>
-                    </div>
-
-                    <button type="button" onclick="showConfirm('Are you sure you want to delete this product image?', () => document.getElementById('deleteImageForm').submit(), 'Delete Image')" 
-                        class="absolute top-3 right-3 text-rose-500 hover:text-rose-700 bg-transparent border-none cursor-pointer p-1.5 transition-colors outline-none" 
-                        title="Delete Image">
-                        <i class="fa-solid fa-trash-can text-sm"></i>
-                    </button>
                 </div>
-            @endif
-
-            <div class="p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 rounded-lg space-y-3">
-                <div>
-                    <label class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Upload New Product Image</label>
-                    <input type="file" name="image" accept="image/*" id="imageInput"
-                        class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2 px-3 text-sm text-slate-800 dark:text-slate-200 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-500/10 dark:file:text-blue-400 hover:file:bg-blue-100 cursor-pointer">
-                </div>
-                <div id="imagePreview" class="flex flex-wrap gap-4 mt-2"></div>
             </div>
+            
+            <div id="hiddenInputsContainer" class="hidden"></div>
         </div>
         </div>
 
@@ -200,29 +211,79 @@
     </form>
 </div>
 
-@if($product->image)
-    <form id="deleteImageForm" action="{{ route('admin.products.delete-image', $product->ulid) }}" method="POST" class="hidden">
-        @csrf
-        @method('DELETE')
-    </form>
+@if($product->images && $product->images->count() > 0)
+    @foreach($product->images as $img)
+        <form id="deleteImageForm_{{ $img->id }}" action="{{ route('admin.products.delete-image', $img->id) }}" method="POST" class="hidden">
+            @csrf
+            @method('DELETE')
+        </form>
+    @endforeach
 @endif
 
 <script>
-// ── Image Preview ──
-document.getElementById('imageInput').addEventListener('change', function () {
-    const preview = document.getElementById('imagePreview');
-    preview.innerHTML = '';
-    if (this.files && this.files[0]) {
-        const reader = new FileReader();
-        reader.onload = e => {
-            preview.insertAdjacentHTML('beforeend', `
-                <div class="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm w-24 h-24 group">
-                    <img src="${e.target.result}" class="w-full h-full object-cover">
-                </div>`);
-        };
-        reader.readAsDataURL(this.files[0]);
+let uniqueIdCounter = 0;
+
+function triggerAddImage() {
+    uniqueIdCounter++;
+    const id = 'img_' + uniqueIdCounter;
+    
+    // Create dynamic file input
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.name = 'product_images[' + id + ']';
+    input.accept = 'image/*';
+    input.id = 'input_' + id;
+    input.className = 'hidden';
+    
+    input.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const gallery = document.getElementById('imageGallery');
+                const addCard = document.getElementById('addImageCard');
+                
+                const cardHtml = `
+                    <div class="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm w-32 h-32 bg-slate-950 flex flex-col justify-between group" id="preview_card_${id}">
+                        <img src="${e.target.result}" class="w-full h-full object-cover absolute inset-0">
+                        <div class="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button type="button" class="text-rose-500 hover:text-rose-700 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full p-1.5 transition-colors outline-none cursor-pointer flex items-center justify-center w-7 h-7 shadow-sm" onclick="removeNewImage('${id}')">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                        <div class="absolute bottom-2 left-2 right-2 bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-lg p-1.5 flex items-center gap-1.5 shadow-sm z-10">
+                            <input type="radio" name="default_image" value="new_${id}" id="radio_new_${id}" class="accent-blue-600 cursor-pointer">
+                            <label for="radio_new_${id}" class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer select-none">Default</label>
+                        </div>
+                    </div>
+                `;
+                addCard.insertAdjacentHTML('beforebegin', cardHtml);
+                
+                // Automatically check if it's the first one added and no default is selected
+                const checkedRadio = document.querySelector('input[name="default_image"]:checked');
+                if (!checkedRadio) {
+                    document.getElementById('radio_new_' + id).checked = true;
+                }
+            };
+            reader.readAsDataURL(this.files[0]);
+        } else {
+            input.remove();
+        }
+    });
+    
+    document.getElementById('hiddenInputsContainer').appendChild(input);
+    input.click();
+}
+
+function removeNewImage(id) {
+    document.getElementById('preview_card_' + id).remove();
+    document.getElementById('input_' + id).remove();
+    
+    const checkedRadio = document.querySelector('input[name="default_image"]:checked');
+    if (!checkedRadio) {
+        const firstRadio = document.querySelector('input[name="default_image"]');
+        if (firstRadio) firstRadio.checked = true;
     }
-});
+}
 </script>
 
 @push('scripts')

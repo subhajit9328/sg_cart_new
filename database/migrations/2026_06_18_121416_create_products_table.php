@@ -22,7 +22,6 @@ return new class extends Migration {
             $table->string('status')->default('draft'); // draft, active, inactive
             $table->string('weight')->nullable();
             $table->string('dimensions')->nullable(); // LxWxH
-            $table->string('image')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

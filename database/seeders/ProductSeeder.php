@@ -26,6 +26,10 @@ class ProductSeeder extends Seeder
                 'weight' => '250g',
                 'dimensions' => '30x20x2 cm',
                 'image_url' => 'https://images.unsplash.com/photo-1598032895397-b9472444bf93?w=600&auto=format&fit=crop&q=80',
+                'extra_image_urls' => [
+                    'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80',
+                ],
             ],
             [
                 'name' => 'Levis 511 Slim Fit Jeans',
@@ -40,6 +44,10 @@ class ProductSeeder extends Seeder
                 'weight' => '600g',
                 'dimensions' => '35x25x4 cm',
                 'image_url' => 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&auto=format&fit=crop&q=80',
+                'extra_image_urls' => [
+                    'https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=600&auto=format&fit=crop&q=80',
+                ],
             ],
             [
                 'name' => 'Nike Air Max Running Shoes',
@@ -54,6 +62,10 @@ class ProductSeeder extends Seeder
                 'weight' => '800g',
                 'dimensions' => '40x30x12 cm',
                 'image_url' => 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=80',
+                'extra_image_urls' => [
+                    'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=600&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=600&auto=format&fit=crop&q=80',
+                ],
             ],
             [
                 'name' => 'Adidas Training Fleece Hoodie',
@@ -68,6 +80,9 @@ class ProductSeeder extends Seeder
                 'weight' => '450g',
                 'dimensions' => '32x22x5 cm',
                 'image_url' => 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600&auto=format&fit=crop&q=80',
+                'extra_image_urls' => [
+                    'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&auto=format&fit=crop&q=80',
+                ],
             ],
             [
                 'name' => 'Zara Satin Wrap Dress',
@@ -82,6 +97,10 @@ class ProductSeeder extends Seeder
                 'weight' => '350g',
                 'dimensions' => '30x20x3 cm',
                 'image_url' => 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&auto=format&fit=crop&q=80',
+                'extra_image_urls' => [
+                    'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=600&auto=format&fit=crop&q=80',
+                ],
             ],
             [
                 'name' => 'Fabindia Silk Anarkali Suit',
@@ -96,6 +115,9 @@ class ProductSeeder extends Seeder
                 'weight' => '500g',
                 'dimensions' => '38x28x5 cm',
                 'image_url' => 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop&q=80',
+                'extra_image_urls' => [
+                    'https://images.unsplash.com/photo-1610030469668-93535c17b6b3?w=600&auto=format&fit=crop&q=80',
+                ],
             ],
             [
                 'name' => 'Louis Philippe Formal Oxford Shirt',
@@ -110,6 +132,9 @@ class ProductSeeder extends Seeder
                 'weight' => '300g',
                 'dimensions' => '30x20x2 cm',
                 'image_url' => 'https://images.unsplash.com/photo-1621072156002-e2fcc10d9714?w=600&auto=format&fit=crop&q=80',
+                'extra_image_urls' => [
+                    'https://images.unsplash.com/photo-1598032895397-b9472444bf93?w=600&auto=format&fit=crop&q=80',
+                ],
             ],
             [
                 'name' => 'Puma Active Dry-Fit Tee',
@@ -124,6 +149,9 @@ class ProductSeeder extends Seeder
                 'weight' => '150g',
                 'dimensions' => '25x18x1 cm',
                 'image_url' => 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600&auto=format&fit=crop&q=80',
+                'extra_image_urls' => [
+                    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop&q=80',
+                ],
             ],
             [
                 'name' => 'Levis Graphic Logo Tee',
@@ -138,6 +166,9 @@ class ProductSeeder extends Seeder
                 'weight' => '180g',
                 'dimensions' => '25x18x1 cm',
                 'image_url' => 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80',
+                'extra_image_urls' => [
+                    'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&auto=format&fit=crop&q=80',
+                ],
             ],
             [
                 'name' => 'W for Woman Cotton Straight Kurti',
@@ -152,6 +183,9 @@ class ProductSeeder extends Seeder
                 'weight' => '200g',
                 'dimensions' => '30x22x1 cm',
                 'image_url' => 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=600&auto=format&fit=crop&q=80',
+                'extra_image_urls' => [
+                    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop&q=80',
+                ],
             ],
             [
                 'name' => 'Zara Retro UV Sunglasses',
@@ -166,6 +200,9 @@ class ProductSeeder extends Seeder
                 'weight' => '100g',
                 'dimensions' => '18x8x6 cm',
                 'image_url' => 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=600&auto=format&fit=crop&q=80',
+                'extra_image_urls' => [
+                    'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=600&auto=format&fit=crop&q=80',
+                ],
             ],
             [
                 'name' => 'Zara Minimalist Leather Handbag',
@@ -180,6 +217,9 @@ class ProductSeeder extends Seeder
                 'weight' => '700g',
                 'dimensions' => '40x35x15 cm',
                 'image_url' => 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&auto=format&fit=crop&q=80',
+                'extra_image_urls' => [
+                    'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop&q=80',
+                ],
             ],
             [
                 'name' => 'Benetton Colorblock Sweater',
@@ -194,6 +234,9 @@ class ProductSeeder extends Seeder
                 'weight' => '400g',
                 'dimensions' => '35x25x4 cm',
                 'image_url' => 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&auto=format&fit=crop&q=80',
+                'extra_image_urls' => [
+                    'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&auto=format&fit=crop&q=80',
+                ],
             ],
             [
                 'name' => 'Fabindia Handcrafted Silk Saree',
@@ -208,6 +251,9 @@ class ProductSeeder extends Seeder
                 'weight' => '900g',
                 'dimensions' => '45x35x6 cm',
                 'image_url' => 'https://images.unsplash.com/photo-1610030470206-613d7d4b4a1b?w=600&auto=format&fit=crop&q=80',
+                'extra_image_urls' => [
+                    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop&q=80',
+                ],
             ],
             [
                 'name' => 'Raymond Premium Slim Blazer',
@@ -222,6 +268,9 @@ class ProductSeeder extends Seeder
                 'weight' => '1100g',
                 'dimensions' => '45x38x8 cm',
                 'image_url' => 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop&q=80',
+                'extra_image_urls' => [
+                    'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600&auto=format&fit=crop&q=80',
+                ],
             ],
         ];
 
@@ -234,7 +283,7 @@ class ProductSeeder extends Seeder
             $catId = Category::where('name', $p['category_name'])->value('id');
             $manId = Manufacturer::where('name', $p['manufacturer_name'])->value('id');
 
-            // Download image file from URL and save to products folder
+            // Download default image file from URL and save to products folder
             $imagePath = null;
             if (!empty($p['image_url'])) {
                 try {
@@ -251,23 +300,56 @@ class ProductSeeder extends Seeder
                         $imagePath = $filename;
                     }
                 } catch (\Exception $e) {
-                    $this->command->warn("Could not download image for {$p['sku']}: " . $e->getMessage());
+                    $this->command->warn("Could not download main image for {$p['sku']}: " . $e->getMessage());
                 }
             }
 
-            unset($p['category_name'], $p['manufacturer_name'], $p['image_url']);
+            $extraImageUrls = $p['extra_image_urls'] ?? [];
 
-            Product::firstOrCreate(
+            unset($p['category_name'], $p['manufacturer_name'], $p['image_url'], $p['extra_image_urls']);
+
+            $productModel = Product::firstOrCreate(
                 ['sku' => $p['sku']],
                 [
                     ...$p,
                     'category_id' => $catId,
                     'manufacturer_id' => $manId,
-                    'image' => $imagePath,
                 ]
             );
+
+            // Save default image to product_images table
+            if ($imagePath) {
+                $productModel->images()->firstOrCreate([
+                    'image_path' => $imagePath,
+                    'is_default' => true,
+                ]);
+            }
+
+            // Seed extra images to product_images table
+            foreach ($extraImageUrls as $index => $url) {
+                try {
+                    $context = stream_context_create([
+                        'http' => [
+                            'timeout' => 5, // 5 seconds timeout
+                            'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                        ]
+                    ]);
+                    $imageContent = @file_get_contents($url, false, $context);
+                    if ($imageContent !== false) {
+                        $filename = 'products/' . $p['sku'] . '_extra_' . ($index + 1) . '.jpg';
+                        Storage::disk('public')->put($filename, $imageContent);
+                        
+                        $productModel->images()->firstOrCreate([
+                            'image_path' => $filename,
+                            'is_default' => false,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    $this->command->warn("Could not download extra image for {$p['sku']}: " . $e->getMessage());
+                }
+            }
         }
 
-        $this->command->info('✅ 15 Products successfully seeded with download mock images.');
+        $this->command->info('✅ 15 Products successfully seeded with default and extra mock images.');
     }
 }
