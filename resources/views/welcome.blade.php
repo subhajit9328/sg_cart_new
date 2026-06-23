@@ -81,14 +81,14 @@
         
         <div class="grid-4">
             @foreach($products as $product)
-                <div class="product-card" onclick="window.location.href='{{ route('store.product', $product['id']) }}'">
+                <div class="product-card" onclick="window.location.href='{{ route('store.product', $product['slug']) }}'">
                     <div class="product-card-img">
                         @if($product['badge'])
                             <span class="product-badge badge-{{ strtolower($product['badge']) }}">{{ $product['badge'] }}</span>
                         @endif
                         <img src="{{ $product['img'] }}" alt="{{ $product['name'] }}"/>
                         <div class="product-card-overlay">
-                            <button onclick="event.stopPropagation(); window.location.href='{{ route('store.product', $product['id']) }}'" class="btn btn-primary btn-sm w-full"><i class="fa-solid fa-cart-shopping"></i> Quick Buy</button>
+                            <button onclick="event.stopPropagation(); window.location.href='{{ route('store.product', $product['slug']) }}'" class="btn btn-primary btn-sm w-full"><i class="fa-solid fa-cart-shopping"></i> Quick Buy</button>
                         </div>
                     </div>
                     <div class="product-card-body">

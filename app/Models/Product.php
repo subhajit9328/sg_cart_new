@@ -12,10 +12,33 @@ class Product extends Model
     use SoftDeletes, HasUlids;
 
     protected $fillable = [
-        'name', 'sku', 'category_id', 'manufacturer_id',
+        'name', 'slug', 'sku', 'category_id', 'manufacturer_id',
         'short_description', 'description', 'price', 'sale_price',
         'stock', 'status', 'weight', 'dimensions',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($product) {
+            if (empty($product->slug) || ($product->isDirty('name') && $product->isClean('slug'))) {
+                $slug = \Illuminate\Support\Str::slug($product->name);
+                
+                $originalSlug = $slug;
+                $counter = 1;
+                
+                while (static::where('slug', $slug)
+                    ->where('id', '!=', $product->id ?? 0)
+                    ->exists()
+                ) {
+                    $slug = $originalSlug . '-' . $counter++;
+                }
+                
+                $product->slug = $slug;
+            }
+        });
+    }
 
     /**
      * Only auto-generate ULID for the `ulid` column.

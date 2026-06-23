@@ -4,6 +4,24 @@
 
 @section('content')
 
+<style>
+    .pd-main-img {
+        overflow: hidden !important;
+        position: relative;
+    }
+    #mainProductImg {
+        transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform-origin 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.2s ease !important;
+        cursor: zoom-in;
+        transform-origin: center center;
+        will-change: transform, transform-origin;
+    }
+    .zoom-hint {
+        transition: opacity 0.25s ease-in-out;
+    }
+    .pd-main-img:hover .zoom-hint {
+        opacity: 0;
+    }
+</style>
 
 <div class="section-inner pt-5 md:pt-6">
     
@@ -28,6 +46,9 @@
                 @if($product['badge'])
                     <span class="product-badge badge-{{ strtolower($product['badge']) }}" style="top:16px; left:16px">{{ $product['badge'] }}</span>
                 @endif
+                <div class="zoom-hint absolute bottom-4 right-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-slate-800 dark:text-slate-100 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-lg shadow-sm border border-slate-200/50 dark:border-slate-800 pointer-events-none flex items-center gap-1.5 z-10">
+                    <i class="fa-solid fa-magnifying-glass-plus text-slate-500 dark:text-slate-400"></i> Hover to Zoom
+                </div>
             </div>
         </div>
 
@@ -177,11 +198,11 @@
     <!-- RELATED PRODUCTS -->
     <div class="section" style="margin-top:40px">
         <div class="section-header">
-            <h2 class="section-title">Related Product</h2>
+            <h2 class="section-title">Related Products</h2>
         </div>
         <div class="grid-4">
             @foreach($related as $rel)
-                <div class="product-card" onclick="window.location.href='{{ route('store.product', $rel['id']) }}'">
+                <div class="product-card" onclick="window.location.href='{{ route('store.product', $rel['slug']) }}'">
                     <div class="product-card-img">
                         <img src="{{ $rel['img'] }}" alt="{{ $rel['name'] }}"/>
                     </div>
@@ -234,6 +255,67 @@
         event.target.classList.add('active');
         document.getElementById(`spec-${name}`).style.display = 'block';
     }
+
+    // Zoom Image Feature
+    document.addEventListener('DOMContentLoaded', function() {
+        const gallery = document.querySelector('.pd-main-img');
+        const img = document.getElementById('mainProductImg');
+        
+        if (gallery && img) {
+            // Reusable zoom coordinate calculation and scaling
+            function zoomMove(clientX, clientY) {
+                const rect = gallery.getBoundingClientRect();
+                const x = ((clientX - rect.left) / rect.width) * 100;
+                const y = ((clientY - rect.top) / rect.height) * 100;
+                
+                // Clamp coordinates between 0% and 100%
+                const clampedX = Math.max(0, Math.min(100, x));
+                const clampedY = Math.max(0, Math.min(100, y));
+
+                img.style.transformOrigin = `${clampedX}% ${clampedY}%`;
+                img.style.transform = 'scale(2.5)';
+            }
+
+            function zoomReset() {
+                img.style.transform = 'scale(1)';
+                img.style.transformOrigin = 'center center';
+            }
+
+            // Mouse Events
+            gallery.addEventListener('mousemove', function(e) {
+                zoomMove(e.clientX, e.clientY);
+            });
+
+            gallery.addEventListener('mouseleave', function() {
+                zoomReset();
+            });
+
+            // Mobile Touch Events (Swipe to zoom & pan)
+            gallery.addEventListener('touchstart', function(e) {
+                if (e.touches.length > 0) {
+                    zoomMove(e.touches[0].clientX, e.touches[0].clientY);
+                }
+            }, { passive: true });
+
+            gallery.addEventListener('touchmove', function(e) {
+                if (e.touches.length > 0) {
+                    // Prevent page scroll when interacting with zoom container
+                    if (e.cancelable) {
+                        e.preventDefault();
+                    }
+                    zoomMove(e.touches[0].clientX, e.touches[0].clientY);
+                }
+            }, { passive: false });
+
+            gallery.addEventListener('touchend', function() {
+                zoomReset();
+            });
+
+            gallery.addEventListener('touchcancel', function() {
+                zoomReset();
+            });
+        }
+    });
 </script>
 @includeIf('product-variants::storefront-variant-script')
 @endsection

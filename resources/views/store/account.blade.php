@@ -152,7 +152,7 @@
                 
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-5">
                     @forelse($wishlist as $wl)
-                        <div class="product-card" onclick="window.location.href='{{ route('store.product', $wl['id']) }}'">
+                        <div class="product-card" onclick="window.location.href='{{ route('store.product', $wl['slug']) }}'">
                             <div class="product-card-img">
                                 <img src="{{ $wl['img'] }}" alt="{{ $wl['name'] }}"/>
                                 <div class="product-card-overlay">
