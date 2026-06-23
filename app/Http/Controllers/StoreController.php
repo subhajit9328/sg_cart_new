@@ -63,10 +63,10 @@ class StoreController extends Controller
                 'dimensions' => $p->dimensions,
                 'sku' => $p->sku,
                 'manufacturer' => $p->manufacturer ? $p->manufacturer->name : null,
-                'img' => $p->image ? \Illuminate\Support\Facades\Storage::url($p->image) : 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&auto=format&fit=crop&q=80',
+                'img' => $p->image ? \Illuminate\Support\Facades\Storage::url($p->image) : asset('images/no-image.svg'),
                 'images' => $p->images->isNotEmpty()
                     ? $p->images->sortByDesc('is_default')->map(fn($img) => \Illuminate\Support\Facades\Storage::url($img->image_path))->values()->toArray()
-                    : ['https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&auto=format&fit=crop&q=80']
+                    : [asset('images/no-image.svg')]
             ];
         })->toArray();
     }

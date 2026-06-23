@@ -99,7 +99,29 @@ class VariantController extends Controller
     {
         $product = \App\Models\Product::where('id', $productId)->orWhere('ulid', $productId)->firstOrFail();
         
+        $request->validate([
+            'variants' => 'nullable|array',
+            'variants.*.price' => 'nullable|numeric|gt:0',
+            'variants.*.sale_price' => 'nullable|numeric|min:0',
+            'variants.*.stock' => 'nullable|integer|min:0',
+            'variants.*.color_id' => 'nullable|exists:colors,id',
+            'variants.*.size_id' => 'nullable|exists:sizes,id',
+        ]);
+
         $submittedVariants = $request->input('variants', []);
+
+        // Custom validation to ensure variant sale_price is equal to or less than regular price (or base product price fallback)
+        foreach ($submittedVariants as $index => $varData) {
+            $price = !empty($varData['price']) ? (float)$varData['price'] : (float)$product->price;
+            $salePrice = !empty($varData['sale_price']) ? (float)$varData['sale_price'] : null;
+
+            if ($salePrice !== null && $salePrice > $price) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(["variants.{$index}.sale_price" => "Invalid Pricing: The variant sale price must be equal to or lower than its price (or base product price of " . number_format($price, 2) . ")."]);
+            }
+        }
+
         $submittedIds = collect($submittedVariants)->pluck('id')->filter()->toArray();
 
         DB::transaction(function () use ($product, $submittedVariants, $submittedIds, $request) {

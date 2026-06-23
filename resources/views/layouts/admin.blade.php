@@ -409,6 +409,9 @@
         @if(session('info'))
             showToast("{{ session('info') }}", 'info');
         @endif
+        @if($errors->any())
+            showToast("{!! addslashes($errors->first()) !!}", 'error');
+        @endif
     });
 
     // Global Form Submit Loader

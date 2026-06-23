@@ -46,16 +46,18 @@ class ProductController extends Controller
             'short_description' => 'nullable|string',
             'description'       => 'nullable|string',
             'price'             => 'required|numeric|gt:0',
-            'sale_price'        => 'nullable|numeric|min:0',
+            'sale_price'        => 'nullable|numeric|min:0|lte:price',
             'stock'             => 'required|integer|min:0',
             'status'            => 'required|in:draft,active,inactive',
             'weight'            => 'nullable|string',
             'dimensions'        => 'nullable|string',
             'product_images'    => 'nullable|array',
             'product_images.*'  => 'image|max:4096',
+        ], [
+            'sale_price.lte'    => 'Invalid Pricing: The sale price must be equal to or lower than the regular price.',
         ]);
 
-        DB::transaction(function () use ($data, $request) {
+        $product = DB::transaction(function () use ($data, $request) {
             $product = Product::create($data);
 
             $defaultImageValue = $request->input('default_image');
@@ -79,7 +81,14 @@ class ProductController extends Controller
                     ]);
                 }
             }
+
+            return $product;
         });
+
+        if (\Route::has('admin.products.variants.grid')) {
+            return redirect()->route('admin.products.edit', ['product' => $product, 'tab' => 'variants'])
+                ->with('success', 'Product is created successfully.');
+        }
 
         return redirect()->route('admin.products.index')->with('success', 'Product is created successfully.');
     }
@@ -102,13 +111,15 @@ class ProductController extends Controller
             'short_description' => 'nullable|string',
             'description'       => 'nullable|string',
             'price'             => 'required|numeric|gt:0',
-            'sale_price'        => 'nullable|numeric|min:0',
+            'sale_price'        => 'nullable|numeric|min:0|lte:price',
             'stock'             => 'required|integer|min:0',
             'status'            => 'required|in:draft,active,inactive',
             'weight'            => 'nullable|string',
             'dimensions'        => 'nullable|string',
             'product_images'    => 'nullable|array',
             'product_images.*'  => 'image|max:4096',
+        ], [
+            'sale_price.lte'    => 'Invalid Pricing: The sale price must be equal to or lower than the regular price.',
         ]);
 
         DB::transaction(function () use ($data, $request, $product) {
