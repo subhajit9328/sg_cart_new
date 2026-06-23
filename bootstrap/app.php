@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
+
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('admin*') ? route('login') : route('store.login'));
+        $middleware->redirectUsersTo(fn (Request $request) => auth('customer')->check() ? route('store.account') : route('admin.dashboard'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

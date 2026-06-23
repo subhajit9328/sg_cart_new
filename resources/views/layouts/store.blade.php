@@ -44,14 +44,14 @@
 
         <div class="mobile-nav-body">
             <!-- User Status Card -->
-            @auth
+            @auth('customer')
                 <div class="mobile-nav-user-card">
                     <div class="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent text-lg">
                         <i class="fa-regular fa-user"></i>
                     </div>
                     <div class="mobile-nav-user-info leading-tight">
                         <p class="text-[10px] text-stone uppercase tracking-wider font-semibold">Logged in as</p>
-                        <p class="text-[14px] font-bold text-ink truncate">{{ Auth::user()->name }}</p>
+                        <p class="text-[14px] font-bold text-ink truncate">{{ Auth::guard('customer')->user()->name }}</p>
                     </div>
                 </div>
             @else
@@ -97,7 +97,7 @@
             </div>
 
             <!-- User Options / Logout -->
-            @auth
+            @auth('customer')
                 <div class="mobile-nav-section">
                     <span class="mobile-nav-section-title">Account Settings</span>
                     <nav class="mobile-nav-list">
@@ -163,10 +163,10 @@
             <!-- Right Actions -->
             <div class="header-actions">
                 <!-- Account -->
-                @auth
+                @auth('customer')
                 <a href="{{ route('store.account') }}" class="header-account-btn" title="My Account">
                     <i class="fa-regular fa-circle-user header-account-icon"></i>
-                    <span class="header-account-name">{{ explode(' ', Auth::user()->name)[0] }}</span>
+                    <span class="header-account-name">{{ explode(' ', Auth::guard('customer')->user()->name)[0] }}</span>
                 </a>
                 @else
                 <a href="{{ route('store.login') }}" class="header-account-btn" title="Sign In">

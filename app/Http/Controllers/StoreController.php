@@ -285,7 +285,7 @@ class StoreController extends Controller
      */
     public function checkout()
     {
-        if (!auth()->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to proceed to checkout.');
         }
 
@@ -314,7 +314,7 @@ class StoreController extends Controller
      */
     public function placeOrder(Request $request)
     {
-        if (!auth()->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to proceed to checkout.');
         }
 
@@ -386,7 +386,7 @@ class StoreController extends Controller
      */
     public function account($tab = 'orders')
     {
-        if (!auth()->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to access your account.');
         }
 
@@ -422,7 +422,7 @@ class StoreController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        if (!auth()->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to update your profile.');
         }
 
@@ -431,9 +431,9 @@ class StoreController extends Controller
             'last_name' => 'required|string|max:255',
         ]);
 
-        $user = auth()->user();
-        $user->name = trim($request->first_name . ' ' . $request->last_name);
-        $user->save();
+        $customer = auth('customer')->user();
+        $customer->name = trim($request->first_name . ' ' . $request->last_name);
+        $customer->save();
 
         return redirect()->route('store.account', 'profile')->with('success', 'Profile details updated successfully!');
     }

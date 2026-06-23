@@ -15,11 +15,11 @@
             <!-- User Info Summary Header -->
             <div class="flex items-center gap-4 mb-6 pb-6 border-b border-[#e8e4df]">
                 <div class="w-14 h-14 bg-slate-950 rounded-full flex items-center justify-center font-display text-xl font-extrabold text-white shadow-md">
-                    {{ strtoupper(substr(auth()->user()?->name ?? 'John Doe', 0, 2)) }}
+                    {{ strtoupper(substr(auth('customer')->user()?->name ?? 'John Doe', 0, 2)) }}
                 </div>
                 <div class="min-w-0">
-                    <h3 class="font-display font-extrabold text-sm text-slate-800 truncate">{{ auth()->user()?->name ?? 'John Doe' }}</h3>
-                    <p class="text-xs text-slate-400 truncate mt-0.5">{{ auth()->user()?->email ?? 'john.doe@example.com' }}</p>
+                    <h3 class="font-display font-extrabold text-sm text-slate-800 truncate">{{ auth('customer')->user()?->name ?? 'John Doe' }}</h3>
+                    <p class="text-xs text-slate-400 truncate mt-0.5">{{ auth('customer')->user()?->email ?? 'john.doe@example.com' }}</p>
                 </div>
             </div>
 
@@ -100,17 +100,17 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1">
                             <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">First Name <span class="text-rose-600">*</span></label>
-                            <input name="first_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" value="{{ auth()->user() ? explode(' ', auth()->user()->name)[0] : 'John' }}"/>
+                            <input name="first_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" value="{{ auth('customer')->user() ? explode(' ', auth('customer')->user()->name)[0] : 'John' }}"/>
                         </div>
                         <div class="flex flex-col gap-1">
                             <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Last Name <span class="text-rose-600">*</span></label>
-                            <input name="last_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" value="{{ auth()->user() ? (explode(' ', auth()->user()->name)[1] ?? '') : 'Doe' }}"/>
+                            <input name="last_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" value="{{ auth('customer')->user() ? (explode(' ', auth('customer')->user()->name)[1] ?? '') : 'Doe' }}"/>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1">
                             <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Email Address</label>
-                            <input class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5 disabled:bg-[#f8f7f5] disabled:text-slate-400 disabled:cursor-not-allowed" value="{{ auth()->user()?->email ?? 'john.doe@example.com' }}" readonly disabled/>
+                            <input class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5 disabled:bg-[#f8f7f5] disabled:text-slate-400 disabled:cursor-not-allowed" value="{{ auth('customer')->user()?->email ?? 'john.doe@example.com' }}" readonly disabled/>
                         </div>
                         <div class="flex flex-col gap-1">
                             <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Mobile Number</label>
@@ -131,7 +131,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div class="border border-[#e8e4df] rounded-xl p-5 relative transition-all hover:border-slate-400 border-slate-900 bg-slate-50/10">
                         <span class="absolute -top-px right-4 bg-slate-950 text-white text-[9px] font-bold uppercase tracking-wider padding px-2.5 py-1 rounded-b-lg">Default Billing</span>
-                        <div class="text-sm font-bold mb-1.5 flex items-center gap-1.5"><i class="fa-regular fa-address-book text-slate-400"></i> {{ auth()->user()?->name ?? 'John Doe' }}</div>
+                        <div class="text-sm font-bold mb-1.5 flex items-center gap-1.5"><i class="fa-regular fa-address-book text-slate-400"></i> {{ auth('customer')->user()?->name ?? 'John Doe' }}</div>
                         <div class="text-xs text-slate-500 leading-relaxed">123 Main Street<br/>New York, NY 10001<br/>United States</div>
                         <div class="flex gap-3 mt-4 pt-3 border-t border-[#e8e4df]">
                             <span class="text-[11px] font-bold text-accent cursor-pointer" onclick="showToast('Edit mode opened','success')">Edit Address</span>
