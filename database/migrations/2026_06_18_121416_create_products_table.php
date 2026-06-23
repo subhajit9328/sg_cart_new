@@ -11,6 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->string('ulid', 26)->unique();
             $table->string('name');
+            $table->string('slug')->unique()->index();
             $table->string('sku')->unique();
             $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('manufacturer_id')->nullable()->constrained()->nullOnDelete();

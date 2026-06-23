@@ -49,6 +49,7 @@ class StoreController extends Controller
 
             return [
                 'id' => $p->id,
+                'slug' => $p->slug,
                 'name' => $p->name,
                 'cat' => $catName,
                 'price' => $p->sale_price ?? $p->price,
@@ -138,10 +139,10 @@ class StoreController extends Controller
     /**
      * Product details page.
      */
-    public function product($id)
+    public function product($slug)
     {
         $products = collect(self::getProducts());
-        $product = $products->firstWhere('id', (int) $id);
+        $product = $products->firstWhere('slug', $slug);
 
         if (!$product) {
             abort(404);
@@ -149,7 +150,7 @@ class StoreController extends Controller
 
         // Fetch related products (same category)
         $related = $products->where('cat', $product['cat'])
-            ->where('id', '!=', $product['id'])
+            ->where('slug', '!=', $product['slug'])
             ->take(4);
 
         return view('store.product', compact('product', 'related'));
@@ -216,6 +217,7 @@ class StoreController extends Controller
         } else {
             $cart[$cartKey] = [
                 'id' => $product['id'],
+                'slug' => $product['slug'],
                 'name' => $product['name'],
                 'price' => $product['price'],
                 'img' => $product['img'],
@@ -484,7 +486,7 @@ class StoreController extends Controller
             'price' => (float) $p['price'],
             'cat' => $p['cat'],
             'img' => $p['img'],
-            'url' => route('store.product', $p['id'])
+            'url' => route('store.product', $p['slug'])
         ])->values()->take(5);
 
         return response()->json($results);

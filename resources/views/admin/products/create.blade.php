@@ -48,13 +48,19 @@
         <div class="space-y-4">
             <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">Basic Information</h3>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label for="name" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Product Name <span class="text-rose-600">*</span></label>
                     <input type="text" name="name" id="name" value="{{ old('name') }}" required
                         class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('name') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
                         placeholder="iPhone 15 Pro">
                     @error('name') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="slug" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">SEO Slug</label>
+                    <input type="text" name="slug" id="slug" value="{{ old('slug') }}" placeholder="auto-generated-from-name"
+                        class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('slug') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror">
+                    @error('slug') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label for="sku" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">SKU <span class="text-rose-600">*</span></label>
@@ -271,6 +277,16 @@ function removeNewImage(id) {
         $('#status').select2({
             minimumResultsForSearch: -1,
             width: '100%'
+        });
+
+        // Auto-populate slug from product name in real-time
+        $('#name').on('input', function() {
+            let slug = this.value
+                .toLowerCase()
+                .replace(/[^a-z0-9 -]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+            $('#slug').val(slug);
         });
     });
 </script>

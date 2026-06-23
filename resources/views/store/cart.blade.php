@@ -22,7 +22,7 @@
             <div class="flex flex-col gap-3">
                 @foreach($cart as $key => $item)
                     <div class="bg-white border border-[#e8e4df] rounded-2xl p-5 flex flex-col sm:flex-row gap-4 items-start">
-                        <div class="w-full sm:w-[90px] h-[200px] sm:h-[110px] rounded-lg overflow-hidden bg-[#f0ece7] shrink-0 border border-[#e8e4df] cursor-pointer" onclick="window.location.href='{{ route('store.product', $item['id']) }}'">
+                        <div class="w-full sm:w-[90px] h-[200px] sm:h-[110px] rounded-lg overflow-hidden bg-[#f0ece7] shrink-0 border border-[#e8e4df] cursor-pointer" onclick="window.location.href='{{ route('store.product', $item['slug']) }}'">
                             <img src="{{ $item['img'] }}" alt="{{ $item['name'] }}" class="w-full h-full object-cover"/>
                         </div>
                         
@@ -31,7 +31,7 @@
                                 <div>
                                     <div class="text-[10px] font-bold tracking-widest uppercase text-slate-400">{{ $item['cat'] ?? 'Fashion' }}</div>
                                     <h3 class="font-display font-bold text-base mt-0.5 text-slate-900 hover:text-accent transition-colors">
-                                        <a href="{{ route('store.product', $item['id']) }}" style="color:inherit; text-decoration:none">{{ $item['name'] }}</a>
+                                        <a href="{{ route('store.product', $item['slug']) }}" style="color:inherit; text-decoration:none">{{ $item['name'] }}</a>
                                     </h3>
                                     @if(!empty($item['size']) || !empty($item['color']))
                                         <div class="flex flex-wrap gap-2 items-center mt-1.5 text-xs text-slate-400">
