@@ -183,6 +183,18 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')->with('success', 'Product is deleted successfully.');
     }
 
+    public function show(Product $product)
+    {
+        $relations = ['category', 'manufacturer', 'images'];
+        if (class_exists(\SGCart\ProductVariants\Models\ProductVariant::class)) {
+            $relations[] = 'variants.color';
+            $relations[] = 'variants.size';
+            $relations[] = 'variants.images';
+        }
+        $product->load($relations);
+        return view('admin.products.show', compact('product'));
+    }
+
 
     // ─── Bulk CSV/Excel Upload ────────────────────────────────────────────────
     public function bulkUpload(Request $request)

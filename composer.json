@@ -9,6 +9,8 @@
         "php": "^8.3",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
+        "sgcart/coupons": "@dev",
+        "sgcart/product-variants": "@dev",
         "spatie/laravel-permission": "^8.0"
     },
     "require-dev": {
@@ -21,6 +23,13 @@
         "phpunit/phpunit": "^12.5.12"
     },
     "repositories": [
+        {
+            "type": "path",
+            "url": "packages/sgcart/product-variants",
+            "options": {
+                "symlink": true
+            }
+        },
         {
             "type": "path",
             "url": "packages/sgcart/coupons",
@@ -74,8 +83,7 @@
             "@php artisan migrate --graceful --ansi"
         ],
         "pre-package-uninstall": [
-            "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall",
-            "@php artisan migrate:rollback --path=packages/sgcart/coupons/database/migrations --force"
+            "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
         ]
     },
     "extra": {

@@ -19,9 +19,26 @@
     </div>
 </div>
 
+<!-- Tab Navigation (Underline Style outside the card) -->
+<div class="flex items-center border-b border-slate-200 dark:border-slate-800 mb-6">
+    <div class="flex gap-1 -mb-px">
+        <button type="button" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 outline-none select-none bg-transparent cursor-default flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-xs"></i>
+            <span>Basic Details</span>
+        </button>
+        @if(Route::has('admin.products.variants.grid'))
+        <button type="button" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-400 dark:text-slate-500 outline-none cursor-not-allowed flex items-center gap-2 bg-transparent" title="Product must be created before variants can be configured" disabled>
+            <i class="fa-solid fa-tags text-xs text-slate-400 dark:text-slate-500"></i>
+            <span>Product Variants</span>
+            <i class="fa-solid fa-lock text-[10px]"></i>
+        </button>
+        @endif
+    </div>
+</div>
+
 <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm w-full overflow-hidden">
-    <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-        <h2 class="font-semibold text-sm">Enter Product Specifications & Details</h2>
+    <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-wrap justify-between items-center gap-4">
+        <h2 class="font-semibold text-sm font-display">Enter Product Specifications & Details</h2>
     </div>
 
     <form method="POST" action="{{ route('admin.products.store') }}" enctype="multipart/form-data" class="p-6 space-y-8">

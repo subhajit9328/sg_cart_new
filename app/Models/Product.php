@@ -63,4 +63,12 @@ class Product extends Model
     {
         return $this->hasOne(ProductImage::class)->where('is_default', true);
     }
+
+    public function variants()
+    {
+        if (class_exists(\SGCart\ProductVariants\Models\ProductVariant::class)) {
+            return $this->hasMany(\SGCart\ProductVariants\Models\ProductVariant::class);
+        }
+        return $this->hasMany(self::class, 'id', 'id')->whereRaw('1 = 0');
+    }
 }

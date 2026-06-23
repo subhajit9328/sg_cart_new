@@ -12,7 +12,12 @@ class StoreController extends Controller
      */
     public static function getProducts()
     {
-        return \App\Models\Product::with(['category.parent', 'images'])->where('status', 'active')->get()->map(function ($p) {
+        $relations = ['category.parent', 'images'];
+        if (class_exists(\SGCart\ProductVariants\Models\ProductVariant::class)) {
+            $relations[] = 'variants.color';
+            $relations[] = 'variants.size';
+        }
+        return \App\Models\Product::with($relations)->where('status', 'active')->get()->map(function ($p) {
             $catName = 'Fashion';
             if ($p->category) {
                 $topParent = $p->category;
@@ -27,15 +32,19 @@ class StoreController extends Controller
                 elseif (str_contains($name, 'Accessory') || str_contains($name, 'Accessories')) $catName = 'Accessories';
             }
 
-            // Determine sizes and colors dynamically from database column values if present
+            // Determine sizes and colors dynamically from variants or database column values if present
             $sizes = [];
-            if (isset($p->sizes) && !empty($p->sizes)) {
-                $sizes = is_array($p->sizes) ? $p->sizes : array_filter(array_map('trim', explode(',', $p->sizes)));
-            }
-
             $colors = [];
-            if (isset($p->colors) && !empty($p->colors)) {
-                $colors = is_array($p->colors) ? $p->colors : array_filter(array_map('trim', explode(',', $p->colors)));
+            if ($p->variants && $p->variants->isNotEmpty()) {
+                $colors = $p->variants->where('is_active', true)->map(fn($v) => $v->color?->hex_code)->filter()->unique()->values()->toArray();
+                $sizes = $p->variants->where('is_active', true)->map(fn($v) => $v->size?->code)->filter()->unique()->values()->toArray();
+            } else {
+                if (isset($p->sizes) && !empty($p->sizes)) {
+                    $sizes = is_array($p->sizes) ? $p->sizes : array_filter(array_map('trim', explode(',', $p->sizes)));
+                }
+                if (isset($p->colors) && !empty($p->colors)) {
+                    $colors = is_array($p->colors) ? $p->colors : array_filter(array_map('trim', explode(',', $p->colors)));
+                }
             }
 
             return [

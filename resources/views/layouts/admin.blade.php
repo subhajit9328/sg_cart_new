@@ -21,6 +21,8 @@
     <!-- Tailwind compiled by Vite -->
     @vite(['resources/css/app.css', 'resources/css/admin.css', 'resources/js/app.js'])
 
+    @stack('styles')
+
     <script>
         // Check dark mode preference on load (default to light)
         if (localStorage.getItem('theme') === 'dark') {
@@ -94,6 +96,7 @@
             @endcanany
 
             @includeIf('coupons::admin-menu')
+            @includeIf('product-variants::admin-menu')
         </nav>
 
 

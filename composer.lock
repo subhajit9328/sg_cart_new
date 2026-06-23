@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0161dd6938de8abb190dd697f8a2f369",
+    "content-hash": "7a7005c864f057bf4cdb720979a3dbd8",
     "packages": [
         {
             "name": "brick/math",
@@ -3304,6 +3304,85 @@
                 "source": "https://github.com/ramsey/uuid/tree/4.9.2"
             },
             "time": "2025-12-14T04:43:48+00:00"
+        },
+        {
+            "name": "sgcart/coupons",
+            "version": "dev-create_product_variant_package",
+            "dist": {
+                "type": "path",
+                "url": "packages/sgcart/coupons",
+                "reference": "96ad87ab6252ee61353fc97db0aa8ffc0e2baf1f"
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "SGCart\\Coupons\\Providers\\CouponServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SGCart\\Coupons\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "SGCart Team",
+                    "email": "support@sgcart.com"
+                }
+            ],
+            "description": "Dynamic coupon code plugin for SGCart",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "sgcart/product-variants",
+            "version": "dev-create_product_variant_package",
+            "dist": {
+                "type": "path",
+                "url": "packages/sgcart/product-variants",
+                "reference": "0bf4611e6e59770c44152d0c714060bbb540f569"
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "SGCart\\ProductVariants\\Providers\\ProductVariantServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SGCart\\ProductVariants\\": "src/",
+                    "SGCart\\ProductVariants\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "SGCart Team",
+                    "email": "support@sgcart.com"
+                }
+            ],
+            "description": "standalone plug-and-play product variants package for SGCart",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "spatie/laravel-package-tools",
@@ -8543,7 +8622,10 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "sgcart/coupons": 20,
+        "sgcart/product-variants": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

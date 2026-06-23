@@ -13,15 +13,15 @@
         <!-- Left Gallery Column -->
         <!-- Left Gallery Column -->
         <div class="pd-gallery">
-            @if(isset($product['images']) && count($product['images']) > 1)
-                <div class="pd-thumbs">
+            <div class="pd-thumbs" style="{{ (!isset($product['images']) || count($product['images']) <= 1) ? 'display: none;' : '' }}">
+                @if(isset($product['images']))
                     @foreach($product['images'] as $imgSrc)
                         <div class="pd-thumb {{ $loop->first ? 'active' : '' }}" onclick="changeImage('{{ $imgSrc }}', this)">
                             <img src="{{ $imgSrc }}" alt="{{ $product['name'] }} Thumb"/>
                         </div>
                     @endforeach
-                </div>
-            @endif
+                @endif
+            </div>
             
             <div class="pd-main-img">
                 <img id="mainProductImg" src="{{ $product['img'] }}" alt="{{ $product['name'] }}"/>
@@ -235,4 +235,5 @@
         document.getElementById(`spec-${name}`).style.display = 'block';
     }
 </script>
+@includeIf('product-variants::storefront-variant-script')
 @endsection

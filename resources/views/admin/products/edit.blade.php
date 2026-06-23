@@ -24,23 +24,40 @@
         @if($product->status === 'active')
             <a href="{{ route('store.product', $product->id) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-semibold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm">
                 <i class="fa-solid fa-eye text-slate-500 dark:text-slate-400"></i>
-                <span>View Product</span>
+                <span>Preview Product</span>
             </a>
         @else
             <span class="inline-flex items-center gap-2 px-4 py-2 border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-slate-400 dark:text-slate-600 rounded-lg text-sm font-semibold cursor-not-allowed shadow-sm" title="Product must be active to view on storefront">
                 <i class="fa-solid fa-eye text-slate-400 dark:text-slate-600"></i>
-                <span>View Product</span>
+                <span>Preview Product</span>
             </span>
+        @endif
+    </div>
+</div>
+
+<!-- Tab Navigation (Underline Style outside the card) -->
+<div class="flex items-center border-b border-slate-200 dark:border-slate-800 mb-6">
+    <div class="flex gap-1 -mb-px">
+        <button type="button" onclick="switchTab('details')" id="tabBtn_details" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 outline-none select-none bg-transparent cursor-pointer flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-xs"></i>
+            <span>Basic Details</span>
+        </button>
+        @if(Route::has('admin.products.variants.grid'))
+        <button type="button" onclick="switchTab('variants')" id="tabBtn_variants" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 outline-none select-none bg-transparent cursor-pointer flex items-center gap-2">
+            <i class="fa-solid fa-tags text-xs"></i>
+            <span>Product Variants</span>
+        </button>
         @endif
     </div>
 </div>
 
 <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm w-full overflow-hidden">
     <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
-        <h2 class="font-semibold text-sm">Update Product Information</h2>
+        <h2 class="font-semibold text-sm font-display" id="cardTitle">Update Product Information</h2>
     </div>
 
-    <form method="POST" action="{{ route('admin.products.update', $product->ulid) }}" enctype="multipart/form-data" class="p-6 space-y-8">
+    <div id="detailsTabContent" class="tab-content">
+        <form method="POST" action="{{ route('admin.products.update', $product->ulid) }}" enctype="multipart/form-data" class="p-6 space-y-8">
         @csrf
         @method('PUT')
 
@@ -209,6 +226,86 @@
         </div>
 
     </form>
+    </div>
+
+    @if(Route::has('admin.products.variants.grid'))
+    <!-- Variants Tab Content -->
+    <div id="variantsTabContent" class="tab-content hidden p-6">
+        <!-- Loader Skeleton -->
+        <div id="variantsLoader" class="space-y-6 animate-pulse">
+            <!-- Header Skeleton -->
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <div>
+                    <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded w-36 mb-2"></div>
+                    <div class="h-3 bg-slate-100 dark:bg-slate-800/60 rounded w-96"></div>
+                </div>
+                <div class="flex gap-2">
+                    <div class="h-8 bg-slate-100 dark:bg-slate-800 rounded-lg w-32"></div>
+                    <div class="h-8 bg-slate-100 dark:bg-slate-800 rounded-lg w-28"></div>
+                    <div class="h-8 bg-slate-200 dark:bg-slate-700 rounded-lg w-36"></div>
+                </div>
+            </div>
+
+            <!-- Spreadsheet Grid Skeleton -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden mb-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/50">
+                                <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-44">Color</th>
+                                <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-44">Size</th>
+                                <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">SKU Override</th>
+                                <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-36">Price Override ($)</th>
+                                <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-32">Stock Qty</th>
+                                <th class="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-24">Active</th>
+                                <th class="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-36">Gallery</th>
+                                <th class="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-16"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                            @for($i = 0; $i < 3; $i++)
+                            <tr class="transition-colors">
+                                <td class="px-4 py-3.5 w-44">
+                                    <div class="h-8 bg-slate-100 dark:bg-slate-800/80 rounded-lg w-full"></div>
+                                </td>
+                                <td class="px-4 py-3.5 w-44">
+                                    <div class="h-8 bg-slate-100 dark:bg-slate-800/80 rounded-lg w-full"></div>
+                                </td>
+                                <td class="px-4 py-3.5">
+                                    <div class="h-8 bg-slate-100 dark:bg-slate-800/80 rounded-lg w-full"></div>
+                                </td>
+                                <td class="px-4 py-3.5 w-36">
+                                    <div class="h-8 bg-slate-100 dark:bg-slate-800/80 rounded-lg w-full"></div>
+                                </td>
+                                <td class="px-4 py-3.5 w-32">
+                                    <div class="h-8 bg-slate-100 dark:bg-slate-800/80 rounded-lg w-full"></div>
+                                </td>
+                                <td class="px-4 py-3.5 w-24 text-center">
+                                    <div class="w-9 h-5 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto"></div>
+                                </td>
+                                <td class="px-4 py-3.5 w-36 text-center">
+                                    <div class="h-8 bg-slate-100 dark:bg-slate-800/80 rounded-lg w-24 mx-auto"></div>
+                                </td>
+                                <td class="px-4 py-3.5 w-16 text-right">
+                                    <div class="w-8 h-8 bg-slate-100 dark:bg-slate-800/80 rounded-lg ml-auto"></div>
+                                </td>
+                            </tr>
+                            @endfor
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Form Actions Skeleton -->
+            <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <div class="h-10 bg-slate-100 dark:bg-slate-800 rounded-lg w-20"></div>
+                <div class="h-10 bg-slate-200 dark:bg-slate-700 rounded-lg w-44"></div>
+            </div>
+        </div>
+        <!-- Grid Container -->
+        <div id="variantsGridContainer"></div>
+    </div>
+    @endif
 </div>
 
 @if($product->images && $product->images->count() > 0)
@@ -288,6 +385,74 @@ function removeNewImage(id) {
 
 @push('scripts')
 <script>
+    // Tab toggler logic
+    window.switchTab = function(tab) {
+        const tabs = ['details'];
+        @if(Route::has('admin.products.variants.grid'))
+        tabs.push('variants');
+        @endif
+        const cardTitle = document.getElementById('cardTitle');
+
+        tabs.forEach(t => {
+            const btn = document.getElementById('tabBtn_' + t);
+            const content = document.getElementById(t + 'TabContent');
+            if (t === tab) {
+                btn.className = "px-4 py-2.5 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 outline-none select-none bg-transparent cursor-pointer flex items-center gap-2";
+                content.classList.remove('hidden');
+            } else {
+                btn.className = "px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 outline-none select-none bg-transparent cursor-pointer flex items-center gap-2";
+                content.classList.add('hidden');
+            }
+        });
+
+        if (cardTitle) {
+            if (tab === 'details') {
+                cardTitle.textContent = "Update Product Information";
+            } else if (tab === 'variants') {
+                cardTitle.textContent = "Manage Product Variations & Inventory";
+            }
+        }
+
+        // Store tab in URL query parameter history
+        const url = new URL(window.location);
+        url.searchParams.set('tab', tab);
+        window.history.replaceState({}, '', url);
+
+        // Load grid if switching to variants
+        if (tab === 'variants') {
+            @if(Route::has('admin.products.variants.grid'))
+            loadVariantsGrid();
+            @endif
+        }
+    };
+
+    @if(Route::has('admin.products.variants.grid'))
+    window.loadVariantsGrid = function() {
+        const $gridContainer = $('#variantsGridContainer');
+        const loader = document.getElementById('variantsLoader');
+        
+        loader.classList.remove('hidden');
+        $gridContainer.empty();
+
+        $.ajax({
+            url: '{{ route("admin.products.variants.grid", $product->id) }}',
+            type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(html) {
+                loader.classList.add('hidden');
+                $gridContainer.html(html);
+            },
+            error: function(err) {
+                loader.classList.add('hidden');
+                $gridContainer.html('<p class="text-rose-500 text-sm">Failed to load variations grid.</p>');
+                console.error(err);
+            }
+        });
+    };
+    @endif
+
     $(document).ready(function() {
         $('#category_id').select2({
             placeholder: "— Select Category —",
@@ -303,6 +468,17 @@ function removeNewImage(id) {
             minimumResultsForSearch: -1,
             width: '100%'
         });
+
+        // Check for active tab query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeTab = urlParams.get('tab') || 'details';
+        if (activeTab !== 'details') {
+            @if(Route::has('admin.products.variants.grid'))
+            switchTab(activeTab);
+            @else
+            switchTab('details');
+            @endif
+        }
     });
 </script>
 @endpush
