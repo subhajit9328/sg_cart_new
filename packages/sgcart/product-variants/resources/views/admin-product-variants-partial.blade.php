@@ -3,7 +3,7 @@
 
     <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div>
-            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Product Variations</h3>
+            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Product Variants</h3>
             <p class="text-xs text-slate-400 mt-1">Define combinations of colors and sizes. Override SKU, price, and track individual inventory.</p>
         </div>
         <div class="flex gap-2">
@@ -14,7 +14,7 @@
                 <i class="fa-solid fa-ruler-horizontal text-emerald-500"></i> Quick Add Size
             </button>
             <button type="button" onclick="addVariantRow()" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all shadow-sm shadow-blue-600/10 border-none cursor-pointer">
-                <i class="fa-solid fa-plus"></i> Add Variation Row
+                <i class="fa-solid fa-plus"></i> Add Variant Row
             </button>
         </div>
     </div>
@@ -28,7 +28,14 @@
                         <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-44">Color</th>
                         <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-44">Size</th>
                         <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">SKU Override</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-36">Price Override ($)</th>
+                        <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-36">
+                            Price(₹)
+                            <i class="fa-solid fa-circle-question text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 ml-1 cursor-help" data-tooltip="Set a custom price for this variant. If left empty, it will fallback to the base product's price."></i>
+                        </th>
+                        <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-36">
+                            Sale Price(₹)
+                            <i class="fa-solid fa-circle-question text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 ml-1 cursor-help" data-tooltip="Set a custom sale price for this variant. If left empty, it will fallback to the base product's sale price."></i>
+                        </th>
                         <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-32">Stock Qty</th>
                         <th class="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-24">Active</th>
                         <th class="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-36">Gallery</th>
@@ -69,6 +76,10 @@
                         </td>
 
                         <td class="px-4 py-3.5">
+                            <input type="number" step="0.01" min="0" name="variants[{{ $index }}][sale_price]" value="{{ $v->sale_price }}" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 font-mono" placeholder="Default">
+                        </td>
+
+                        <td class="px-4 py-3.5">
                             <input type="number" min="0" name="variants[{{ $index }}][stock]" value="{{ $v->stock ?? 0 }}" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 font-mono">
                         </td>
 
@@ -94,9 +105,9 @@
                     </tr>
                     @empty
                     <tr id="emptyVariantsRow">
-                        <td colspan="8" class="px-4 py-12 text-center text-slate-400">
+                        <td colspan="9" class="px-4 py-12 text-center text-slate-400">
                             <i class="fa-solid fa-table-list text-4xl mb-3 opacity-20 block"></i>
-                            No variations defined for this product yet. Click "Add Variation Row" to get started.
+                            No variants defined for this product yet. Click "Add Variant Row" to get started.
                         </td>
                     </tr>
                     @endforelse
@@ -111,7 +122,7 @@
             Cancel
         </a>
         <button type="submit" class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium transition-colors shadow-lg shadow-blue-600/10 border-none cursor-pointer">
-            Save Variation Settings
+            Save Variant Settings
         </button>
     </div>
 
@@ -125,14 +136,14 @@
     <div id="variantGalleryModal_{{ $index }}" class="variant-modal fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm">
         <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-2xl w-full mx-4 border border-slate-200 dark:border-slate-800 overflow-hidden">
             <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
-                <h3 class="font-semibold text-sm font-display">Manage Variation Images</h3>
+                <h3 class="font-semibold text-sm font-display">Manage Variant Images</h3>
                 <button type="button" onclick="closeVariantGalleryModal({{ $index }})" class="text-slate-400 hover:text-slate-600 bg-transparent border-none cursor-pointer p-1">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
             <div class="p-6 space-y-6">
                 <p class="text-xs text-slate-400">
-                    Upload images specific to this variation. Shoppers will see these photos automatically when they select this color and size combination. Select a radio button to make an image default for this variation.
+                    Upload images specific to this variant. Shoppers will see these photos automatically when they select this color and size combination. Select a radio button to make an image default for this variant.
                 </p>
                 
                 <div class="flex flex-wrap gap-4" id="variant_image_gallery_{{ $index }}">
@@ -241,6 +252,10 @@
         </td>
 
         <td class="px-4 py-3.5">
+            <input type="number" step="0.01" min="0" name="variants[__INDEX__][sale_price]" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 font-mono" placeholder="Default">
+        </td>
+
+        <td class="px-4 py-3.5">
             <input type="number" min="0" name="variants[__INDEX__][stock]" value="0" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 font-mono">
         </td>
 
@@ -270,14 +285,14 @@
     <div id="variantGalleryModal___INDEX__" class="variant-modal fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm">
         <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-2xl w-full mx-4 border border-slate-200 dark:border-slate-800 overflow-hidden">
             <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
-                <h3 class="font-semibold text-sm font-display">Manage Variation Images</h3>
+                <h3 class="font-semibold text-sm font-display">Manage Variant Images</h3>
                 <button type="button" onclick="closeVariantGalleryModal(__INDEX__)" class="text-slate-400 hover:text-slate-600 bg-transparent border-none cursor-pointer p-1">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
             <div class="p-6 space-y-6">
                 <p class="text-xs text-slate-400">
-                    Upload images specific to this variation. Shoppers will see these photos automatically when they select this color and size combination. Select a radio button to make an image default for this variation.
+                    Upload images specific to this variant. Shoppers will see these photos automatically when they select this color and size combination. Select a radio button to make an image default for this variant.
                 </p>
                 
                 <div class="flex flex-wrap gap-4" id="variant_image_gallery___INDEX__">
@@ -321,7 +336,7 @@
     }
 
     function removeVariantRow(button) {
-        showConfirm('Are you sure you want to remove this variation?', () => {
+        showConfirm('Are you sure you want to remove this variant?', () => {
             const row = button.closest('tr');
             const index = row.getAttribute('data-row-index');
             
@@ -340,9 +355,9 @@
             if (body.querySelectorAll('tr[data-row-index]').length === 0) {
                 body.innerHTML = `
                     <tr id="emptyVariantsRow">
-                        <td colspan="8" class="px-4 py-12 text-center text-slate-400">
+                        <td colspan="9" class="px-4 py-12 text-center text-slate-400">
                             <i class="fa-solid fa-table-list text-4xl mb-3 opacity-20 block"></i>
-                            No variations defined for this product yet. Click "Add Variation Row" to get started.
+                            No variants defined for this product yet. Click "Add Variant Row" to get started.
                         </td>
                     </tr>
                 `;

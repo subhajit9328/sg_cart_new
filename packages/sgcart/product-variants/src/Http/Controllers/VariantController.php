@@ -54,10 +54,14 @@ class VariantController extends Controller
             $defaultImg = $variant->images->firstWhere('is_default', true) ?: $variant->images->first();
             $imgUrl = $defaultImg ? Storage::url($delImgPath = $defaultImg->image_path) : null;
 
+            $sellingPrice = $variant->sale_price ?: $variant->price;
+            $regularPrice = $variant->sale_price ? $variant->price : null;
+
             return response()->json([
                 'found' => true,
                 'sku' => $variant->sku,
-                'price' => $variant->price ? number_format($variant->price, 2, '.', '') : null,
+                'price' => $sellingPrice ? number_format($sellingPrice, 2, '.', '') : null,
+                'old' => $regularPrice ? number_format($regularPrice, 2, '.', '') : null,
                 'stock' => (int) $variant->stock,
                 'img' => $imgUrl,
             ]);
@@ -119,12 +123,13 @@ class VariantController extends Controller
                 if (!empty($varData['id'])) {
                     $variant = ProductVariant::findOrFail($varData['id']);
                     $variant->update([
-                        'color_id'  => $varData['color_id'] ?: null,
-                        'size_id'   => $varData['size_id'] ?: null,
-                        'sku'       => $varData['sku'] ?: null,
-                        'price'     => $varData['price'] ?: null,
-                        'stock'     => (int) ($varData['stock'] ?? 0),
-                        'is_active' => isset($varData['is_active']) ? (bool)$varData['is_active'] : false,
+                        'color_id'   => $varData['color_id'] ?: null,
+                        'size_id'    => $varData['size_id'] ?: null,
+                        'sku'        => $varData['sku'] ?: null,
+                        'price'      => $varData['price'] ?: null,
+                        'sale_price' => $varData['sale_price'] ?: null,
+                        'stock'      => (int) ($varData['stock'] ?? 0),
+                        'is_active'  => isset($varData['is_active']) ? (bool)$varData['is_active'] : false,
                     ]);
                 } else {
                     $variant = ProductVariant::create([
@@ -133,6 +138,7 @@ class VariantController extends Controller
                         'size_id'    => $varData['size_id'] ?: null,
                         'sku'        => $varData['sku'] ?: null,
                         'price'      => $varData['price'] ?: null,
+                        'sale_price' => $varData['sale_price'] ?: null,
                         'stock'      => (int) ($varData['stock'] ?? 0),
                         'is_active'  => isset($varData['is_active']) ? (bool)$varData['is_active'] : false,
                     ]);

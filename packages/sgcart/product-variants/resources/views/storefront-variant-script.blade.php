@@ -43,16 +43,17 @@
                         return \Storage::url($img->image_path);
                     })->values()->toArray();
                     return [
-                        'id'        => $v->id,
-                        'color_hex' => $v->color?->hex_code,
-                        'color_id'  => $v->color_id,
-                        'size_code' => $v->size?->code,
-                        'size_id'   => $v->size_id,
-                        'sku'       => $v->sku,
-                        'price'     => $v->price ? number_format($v->price, 2, '.', '') : null,
-                        'stock'     => (int) $v->stock,
-                        'img'       => $defaultImg ? \Storage::url($defaultImg->image_path) : null,
-                        'imgs'      => $variantImages,
+                        'id'         => $v->id,
+                        'color_hex'  => $v->color?->hex_code,
+                        'color_id'   => $v->color_id,
+                        'size_code'  => $v->size?->code,
+                        'size_id'    => $v->size_id,
+                        'sku'        => $v->sku,
+                        'price'      => $v->price ? number_format($v->price, 2, '.', '') : null,
+                        'sale_price' => $v->sale_price ? number_format($v->sale_price, 2, '.', '') : null,
+                        'stock'      => (int) $v->stock,
+                        'img'        => $defaultImg ? \Storage::url($defaultImg->image_path) : null,
+                        'imgs'       => $variantImages,
                     ];
                 })->toArray();
         }
@@ -69,8 +70,8 @@
     // while Storage::url() returns root-relative paths — direct comparison fails.
     let currentDisplayedSrc = originalImgSrc;
 
-    const originalPriceEl  = document.querySelector('.pd-layout span.font-display');
-    const originalPriceTxt = originalPriceEl ? originalPriceEl.textContent : null;
+    const priceWrapper = document.getElementById('variantPriceWrapper');
+    const originalPriceHTML = priceWrapper ? priceWrapper.innerHTML : '';
 
     const originalSkuEl  = document.querySelector('.spec-content table td.font-mono');
     const originalSkuTxt = originalSkuEl ? originalSkuEl.textContent : null;
@@ -226,13 +227,36 @@
             }
 
             // ── Price ──
-            if (match.price && originalPriceEl) {
-                originalPriceEl.textContent = '₹' + parseFloat(match.price).toLocaleString('en-IN', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-            } else if (!match.price && originalPriceEl && originalPriceTxt) {
-                originalPriceEl.textContent = originalPriceTxt;
+            if (priceWrapper) {
+                const sellingPrice = match.sale_price || match.price;
+                const regularPrice = match.sale_price ? match.price : null;
+                
+                if (sellingPrice) {
+                    const formattedSelling = parseFloat(sellingPrice).toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    
+                    if (regularPrice) {
+                        const formattedRegular = parseFloat(regularPrice).toLocaleString('en-IN', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                        const savings = Math.round((1 - parseFloat(sellingPrice) / parseFloat(regularPrice)) * 100);
+                        
+                        priceWrapper.innerHTML = `
+                            <span class="font-display font-extrabold text-2xl text-slate-900">₹${formattedSelling}</span>
+                            <span class="text-lg text-slate-400 line-through">₹${formattedRegular}</span>
+                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Save ${savings}%</span>
+                        `;
+                    } else {
+                        priceWrapper.innerHTML = `
+                            <span class="font-display font-extrabold text-2xl text-slate-900">₹${formattedSelling}</span>
+                        `;
+                    }
+                } else {
+                    priceWrapper.innerHTML = originalPriceHTML;
+                }
             }
 
             // ── SKU ──
@@ -263,8 +287,8 @@
                 thumbsContainer.style.display = originalThumbsDisplay;
             }
 
-            if (originalPriceEl && originalPriceTxt) {
-                originalPriceEl.textContent = originalPriceTxt;
+            if (priceWrapper) {
+                priceWrapper.innerHTML = originalPriceHTML;
             }
             if (originalSkuEl && originalSkuTxt) {
                 originalSkuEl.textContent = originalSkuTxt;

@@ -479,6 +479,7 @@
                         <tr>
                             <th>Color</th><th>Size</th><th>SKU Override</th>
                             <th>Price</th>
+                            <th>Sale Price</th>
                             <th style="text-align:center;">Stock</th>
                             <th style="text-align:center;">Status</th>
                         </tr>
@@ -516,6 +517,15 @@
                                 <span style="font-weight:700;font-size:13px;color:#1e293b;">&#x20B9;{{ number_format($variant->price, 2) }}</span>
                             @else
                                 <span style="font-size:12px;color:#94a3b8;font-style:italic;">Inherit <span style="font-style:normal;font-weight:600;color:#64748b;">&#x20B9;{{ number_format($product->price, 2) }}</span></span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($variant->sale_price)
+                                <span style="font-weight:700;font-size:13px;color:#1e293b;">&#x20B9;{{ number_format($variant->sale_price, 2) }}</span>
+                            @elseif($product->sale_price)
+                                <span style="font-size:12px;color:#94a3b8;font-style:italic;">Inherit <span style="font-style:normal;font-weight:600;color:#64748b;">&#x20B9;{{ number_format($product->sale_price, 2) }}</span></span>
+                            @else
+                                <span style="color:#94a3b8;font-size:12px;font-style:italic;">—</span>
                             @endif
                         </td>
                         <td style="text-align:center;">

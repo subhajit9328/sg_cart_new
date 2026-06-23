@@ -255,7 +255,14 @@
                                 <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-44">Color</th>
                                 <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-44">Size</th>
                                 <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">SKU Override</th>
-                                <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-36">Price Override ($)</th>
+                                <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-36">
+                                    Price(₹)
+                                    <i class="fa-solid fa-circle-question text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 ml-1 cursor-help" data-tooltip="Set a custom price for this variant. If left empty, it will fallback to the base product's price."></i>
+                                </th>
+                                <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-36">
+                                    Sale Price(₹)
+                                    <i class="fa-solid fa-circle-question text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 ml-1 cursor-help" data-tooltip="Set a custom sale price for this variant. If left empty, it will fallback to the base product's sale price."></i>
+                                </th>
                                 <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-32">Stock Qty</th>
                                 <th class="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-24">Active</th>
                                 <th class="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-36">Gallery</th>
@@ -272,6 +279,9 @@
                                     <div class="h-8 bg-slate-100 dark:bg-slate-800/80 rounded-lg w-full"></div>
                                 </td>
                                 <td class="px-4 py-3.5">
+                                    <div class="h-8 bg-slate-100 dark:bg-slate-800/80 rounded-lg w-full"></div>
+                                </td>
+                                <td class="px-4 py-3.5 w-36">
                                     <div class="h-8 bg-slate-100 dark:bg-slate-800/80 rounded-lg w-full"></div>
                                 </td>
                                 <td class="px-4 py-3.5 w-36">
@@ -409,7 +419,7 @@ function removeNewImage(id) {
             if (tab === 'details') {
                 cardTitle.textContent = "Update Product Information";
             } else if (tab === 'variants') {
-                cardTitle.textContent = "Manage Product Variations & Inventory";
+                cardTitle.textContent = "Manage Product Variants & Inventory";
             }
         }
 
@@ -446,7 +456,7 @@ function removeNewImage(id) {
             },
             error: function(err) {
                 loader.classList.add('hidden');
-                $gridContainer.html('<p class="text-rose-500 text-sm">Failed to load variations grid.</p>');
+                $gridContainer.html('<p class="text-rose-500 text-sm">Failed to load variants grid.</p>');
                 console.error(err);
             }
         });

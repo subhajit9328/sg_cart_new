@@ -43,7 +43,7 @@
 
 
                 <!-- Pricing -->
-                <div class="flex items-end gap-3 mb-5 pb-5 border-b border-slate-100">
+                <div class="flex items-end gap-3 mb-5 pb-5 border-b border-slate-100" id="variantPriceWrapper">
                     <span class="font-display font-extrabold text-2xl text-slate-900">₹{{ number_format($product['price'], 2) }}</span>
                     @if($product['old'])
                         <span class="text-lg text-slate-400 line-through">₹{{ number_format($product['old'], 2) }}</span>
@@ -177,7 +177,7 @@
     <!-- RELATED PRODUCTS -->
     <div class="section" style="margin-top:40px">
         <div class="section-header">
-            <h2 class="section-title">Related Capsule</h2>
+            <h2 class="section-title">Related Product</h2>
         </div>
         <div class="grid-4">
             @foreach($related as $rel)

@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->foreignId('size_id')->nullable()->constrained('sizes')->nullOnDelete();
             $table->string('sku')->nullable();
             $table->decimal('price', 10, 2)->nullable();
+            $table->decimal('sale_price', 10, 2)->nullable();
             $table->unsignedInteger('stock')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

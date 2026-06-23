@@ -1201,6 +1201,8 @@ body.admin-body {
     }
 }
 
+
+
 /* Coupon storefront remove button custom override */
 a[href*="/cart/coupon/remove"] {
     color: #f43f5e !important; /* rose-500 */
