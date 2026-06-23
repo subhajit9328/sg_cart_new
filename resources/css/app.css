@@ -62,6 +62,23 @@ body.storefront {
     gap: 18px;
 }
 
+.header-hamburger {
+    display: none;
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    outline: none;
+}
+.header-hamburger:hover {
+    color: var(--color-accent);
+}
+
 /* Logo */
 .header-logo {
     display: inline-flex;
@@ -379,11 +396,32 @@ body.storefront {
         display: none;
     }
 }
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+    .header-hamburger {
+        display: inline-flex;
+        order: 1;
+    }
+    .header-logo {
+        order: 2;
+        padding: 4px 6px;
+    }
+    .header-actions {
+        order: 3;
+        margin-left: auto;
+        gap: 12px;
+    }
+    .header-search-wrap {
+        order: 4;
+        width: 100%;
+        flex: none;
+        flex-basis: 100%;
+        margin-top: 4px;
+    }
     .header-main-inner {
-        height: 56px;
-        gap: 10px;
-        padding: 0 12px;
+        flex-wrap: wrap;
+        height: auto;
+        padding: 10px 14px 12px 14px;
+        gap: 8px 12px;
     }
     .header-logo-text {
         font-size: 18px;
@@ -394,17 +432,22 @@ body.storefront {
     .header-cart-label {
         display: none;
     }
-    .header-sub-links .header-sub-link:nth-child(n+3) {
+    .header-sub {
         display: none;
+    }
+    body.storefront .min-h-screen {
+        padding-top: 110px !important;
     }
 }
 
 .mobile-nav {
-    @apply fixed inset-0 z-40 pointer-events-none;
+    @apply fixed inset-0 z-[9999] pointer-events-none;
     &.open {
         @apply pointer-events-auto;
         & .mobile-nav-bg {
             @apply opacity-100;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
         }
         & .mobile-nav-panel {
             @apply translate-x-0;
@@ -412,21 +455,70 @@ body.storefront {
     }
 }
 .mobile-nav-bg {
-    @apply absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300;
+    @apply absolute inset-0 bg-black/55 opacity-0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+    transition: opacity 0.3s ease, backdrop-filter 0.3s ease, -webkit-backdrop-filter 0.3s ease;
 }
 .mobile-nav-panel {
-    @apply absolute top-0 left-0 bottom-0 w-[280px] bg-silk -translate-x-full pt-6 px-6 pb-6 flex flex-col gap-1;
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.15);
+    @apply absolute top-0 left-0 bottom-0 w-[310px] max-w-[85vw] bg-silk -translate-x-full p-0 flex flex-col;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.15);
 }
 .mobile-nav-header {
-    @apply flex items-center justify-between mb-6 pb-4 border-b border-border;
+    @apply flex items-center justify-between px-6 py-4.5 border-b border-border/50 bg-white flex-shrink-0;
+}
+.mobile-nav-logo {
+    @apply flex items-center gap-2.5 no-underline transition-all duration-200 hover:opacity-90;
+    & i {
+        @apply text-[17px] text-accent;
+        transform: translateY(-0.5px);
+    }
+}
+.mobile-nav-brand {
+    @apply font-display text-[20px] font-extrabold tracking-[-0.6px] text-ink uppercase;
+    & .brand-dot {
+        @apply text-accent;
+    }
 }
 .mobile-nav-close {
-    @apply text-stone hover:text-ink text-xl cursor-pointer border-none bg-transparent outline-none p-1 flex items-center justify-center;
+    @apply w-9.5 h-9.5 rounded-full flex items-center justify-center text-stone hover:text-ink bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200 transition-all duration-200 cursor-pointer outline-none;
+}
+.mobile-nav-body {
+    @apply flex-1 overflow-y-auto p-5 space-y-6;
+}
+.mobile-nav-user-card {
+    @apply flex items-center gap-3.5 p-4 bg-white border border-border/80 rounded-xl transition-all duration-200;
+}
+.mobile-nav-user-info {
+    @apply flex-1 min-w-0;
+}
+.mobile-nav-section {
+    @apply flex flex-col gap-2;
+}
+.mobile-nav-section-title {
+    @apply text-[10px] font-bold uppercase tracking-[1.5px] text-stone/80 mb-1 block;
+}
+.mobile-nav-list {
+    @apply flex flex-col gap-1;
 }
 .mobile-nav-link {
-    @apply font-display text-lg font-bold py-3.5 text-ink cursor-pointer border-b border-border/60 transition-colors no-underline hover:text-accent flex items-center;
+    @apply flex items-center gap-3.5 py-3 px-3.5 rounded-xl text-[14px] font-semibold text-ink/80 transition-all duration-200 no-underline hover:bg-blush hover:text-accent border-none;
+    &.active {
+        @apply bg-[#c8a97e]/12 text-accent font-bold;
+        & i {
+            @apply text-accent;
+        }
+    }
+    & i {
+        @apply w-5 text-center text-[15px] text-stone/75 transition-colors shrink-0;
+    }
+    &:hover i {
+        @apply text-accent;
+    }
+}
+.mobile-nav-footer {
+    @apply p-5 border-t border-border bg-[#fbfaf8] flex-shrink-0;
 }
 
 /* BUTTONS */
@@ -1045,15 +1137,27 @@ body.admin-body {
 
 /* Sidebar nav links */
 .nav-link {
-    @apply flex items-center gap-3 py-[0.62rem] px-[0.85rem] rounded-[0.6rem] text-[0.86rem] font-medium text-slate-400 cursor-pointer whitespace-nowrap transition-colors duration-150 no-underline hover:bg-white/5 hover:text-white;
+    @apply flex items-center gap-3 py-[0.62rem] px-[0.85rem] rounded-[0.6rem] text-[0.86rem] font-medium text-slate-400 cursor-pointer whitespace-nowrap transition-all duration-150 no-underline hover:bg-white/5 hover:text-white hover:translate-x-0.5;
     &.active {
-        @apply bg-blue-600/22 text-white;
+        @apply bg-blue-600/22 text-white font-semibold;
         & i {
             @apply text-blue-400;
         }
     }
     & i {
-        @apply w-5 text-center shrink-0;
+        @apply w-5 text-center shrink-0 transition-transform duration-200;
+    }
+    &:hover i {
+        @apply scale-110 text-blue-400;
+    }
+}
+
+@media (max-width: 1023px) {
+    .nav-link {
+        @apply py-3.5 px-4.5 text-[0.92rem] gap-4 rounded-xl;
+    }
+    .section-label {
+        @apply pt-5 pb-2 px-4.5 text-[0.75rem] tracking-wider;
     }
 }
 

@@ -16,6 +16,10 @@
 
     <body class="storefront">
 
+@php
+    $navCategories = collect(App\Http\Controllers\StoreController::getProducts())->pluck('cat')->unique()->values();
+@endphp
+
 <!-- SCROLL TOP -->
 <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
     <i class="fa-solid fa-arrow-up"></i>
@@ -29,33 +33,111 @@
     <div class="mobile-nav-bg" onclick="closeMobileNav()"></div>
     <div class="mobile-nav-panel">
         <div class="mobile-nav-header">
-            <a class="logo" href="{{ route('store.home') }}" onclick="closeMobileNav()">
-                <i class="fa-solid fa-cart-shopping logo-icon"></i>sgcart<span>.</span>
+            <a class="mobile-nav-logo" href="{{ route('store.home') }}" onclick="closeMobileNav()">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span class="mobile-nav-brand">sgcart<span class="brand-dot">.</span></span>
             </a>
             <button class="mobile-nav-close" onclick="closeMobileNav()" aria-label="Close menu">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        <a href="{{ route('store.home') }}" class="mobile-nav-link"><i class="fa-solid fa-house mr-3 text-stone" style="font-size:15px"></i>Home</a>
-        <a href="{{ route('store.shop') }}" class="mobile-nav-link"><i class="fa-solid fa-shop mr-3 text-stone" style="font-size:15px"></i>Shop All</a>
-        @auth
-            <a href="{{ route('store.account') }}" class="mobile-nav-link"><i class="fa-regular fa-user mr-3 text-stone" style="font-size:15px"></i>My Account</a>
-        @else
-            <a href="{{ route('store.login') }}" class="mobile-nav-link"><i class="fa-solid fa-arrow-right-to-bracket mr-3 text-stone" style="font-size:15px"></i>Login</a>
-        @endauth
-        <a href="{{ route('store.cart') }}" class="mobile-nav-link"><i class="fa-solid fa-cart-shopping mr-3 text-stone" style="font-size:15px"></i>Cart</a>
+
+        <div class="mobile-nav-body">
+            <!-- User Status Card -->
+            @auth
+                <div class="mobile-nav-user-card">
+                    <div class="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent text-lg">
+                        <i class="fa-regular fa-user"></i>
+                    </div>
+                    <div class="mobile-nav-user-info leading-tight">
+                        <p class="text-[10px] text-stone uppercase tracking-wider font-semibold">Logged in as</p>
+                        <p class="text-[14px] font-bold text-ink truncate">{{ Auth::user()->name }}</p>
+                    </div>
+                </div>
+            @else
+                <div class="mobile-nav-user-card" style="background:var(--color-blush)">
+                    <div class="mobile-nav-user-info leading-normal">
+                        <p class="text-xs text-stone mb-2.5">Sign in to track orders, save items to your wishlist, and check out faster.</p>
+                        <a href="{{ route('store.login') }}" class="btn btn-accent btn-sm w-full py-2 rounded-lg text-center font-semibold text-xs tracking-wider" onclick="closeMobileNav()">Sign In</a>
+                    </div>
+                </div>
+            @endauth
+
+            <!-- Navigation Links -->
+            <div class="mobile-nav-section">
+                <span class="mobile-nav-section-title">Navigation</span>
+                <nav class="mobile-nav-list">
+                    <a href="{{ route('store.home') }}" class="mobile-nav-link {{ Route::is('store.home') ? 'active' : '' }}" onclick="closeMobileNav()">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Home</span>
+                    </a>
+                    <a href="{{ route('store.shop') }}" class="mobile-nav-link {{ (Route::is('store.shop') && !request('category')) ? 'active' : '' }}" onclick="closeMobileNav()">
+                        <i class="fa-solid fa-store"></i>
+                        <span>Shop All</span>
+                    </a>
+                    <a href="{{ route('store.cart') }}" class="mobile-nav-link {{ Route::is('store.cart') ? 'active' : '' }}" onclick="closeMobileNav()">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <span>Cart</span>
+                        <span class="ml-auto min-w-[18px] h-[18px] bg-accent text-white rounded-full font-bold text-[9px] flex items-center justify-center px-1.5 py-0.5 leading-none" id="mobileCartBadge">{{ count(session('cart', [])) }}</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Categories Section -->
+            <div class="mobile-nav-section">
+                <span class="mobile-nav-section-title">Browse Categories</span>
+                <nav class="mobile-nav-list">
+                    @foreach($navCategories as $cat)
+                        <a href="{{ route('store.shop', ['category' => $cat]) }}" class="mobile-nav-link {{ request('category') === $cat ? 'active' : '' }}" onclick="closeMobileNav()">
+                            <i class="fa-solid fa-tag"></i>
+                            <span>{{ $cat }}</span>
+                        </a>
+                    @endforeach
+                </nav>
+            </div>
+
+            <!-- User Options / Logout -->
+            @auth
+                <div class="mobile-nav-section">
+                    <span class="mobile-nav-section-title">Account Settings</span>
+                    <nav class="mobile-nav-list">
+                        <a href="{{ route('store.account') }}" class="mobile-nav-link {{ Route::is('store.account') ? 'active' : '' }}" onclick="closeMobileNav()">
+                            <i class="fa-solid fa-circle-user"></i>
+                            <span>My Account</span>
+                        </a>
+                        <a onclick="event.preventDefault(); closeMobileNav(); showConfirm('Are you sure you want to sign out?', () => document.getElementById('storeLogoutForm').submit());" class="mobile-nav-link text-rose-600 hover:bg-rose-50 hover:text-rose-700 cursor-pointer">
+                            <i class="fa-solid fa-right-from-bracket text-rose-500"></i>
+                            <span>Sign Out</span>
+                        </a>
+                    </nav>
+                </div>
+            @endauth
+        </div>
+
+        <!-- Footer Promo Area -->
+        <div class="mobile-nav-footer">
+            <div class="flex items-center gap-3 text-xs text-stone">
+                <i class="fa-solid fa-truck-fast text-[14px] text-accent"></i>
+                <div class="leading-tight">
+                    <p class="font-bold text-ink">Free Shipping</p>
+                    <p class="text-[10px] text-stone">On orders above ₹999</p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- NAVBAR: Amazon-style double row -->
-@php
-    $navCategories = collect(App\Http\Controllers\StoreController::getProducts())->pluck('cat')->unique()->values();
-@endphp
 
 <header id="siteHeader">
     <!-- ROW 1: Main Header -->
     <div class="header-main">
         <div class="header-main-inner">
+
+            <!-- Hamburger Menu Button (Mobile only) -->
+            <button type="button" class="header-hamburger" id="hamburger" onclick="toggleMobileNav()" aria-label="Toggle navigation menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
 
             <!-- Logo -->
             <a class="header-logo" href="{{ route('store.home') }}">
@@ -547,6 +629,11 @@
         });
     }
 </script>
+
+<form action="{{ route('store.logout') }}" method="POST" id="storeLogoutForm" class="hidden">
+    @csrf
+</form>
+
 @yield('scripts')
 </body>
 </html>

@@ -37,12 +37,16 @@
 <div class="flex min-h-screen" id="appShell">
 
     <!-- ============ Sidebar ============ -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 flex flex-col -translate-x-full lg:translate-x-0 transition-all duration-200">
-        <div class="h-16 flex items-center px-5 border-b border-white/10 flex-shrink-0 logo-container-admin">
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 flex flex-col -translate-x-full lg:translate-x-0 transition-all duration-200 border-r border-white/10">
+        <div class="h-16 flex items-center justify-between px-5 border-b border-white/10 flex-shrink-0 logo-container-admin">
             <a class="logo-admin" href="{{ route('admin.dashboard') }}">
                 <i class="fa-solid fa-cart-shopping logo-icon"></i>
                 <span class="brand-text">sgcart</span>
             </a>
+            <!-- Close toggle button for mobile -->
+            <button id="sidebarCloseBtn" class="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 border-none bg-transparent cursor-pointer transition-colors" aria-label="Close sidebar">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
         </div>
 
         <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
@@ -102,7 +106,7 @@
 
     </aside>
 
-    <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-900/50 z-30 hidden"></div>
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-30 hidden transition-all duration-200"></div>
 
     <!-- ============ Main wrap ============ -->
     <div id="mainWrap" class="flex-1 min-w-0 transition-all duration-200 lg:ml-64">
@@ -197,6 +201,7 @@
     const topbar = document.getElementById('topbar');
     const sidebarBackdrop = document.getElementById('sidebarBackdrop');
     const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+    const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
 
     function isDesktop() { 
         return window.matchMedia('(min-width: 1024px)').matches; 
@@ -218,11 +223,16 @@
         }
     });
 
-    sidebarBackdrop.addEventListener('click', () => {
+    function closeMobileSidebar() {
         sidebar.classList.add('-translate-x-full');
         sidebar.classList.remove('translate-x-0');
         sidebarBackdrop.classList.add('hidden');
-    });
+    }
+
+    sidebarBackdrop.addEventListener('click', closeMobileSidebar);
+    if (sidebarCloseBtn) {
+        sidebarCloseBtn.addEventListener('click', closeMobileSidebar);
+    }
 
     // Global Toast Handler
     function showToast(text, type='success') {
