@@ -25,6 +25,12 @@ class CouponServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                \SGCart\Coupons\Console\Commands\UninstallCommand::class,
+            ]);
+        }
+
         // Load Package Components
         $this->loadRoutesFrom(__DIR__.'/../../routes/web.php');
         $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
@@ -32,6 +38,11 @@ class CouponServiceProvider extends ServiceProvider
 
         // Automate Installation (Migrations & Permissions) inside boot phase
         $this->autoInstall();
+
+        // Listen for Composer pre-uninstall event
+        $this->app['events']->listen('composer_package.sgcart/coupons:pre_uninstall', function () {
+            Artisan::call('sgcart:coupons-uninstall');
+        });
     }
 
     /**
@@ -40,6 +51,19 @@ class CouponServiceProvider extends ServiceProvider
     protected function autoInstall(): void
     {
         try {
+            if ($this->app->runningInConsole()) {
+                $command = $_SERVER['argv'][1] ?? null;
+                if (in_array($command, [
+                    'sgcart:variants-uninstall',
+                    'sgcart:coupons-uninstall',
+                    'migrate:rollback',
+                    'migrate:reset',
+                    'migrate:refresh',
+                ])) {
+                    return;
+                }
+            }
+
             // Check database connection and verify if coupons table is missing
             if (Schema::connection(null)->getConnection()->getPdo() && !Schema::hasTable('coupons')) {
                 // Programmatically trigger package database migrations
@@ -52,7 +76,7 @@ class CouponServiceProvider extends ServiceProvider
             // Programmatically seed Spatie permissions
             if (class_exists(\Spatie\Permission\Models\Permission::class)) {
                 $permission = \Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'manage coupons', 'guard_name' => 'web']);
-                $role = \Spatie\Permission\Models\Role::where('name', 'Super Admin')->first();
+                $role = \Spatie\Permission\Models\Role::whereIn('name', ['Super Admin', 'super-admin'])->first();
                 if ($role && !$role->hasPermissionTo($permission)) {
                     $role->givePermissionTo($permission);
                 }

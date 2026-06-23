@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use App\Mail\RegistrationSuccessMail;
 
 class AuthController extends Controller
 {
@@ -71,7 +74,7 @@ class AuthController extends Controller
      */
     public function showStorefrontLogin()
     {
-        if (Auth::check()) {
+        if (Auth::guard('customer')->check()) {
             return redirect()->route('store.account');
         }
         return view('store.auth.login');
@@ -89,7 +92,7 @@ class AuthController extends Controller
 
         $remember = $request->boolean('remember');
 
-        if (Auth::attempt($credentials, $remember)) {
+        if (Auth::guard('customer')->attempt($credentials, $remember)) {
             $request->session()->regenerate();
             return redirect()->intended(route('store.account'))->with('success', 'Logged in successfully!');
         }
@@ -104,7 +107,7 @@ class AuthController extends Controller
      */
     public function showStorefrontRegister()
     {
-        if (Auth::check()) {
+        if (Auth::guard('customer')->check()) {
             return redirect()->route('store.account');
         }
         return view('store.auth.register');
@@ -117,17 +120,23 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:customers'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        $user = \App\Models\User::create([
+        $customer = \App\Models\Customer::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => \Illuminate\Support\Facades\Hash::make($request->password),
         ]);
 
-        Auth::login($user);
+        try {
+            Mail::to($customer->email)->send(new RegistrationSuccessMail($customer));
+        } catch (\Exception $e) {
+            Log::error('Failed to send registration success email: ' . $e->getMessage());
+        }
+
+        Auth::guard('customer')->login($customer);
 
         return redirect()->route('store.account')->with('success', 'Account created successfully!');
     }
@@ -137,7 +146,7 @@ class AuthController extends Controller
      */
     public function storefrontLogout(Request $request)
     {
-        Auth::logout();
+        Auth::guard('customer')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

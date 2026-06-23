@@ -22,22 +22,25 @@ Route::post('/cart/update', [StoreController::class, 'updateCart'])->name('store
 Route::get('/cart/remove/{key}', [StoreController::class, 'removeFromCart'])->name('store.cart.remove');
 
 
-Route::get('/checkout', [StoreController::class, 'checkout'])->name('store.checkout');
-Route::post('/checkout/order', [StoreController::class, 'placeOrder'])->name('store.checkout.order');
 Route::get('/success', [StoreController::class, 'success'])->name('store.success');
-
-Route::get('/account/{tab?}', [StoreController::class, 'account'])->name('store.account');
-Route::post('/account/profile/update', [StoreController::class, 'updateProfile'])->name('store.account.profile.update');
 Route::post('/wishlist/toggle', [StoreController::class, 'toggleWishlist'])->name('store.wishlist.toggle');
 
-// Storefront Auth Routes
-Route::middleware('guest')->group(function () {
+// Storefront Auth Routes for Guest Customers
+Route::middleware('guest:customer')->group(function () {
     Route::get('/login', [AuthController::class, 'showStorefrontLogin'])->name('store.login');
     Route::post('/login', [AuthController::class, 'storefrontLogin'])->name('store.login.submit');
     Route::get('/register', [AuthController::class, 'showStorefrontRegister'])->name('store.register');
     Route::post('/register', [AuthController::class, 'storefrontRegister'])->name('store.register.submit');
 });
-Route::post('/logout', [AuthController::class, 'storefrontLogout'])->name('store.logout');
+
+// Storefront Auth Routes for Authenticated Customers
+Route::middleware('auth:customer')->group(function () {
+    Route::post('/logout', [AuthController::class, 'storefrontLogout'])->name('store.logout');
+    Route::get('/checkout', [StoreController::class, 'checkout'])->name('store.checkout');
+    Route::post('/checkout/order', [StoreController::class, 'placeOrder'])->name('store.checkout.order');
+    Route::get('/account/{tab?}', [StoreController::class, 'account'])->name('store.account');
+    Route::post('/account/profile/update', [StoreController::class, 'updateProfile'])->name('store.account.profile.update');
+});
 
 // Admin Routes (prefixed with admin)
 Route::prefix('admin')->group(function () {
@@ -81,7 +84,7 @@ Route::prefix('admin')->group(function () {
             // Extra product sub-routes
             Route::prefix('products')->name('products.')->middleware('permission:manage products')->group(function () {
                 Route::post('bulk-upload', [ProductController::class, 'bulkUpload'])->name('bulk-upload');
-                Route::delete('{product}/image', [ProductController::class, 'deleteImage'])->name('delete-image');
+                Route::delete('image/{productImage}', [ProductController::class, 'deleteImage'])->name('delete-image');
             });
         });
     });

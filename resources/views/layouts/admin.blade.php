@@ -21,6 +21,8 @@
     <!-- Tailwind compiled by Vite -->
     @vite(['resources/css/app.css', 'resources/css/admin.css', 'resources/js/app.js'])
 
+    @stack('styles')
+
     <script>
         // Check dark mode preference on load (default to light)
         if (localStorage.getItem('theme') === 'dark') {
@@ -35,17 +37,21 @@
 <div class="flex min-h-screen" id="appShell">
 
     <!-- ============ Sidebar ============ -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 flex flex-col -translate-x-full lg:translate-x-0 transition-all duration-200">
-        <div class="h-16 flex items-center px-5 border-b border-white/10 flex-shrink-0 logo-container-admin">
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 flex flex-col -translate-x-full lg:translate-x-0 transition-all duration-200 border-r border-white/10">
+        <div class="h-16 flex items-center justify-between px-5 border-b border-white/10 flex-shrink-0 logo-container-admin">
             <a class="logo-admin" href="{{ route('admin.dashboard') }}">
                 <i class="fa-solid fa-cart-shopping logo-icon"></i>
                 <span class="brand-text">sgcart</span>
             </a>
+            <!-- Close toggle button for mobile -->
+            <button id="sidebarCloseBtn" class="lg:hidden w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 border-none bg-transparent cursor-pointer transition-colors" aria-label="Close sidebar">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
         </div>
 
         <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
             <p class="px-3 pt-1 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Main</p>
-            <a href="{{ route('admin.dashboard') }}" class="nav-link {{ Route::is('admin.dashboard') ? 'active' : '' }}">
+            <a href="{{ route('admin.dashboard') }}" class="nav-link {{ Route::is('admin.dashboard') ? 'active' : '' }}" data-tooltip="Dashboard">
                 <i class="fa-solid fa-gauge-high"></i>
                 <span class="sidebar-text">Dashboard</span>
             </a>
@@ -54,21 +60,21 @@
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Catalogue</p>
 
             @can('manage products')
-            <a href="{{ route('admin.products.index') }}" class="nav-link {{ Request::is('admin/products*') ? 'active' : '' }}">
+            <a href="{{ route('admin.products.index') }}" class="nav-link {{ Request::is('admin/products*') ? 'active' : '' }}" data-tooltip="Products">
                 <i class="fa-solid fa-box-open"></i>
                 <span class="sidebar-text">Products</span>
             </a>
             @endcan
 
             @can('manage products')
-            <a href="{{ route('admin.categories.index') }}" class="nav-link {{ Request::is('admin/categories*') ? 'active' : '' }}">
+            <a href="{{ route('admin.categories.index') }}" class="nav-link {{ Request::is('admin/categories*') ? 'active' : '' }}" data-tooltip="Categories">
                 <i class="fa-solid fa-tags"></i>
                 <span class="sidebar-text">Categories</span>
             </a>
             @endcan
 
             @can('manage products')
-            <a href="{{ route('admin.manufacturers.index') }}" class="nav-link {{ Request::is('admin/manufacturers*') ? 'active' : '' }}">
+            <a href="{{ route('admin.manufacturers.index') }}" class="nav-link {{ Request::is('admin/manufacturers*') ? 'active' : '' }}" data-tooltip="Manufacturers">
                 <i class="fa-solid fa-industry"></i>
                 <span class="sidebar-text">Manufacturers</span>
             </a>
@@ -79,14 +85,14 @@
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Access Control</p>
 
             @can('manage users')
-            <a href="{{ route('admin.users.index') }}" class="nav-link {{ Request::is('admin/users*') ? 'active' : '' }}">
+            <a href="{{ route('admin.users.index') }}" class="nav-link {{ Request::is('admin/users*') ? 'active' : '' }}" data-tooltip="User Management">
                 <i class="fa-solid fa-users-gear"></i>
                 <span class="sidebar-text">User Management</span>
             </a>
             @endcan
 
             @can('manage roles')
-            <a href="{{ route('admin.roles.index') }}" class="nav-link {{ Request::is('admin/roles*') ? 'active' : '' }}">
+            <a href="{{ route('admin.roles.index') }}" class="nav-link {{ Request::is('admin/roles*') ? 'active' : '' }}" data-tooltip="Role Management">
                 <i class="fa-solid fa-shield-halved"></i>
                 <span class="sidebar-text">Role Management</span>
             </a>
@@ -94,12 +100,13 @@
             @endcanany
 
             @includeIf('coupons::admin-menu')
+            @includeIf('product-variants::admin-menu')
         </nav>
 
 
     </aside>
 
-    <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-900/50 z-30 hidden"></div>
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-30 hidden transition-all duration-200"></div>
 
     <!-- ============ Main wrap ============ -->
     <div id="mainWrap" class="flex-1 min-w-0 transition-all duration-200 lg:ml-64">
@@ -194,6 +201,7 @@
     const topbar = document.getElementById('topbar');
     const sidebarBackdrop = document.getElementById('sidebarBackdrop');
     const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+    const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
 
     function isDesktop() { 
         return window.matchMedia('(min-width: 1024px)').matches; 
@@ -215,11 +223,16 @@
         }
     });
 
-    sidebarBackdrop.addEventListener('click', () => {
+    function closeMobileSidebar() {
         sidebar.classList.add('-translate-x-full');
         sidebar.classList.remove('translate-x-0');
         sidebarBackdrop.classList.add('hidden');
-    });
+    }
+
+    sidebarBackdrop.addEventListener('click', closeMobileSidebar);
+    if (sidebarCloseBtn) {
+        sidebarCloseBtn.addEventListener('click', closeMobileSidebar);
+    }
 
     // Global Toast Handler
     function showToast(text, type='success') {
@@ -309,9 +322,13 @@
 
     // Global Confirmation Modal
     function showConfirm(text, callback, title='Confirm Action') {
-        const isDelete = title.toLowerCase().includes('delete');
-        const confirmBtnClass = isDelete 
-            ? 'bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white shadow-lg shadow-rose-600/10' 
+        const titleLower = title.toLowerCase();
+        const isDelete = titleLower.includes('delete');
+        const isRemove = titleLower.includes('remove');
+        const isDangerous = isDelete || isRemove;
+        
+        const confirmBtnClass = isDangerous 
+            ? 'bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white shadow-lg shadow-rose-600/10 border-none' 
             : 'btn btn-primary';
         const confirmText = isDelete ? 'Delete' : 'Confirm';
 
@@ -655,6 +672,115 @@
                 input.type = 'password';
                 toggleBtn.innerHTML = '<i class="fa-regular fa-eye"></i>';
             }
+        });
+    });
+
+    // Global Custom Tooltips Handler (Appended to body to prevent overflow clipping)
+    $(document).ready(function() {
+        const $tooltip = $('<div id="globalTooltip" class="fixed hidden bg-slate-900/95 dark:bg-slate-950/95 text-slate-100 dark:text-slate-200 text-[11px] font-medium leading-relaxed px-3 py-1.5 rounded-lg shadow-xl border border-white/10 dark:border-slate-800/80 z-[10000] pointer-events-none transition-all duration-150 transform opacity-0 w-max max-w-[240px] whitespace-normal backdrop-blur-xs"></div>');
+        const $arrow = $('<div class="absolute border-[5px] border-transparent"></div>');
+        $tooltip.append($arrow);
+        $('body').append($tooltip);
+
+        $(document).on('mouseenter', '[data-tooltip]', function() {
+            // Sidebar item handling: only show when sidebar is in icon-only mode
+            if ($(this).hasClass('nav-link') && !$('#sidebar').hasClass('icon-only')) {
+                return;
+            }
+
+            const text = $(this).attr('data-tooltip');
+            if (!text) return;
+
+            const position = $(this).attr('data-tooltip-position') || ($(this).hasClass('nav-link') ? 'right' : 'top');
+            const rect = this.getBoundingClientRect();
+            
+            // Set text and re-append arrow
+            $tooltip.text(text).append($arrow);
+            
+            // Clean up arrow classes
+            $arrow.attr('class', 'absolute border-[5px] border-transparent');
+            
+            let top = 0;
+            let left = 0;
+            let startTransform = '';
+            let endTransform = '';
+
+            // Calculate position
+            if (position === 'right') {
+                $arrow.addClass('right-full top-1/2 -translate-y-1/2 border-r-slate-900 dark:border-r-slate-950');
+                top = rect.top + rect.height / 2;
+                left = rect.right + 10;
+                startTransform = 'translateY(-50%) translateX(-6px)';
+                endTransform = 'translateY(-50%) translateX(0)';
+            } else { // default to 'top'
+                $arrow.addClass('top-full left-1/2 -translate-x-1/2 border-t-slate-900 dark:border-t-slate-950');
+                top = rect.top - 10;
+                left = rect.left + rect.width / 2;
+                startTransform = 'translateY(6px) translateX(-50%)';
+                endTransform = 'translateY(0) translateX(-50%)';
+            }
+
+            $tooltip.removeClass('hidden');
+
+            // Get actual dimensions (after text is set and hidden is removed)
+            const tooltipWidth = $tooltip.outerWidth();
+            const tooltipHeight = $tooltip.outerHeight();
+
+            if (position === 'top') {
+                top = rect.top - tooltipHeight - 8;
+                // Boundaries prevention (stay within window)
+                if (left - tooltipWidth / 2 < 8) {
+                    left = tooltipWidth / 2 + 8;
+                } else if (left + tooltipWidth / 2 > window.innerWidth - 8) {
+                    left = window.innerWidth - tooltipWidth / 2 - 8;
+                }
+            } else if (position === 'right') {
+                // Adjust if overflowing window bounds
+                if (top - tooltipHeight / 2 < 8) {
+                    top = tooltipHeight / 2 + 8;
+                } else if (top + tooltipHeight / 2 > window.innerHeight - 8) {
+                    top = window.innerHeight - tooltipHeight / 2 - 8;
+                }
+            }
+
+            $tooltip.css({
+                top: top + 'px',
+                left: left + 'px',
+                transform: startTransform
+            });
+
+            $tooltip.off('transitionend');
+            requestAnimationFrame(() => {
+                $tooltip.css({
+                    opacity: 1,
+                    transform: endTransform
+                });
+            });
+        });
+
+        $(document).on('mouseleave', '[data-tooltip]', function() {
+            if ($(this).hasClass('nav-link') && !$('#sidebar').hasClass('icon-only')) {
+                return;
+            }
+            
+            const position = $(this).attr('data-tooltip-position') || ($(this).hasClass('nav-link') ? 'right' : 'top');
+            let endTransform = '';
+            if (position === 'right') {
+                endTransform = 'translateY(-50%) translateX(-6px)';
+            } else {
+                endTransform = 'translateY(6px) translateX(-50%)';
+            }
+
+            $tooltip.css({
+                opacity: 0,
+                transform: endTransform
+            });
+            
+            $tooltip.off('transitionend').on('transitionend', function() {
+                if ($tooltip.css('opacity') == '0') {
+                    $tooltip.addClass('hidden');
+                }
+            });
         });
     });
 </script>

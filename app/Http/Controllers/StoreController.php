@@ -12,7 +12,12 @@ class StoreController extends Controller
      */
     public static function getProducts()
     {
-        return \App\Models\Product::with(['category.parent'])->where('status', 'active')->get()->map(function ($p) {
+        $relations = ['category.parent', 'images'];
+        if (class_exists(\SGCart\ProductVariants\Models\ProductVariant::class)) {
+            $relations[] = 'variants.color';
+            $relations[] = 'variants.size';
+        }
+        return \App\Models\Product::with($relations)->where('status', 'active')->get()->map(function ($p) {
             $catName = 'Fashion';
             if ($p->category) {
                 $topParent = $p->category;
@@ -27,15 +32,19 @@ class StoreController extends Controller
                 elseif (str_contains($name, 'Accessory') || str_contains($name, 'Accessories')) $catName = 'Accessories';
             }
 
-            // Determine sizes and colors dynamically from database column values if present
+            // Determine sizes and colors dynamically from variants or database column values if present
             $sizes = [];
-            if (isset($p->sizes) && !empty($p->sizes)) {
-                $sizes = is_array($p->sizes) ? $p->sizes : array_filter(array_map('trim', explode(',', $p->sizes)));
-            }
-
             $colors = [];
-            if (isset($p->colors) && !empty($p->colors)) {
-                $colors = is_array($p->colors) ? $p->colors : array_filter(array_map('trim', explode(',', $p->colors)));
+            if ($p->variants && $p->variants->isNotEmpty()) {
+                $colors = $p->variants->where('is_active', true)->map(fn($v) => $v->color?->hex_code)->filter()->unique()->values()->toArray();
+                $sizes = $p->variants->where('is_active', true)->map(fn($v) => $v->size?->code)->filter()->unique()->values()->toArray();
+            } else {
+                if (isset($p->sizes) && !empty($p->sizes)) {
+                    $sizes = is_array($p->sizes) ? $p->sizes : array_filter(array_map('trim', explode(',', $p->sizes)));
+                }
+                if (isset($p->colors) && !empty($p->colors)) {
+                    $colors = is_array($p->colors) ? $p->colors : array_filter(array_map('trim', explode(',', $p->colors)));
+                }
             }
 
             return [
@@ -55,9 +64,9 @@ class StoreController extends Controller
                 'sku' => $p->sku,
                 'manufacturer' => $p->manufacturer ? $p->manufacturer->name : null,
                 'img' => $p->image ? \Illuminate\Support\Facades\Storage::url($p->image) : 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&auto=format&fit=crop&q=80',
-                'images' => [
-                    $p->image ? \Illuminate\Support\Facades\Storage::url($p->image) : 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&auto=format&fit=crop&q=80'
-                ]
+                'images' => $p->images->isNotEmpty()
+                    ? $p->images->sortByDesc('is_default')->map(fn($img) => \Illuminate\Support\Facades\Storage::url($img->image_path))->values()->toArray()
+                    : ['https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&auto=format&fit=crop&q=80']
             ];
         })->toArray();
     }
@@ -276,7 +285,7 @@ class StoreController extends Controller
      */
     public function checkout()
     {
-        if (!auth()->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to proceed to checkout.');
         }
 
@@ -305,7 +314,7 @@ class StoreController extends Controller
      */
     public function placeOrder(Request $request)
     {
-        if (!auth()->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to proceed to checkout.');
         }
 
@@ -377,7 +386,7 @@ class StoreController extends Controller
      */
     public function account($tab = 'orders')
     {
-        if (!auth()->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to access your account.');
         }
 
@@ -413,7 +422,7 @@ class StoreController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        if (!auth()->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to update your profile.');
         }
 
@@ -422,9 +431,9 @@ class StoreController extends Controller
             'last_name' => 'required|string|max:255',
         ]);
 
-        $user = auth()->user();
-        $user->name = trim($request->first_name . ' ' . $request->last_name);
-        $user->save();
+        $customer = auth('customer')->user();
+        $customer->name = trim($request->first_name . ' ' . $request->last_name);
+        $customer->save();
 
         return redirect()->route('store.account', 'profile')->with('success', 'Profile details updated successfully!');
     }

@@ -76,7 +76,7 @@
                 <h2 class="section-title">New Drops</h2>
                 <p class="section-sub">Fresh arrivals styled for the seasonal transit</p>
             </div>
-            <a href="{{ route('store.shop') }}" class="btn btn-outline btn-sm">View Catalogue</a>
+            <a href="{{ route('store.shop') }}" class="btn btn-outline btn-sm">View All</a>
         </div>
         
         <div class="grid-4">

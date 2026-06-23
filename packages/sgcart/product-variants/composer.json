@@ -1,0 +1,28 @@
+{
+    "name": "sgcart/product-variants",
+    "description": "standalone plug-and-play product variants package for SGCart",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "SGCart Team",
+            "email": "support@sgcart.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "SGCart\\ProductVariants\\": "src/",
+            "SGCart\\ProductVariants\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SGCart\\ProductVariants\\Providers\\ProductVariantServiceProvider"
+            ]
+        }
+    }
+}

@@ -19,9 +19,26 @@
     </div>
 </div>
 
+<!-- Tab Navigation (Underline Style outside the card) -->
+<div class="flex items-center border-b border-slate-200 dark:border-slate-800 mb-6">
+    <div class="flex gap-1 -mb-px">
+        <button type="button" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 outline-none select-none bg-transparent cursor-default flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-xs"></i>
+            <span>Basic Details</span>
+        </button>
+        @if(Route::has('admin.products.variants.grid'))
+        <button type="button" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-400 dark:text-slate-500 outline-none cursor-not-allowed flex items-center gap-2 bg-transparent" title="Product must be created before variants can be configured" disabled>
+            <i class="fa-solid fa-tags text-xs text-slate-400 dark:text-slate-500"></i>
+            <span>Product Variants</span>
+            <i class="fa-solid fa-lock text-[10px]"></i>
+        </button>
+        @endif
+    </div>
+</div>
+
 <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm w-full overflow-hidden">
-    <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-        <h2 class="font-semibold text-sm">Enter Product Specifications & Details</h2>
+    <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-wrap justify-between items-center gap-4">
+        <h2 class="font-semibold text-sm font-display">Enter Product Specifications & Details</h2>
     </div>
 
     <form method="POST" action="{{ route('admin.products.store') }}" enctype="multipart/form-data" class="p-6 space-y-8">
@@ -140,15 +157,23 @@
 
         {{-- ── Product Image Section ── --}}
         <div class="space-y-4">
-            <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">Product Image</h3>
-            <div class="p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 rounded-lg space-y-4">
-                <div>
-                    <label class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Upload Product Image</label>
-                    <input type="file" name="image" accept="image/*" id="imageInput"
-                        class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2 px-3 text-sm text-slate-800 dark:text-slate-200 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-500/10 dark:file:text-blue-400 hover:file:bg-blue-100 cursor-pointer">
+            <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">Product Images</h3>
+            
+            <div class="p-5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 rounded-xl space-y-4">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Add product images below. Choose a default image using the radio button on the image card.</p>
+                
+                <div id="imageGallery" class="flex flex-wrap gap-4">
+                    <!-- Dynamic Preview Cards will be inserted here -->
+                    
+                    <!-- Add Image Button Card -->
+                    <div id="addImageCard" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-xl w-32 h-32 flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-slate-100/50 dark:hover:bg-slate-800/30 gap-1.5 group select-none" onclick="triggerAddImage()">
+                        <i class="fa-solid fa-circle-plus text-2xl text-slate-400 dark:text-slate-600 group-hover:text-blue-500 transition-colors"></i>
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors">Add Image</span>
+                    </div>
                 </div>
-                <div id="imagePreview" class="flex flex-wrap gap-4 mt-2"></div>
             </div>
+            
+            <div id="hiddenInputsContainer" class="hidden"></div>
         </div>
 
         <!-- Form Actions -->
@@ -165,21 +190,69 @@
 </div>
 
 <script>
-// ── Image Preview ──
-document.getElementById('imageInput').addEventListener('change', function () {
-    const preview = document.getElementById('imagePreview');
-    preview.innerHTML = '';
-    if (this.files && this.files[0]) {
-        const reader = new FileReader();
-        reader.onload = e => {
-            preview.insertAdjacentHTML('beforeend', `
-                <div class="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm w-24 h-24 group">
-                    <img src="${e.target.result}" class="w-full h-full object-cover">
-                </div>`);
-        };
-        reader.readAsDataURL(this.files[0]);
+let uniqueIdCounter = 0;
+
+function triggerAddImage() {
+    uniqueIdCounter++;
+    const id = 'img_' + uniqueIdCounter;
+    
+    // Create dynamic file input
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.name = 'product_images[' + id + ']';
+    input.accept = 'image/*';
+    input.id = 'input_' + id;
+    input.className = 'hidden';
+    
+    input.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const gallery = document.getElementById('imageGallery');
+                const addCard = document.getElementById('addImageCard');
+                
+                const cardHtml = `
+                    <div class="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm w-32 h-32 bg-slate-950 flex flex-col justify-between group" id="preview_card_${id}">
+                        <img src="${e.target.result}" class="w-full h-full object-cover absolute inset-0">
+                        <div class="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button type="button" class="text-rose-500 hover:text-rose-700 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full p-1.5 transition-colors outline-none cursor-pointer flex items-center justify-center w-7 h-7 shadow-sm" onclick="removeNewImage('${id}')">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                        <div class="absolute bottom-2 left-2 right-2 bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-lg p-1.5 flex items-center gap-1.5 shadow-sm z-10">
+                            <input type="radio" name="default_image" value="new_${id}" id="radio_new_${id}" class="accent-blue-600 cursor-pointer">
+                            <label for="radio_new_${id}" class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer select-none">Default</label>
+                        </div>
+                    </div>
+                `;
+                addCard.insertAdjacentHTML('beforebegin', cardHtml);
+                
+                // Automatically check if it's the first one added
+                const checkedRadio = document.querySelector('input[name="default_image"]:checked');
+                if (!checkedRadio) {
+                    document.getElementById('radio_new_' + id).checked = true;
+                }
+            };
+            reader.readAsDataURL(this.files[0]);
+        } else {
+            input.remove();
+        }
+    });
+    
+    document.getElementById('hiddenInputsContainer').appendChild(input);
+    input.click();
+}
+
+function removeNewImage(id) {
+    document.getElementById('preview_card_' + id).remove();
+    document.getElementById('input_' + id).remove();
+    
+    const checkedRadio = document.querySelector('input[name="default_image"]:checked');
+    if (!checkedRadio) {
+        const firstRadio = document.querySelector('input[name="default_image"]');
+        if (firstRadio) firstRadio.checked = true;
     }
-});
+}
 </script>
 
 @push('scripts')

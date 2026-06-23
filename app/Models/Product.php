@@ -15,7 +15,6 @@ class Product extends Model
         'name', 'sku', 'category_id', 'manufacturer_id',
         'short_description', 'description', 'price', 'sale_price',
         'stock', 'status', 'weight', 'dimensions',
-        'image',
     ];
 
     /**
@@ -43,6 +42,33 @@ class Product extends Model
         ];
     }
 
+    /**
+     * Fallback accessor to dynamically retrieve default or first image.
+     */
+    public function getImageAttribute()
+    {
+        $default = $this->images->firstWhere('is_default', true);
+        return $default ? $default->image_path : ($this->images->first()?->image_path);
+    }
+
     public function category()    { return $this->belongsTo(Category::class); }
     public function manufacturer(){ return $this->belongsTo(Manufacturer::class); }
+    
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class);
+    }
+
+    public function defaultImage()
+    {
+        return $this->hasOne(ProductImage::class)->where('is_default', true);
+    }
+
+    public function variants()
+    {
+        if (class_exists(\SGCart\ProductVariants\Models\ProductVariant::class)) {
+            return $this->hasMany(\SGCart\ProductVariants\Models\ProductVariant::class);
+        }
+        return $this->hasMany(self::class, 'id', 'id')->whereRaw('1 = 0');
+    }
 }
