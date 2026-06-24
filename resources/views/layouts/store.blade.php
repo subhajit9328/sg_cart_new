@@ -14,7 +14,15 @@
     <!-- Vite asset compilation -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <body class="storefront">
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="storefront">
 
 @php
     $navCategories = collect(App\Http\Controllers\StoreController::getProducts())->pluck('cat')->unique()->values();
@@ -78,7 +86,9 @@
                     <a href="{{ route('store.cart') }}" class="mobile-nav-link {{ Route::is('store.cart') ? 'active' : '' }}" onclick="closeMobileNav()">
                         <i class="fa-solid fa-cart-shopping"></i>
                         <span>Cart</span>
-                        <span class="ml-auto min-w-[18px] h-[18px] bg-accent text-white rounded-full font-bold text-[9px] flex items-center justify-center px-1.5 py-0.5 leading-none" id="mobileCartBadge">{{ count(session('cart', [])) }}</span>
+                        @if(count(session('cart', [])) > 0)
+                            <span class="ml-auto min-w-[18px] h-[18px] bg-accent text-white rounded-full font-bold text-[9px] flex items-center justify-center px-1.5 py-0.5 leading-none" id="mobileCartBadge">{{ count(session('cart', [])) }}</span>
+                        @endif
                     </a>
                 </nav>
             </div>
@@ -168,6 +178,20 @@
 
             <!-- Right Actions -->
             <div class="header-actions">
+                <!-- Theme Toggle -->
+                <button type="button" id="themeToggleBtn" class="header-theme-btn" title="Toggle Dark/Light Mode">
+                    <i class="fa-solid fa-moon header-theme-icon" id="themeIcon"></i>
+                </button>
+
+                <!-- Cart -->
+                <a href="{{ route('store.cart') }}" class="header-cart-btn" title="Cart">
+                    <i class="fa-solid fa-cart-shopping header-cart-icon"></i>
+                    <span class="header-cart-label">Cart</span>
+                    @if(count(session('cart', [])) > 0)
+                        <span class="header-cart-count" id="cartBadge">{{ count(session('cart', [])) }}</span>
+                    @endif
+                </a>
+
                 <!-- Account -->
                 @auth('customer')
                 <a href="{{ route('store.account') }}" class="header-account-btn" title="My Account">
@@ -180,13 +204,6 @@
                     <span class="header-account-name">Login</span>
                 </a>
                 @endauth
-
-                <!-- Cart -->
-                <a href="{{ route('store.cart') }}" class="header-cart-btn" title="Cart">
-                    <i class="fa-solid fa-cart-shopping header-cart-icon"></i>
-                    <span class="header-cart-label">Cart</span>
-                    <span class="header-cart-count" id="cartBadge">{{ count(session('cart', [])) }}</span>
-                </a>
             </div>
 
         </div>
@@ -223,7 +240,7 @@
 </header>
 
 <!-- MAIN CONTENT -->
-<div class="min-h-screen" style="padding-top: 116px; padding-bottom: 48px;">
+<div class="min-h-screen" style="padding-top: 112px; padding-bottom: 48px;">
     @yield('content')
 </div>
 
@@ -395,8 +412,8 @@
                 </div>
                 <p class="text-sm text-stone dark:text-slate-400 mb-6 leading-relaxed">${text}</p>
                 <div class="flex justify-end gap-3">
-                    <button class="modal-cancel border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-colors bg-transparent">Cancel</button>
-                    <button class="modal-confirm btn ${confirmBtnClass} px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer">Confirm</button>
+                    <button class="modal-cancel border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-colors bg-transparent" style="text-transform: none;">Cancel</button>
+                    <button class="modal-confirm btn ${confirmBtnClass} px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer" style="text-transform: none;">Confirm</button>
                 </div>
             </div>
         `;
@@ -451,6 +468,10 @@
         if (e.defaultPrevented) return;
 
         const form = e.target;
+        if (form && (form.classList.contains('wishlist-ajax-form') || (form.action && form.action.includes('/wishlist/toggle')))) {
+            return;
+        }
+
         const submitBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
         submitBtns.forEach(btn => {
             // Check if spinner is already added
@@ -784,6 +805,169 @@
             });
         }
     })();
+
+    // Dark Mode Toggle Feature
+    (function() {
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        const themeLabel = document.getElementById('themeLabel');
+
+        function updateThemeUI() {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (themeIcon) {
+                themeIcon.className = isDark ? 'fa-solid fa-sun header-theme-icon' : 'fa-solid fa-moon header-theme-icon';
+            }
+            if (themeLabel) {
+                themeLabel.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+            }
+        }
+
+        if (themeToggleBtn) {
+            // Initial UI state update
+            updateThemeUI();
+
+            themeToggleBtn.addEventListener('click', function() {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+                updateThemeUI();
+            });
+        }
+    })();
+
+    // AJAX Wishlist Toggle Feature
+    window.toggleWishlist = function(button) {
+        if (!button || button.disabled) return;
+
+        const productId = button.getAttribute('data-product-id');
+        if (!productId) return;
+
+        // Find the icon and replace with a spinner during loading
+        const icon = button.querySelector('i');
+        let originalIconClass = '';
+        if (icon) {
+            originalIconClass = icon.className;
+            icon.className = 'fa-solid fa-spinner fa-spin';
+        }
+
+        button.disabled = true;
+        button.style.pointerEvents = 'none';
+
+        // Prepare FormData
+        const formData = new FormData();
+        formData.append('product_id', productId);
+
+        // Get CSRF Token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        fetch('/wishlist/toggle', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                
+                const isProductInWishlist = data.wishlist.map(Number).includes(Number(productId));
+                
+                // Update all wishlist elements for this product ID on the page
+                const buttons = document.querySelectorAll(`[data-product-id="${productId}"]`);
+                buttons.forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.pointerEvents = '';
+                    
+                    if (btn.classList.contains('wishlist-btn')) {
+                        if (isProductInWishlist) {
+                            btn.classList.add('active');
+                        } else {
+                            btn.classList.remove('active');
+                        }
+                        const iconEl = btn.querySelector('i');
+                        if (iconEl) {
+                            iconEl.className = isProductInWishlist ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+                        }
+                        
+                        // Handle removal animation if toggled on account wishlist tab
+                        if (btn.closest('#tab-wishlist') && !isProductInWishlist) {
+                            const card = btn.closest('.product-card');
+                            if (card) {
+                                card.style.transition = 'all 0.3s ease';
+                                card.style.opacity = '0';
+                                card.style.transform = 'scale(0.9)';
+                                setTimeout(() => {
+                                    card.remove();
+                                    const container = document.querySelector('#tab-wishlist .grid, #tab-wishlist .grid-cols-2');
+                                    if (container && container.querySelectorAll('.product-card').length === 0) {
+                                        container.outerHTML = `
+                                            <div class="col-span-2 sm:col-span-3 md:col-span-4 py-12 text-center text-slate-400">
+                                                <i class="fa-regular fa-heart text-4xl mb-3 opacity-20 block"></i>
+                                                <p class="text-sm">Your wishlist is empty.</p>
+                                                <a href="/shop" class="btn btn-primary btn-sm mt-4">Discover Products</a>
+                                            </div>
+                                        `;
+                                    }
+                                }, 300);
+                            }
+                        }
+                    } else if (btn.classList.contains('wishlist-detail-btn')) {
+                        btn.title = isProductInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist';
+                        if (isProductInWishlist) {
+                            btn.classList.add('active');
+                        } else {
+                            btn.classList.remove('active');
+                        }
+                        const iconEl = btn.querySelector('i');
+                        if (iconEl) {
+                            iconEl.className = isProductInWishlist ? 'fa-solid fa-heart text-base' : 'fa-regular fa-heart text-base';
+                        }
+                    } else if (btn.classList.contains('wishlist-remove-btn')) {
+                        const card = btn.closest('.product-card');
+                        if (card) {
+                            card.style.transition = 'all 0.3s ease';
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.9)';
+                            setTimeout(() => {
+                                card.remove();
+                                const container = document.querySelector('#tab-wishlist .grid, #tab-wishlist .grid-cols-2');
+                                if (container && container.querySelectorAll('.product-card').length === 0) {
+                                    container.outerHTML = `
+                                        <div class="py-12 text-center text-slate-400">
+                                            <i class="fa-regular fa-heart text-4xl mb-3 opacity-20 block"></i>
+                                            <p class="text-sm">Your wishlist is empty.</p>
+                                            <a href="/shop" class="btn btn-primary btn-sm mt-4">Discover Products</a>
+                                        </div>
+                                    `;
+                                }
+                            }, 300);
+                        }
+                    }
+                });
+            } else {
+                showToast(data.message || 'Something went wrong', 'error');
+                // Restore button state on error
+                button.disabled = false;
+                button.style.pointerEvents = '';
+                if (icon) icon.className = originalIconClass;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Failed to update wishlist.', 'error');
+            // Restore button state on error
+            button.disabled = false;
+            button.style.pointerEvents = '';
+            if (icon) icon.className = originalIconClass;
+        });
+    };
 </script>
 
 <form action="{{ route('store.logout') }}" method="POST" id="storeLogoutForm" class="hidden">
