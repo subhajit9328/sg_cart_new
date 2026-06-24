@@ -95,11 +95,9 @@
 
         <!-- Demo Accounts Hint -->
         <div class="mt-8 pt-6 border-t border-slate-800 text-center">
-            <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-3">Quick Demo Accounts</p>
-            <div class="grid grid-cols-3 gap-2 text-xs">
-                <button onclick="fillDemo('admin@sgcart.com')" class="px-2 py-1.5 bg-slate-900 hover:bg-slate-800 rounded border border-slate-800/80 text-slate-300 hover:text-white transition-all">Super Admin</button>
-                <button onclick="fillDemo('manager@sgcart.com')" class="px-2 py-1.5 bg-slate-900 hover:bg-slate-800 rounded border border-slate-800/80 text-slate-300 hover:text-white transition-all">Manager</button>
-                <button onclick="fillDemo('user@sgcart.com')" class="px-2 py-1.5 bg-slate-900 hover:bg-slate-800 rounded border border-slate-800/80 text-slate-300 hover:text-white transition-all">User</button>
+            <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-3">Quick Demo Account</p>
+            <div class="flex justify-center text-xs">
+                <button onclick="fillDemo('admin@sgcart.com')" class="px-6 py-2 bg-slate-900 hover:bg-slate-800 rounded border border-slate-800/80 text-slate-300 hover:text-white transition-all font-medium">Super Admin</button>
             </div>
         </div>
 
