@@ -153,6 +153,12 @@
                            autocomplete="off"
                            value="{{ request('search') }}"
                            class="header-search-input"/>
+                    <button type="button" class="header-search-clear-btn" id="clearSearchBtn" title="Clear Search" style="display: none;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <button type="button" class="header-search-voice-btn" id="voiceSearchBtn" title="Search by Voice">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
                     <button type="submit" class="header-search-btn" aria-label="Search">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </button>
@@ -628,6 +634,156 @@
             }
         });
     }
+
+    // Voice Search Feature
+    (function() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const voiceBtn = document.getElementById('voiceSearchBtn');
+        const searchInput = document.getElementById('navSearchInput');
+        const searchForm = document.getElementById('navSearchForm');
+
+        if (voiceBtn && searchInput && searchForm) {
+            if (!SpeechRecognition) {
+                // Inform user if SpeechRecognition is not supported in this browser (e.g. Firefox)
+                voiceBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showToast('Voice search is not supported in this browser. Please try Chrome, Edge, or Safari.', 'info');
+                });
+                return;
+            }
+
+            // Speech recognition state variables
+            let activeRecognition = null;
+            let recognitionState = 'inactive'; // 'inactive', 'starting', 'listening', 'stopping'
+            const originalPlaceholder = searchInput.placeholder;
+
+            // Reset states when loaded via back/forward browser cache (bfcache)
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted) {
+                    recognitionState = 'inactive';
+                    voiceBtn.classList.remove('listening');
+                    searchInput.placeholder = originalPlaceholder;
+                    activeRecognition = null;
+                }
+            });
+
+            voiceBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (recognitionState === 'listening' || recognitionState === 'starting') {
+                    recognitionState = 'stopping';
+                    if (activeRecognition) {
+                        activeRecognition.stop();
+                    }
+                } else if (recognitionState === 'inactive') {
+                    try {
+                        recognitionState = 'starting';
+                        
+                        // Create a fresh instance every time to avoid state corruption or locked state errors
+                        activeRecognition = new SpeechRecognition();
+                        activeRecognition.continuous = false;
+                        activeRecognition.interimResults = false;
+                        activeRecognition.maxAlternatives = 1;
+                        activeRecognition.lang = document.documentElement.lang || navigator.language || 'en-US';
+
+                        activeRecognition.onstart = function() {
+                            recognitionState = 'listening';
+                            voiceBtn.classList.add('listening');
+                            searchInput.placeholder = 'Listening... Speak now';
+                            showToast('Listening for voice input...', 'info');
+                        };
+
+                        activeRecognition.onresult = function(event) {
+                            if (event.results && event.results[0] && event.results[0][0]) {
+                                const transcript = event.results[0][0].transcript;
+                                let query = transcript.trim();
+                                if (query.endsWith('.')) {
+                                    query = query.slice(0, -1);
+                                }
+                                searchInput.value = query;
+                                
+                                // Trigger live suggestions dropdown matching the voice input
+                                searchInput.dispatchEvent(new Event('input'));
+                                
+                                showToast(`Voice recognized: "${query}"`, 'success');
+                            }
+                        };
+
+                        activeRecognition.onerror = function(event) {
+                            console.error('Speech recognition error event:', event.error);
+                            cleanup();
+
+                            if (event.error === 'not-allowed') {
+                                showToast('Microphone access blocked. Please check browser settings.', 'error');
+                            } else if (event.error === 'no-microphone') {
+                                showToast('No microphone found. Please connect one.', 'error');
+                            } else if (event.error === 'no-speech') {
+                                showToast('No speech was detected. Try again.', 'warning');
+                            } else {
+                                showToast('Voice search failed. Try again.', 'error');
+                            }
+                        };
+
+                        activeRecognition.onend = function() {
+                            cleanup();
+                        };
+
+                        function cleanup() {
+                            recognitionState = 'inactive';
+                            voiceBtn.classList.remove('listening');
+                            searchInput.placeholder = originalPlaceholder;
+                            activeRecognition = null;
+                        }
+
+                        activeRecognition.start();
+                    } catch (err) {
+                        console.error('Speech recognition error on start:', err);
+                        recognitionState = 'inactive';
+                        activeRecognition = null;
+                        showToast('Error starting speech recognition.', 'error');
+                    }
+                }
+            });
+        }
+    })();
+
+    // Search Clear Button Feature
+    (function() {
+        const clearBtn = document.getElementById('clearSearchBtn');
+        const searchInput = document.getElementById('navSearchInput');
+
+        if (clearBtn && searchInput) {
+            // Function to toggle clear button visibility
+            function toggleClearBtn() {
+                if (searchInput.value.trim().length > 0) {
+                    clearBtn.style.display = 'flex';
+                } else {
+                    clearBtn.style.display = 'none';
+                }
+            }
+
+            // Check initially on load (e.g. if back-navigation restores the form query)
+            toggleClearBtn();
+
+            // Toggle clear button when input value changes
+            searchInput.addEventListener('input', toggleClearBtn);
+
+            // Clear input logic
+            clearBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                searchInput.value = '';
+                // Trigger input event to update/hide live suggestions dropdown
+                searchInput.dispatchEvent(new Event('input'));
+                
+                clearBtn.style.display = 'none';
+                searchInput.focus();
+            });
+        }
+    })();
 </script>
 
 <form action="{{ route('store.logout') }}" method="POST" id="storeLogoutForm" class="hidden">
