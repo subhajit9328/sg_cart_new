@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class StoreController extends Controller
 {
@@ -126,8 +127,23 @@ class StoreController extends Controller
             $allCategories = ['Women', 'Men', 'Accessories', 'Footwear', 'Beauty'];
         }
 
+        // Pagination: 12 products per page
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $perPage = 12;
+        $currentPageResults = $products->slice(($page - 1) * $perPage, $perPage)->values();
+        $paginatedProducts = new LengthAwarePaginator(
+            $currentPageResults,
+            $products->count(),
+            $perPage,
+            $page,
+            [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+                'query' => $request->query()
+            ]
+        );
+
         return view('store.shop', [
-            'products' => $products,
+            'products' => $paginatedProducts,
             'allCategories' => $allCategories,
             'selectedCategories' => (array) $request->input('category', []),
             'selectedPriceMax' => $request->input('price_max', 10000),

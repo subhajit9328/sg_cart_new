@@ -87,9 +87,6 @@
                             <span class="product-badge badge-{{ strtolower($product['badge']) }}">{{ $product['badge'] }}</span>
                         @endif
                         <img src="{{ $product['img'] }}" alt="{{ $product['name'] }}"/>
-                        <div class="product-card-overlay">
-                            <button onclick="event.stopPropagation(); window.location.href='{{ route('store.product', $product['slug']) }}'" class="btn btn-primary btn-sm w-full"><i class="fa-solid fa-cart-shopping"></i> Quick Buy</button>
-                        </div>
                     </div>
                     <div class="product-card-body">
                         <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $product['cat'] }}</p>

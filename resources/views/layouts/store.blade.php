@@ -14,7 +14,15 @@
     <!-- Vite asset compilation -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <body class="storefront">
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="storefront">
 
 @php
     $navCategories = collect(App\Http\Controllers\StoreController::getProducts())->pluck('cat')->unique()->values();
@@ -78,7 +86,9 @@
                     <a href="{{ route('store.cart') }}" class="mobile-nav-link {{ Route::is('store.cart') ? 'active' : '' }}" onclick="closeMobileNav()">
                         <i class="fa-solid fa-cart-shopping"></i>
                         <span>Cart</span>
-                        <span class="ml-auto min-w-[18px] h-[18px] bg-accent text-white rounded-full font-bold text-[9px] flex items-center justify-center px-1.5 py-0.5 leading-none" id="mobileCartBadge">{{ count(session('cart', [])) }}</span>
+                        @if(count(session('cart', [])) > 0)
+                            <span class="ml-auto min-w-[18px] h-[18px] bg-accent text-white rounded-full font-bold text-[9px] flex items-center justify-center px-1.5 py-0.5 leading-none" id="mobileCartBadge">{{ count(session('cart', [])) }}</span>
+                        @endif
                     </a>
                 </nav>
             </div>
@@ -168,6 +178,20 @@
 
             <!-- Right Actions -->
             <div class="header-actions">
+                <!-- Theme Toggle -->
+                <button type="button" id="themeToggleBtn" class="header-theme-btn" title="Toggle Dark/Light Mode">
+                    <i class="fa-solid fa-moon header-theme-icon" id="themeIcon"></i>
+                </button>
+
+                <!-- Cart -->
+                <a href="{{ route('store.cart') }}" class="header-cart-btn" title="Cart">
+                    <i class="fa-solid fa-cart-shopping header-cart-icon"></i>
+                    <span class="header-cart-label">Cart</span>
+                    @if(count(session('cart', [])) > 0)
+                        <span class="header-cart-count" id="cartBadge">{{ count(session('cart', [])) }}</span>
+                    @endif
+                </a>
+
                 <!-- Account -->
                 @auth('customer')
                 <a href="{{ route('store.account') }}" class="header-account-btn" title="My Account">
@@ -180,13 +204,6 @@
                     <span class="header-account-name">Login</span>
                 </a>
                 @endauth
-
-                <!-- Cart -->
-                <a href="{{ route('store.cart') }}" class="header-cart-btn" title="Cart">
-                    <i class="fa-solid fa-cart-shopping header-cart-icon"></i>
-                    <span class="header-cart-label">Cart</span>
-                    <span class="header-cart-count" id="cartBadge">{{ count(session('cart', [])) }}</span>
-                </a>
             </div>
 
         </div>
@@ -223,7 +240,7 @@
 </header>
 
 <!-- MAIN CONTENT -->
-<div class="min-h-screen" style="padding-top: 116px; padding-bottom: 48px;">
+<div class="min-h-screen" style="padding-top: 112px; padding-bottom: 48px;">
     @yield('content')
 </div>
 
@@ -781,6 +798,39 @@
                 
                 clearBtn.style.display = 'none';
                 searchInput.focus();
+            });
+        }
+    })();
+
+    // Dark Mode Toggle Feature
+    (function() {
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        const themeLabel = document.getElementById('themeLabel');
+
+        function updateThemeUI() {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (themeIcon) {
+                themeIcon.className = isDark ? 'fa-solid fa-sun header-theme-icon' : 'fa-solid fa-moon header-theme-icon';
+            }
+            if (themeLabel) {
+                themeLabel.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+            }
+        }
+
+        if (themeToggleBtn) {
+            // Initial UI state update
+            updateThemeUI();
+
+            themeToggleBtn.addEventListener('click', function() {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+                updateThemeUI();
             });
         }
     })();
