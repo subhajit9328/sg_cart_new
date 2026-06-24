@@ -63,13 +63,26 @@
                 
 
 
-                <!-- Pricing -->
-                <div class="flex items-end gap-3 mb-5 pb-5 border-b border-slate-100" id="variantPriceWrapper">
-                    <span class="font-display font-extrabold text-2xl text-slate-900">₹{{ number_format($product['price'], 2) }}</span>
-                    @if($product['old'])
-                        <span class="text-lg text-slate-400 line-through">₹{{ number_format($product['old'], 2) }}</span>
-                        <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Save {{ round((1 - $product['price'] / $product['old']) * 100) }}%</span>
-                    @endif
+                <!-- Pricing & Stock Badge -->
+                <div class="flex items-center justify-between flex-wrap gap-3 mb-5 pb-5 border-b border-slate-100">
+                    <div class="flex items-end gap-3" id="variantPriceWrapper">
+                        <span class="font-display font-extrabold text-2xl text-slate-900">₹{{ number_format($product['price'], 2) }}</span>
+                        @if($product['old'])
+                            <span class="text-lg text-slate-400 line-through">₹{{ number_format($product['old'], 2) }}</span>
+                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Save {{ round((1 - $product['price'] / $product['old']) * 100) }}%</span>
+                        @endif
+                    </div>
+                    <div>
+                        @if(($product['stock'] ?? 0) > 0)
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> In Stock ({{ $product['stock'] }} left)
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Out of Stock
+                            </span>
+                        @endif
+                    </div>
                 </div>
 
                 <p class="text-xs text-slate-500 leading-relaxed mb-6">{{ $product['desc'] }}</p>
@@ -106,18 +119,27 @@
                 @endif
 
                 <!-- Quantity & Actions -->
+                <!-- Quantity & Actions -->
                 <div class="flex gap-3 items-end pt-5 border-t border-slate-100 mb-6">
-                    <div>
-                        <label class="label">Quantity</label>
-                        <div class="qty-row" style="height:46px">
-                            <button type="button" class="qty-btn" onclick="adjQty(-1)"><i class="fa-solid fa-minus text-xs"></i></button>
-                            <input type="number" name="quantity" id="qtyInput" value="1" min="1" class="qty-num" readonly/>
-                            <button type="button" class="qty-btn" onclick="adjQty(1)"><i class="fa-solid fa-plus text-xs"></i></button>
+                    @if(($product['stock'] ?? 0) <= 0)
+                        <div class="flex-1">
+                            <button type="button" class="btn btn-primary w-full bg-slate-200 text-slate-400 border-none cursor-not-allowed hover:translate-y-0" style="height:46px; background-color:#e2e8f0 !important; color:#94a3b8 !important;" disabled>
+                                <i class="fa-solid fa-ban"></i> Out of Stock
+                            </button>
                         </div>
-                    </div>
-                    <div class="flex-1">
-                        <button type="submit" class="btn btn-primary w-full" style="height:46px"><i class="fa-solid fa-bag-shopping"></i> Add To Bag</button>
-                    </div>
+                    @else
+                        <div>
+                            <label class="label">Quantity</label>
+                            <div class="qty-row" style="height:46px">
+                                <button type="button" class="qty-btn" onclick="adjQty(-1)"><i class="fa-solid fa-minus text-xs"></i></button>
+                                <input type="number" name="quantity" id="qtyInput" value="1" min="1" class="qty-num" readonly/>
+                                <button type="button" class="qty-btn" onclick="adjQty(1)"><i class="fa-solid fa-plus text-xs"></i></button>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <button type="submit" class="btn btn-primary w-full" style="height:46px"><i class="fa-solid fa-bag-shopping"></i> Add To Cart</button>
+                        </div>
+                    @endif
                     <div>
                         @php
                             $inWishlist = in_array($product['id'], session('wishlist', [3, 5, 6]));
@@ -129,6 +151,10 @@
                         </button>
                     </div>
                 </div>
+
+                @if(($product['stock'] ?? 0) > 0 && ($product['stock'] ?? 0) <= 5)
+                    <p class="text-xs text-amber-600 font-bold mb-6"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Only {{ $product['stock'] }} left in stock - order soon!</p>
+                @endif
 
                 <!-- Info list -->
                 <div class="border-t border-slate-100 pt-3">
@@ -243,6 +269,7 @@
 
     function adjQty(dir) {
         const inp = document.getElementById('qtyInput');
+        if (!inp) return;
         let val = parseInt(inp.value) + dir;
         if (val < 1) val = 1;
         inp.value = val;

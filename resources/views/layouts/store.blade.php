@@ -78,7 +78,7 @@
                     <a href="{{ route('store.cart') }}" class="mobile-nav-link {{ Route::is('store.cart') ? 'active' : '' }}" onclick="closeMobileNav()">
                         <i class="fa-solid fa-cart-shopping"></i>
                         <span>Cart</span>
-                        <span class="ml-auto min-w-[18px] h-[18px] bg-accent text-white rounded-full font-bold text-[9px] flex items-center justify-center px-1.5 py-0.5 leading-none" id="mobileCartBadge">{{ count(session('cart', [])) }}</span>
+                        <span class="ml-auto min-w-[18px] h-[18px] bg-accent text-white rounded-full font-bold text-[9px] flex items-center justify-center px-1.5 py-0.5 leading-none" id="mobileCartBadge">{{ $cartCount ?? 0 }}</span>
                     </a>
                 </nav>
             </div>
@@ -185,7 +185,7 @@
                 <a href="{{ route('store.cart') }}" class="header-cart-btn" title="Cart">
                     <i class="fa-solid fa-cart-shopping header-cart-icon"></i>
                     <span class="header-cart-label">Cart</span>
-                    <span class="header-cart-count" id="cartBadge">{{ count(session('cart', [])) }}</span>
+                    <span class="header-cart-count" id="cartBadge">{{ $cartCount ?? 0 }}</span>
                 </a>
             </div>
 

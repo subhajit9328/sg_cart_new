@@ -77,9 +77,14 @@
                                         <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 mt-1">In Transit</span>
                                     @endif
                                 </div>
-                                <button type="button" onclick="showToast('Invoice downloaded successfully!','success')" class="w-9 h-9 rounded-lg border border-slate-200 hover:bg-slate-50 flex items-center justify-center transition-colors text-slate-400 hover:text-slate-800" title="Download Invoice">
-                                    <i class="fa-solid fa-download text-sm"></i>
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ route('store.account.order.view', $order['ulid']) }}" class="w-9 h-9 rounded-lg border border-slate-200 hover:bg-slate-50 flex items-center justify-center transition-colors text-slate-400 hover:text-slate-800" title="View Order Details">
+                                        <i class="fa-solid fa-eye text-sm"></i>
+                                    </a>
+                                    <a href="{{ route('store.account.order.invoice', $order['ulid']) }}" class="w-9 h-9 rounded-lg border border-slate-200 hover:bg-slate-50 flex items-center justify-center transition-colors text-slate-400 hover:text-slate-800" title="Download Invoice">
+                                        <i class="fa-solid fa-download text-sm"></i>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     @empty
@@ -128,22 +133,37 @@
             <div id="tab-address" class="acc-content {{ $activeTab === 'address' ? 'active' : '' }}">
                 <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-solid fa-map-location-dot text-accent text-sm"></i> Manage Addresses</h2>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div class="border border-[#e8e4df] rounded-xl p-5 relative transition-all hover:border-slate-400 border-slate-900 bg-slate-50/10">
-                        <span class="absolute -top-px right-4 bg-slate-950 text-white text-[9px] font-bold uppercase tracking-wider padding px-2.5 py-1 rounded-b-lg">Default Billing</span>
-                        <div class="text-sm font-bold mb-1.5 flex items-center gap-1.5"><i class="fa-regular fa-address-book text-slate-400"></i> {{ auth('customer')->user()?->name ?? 'John Doe' }}</div>
-                        <div class="text-xs text-slate-500 leading-relaxed">123 Main Street<br/>New York, NY 10001<br/>United States</div>
-                        <div class="flex gap-3 mt-4 pt-3 border-t border-[#e8e4df]">
-                            <span class="text-[11px] font-bold text-accent cursor-pointer" onclick="showToast('Edit mode opened','success')">Edit Address</span>
-                            <span class="text-[11px] font-bold text-rose-500 cursor-pointer" onclick="showToast('Default address cannot be deleted','error')">Delete</span>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    @foreach($addresses as $addr)
+                        <div class="border border-[#e8e4df] rounded-xl p-5 relative transition-all hover:border-slate-400 {{ $addr->is_default ? 'border-slate-900 bg-slate-50/10' : '' }}">
+                            @if($addr->is_default)
+                                <span class="absolute -top-px right-4 bg-slate-950 text-white text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-b-lg">Default Shipping</span>
+                            @endif
+                            <div class="text-sm font-bold mb-1.5 flex items-center gap-1.5"><i class="fa-regular fa-address-book text-slate-400"></i> {{ $addr->first_name }} {{ $addr->last_name }}</div>
+                            <div class="text-xs text-slate-500 leading-relaxed">{{ $addr->address }}<br/>{{ $addr->city }}, {{ $addr->state }} {{ $addr->zip }}<br/>{{ $addr->country }}</div>
+                            <div class="flex gap-2.5 mt-3 items-center justify-end">
+                                <span class="text-[10px] font-bold text-accent cursor-pointer hover:text-slate-900 transition-colors select-none" onclick="openEditAddressModal({{ json_encode($addr) }})"><i class="fa-regular fa-pen-to-square mr-1"></i>Edit</span>
+                                <span class="text-slate-200 select-none">•</span>
+                                <a href="{{ route('store.account.address.delete', $addr->id) }}" class="text-[10px] font-bold text-rose-500 hover:text-rose-700" style="text-decoration:none" onclick="return confirm('Are you sure you want to delete this address?')"><i class="fa-regular fa-trash-can mr-1"></i>Delete</a>
+                            </div>
                         </div>
-                    </div>
+                    @endforeach
                     
-                    <div class="border-2 border-dashed border-[#e8e4df] hover:border-slate-400 rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer gap-2 min-h-[150px] transition-all" onclick="showToast('Feature coming soon!','success')">
+                    <!-- Add Address Button Card -->
+                    <div class="border-2 border-dashed border-[#e8e4df] hover:border-slate-400 hover:bg-slate-50/50 rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer gap-2 min-h-[150px] transition-all {{ $addresses->isEmpty() ? 'col-span-3' : '' }}" onclick="openAddressModal()">
                         <i class="fa-solid fa-plus text-2xl text-slate-300"></i>
                         <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Add New Address</span>
                     </div>
                 </div>
+
+                <!-- Add Address Modal Markup -->
+                <x-address-modal 
+                    id="addressModal" 
+                    formId="addressForm" 
+                    onClose="closeAddressModal()" 
+                    submitBtnId="saveAddressSubmitBtn" 
+                    action="{{ route('store.account.address.add') }}" 
+                />
             </div>
 
             <!-- Wishlist Tab -->
@@ -182,10 +202,79 @@
     </div>
 
 </div>
+
 @endsection
 
 @section('scripts')
 <script>
     // Tab switching is now routed via URL to preserve state.
+
+    function openAddressModal() {
+        const modal = document.getElementById('addressModal');
+        const content = document.getElementById('addressModalContent');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100');
+        content.classList.remove('scale-95');
+        content.classList.add('scale-100');
+    }
+
+    function openEditAddressModal(address) {
+        const modal = document.getElementById('addressModal');
+        const content = document.getElementById('addressModalContent');
+        const title = document.getElementById('addressModalTitle');
+        const form = document.getElementById('addressForm');
+
+        // Set Edit title
+        title.innerHTML = '<i class="fa-solid fa-map-location-dot text-accent"></i> Edit Address';
+        
+        // Update Form Action
+        form.action = "{{ route('store.account.address.update', ':id') }}".replace(':id', address.id);
+        
+        // Populate inputs
+        form.querySelector('input[name="first_name"]').value = address.first_name;
+        form.querySelector('input[name="last_name"]').value = address.last_name;
+        form.querySelector('input[name="address"]').value = address.address;
+        form.querySelector('input[name="city"]').value = address.city;
+        form.querySelector('input[name="state"]').value = address.state || '';
+        form.querySelector('input[name="zip"]').value = address.zip;
+        form.querySelector('input[name="country"]').value = address.country || '';
+
+        // Open modal
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100');
+        content.classList.remove('scale-95');
+        content.classList.add('scale-100');
+    }
+
+    function closeAddressModal() {
+        const modal = document.getElementById('addressModal');
+        const content = document.getElementById('addressModalContent');
+        const title = document.getElementById('addressModalTitle');
+        const form = document.getElementById('addressForm');
+
+        modal.classList.remove('opacity-100');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        content.classList.remove('scale-100');
+        content.classList.add('scale-95');
+
+        // Reset after animation
+        setTimeout(() => {
+            title.innerHTML = '<i class="fa-solid fa-map-location-dot text-accent"></i> Add New Address';
+            form.action = "{{ route('store.account.address.add') }}";
+            form.reset();
+        }, 300);
+    }
+
+    // Close modals when clicking on the backdrop
+    document.addEventListener('DOMContentLoaded', function() {
+        const addressModal = document.getElementById('addressModal');
+        if (addressModal) {
+            addressModal.addEventListener('click', function(e) {
+                if (e.target === addressModal) {
+                    closeAddressModal();
+                }
+            });
+        }
+    });
 </script>
 @endsection

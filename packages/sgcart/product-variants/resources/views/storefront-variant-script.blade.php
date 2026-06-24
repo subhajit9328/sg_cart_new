@@ -275,7 +275,7 @@
                     addToBagBtn.style.cssText = 'background-color:#94a3b8;cursor:not-allowed;';
                 } else {
                     addToBagBtn.disabled  = false;
-                    addToBagBtn.innerHTML = '<i class="fa-solid fa-bag-shopping"></i> Add To Bag';
+                    addToBagBtn.innerHTML = '<i class="fa-solid fa-bag-shopping"></i> Add To Cart';
                     addToBagBtn.style.cssText = '';
                 }
             }
@@ -297,7 +297,7 @@
             const addToBagBtn = document.querySelector('#purchaseForm button[type="submit"]');
             if (addToBagBtn) {
                 addToBagBtn.disabled  = false;
-                addToBagBtn.innerHTML = '<i class="fa-solid fa-bag-shopping"></i> Add To Bag';
+                addToBagBtn.innerHTML = '<i class="fa-solid fa-bag-shopping"></i> Add To Cart';
                 addToBagBtn.style.cssText = '';
             }
         }
