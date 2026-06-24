@@ -58,12 +58,12 @@ class ProductVariantServiceProvider extends ServiceProvider
             }
 
             // Seed colors and sizes if the tables are empty
-            if (Schema::hasTable('colors') && Schema::hasTable('sizes')) {
-                Artisan::call('db:seed', [
-                    '--class' => \SGCart\ProductVariants\Database\Seeders\VariantDatabaseSeeder::class,
-                    '--force' => true,
-                ]);
-            }
+            // if (Schema::hasTable('colors') && Schema::hasTable('sizes')) {
+            //     Artisan::call('db:seed', [
+            //         '--class' => \SGCart\ProductVariants\Database\Seeders\VariantDatabaseSeeder::class,
+            //         '--force' => true,
+            //     ]);
+            // }
 
             // Seed Spatie manage permission for admin panel
             if (class_exists(\Spatie\Permission\Models\Permission::class)) {
