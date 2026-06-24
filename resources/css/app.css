@@ -595,6 +595,56 @@ body.storefront {
     @apply bg-white/15 text-white px-7 py-3.5 rounded-[10px] border-[1.5px] border-white/30 backdrop-blur-md hover:bg-white/25;
 }
 
+/* Premium Wishlist Detail Button */
+.wishlist-detail-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 50% !important;
+    background: #ffffff !important;
+    border: none !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+    cursor: pointer;
+    padding: 0 !important;
+}
+.wishlist-detail-btn:hover {
+    background: #f8fafc !important;
+    transform: scale(1.05) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+.wishlist-detail-btn i {
+    transition: transform 0.25s ease !important;
+    color: #ef4444 !important;
+}
+.wishlist-detail-btn:hover i {
+    transform: scale(1.1) !important;
+}
+
+/* Dark mode overrides */
+.dark .wishlist-detail-btn {
+    background: #1e293b !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+.dark .wishlist-detail-btn:hover {
+    background: #334155 !important;
+}
+.dark .wishlist-detail-btn i {
+    color: #ef4444 !important;
+}
+
+@media (min-width: 769px) {
+    .wishlist-detail-btn {
+        width: 40px !important;
+        height: 40px !important;
+    }
+    .wishlist-detail-btn i {
+        font-size: 18px !important;
+    }
+}
+
 /* CARDS */
 .product-card {
     @apply bg-white rounded-xl overflow-hidden cursor-pointer transition-all border border-border hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.1)];
@@ -637,6 +687,43 @@ body.storefront {
     &.active {
         @apply text-[#e53e3e] opacity-100;
     }
+}
+.dark .wishlist-btn {
+    background-color: #1e293b !important;
+    color: #94a3b8 !important;
+}
+.dark .wishlist-btn.active {
+    color: #ef4444 !important;
+}
+.dark .wishlist-btn:hover {
+    background-color: #334155 !important;
+    color: #ef4444 !important;
+}
+
+.wishlist-remove-btn {
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    color: #1e293b !important;
+    border: 1px solid #e2e8f0 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    height: 36px !important;
+    transition: all 0.2s ease !important;
+}
+.wishlist-remove-btn:hover {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: #ffffff !important;
+}
+.dark .wishlist-remove-btn {
+    background: #1e293b !important;
+    color: #f1f5f9 !important;
+    border-color: #334155 !important;
+}
+.dark .wishlist-remove-btn:hover {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: #ffffff !important;
 }
 
 /* INPUTS */

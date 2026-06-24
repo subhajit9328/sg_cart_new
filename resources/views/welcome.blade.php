@@ -87,6 +87,17 @@
                             <span class="product-badge badge-{{ strtolower($product['badge']) }}">{{ $product['badge'] }}</span>
                         @endif
                         <img src="{{ $product['img'] }}" alt="{{ $product['name'] }}"/>
+                        @auth('customer')
+                            @php
+                                $inWishlist = in_array($product['id'], session('wishlist', [3, 5, 6]));
+                            @endphp
+                            <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}" 
+                                data-product-id="{{ $product['id'] }}"
+                                onclick="event.stopPropagation(); toggleWishlist(this)"
+                                title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                                <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
+                            </button>
+                        @endauth
                     </div>
                     <div class="product-card-body">
                         <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $product['cat'] }}</p>

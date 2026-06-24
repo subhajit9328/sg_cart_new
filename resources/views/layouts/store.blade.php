@@ -468,6 +468,10 @@
         if (e.defaultPrevented) return;
 
         const form = e.target;
+        if (form && (form.classList.contains('wishlist-ajax-form') || (form.action && form.action.includes('/wishlist/toggle')))) {
+            return;
+        }
+
         const submitBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
         submitBtns.forEach(btn => {
             // Check if spinner is already added
@@ -834,6 +838,136 @@
             });
         }
     })();
+
+    // AJAX Wishlist Toggle Feature
+    window.toggleWishlist = function(button) {
+        if (!button || button.disabled) return;
+
+        const productId = button.getAttribute('data-product-id');
+        if (!productId) return;
+
+        // Find the icon and replace with a spinner during loading
+        const icon = button.querySelector('i');
+        let originalIconClass = '';
+        if (icon) {
+            originalIconClass = icon.className;
+            icon.className = 'fa-solid fa-spinner fa-spin';
+        }
+
+        button.disabled = true;
+        button.style.pointerEvents = 'none';
+
+        // Prepare FormData
+        const formData = new FormData();
+        formData.append('product_id', productId);
+
+        // Get CSRF Token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        fetch('/wishlist/toggle', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                
+                const isProductInWishlist = data.wishlist.map(Number).includes(Number(productId));
+                
+                // Update all wishlist elements for this product ID on the page
+                const buttons = document.querySelectorAll(`[data-product-id="${productId}"]`);
+                buttons.forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.pointerEvents = '';
+                    
+                    if (btn.classList.contains('wishlist-btn')) {
+                        if (isProductInWishlist) {
+                            btn.classList.add('active');
+                        } else {
+                            btn.classList.remove('active');
+                        }
+                        const iconEl = btn.querySelector('i');
+                        if (iconEl) {
+                            iconEl.className = isProductInWishlist ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+                        }
+                        
+                        // Handle removal animation if toggled on account wishlist tab
+                        if (btn.closest('#tab-wishlist') && !isProductInWishlist) {
+                            const card = btn.closest('.product-card');
+                            if (card) {
+                                card.style.transition = 'all 0.3s ease';
+                                card.style.opacity = '0';
+                                card.style.transform = 'scale(0.9)';
+                                setTimeout(() => {
+                                    card.remove();
+                                    const container = document.querySelector('#tab-wishlist .grid, #tab-wishlist .grid-cols-2');
+                                    if (container && container.querySelectorAll('.product-card').length === 0) {
+                                        container.outerHTML = `
+                                            <div class="col-span-2 sm:col-span-3 md:col-span-4 py-12 text-center text-slate-400">
+                                                <i class="fa-regular fa-heart text-4xl mb-3 opacity-20 block"></i>
+                                                <p class="text-sm">Your wishlist is empty.</p>
+                                                <a href="/shop" class="btn btn-primary btn-sm mt-4">Discover Products</a>
+                                            </div>
+                                        `;
+                                    }
+                                }, 300);
+                            }
+                        }
+                    } else if (btn.classList.contains('wishlist-detail-btn')) {
+                        btn.title = isProductInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist';
+                        if (isProductInWishlist) {
+                            btn.classList.add('active');
+                        } else {
+                            btn.classList.remove('active');
+                        }
+                        const iconEl = btn.querySelector('i');
+                        if (iconEl) {
+                            iconEl.className = isProductInWishlist ? 'fa-solid fa-heart text-base' : 'fa-regular fa-heart text-base';
+                        }
+                    } else if (btn.classList.contains('wishlist-remove-btn')) {
+                        const card = btn.closest('.product-card');
+                        if (card) {
+                            card.style.transition = 'all 0.3s ease';
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.9)';
+                            setTimeout(() => {
+                                card.remove();
+                                const container = document.querySelector('#tab-wishlist .grid, #tab-wishlist .grid-cols-2');
+                                if (container && container.querySelectorAll('.product-card').length === 0) {
+                                    container.outerHTML = `
+                                        <div class="py-12 text-center text-slate-400">
+                                            <i class="fa-regular fa-heart text-4xl mb-3 opacity-20 block"></i>
+                                            <p class="text-sm">Your wishlist is empty.</p>
+                                            <a href="/shop" class="btn btn-primary btn-sm mt-4">Discover Products</a>
+                                        </div>
+                                    `;
+                                }
+                            }, 300);
+                        }
+                    }
+                });
+            } else {
+                showToast(data.message || 'Something went wrong', 'error');
+                // Restore button state on error
+                button.disabled = false;
+                button.style.pointerEvents = '';
+                if (icon) icon.className = originalIconClass;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Failed to update wishlist.', 'error');
+            // Restore button state on error
+            button.disabled = false;
+            button.style.pointerEvents = '';
+            if (icon) icon.className = originalIconClass;
+        });
+    };
 </script>
 
 <form action="{{ route('store.logout') }}" method="POST" id="storeLogoutForm" class="hidden">
