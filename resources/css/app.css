@@ -164,6 +164,58 @@ body.storefront {
     background: #b8966c;
 }
 
+.header-search-clear-btn {
+    display: none; /* Managed dynamically by input content */
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    color: #9ca3af;
+    font-size: 14px;
+    transition: color 0.15s;
+}
+.header-search-clear-btn:hover {
+    color: #4b5563;
+}
+
+.header-search-voice-btn {
+    display: flex; /* Visible by default; handles click warnings on unsupported browsers */
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    color: #6b7280;
+    font-size: 16px;
+    transition: color 0.15s, transform 0.15s;
+}
+.header-search-voice-btn:hover {
+    color: var(--color-accent);
+}
+.header-search-voice-btn.listening {
+    color: #ef4444;
+    animation: voice-pulse 1.2s infinite ease-in-out;
+}
+@keyframes voice-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.15);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
 .header-actions {
     display: flex;
     align-items: center;
@@ -1021,7 +1073,7 @@ input[type="range"].price-slider::-moz-range-thumb {
 
 /* PRODUCT DETAILS */
 .pd-layout {
-    @apply grid grid-cols-1 md:grid-cols-[1.15fr_0.85fr] gap-12 items-start;
+    @apply grid grid-cols-1 md:grid-cols-[0.9fr_1.1fr] gap-12 items-start;
 }
 .pd-gallery {
     @apply flex flex-col-reverse md:flex-row gap-4 items-start;
@@ -1029,19 +1081,19 @@ input[type="range"].price-slider::-moz-range-thumb {
 .pd-main-img {
     @apply rounded-xl overflow-hidden aspect-square bg-[#f0ece7] relative border border-border flex-1 min-w-0;
     & img {
-        @apply w-full h-full object-cover;
+        @apply w-full h-full object-cover object-top;
     }
 }
 .pd-thumbs {
-    @apply flex flex-row md:flex-col gap-2.5 w-full md:w-[76px] shrink-0 overflow-x-auto md:overflow-visible pb-1 md:pb-0;
+    @apply flex flex-row md:flex-col gap-2.5 w-full md:w-[64px] shrink-0 overflow-x-auto md:overflow-visible pb-1 md:pb-0;
 }
 .pd-thumb {
-    @apply aspect-square w-[60px] md:w-[76px] h-[60px] md:h-[76px] rounded-xl overflow-hidden cursor-pointer border-2 border-transparent transition-all bg-[#f0ece7] hover:border-ink;
+    @apply aspect-square w-[48px] md:w-[64px] rounded-xl overflow-hidden cursor-pointer border-2 border-transparent transition-all bg-[#f0ece7] hover:border-ink;
     &.active {
         @apply border-ink;
     }
     & img {
-        @apply w-full h-full object-cover;
+        @apply w-full h-full object-cover object-top;
     }
 }
 .size-btn {
@@ -1089,7 +1141,7 @@ input[type="range"].price-slider::-moz-range-thumb {
         @apply flex-row w-full overflow-x-auto pb-1;
     }
     .pd-thumb {
-        @apply w-[60px] h-[60px];
+        @apply w-[48px];
     }
 }
 
