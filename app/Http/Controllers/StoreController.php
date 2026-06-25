@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -25,12 +26,7 @@ class StoreController extends Controller
                 while ($topParent->parent) {
                     $topParent = $topParent->parent;
                 }
-                $name = $topParent->name;
-                if (str_contains($name, 'Men')) $catName = 'Men';
-                elseif (str_contains($name, 'Women')) $catName = 'Women';
-                elseif (str_contains($name, 'Kids')) $catName = 'Kids';
-                elseif (str_contains($name, 'Footwear')) $catName = 'Footwear';
-                elseif (str_contains($name, 'Accessory') || str_contains($name, 'Accessories')) $catName = 'Accessories';
+                $catName = $topParent->name;
             }
 
             // Determine sizes and colors dynamically from variants or database column values if present
@@ -79,9 +75,16 @@ class StoreController extends Controller
     public function home()
     {
         $products = collect(self::getProducts())->take(4);
-        $categories = collect(self::getProducts())->pluck('cat')->unique()->values()->toArray();
-        if (empty($categories)) {
-            $categories = ['Women', 'Men', 'Kids', 'Accessories', 'Footwear', 'Beauty'];
+        $categories = Category::parents()->active()->orderBy('sort_order')->take(5)->get();
+        if ($categories->isEmpty()) {
+            $categories = collect(["Women's Clothing", "Men's Clothing", "Kids' Clothing", 'Accessories', 'Footwear'])->map(function($name, $index) {
+                return new Category([
+                    'name' => $name,
+                    'slug' => \Illuminate\Support\Str::slug($name),
+                    'is_active' => true,
+                    'sort_order' => $index
+                ]);
+            });
         }
         return view('welcome', compact('products', 'categories'));
     }
@@ -124,7 +127,7 @@ class StoreController extends Controller
 
         $allCategories = collect(self::getProducts())->pluck('cat')->unique()->values()->toArray();
         if (empty($allCategories)) {
-            $allCategories = ['Women', 'Men', 'Accessories', 'Footwear', 'Beauty'];
+            $allCategories = ["Women's Clothing", "Men's Clothing", "Kids' Clothing", 'Accessories', 'Footwear', 'Sportswear', 'Winter Wear'];
         }
 
         // Pagination: 12 products per page
@@ -479,6 +482,22 @@ class StoreController extends Controller
         }
 
         return redirect()->back()->with('success', $msg);
+    }
+
+    /**
+     * Show guest wishlist page.
+     */
+    public function guestWishlist()
+    {
+        if (\Illuminate\Support\Facades\Auth::guard('customer')->check()) {
+            return redirect()->route('store.account', 'wishlist');
+        }
+
+        $wishlistIds = session()->get('wishlist', [3, 5, 6]);
+        $allProducts = self::getProducts();
+        $wishlist = array_filter($allProducts, fn($p) => in_array($p['id'], $wishlistIds));
+
+        return view('store.wishlist', compact('wishlist'));
     }
 
     /**

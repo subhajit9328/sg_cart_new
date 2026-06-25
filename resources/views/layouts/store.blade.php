@@ -183,10 +183,18 @@
                     <i class="fa-solid fa-moon header-theme-icon" id="themeIcon"></i>
                 </button>
 
+                <!-- Wishlist -->
+                <a href="{{ Auth::guard('customer')->check() ? route('store.account', 'wishlist') : route('store.wishlist') }}" class="header-wishlist-btn" title="Wishlist">
+                    <i class="fa-solid fa-heart header-wishlist-icon"></i>
+                    @php
+                        $wishlistCount = count(session('wishlist', [3, 5, 6]));
+                    @endphp
+                    <span class="header-wishlist-count" id="wishlistBadge" style="{{ $wishlistCount > 0 ? '' : 'display: none;' }}">{{ $wishlistCount }}</span>
+                </a>
+
                 <!-- Cart -->
                 <a href="{{ route('store.cart') }}" class="header-cart-btn" title="Cart">
                     <i class="fa-solid fa-cart-shopping header-cart-icon"></i>
-                    <span class="header-cart-label">Cart</span>
                     @if(count(session('cart', [])) > 0)
                         <span class="header-cart-count" id="cartBadge">{{ count(session('cart', [])) }}</span>
                     @endif
@@ -727,8 +735,6 @@
                                 
                                 // Trigger live suggestions dropdown matching the voice input
                                 searchInput.dispatchEvent(new Event('input'));
-                                
-                                showToast(`Voice recognized: "${query}"`, 'success');
                             }
                         };
 
@@ -876,6 +882,18 @@
         .then(data => {
             if (data.success) {
                 showToast(data.message, 'success');
+                
+                // Update wishlist count badge in the header
+                const badge = document.getElementById('wishlistBadge');
+                if (badge) {
+                    const count = data.wishlist.length;
+                    badge.textContent = count;
+                    if (count > 0) {
+                        badge.style.display = 'inline-flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
                 
                 const isProductInWishlist = data.wishlist.map(Number).includes(Number(productId));
                 

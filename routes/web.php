@@ -24,6 +24,7 @@ Route::get('/cart/remove/{key}', [StoreController::class, 'removeFromCart'])->na
 
 Route::get('/success', [StoreController::class, 'success'])->name('store.success');
 Route::post('/wishlist/toggle', [StoreController::class, 'toggleWishlist'])->name('store.wishlist.toggle');
+Route::get('/wishlist', [StoreController::class, 'guestWishlist'])->name('store.wishlist');
 
 // Storefront Auth Routes for Guest Customers
 Route::middleware('guest:customer')->group(function () {
