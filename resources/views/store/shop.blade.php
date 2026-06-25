@@ -120,7 +120,7 @@
                             @endif
                             <img src="{{ $product['img'] }}" alt="{{ $product['name'] }}"/>
                             @php
-                                $inWishlist = in_array($product['id'], session('wishlist', [3, 5, 6]));
+                                $inWishlist = in_array($product['id'], session('wishlist', []));
                             @endphp
                             <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}" 
                                 data-product-id="{{ $product['id'] }}"
