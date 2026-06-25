@@ -62,19 +62,17 @@
                 <p class="text-xs font-bold text-accent uppercase tracking-widest mb-1.5">{{ $product['cat'] }} Capsule</p>
                 <div class="flex justify-between items-start gap-4 mb-2">
                     <h1 class="font-display font-extrabold text-3xl text-slate-900 leading-tight flex-1">{{ $product['name'] }}</h1>
-                    @auth('customer')
-                        @php
-                            $inWishlist = in_array($product['id'], session('wishlist', [3, 5, 6]));
-                        @endphp
-                        <button type="button" 
-                            class="wishlist-detail-btn {{ $inWishlist ? 'active' : '' }}" 
-                            data-product-id="{{ $product['id'] }}"
-                            onclick="toggleWishlist(this)"
-                            title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}"
-                            style="margin-top: 4px; flex-shrink: 0;">
-                            <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart text-base"></i>
-                        </button>
-                    @endauth
+                    @php
+                        $inWishlist = in_array($product['id'], session('wishlist', [3, 5, 6]));
+                    @endphp
+                    <button type="button" 
+                        class="wishlist-detail-btn {{ $inWishlist ? 'active' : '' }}" 
+                        data-product-id="{{ $product['id'] }}"
+                        onclick="toggleWishlist(this)"
+                        title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}"
+                        style="margin-top: 4px; flex-shrink: 0;">
+                        <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart text-base"></i>
+                    </button>
                 </div>
                 
 
@@ -206,17 +204,15 @@
                 <div class="product-card" onclick="window.location.href='{{ route('store.product', $rel['slug']) }}'">
                     <div class="product-card-img">
                         <img src="{{ $rel['img'] }}" alt="{{ $rel['name'] }}"/>
-                        @auth('customer')
-                            @php
-                                $inWishlist = in_array($rel['id'], session('wishlist', [3, 5, 6]));
-                            @endphp
-                            <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}" 
-                                data-product-id="{{ $rel['id'] }}"
-                                onclick="event.stopPropagation(); toggleWishlist(this)"
-                                title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
-                                <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
-                            </button>
-                        @endauth
+                        @php
+                            $inWishlist = in_array($rel['id'], session('wishlist', [3, 5, 6]));
+                        @endphp
+                        <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}" 
+                            data-product-id="{{ $rel['id'] }}"
+                            onclick="event.stopPropagation(); toggleWishlist(this)"
+                            title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                            <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
+                        </button>
                     </div>
                     <div class="product-card-body">
                         <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $rel['cat'] }}</p>
