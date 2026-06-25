@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\LogActivity;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Mail\CustomerOtpMail;
@@ -642,6 +643,10 @@ class StoreController extends Controller
 
         $request->validate($rules, $messages);
 
+        $oldName = $customer->name;
+        $oldEmail = $customer->email;
+        $oldPhone = $customer->phone_no;
+
         $customer->name = trim($request->first_name.' '.$request->last_name);
 
         $emailAdded = false;
@@ -658,6 +663,31 @@ class StoreController extends Controller
 
         $customer->save();
 
+        // Detect and log changes
+        $changes = [];
+        $original = [];
+        if ($oldName !== $customer->name) {
+            $original['name'] = $oldName;
+            $changes['name'] = $customer->name;
+        }
+        if ($oldEmail !== $customer->email) {
+            $original['email'] = $oldEmail;
+            $changes['email'] = $customer->email;
+        }
+        if ($oldPhone !== $customer->phone_no) {
+            $original['phone_no'] = $oldPhone;
+            $changes['phone_no'] = $customer->phone_no;
+        }
+
+        if (! empty($changes)) {
+            app(LogActivity::class)->capture(
+                description: 'Customer profile updated',
+                event: 'profile.update',
+                subject: $customer,
+                attributeChanges: ['old' => $original, 'new' => $changes]
+            );
+        }
+
         if ($emailAdded) {
             // Generate and cache OTP (5 minutes valid)
             $otp = sprintf('%06d', mt_rand(100000, 999999));
@@ -670,6 +700,13 @@ class StoreController extends Controller
             // Send OTP mail
             try {
                 Mail::to($customer->email)->send(new CustomerOtpMail($customer, $otp));
+                app(LogActivity::class)->capture(
+                    description: "OTP sent to email: {$customer->email} on profile email update",
+                    event: 'otp.sent',
+                    subject: $customer,
+                    properties: ['email' => $customer->email, 'otp_sent_time' => now()->toIso8601String()],
+                    causer: $customer
+                );
             } catch (\Exception $e) {
                 Log::error('Failed to send OTP email on profile email update: '.$e->getMessage());
             }

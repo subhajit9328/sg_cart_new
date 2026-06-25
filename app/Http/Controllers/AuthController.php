@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\LogActivity;
 use App\Mail\CustomerOtpMail;
 use App\Models\Cart;
 use App\Models\Customer;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -38,12 +40,23 @@ class AuthController extends Controller
         ]);
 
         $remember = $request->boolean('remember');
+        $identifier = $request->input('email');
+        $loginAttemptsKey = 'login_attempts_'.md5('admin_'.$identifier);
 
         if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
             // Check if user has dashboard permission
             if (! Auth::user()->can('view dashboard')) {
+                $user = Auth::user();
+                app(LogActivity::class)->capture(
+                    description: 'Admin login denied: missing dashboard permission',
+                    event: 'login.denied',
+                    subject: $user,
+                    properties: ['email' => $identifier],
+                    causer: $user
+                );
+
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
@@ -53,8 +66,29 @@ class AuthController extends Controller
                 ]);
             }
 
+            $user = Auth::user();
+            Cache::forget($loginAttemptsKey);
+            app(LogActivity::class)->capture(
+                description: 'Admin user logged in',
+                event: 'login.success',
+                subject: $user,
+                properties: ['email' => $identifier, 'attempt_count' => 0],
+                causer: $user
+            );
+
             return redirect()->intended(route('admin.dashboard'));
         }
+
+        $attempts = Cache::increment($loginAttemptsKey);
+        Cache::put($loginAttemptsKey, $attempts, 3600);
+        $user = User::where('email', $identifier)->first();
+
+        app(LogActivity::class)->capture(
+            description: "Failed admin login attempt with email: {$identifier}",
+            event: 'login.failed',
+            subject: $user,
+            properties: ['email' => $identifier, 'attempt_count' => $attempts]
+        );
 
         throw ValidationException::withMessages([
             'email' => __('auth.failed'),
@@ -66,6 +100,16 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        if ($user) {
+            app(LogActivity::class)->capture(
+                description: 'Admin user logged out',
+                event: 'logout',
+                subject: $user,
+                causer: $user
+            );
+        }
+
         Auth::logout();
 
         $request->session()->invalidate();
@@ -106,6 +150,7 @@ class AuthController extends Controller
 
         $remember = $request->boolean('remember');
         $guestSessionId = $request->session()->getId();
+        $loginAttemptsKey = 'login_attempts_'.md5('customer_'.$loginInput);
 
         if (Auth::guard('customer')->attempt($credentials, $remember)) {
             $request->session()->regenerate();
@@ -114,8 +159,29 @@ class AuthController extends Controller
             $customerId = Auth::guard('customer')->id();
             Cart::mergeGuestCart($customerId, $guestSessionId);
 
+            $customer = Auth::guard('customer')->user();
+            Cache::forget($loginAttemptsKey);
+            app(LogActivity::class)->capture(
+                description: 'Customer logged in',
+                event: 'login.success',
+                subject: $customer,
+                properties: ['email_or_phone' => $loginInput, 'attempt_count' => 0],
+                causer: $customer
+            );
+
             return redirect()->intended(route('store.account'))->with('success', 'Logged in successfully!');
         }
+
+        $attempts = Cache::increment($loginAttemptsKey);
+        Cache::put($loginAttemptsKey, $attempts, 3600);
+        $customer = Customer::where($isEmail ? 'email' : 'phone_no', $loginInput)->first();
+
+        app(LogActivity::class)->capture(
+            description: "Failed customer login attempt with identifier: {$loginInput}",
+            event: 'login.failed',
+            subject: $customer,
+            properties: ['email_or_phone' => $loginInput, 'attempt_count' => $attempts]
+        );
 
         throw ValidationException::withMessages([
             'email_or_phone' => __('auth.failed'),
@@ -183,6 +249,14 @@ class AuthController extends Controller
 
         $customer = Customer::create($customerData);
 
+        app(LogActivity::class)->capture(
+            description: "Customer registered: {$emailOrPhone}",
+            event: 'registration',
+            subject: $customer,
+            properties: ['email_or_phone' => $emailOrPhone],
+            causer: $customer
+        );
+
         if ($isEmail) {
             // Generate and cache OTP (5 minutes valid)
             $otp = sprintf('%06d', mt_rand(100000, 999999));
@@ -195,6 +269,13 @@ class AuthController extends Controller
             // Send OTP mail
             try {
                 Mail::to($customer->email)->send(new CustomerOtpMail($customer, $otp));
+                app(LogActivity::class)->capture(
+                    description: "OTP sent to email: {$customer->email}",
+                    event: 'otp.sent',
+                    subject: $customer,
+                    properties: ['email' => $customer->email, 'otp_sent_time' => now()->toIso8601String()],
+                    causer: $customer
+                );
             } catch (\Exception $e) {
                 Log::error('Failed to send OTP email on registration: '.$e->getMessage());
             }
@@ -240,6 +321,14 @@ class AuthController extends Controller
             try {
                 Mail::to($customer->email)->send(new CustomerOtpMail($customer, $otp));
                 session()->flash('success', 'A new verification code has been sent to your email.');
+
+                app(LogActivity::class)->capture(
+                    description: "Auto-generated and sent OTP to email: {$customer->email}",
+                    event: 'otp.sent',
+                    subject: $customer,
+                    properties: ['email' => $customer->email, 'otp_sent_time' => now()->toIso8601String()],
+                    causer: $customer
+                );
             } catch (\Exception $e) {
                 Log::error('Failed to auto-send OTP email: '.$e->getMessage());
             }
@@ -271,6 +360,14 @@ class AuthController extends Controller
         $cachedOtp = Cache::get($otpKey);
 
         if (! $cachedOtp || $cachedOtp !== $request->otp) {
+            app(LogActivity::class)->capture(
+                description: "Failed OTP verification attempt for email: {$customer->email}",
+                event: 'otp.failed',
+                subject: $customer,
+                properties: ['email' => $customer->email, 'entered_otp' => $request->otp],
+                causer: $customer
+            );
+
             throw ValidationException::withMessages([
                 'otp' => 'The entered OTP is incorrect or has expired.',
             ]);
@@ -283,6 +380,14 @@ class AuthController extends Controller
         // Clear cached OTP and cooldown
         Cache::forget($otpKey);
         Cache::forget("customer_otp_cooldown_{$customer->id}");
+
+        app(LogActivity::class)->capture(
+            description: "Customer email verified successfully: {$customer->email}",
+            event: 'otp.verified',
+            subject: $customer,
+            properties: ['email' => $customer->email],
+            causer: $customer
+        );
 
         return redirect()->intended(route('store.account'))->with('success', 'Email verified successfully! Welcome to SG CART.');
     }
@@ -318,6 +423,13 @@ class AuthController extends Controller
         // Send OTP mail
         try {
             Mail::to($customer->email)->send(new CustomerOtpMail($customer, $otp));
+            app(LogActivity::class)->capture(
+                description: "OTP resent to email: {$customer->email}",
+                event: 'otp.sent',
+                subject: $customer,
+                properties: ['email' => $customer->email, 'otp_sent_time' => now()->toIso8601String()],
+                causer: $customer
+            );
         } catch (\Exception $e) {
             Log::error('Failed to send OTP email during regeneration: '.$e->getMessage());
 
@@ -332,6 +444,16 @@ class AuthController extends Controller
      */
     public function storefrontLogout(Request $request)
     {
+        $customer = Auth::guard('customer')->user();
+        if ($customer) {
+            app(LogActivity::class)->capture(
+                description: 'Customer logged out',
+                event: 'logout',
+                subject: $customer,
+                causer: $customer
+            );
+        }
+
         Auth::guard('customer')->logout();
 
         $request->session()->invalidate();
