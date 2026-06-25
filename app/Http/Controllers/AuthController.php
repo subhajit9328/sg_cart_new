@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Mail\CustomerOtpMail;
-use App\Mail\RegistrationSuccessMail;
 use App\Models\Cart;
 use App\Models\Customer;
 use Illuminate\Http\Request;
@@ -92,10 +91,18 @@ class AuthController extends Controller
      */
     public function storefrontLogin(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
+        $request->validate([
+            'email_or_phone' => ['required', 'string'],
             'password' => ['required'],
         ]);
+
+        $loginInput = $request->input('email_or_phone');
+        $isEmail = str_contains($loginInput ?? '', '@');
+
+        $credentials = [
+            $isEmail ? 'email' : 'phone_no' => $loginInput,
+            'password' => $request->password,
+        ];
 
         $remember = $request->boolean('remember');
         $guestSessionId = $request->session()->getId();
@@ -111,7 +118,7 @@ class AuthController extends Controller
         }
 
         throw ValidationException::withMessages([
-            'email' => __('auth.failed'),
+            'email_or_phone' => __('auth.failed'),
         ]);
     }
 
@@ -132,34 +139,65 @@ class AuthController extends Controller
      */
     public function storefrontRegister(Request $request)
     {
-        $request->validate([
+        $emailOrPhone = $request->input('email_or_phone');
+        $isEmail = str_contains($emailOrPhone ?? '', '@');
+
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:customers'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
+        ];
+
+        $messages = [];
+
+        if ($isEmail) {
+            $rules['email_or_phone'] = ['required', 'string', 'email', 'max:255', 'unique:customers,email'];
+            $messages['email_or_phone.unique'] = 'The email address has already been taken.';
+            $messages['email_or_phone.email'] = 'The email address must be a valid email address.';
+        } else {
+            $rules['email_or_phone'] = [
+                'required',
+                'string',
+                'regex:/^\+\d{7,15}$/',
+                'unique:customers,phone_no',
+            ];
+            $messages['email_or_phone.regex'] = 'The phone number must include a country code starting with + followed by the number (e.g. +1234567890).';
+            $messages['email_or_phone.unique'] = 'The phone number has already been taken.';
+        }
+
+        $request->validate($rules, $messages);
 
         $guestSessionId = $request->session()->getId();
 
-        $customer = Customer::create([
+        $customerData = [
             'name' => $request->name,
-            'email' => $request->email,
             'password' => Hash::make($request->password),
-        ]);
+        ];
 
-        // Generate and cache OTP (5 minutes valid)
-        $otp = sprintf('%06d', mt_rand(100000, 999999));
-        $otpKey = "customer_otp_{$customer->id}";
-        $cooldownKey = "customer_otp_cooldown_{$customer->id}";
+        if ($isEmail) {
+            $customerData['email'] = $emailOrPhone;
+            $customerData['phone_no'] = null;
+        } else {
+            $customerData['phone_no'] = $emailOrPhone;
+            $customerData['email'] = null;
+        }
 
-        Cache::put($otpKey, $otp, 300); // 5 minutes
-        Cache::put($cooldownKey, now()->addMinutes(5)->timestamp, 300); // 5 minutes cooldown
+        $customer = Customer::create($customerData);
 
-        // Send OTP mail
-        try {
-            Mail::to($customer->email)->send(new RegistrationSuccessMail($customer));
-            Mail::to($customer->email)->send(new CustomerOtpMail($customer, $otp));
-        } catch (\Exception $e) {
-            Log::error('Failed to send OTP email on registration: '.$e->getMessage());
+        if ($isEmail) {
+            // Generate and cache OTP (5 minutes valid)
+            $otp = sprintf('%06d', mt_rand(100000, 999999));
+            $otpKey = "customer_otp_{$customer->id}";
+            $cooldownKey = "customer_otp_cooldown_{$customer->id}";
+
+            Cache::put($otpKey, $otp, 300); // 5 minutes
+            Cache::put($cooldownKey, now()->addMinutes(5)->timestamp, 300); // 5 minutes cooldown
+
+            // Send OTP mail
+            try {
+                Mail::to($customer->email)->send(new CustomerOtpMail($customer, $otp));
+            } catch (\Exception $e) {
+                Log::error('Failed to send OTP email on registration: '.$e->getMessage());
+            }
         }
 
         Auth::guard('customer')->login($customer);
@@ -168,7 +206,11 @@ class AuthController extends Controller
         // Merge guest cart with customer cart
         Cart::mergeGuestCart($customer->id, $guestSessionId);
 
-        return redirect()->route('store.otp.verify')->with('success', 'Account created successfully! Please verify your email.');
+        if ($isEmail) {
+            return redirect()->route('store.otp.verify')->with('success', 'Account created successfully! Please verify your email.');
+        }
+
+        return redirect()->route('store.account')->with('success', 'Account created successfully! Welcome to SG CART.');
     }
 
     /**
@@ -241,8 +283,6 @@ class AuthController extends Controller
         // Clear cached OTP and cooldown
         Cache::forget($otpKey);
         Cache::forget("customer_otp_cooldown_{$customer->id}");
-
-
 
         return redirect()->intended(route('store.account'))->with('success', 'Email verified successfully! Welcome to SG CART.');
     }

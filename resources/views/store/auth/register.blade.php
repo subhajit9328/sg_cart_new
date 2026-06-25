@@ -19,10 +19,10 @@
             </div>
 
             <div class="flex flex-col gap-1">
-                <label class="label">Email Address</label>
-                <input type="email" name="email" id="email" required class="inp" placeholder="john.doe@example.com" value="{{ old('email') }}"/>
-                <p class="error-email text-rose-500 text-xs mt-1 hidden"></p>
-                @error('email') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                <label class="label">Email or Phone Number</label>
+                <input type="text" name="email_or_phone" id="email_or_phone" required class="inp" placeholder="email@example.com or +1234567890" value="{{ old('email_or_phone') }}"/>
+                <p class="error-email-phone text-rose-500 text-xs mt-1 hidden"></p>
+                @error('email_or_phone') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
             <div class="flex flex-col gap-1">
@@ -54,12 +54,12 @@
 $(document).ready(function() {
     const $form = $('form');
     const $name = $('#name');
-    const $email = $('#email');
+    const $emailOrPhone = $('#email_or_phone');
     const $password = $('#password');
     const $passwordConf = $('#password_confirmation');
 
     const $errName = $('.error-name');
-    const $errEmail = $('.error-email');
+    const $errEmailPhone = $('.error-email-phone');
     const $errPassword = $('.error-password');
     const $errPasswordConf = $('.error-password-conf');
 
@@ -76,22 +76,34 @@ $(document).ready(function() {
         }
     }
 
-    function validateEmail() {
-        const val = $email.val().trim();
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    function validateEmailOrPhone() {
+        const val = $emailOrPhone.val().trim();
         if (!val) {
-            $errEmail.text('Email address is required.').removeClass('hidden');
-            $email.addClass('border-rose-500');
+            $errEmailPhone.text('Email or phone number is required.').removeClass('hidden');
+            $emailOrPhone.addClass('border-rose-500');
             return false;
-        } else if (!emailRegex.test(val)) {
-            $errEmail.text('Please enter a valid email address.').removeClass('hidden');
-            $email.addClass('border-rose-500');
-            return false;
-        } else {
-            $errEmail.addClass('hidden').text('');
-            $email.removeClass('border-rose-500');
-            return true;
         }
+
+        const isEmail = val.includes('@');
+        if (isEmail) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(val)) {
+                $errEmailPhone.text('Please enter a valid email address.').removeClass('hidden');
+                $emailOrPhone.addClass('border-rose-500');
+                return false;
+            }
+        } else {
+            const phoneRegex = /^\+\d{7,15}$/;
+            if (!phoneRegex.test(val)) {
+                $errEmailPhone.text('The phone number must include a country code starting with + followed by the number (e.g. +1234567890).').removeClass('hidden');
+                $emailOrPhone.addClass('border-rose-500');
+                return false;
+            }
+        }
+
+        $errEmailPhone.addClass('hidden').text('');
+        $emailOrPhone.removeClass('border-rose-500');
+        return true;
     }
 
     // Password must be at least 8 characters
@@ -132,18 +144,18 @@ $(document).ready(function() {
 
     // Inline triggers on input
     $name.on('input blur', validateName);
-    $email.on('input blur', validateEmail);
+    $emailOrPhone.on('input blur', validateEmailOrPhone);
     $password.on('input blur', validatePassword);
     $passwordConf.on('input blur', validatePasswordConf);
 
     // Form submit validation
     $form.on('submit', function(e) {
         const isNameValid = validateName();
-        const isEmailValid = validateEmail();
+        const isEmailOrPhoneValid = validateEmailOrPhone();
         const isPasswordValid = validatePassword();
         const isPasswordConfValid = validatePasswordConf();
 
-        if (!isNameValid || !isEmailValid || !isPasswordValid || !isPasswordConfValid) {
+        if (!isNameValid || !isEmailOrPhoneValid || !isPasswordValid || !isPasswordConfValid) {
             e.preventDefault();
         }
     });

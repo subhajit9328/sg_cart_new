@@ -19,7 +19,7 @@
                 </div>
                 <div class="min-w-0">
                     <h3 class="font-display font-extrabold text-sm text-slate-800 truncate">{{ auth('customer')->user()?->name ?? 'John Doe' }}</h3>
-                    <p class="text-xs text-slate-400 truncate mt-0.5">{{ auth('customer')->user()?->email ?? 'john.doe@example.com' }}</p>
+                    <p class="text-xs text-slate-400 truncate mt-0.5">{{ auth('customer')->user()?->email ?? auth('customer')->user()?->phone_no }}</p>
                 </div>
             </div>
 
@@ -115,11 +115,23 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1">
                             <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Email Address</label>
-                            <input class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5 disabled:bg-[#f8f7f5] disabled:text-slate-400 disabled:cursor-not-allowed" value="{{ auth('customer')->user()?->email ?? 'john.doe@example.com' }}" readonly disabled/>
+                            @if(auth('customer')->user()?->email)
+                                <input class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5 disabled:bg-[#f8f7f5] disabled:text-slate-400 disabled:cursor-not-allowed" value="{{ auth('customer')->user()->email }}" readonly disabled/>
+                            @else
+                                <input name="email" id="email" type="email" class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" placeholder="Add email address" value="{{ old('email') }}"/>
+                                <p class="error-email text-rose-500 text-xs mt-1 hidden"></p>
+                                @error('email') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            @endif
                         </div>
                         <div class="flex flex-col gap-1">
-                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Mobile Number</label>
-                            <input name="mobile" class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" placeholder="+1 555 0199" value="+1 (555) 382-0199"/>
+                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Registered Phone Number</label>
+                            @if(auth('customer')->user()?->phone_no)
+                                <input class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5 disabled:bg-[#f8f7f5] disabled:text-slate-400 disabled:cursor-not-allowed" value="{{ auth('customer')->user()->phone_no }}" readonly disabled/>
+                            @else
+                                <input name="phone_no" id="phone_no" type="text" class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" placeholder="Add phone number (e.g. +1234567890)" value="{{ old('phone_no') }}"/>
+                                <p class="error-phone text-rose-500 text-xs mt-1 hidden"></p>
+                                @error('phone_no') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            @endif
                         </div>
                     </div>
                     
@@ -272,6 +284,54 @@
             addressModal.addEventListener('click', function(e) {
                 if (e.target === addressModal) {
                     closeAddressModal();
+                }
+            });
+        }
+
+        // Validate profile details form (missing fields)
+        const profileForm = document.querySelector('#tab-profile form');
+        if (profileForm) {
+            profileForm.addEventListener('submit', function(e) {
+                const emailInput = document.getElementById('email');
+                const phoneInput = document.getElementById('phone_no');
+                let isValid = true;
+
+                if (emailInput && emailInput.value.trim()) {
+                    const val = emailInput.value.trim();
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    const errEmail = document.querySelector('.error-email');
+                    if (!emailRegex.test(val)) {
+                        if (errEmail) {
+                            errEmail.textContent = 'Please enter a valid email address.';
+                            errEmail.classList.remove('hidden');
+                        }
+                        emailInput.classList.add('border-rose-500');
+                        isValid = false;
+                    } else {
+                        if (errEmail) errEmail.classList.add('hidden');
+                        emailInput.classList.remove('border-rose-500');
+                    }
+                }
+
+                if (phoneInput && phoneInput.value.trim()) {
+                    const val = phoneInput.value.trim();
+                    const phoneRegex = /^\+\d{7,15}$/;
+                    const errPhone = document.querySelector('.error-phone');
+                    if (!phoneRegex.test(val)) {
+                        if (errPhone) {
+                            errPhone.textContent = 'The phone number must include a country code starting with + followed by the number (e.g. +1234567890).';
+                            errPhone.classList.remove('hidden');
+                        }
+                        phoneInput.classList.add('border-rose-500');
+                        isValid = false;
+                    } else {
+                        if (errPhone) errPhone.classList.add('hidden');
+                        phoneInput.classList.remove('border-rose-500');
+                    }
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
                 }
             });
         }

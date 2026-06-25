@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 class OtpVerificationTest extends TestCase
@@ -21,7 +22,7 @@ class OtpVerificationTest extends TestCase
 
         $response = $this->post(route('store.register.submit'), [
             'name' => 'John Doe',
-            'email' => 'john@example.com',
+            'email_or_phone' => 'john@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ]);
@@ -162,5 +163,249 @@ class OtpVerificationTest extends TestCase
 
         $response = $this->get(route('store.checkout'));
         $response->assertRedirect(route('store.otp.verify'));
+    }
+
+    public function test_registration_with_phone_number_redirects_directly_without_otp()
+    {
+        Mail::fake();
+
+        $response = $this->post(route('store.register.submit'), [
+            'name' => 'Jane Phone',
+            'email_or_phone' => '+919876543210',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $customer = Customer::where('phone_no', '+919876543210')->first();
+        $this->assertNotNull($customer);
+        $this->assertNull($customer->email);
+        $this->assertNull($customer->email_verified_at);
+
+        // Verify redirect is directly to account (dashboard)
+        $response->assertRedirect(route('store.account'));
+
+        // Verify no OTP is in cache and no mail sent
+        $otpKey = "customer_otp_{$customer->id}";
+        $this->assertFalse(Cache::has($otpKey));
+        Mail::assertNothingSent();
+    }
+
+    public function test_registration_fails_on_invalid_phone_format()
+    {
+        // Missing '+' country code prefix
+        $response = $this->post(route('store.register.submit'), [
+            'name' => 'Invalid Phone',
+            'email_or_phone' => '9876543210',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertSessionHasErrors('email_or_phone');
+        $this->assertEquals(0, Customer::count());
+
+        // Too short or contains letters
+        $response2 = $this->post(route('store.register.submit'), [
+            'name' => 'Invalid Phone 2',
+            'email_or_phone' => '+12345abc',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response2->assertSessionHasErrors('email_or_phone');
+        $this->assertEquals(0, Customer::count());
+    }
+
+    public function test_registration_uniqueness_checks()
+    {
+        // Create an existing customer with email and one with phone
+        Customer::create([
+            'name' => 'Existing Email User',
+            'email' => 'existing@example.com',
+            'password' => Hash::make('password123'),
+        ]);
+
+        Customer::create([
+            'name' => 'Existing Phone User',
+            'phone_no' => '+918888888888',
+            'password' => Hash::make('password123'),
+        ]);
+
+        // Attempting to register with the same email should fail
+        $response1 = $this->post(route('store.register.submit'), [
+            'name' => 'New User',
+            'email_or_phone' => 'existing@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+        $response1->assertSessionHasErrors('email_or_phone');
+
+        // Attempting to register with the same phone number should fail
+        $response2 = $this->post(route('store.register.submit'), [
+            'name' => 'New User 2',
+            'email_or_phone' => '+918888888888',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+        $response2->assertSessionHasErrors('email_or_phone');
+    }
+
+    public function test_login_succeeds_with_email_or_phone()
+    {
+        $customer = Customer::create([
+            'name' => 'Dual User',
+            'email' => 'dual@example.com',
+            'phone_no' => '+919999999999',
+            'password' => Hash::make('password123'),
+        ]);
+
+        // Attempt login via email
+        $responseEmail = $this->post(route('store.login.submit'), [
+            'email_or_phone' => 'dual@example.com',
+            'password' => 'password123',
+        ]);
+        $responseEmail->assertRedirect(route('store.account'));
+        $this->assertTrue(Auth::guard('customer')->check());
+
+        Auth::guard('customer')->logout();
+
+        // Attempt login via phone_no
+        $responsePhone = $this->post(route('store.login.submit'), [
+            'email_or_phone' => '+919999999999',
+            'password' => 'password123',
+        ]);
+        $responsePhone->assertRedirect(route('store.account'));
+        $this->assertTrue(Auth::guard('customer')->check());
+    }
+
+    public function test_profile_update_adds_missing_email_and_sends_otp()
+    {
+        Mail::fake();
+
+        $customer = Customer::create([
+            'name' => 'Phone User',
+            'phone_no' => '+919999999999',
+            'password' => Hash::make('password123'),
+        ]);
+
+        $this->actingAs($customer, 'customer');
+
+        $response = $this->post(route('store.account.profile.update'), [
+            'first_name' => 'Updated',
+            'last_name' => 'User',
+            'email' => 'newemail@example.com',
+        ]);
+
+        $customer->refresh();
+        $this->assertEquals('Updated User', $customer->name);
+        $this->assertEquals('newemail@example.com', $customer->email);
+        $this->assertNull($customer->email_verified_at);
+
+        // Verify redirect to OTP page
+        $response->assertRedirect(route('store.otp.verify'));
+
+        // Verify OTP is generated
+        $otpKey = "customer_otp_{$customer->id}";
+        $this->assertTrue(Cache::has($otpKey));
+
+        // Verify OTP mail sent
+        Mail::assertSent(CustomerOtpMail::class);
+    }
+
+    public function test_profile_update_adds_missing_phone_without_otp()
+    {
+        Mail::fake();
+
+        $customer = Customer::create([
+            'name' => 'Email User',
+            'email' => 'user@example.com',
+            'password' => Hash::make('password123'),
+        ]);
+        $customer->email_verified_at = now();
+        $customer->save();
+
+        $this->actingAs($customer, 'customer');
+
+        $response = $this->post(route('store.account.profile.update'), [
+            'first_name' => 'Updated',
+            'last_name' => 'User',
+            'phone_no' => '+919999999999',
+        ]);
+
+        $customer->refresh();
+        $this->assertEquals('Updated User', $customer->name);
+        $this->assertEquals('+919999999999', $customer->phone_no);
+
+        // Redirects back to profile page
+        $response->assertRedirect(route('store.account', 'profile'));
+
+        // No OTP generated or mail sent
+        $otpKey = "customer_otp_{$customer->id}";
+        $this->assertFalse(Cache::has($otpKey));
+        Mail::assertNotSent(CustomerOtpMail::class);
+    }
+
+    public function test_profile_update_strict_validation_preventions()
+    {
+        // 1. Email is already set. Cannot update email.
+        $customer1 = Customer::create([
+            'name' => 'Has Email',
+            'email' => 'hasemail@example.com',
+            'password' => Hash::make('password123'),
+        ]);
+        $customer1->email_verified_at = now();
+        $customer1->save();
+
+        $this->actingAs($customer1, 'customer');
+
+        $response1 = $this->post(route('store.account.profile.update'), [
+            'first_name' => 'Has',
+            'last_name' => 'Email',
+            'email' => 'newemail@example.com',
+        ]);
+
+        $response1->assertSessionHasErrors('email');
+        $customer1->refresh();
+        $this->assertEquals('hasemail@example.com', $customer1->email);
+
+        Auth::guard('customer')->logout();
+
+        // 2. Phone is already set. Cannot update phone.
+        $customer2 = Customer::create([
+            'name' => 'Has Phone',
+            'phone_no' => '+917777777777',
+            'password' => Hash::make('password123'),
+        ]);
+
+        $this->actingAs($customer2, 'customer');
+
+        $response2 = $this->post(route('store.account.profile.update'), [
+            'first_name' => 'Has',
+            'last_name' => 'Phone',
+            'phone_no' => '+916666666666',
+        ]);
+
+        $response2->assertSessionHasErrors('phone_no');
+        $customer2->refresh();
+        $this->assertEquals('+917777777777', $customer2->phone_no);
+
+        Auth::guard('customer')->logout();
+
+        // 3. Cannot submit both.
+        // Wait, a user has to have at least one missing, but even if they try to pass both, it should fail.
+        $customer3 = Customer::create([
+            'name' => 'No Contact Info',
+            'password' => Hash::make('password123'),
+        ]);
+
+        $this->actingAs($customer3, 'customer');
+
+        $response3 = $this->post(route('store.account.profile.update'), [
+            'first_name' => 'No',
+            'last_name' => 'Contact',
+            'email' => 'email@example.com',
+            'phone_no' => '+919999999999',
+        ]);
+
+        $response3->assertSessionHasErrors('email');
     }
 }
