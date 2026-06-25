@@ -38,7 +38,7 @@ class UninstallCommand extends Command
                 }, $migrationFiles);
 
                 if (!empty($migrationNames)) {
-                    $ranMigrations = DB::table('migrations')
+                    $ranMigrations = \Illuminate\Support\Facades\DB::table('migrations')
                         ->whereIn('migration', $migrationNames)
                         ->pluck('migration')
                         ->toArray();
@@ -47,7 +47,7 @@ class UninstallCommand extends Command
                         $this->comment('Found package migrations to rollback: ' . implode(', ', $ranMigrations));
 
                         // Temporarily set the batch of these migrations to a unique batch number
-                        DB::table('migrations')
+                        \Illuminate\Support\Facades\DB::table('migrations')
                             ->whereIn('migration', $ranMigrations)
                             ->update(['batch' => 999999]);
 
@@ -63,6 +63,22 @@ class UninstallCommand extends Command
                     } else {
                         $this->info('No package migrations were found in the ran migrations database.');
                     }
+                }
+            }
+
+            // Force drop remaining package tables in case configuration prevented migrations from rolling them back
+            \Illuminate\Support\Facades\Schema::dropIfExists('product_variant_images');
+            \Illuminate\Support\Facades\Schema::dropIfExists('product_variants');
+            \Illuminate\Support\Facades\Schema::dropIfExists('sizes');
+            \Illuminate\Support\Facades\Schema::dropIfExists('colors');
+
+            // Delete configuration file if it exists
+            $configPath = config_path('product-variants.php');
+            if (file_exists($configPath)) {
+                if (@unlink($configPath)) {
+                    $this->info('Deleted configuration file: ' . $configPath);
+                } else {
+                    $this->warn('Could not delete configuration file: ' . $configPath);
                 }
             }
 

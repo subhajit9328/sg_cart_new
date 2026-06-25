@@ -17,13 +17,23 @@ class Coupon extends Model
         'is_active',
     ];
 
-    protected $casts = [
-        'type' => CouponType::class,
-        'value' => 'decimal:2',
-        'min_cart_total' => 'decimal:2',
-        'expires_at' => 'datetime',
-        'is_active' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        $casts = [
+            'type' => CouponType::class,
+            'value' => 'decimal:2',
+            'is_active' => 'boolean',
+        ];
+
+        if (config('coupons.features.min_cart_total', true)) {
+            $casts['min_cart_total'] = 'decimal:2';
+        }
+        if (config('coupons.features.expires_at', true)) {
+            $casts['expires_at'] = 'datetime';
+        }
+
+        return $casts;
+    }
 
     /**
      * Determine if the coupon is currently valid.
@@ -34,7 +44,7 @@ class Coupon extends Model
             return false;
         }
 
-        if ($this->expires_at && Carbon::now()->greaterThan($this->expires_at)) {
+        if (config('coupons.features.expires_at', true) && $this->expires_at && Carbon::now()->greaterThan($this->expires_at)) {
             return false;
         }
 

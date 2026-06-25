@@ -63,18 +63,22 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        @if(config('coupons.features.min_cart_total', true) || config('coupons.features.expires_at', true))
+        <div class="grid grid-cols-1 @if(config('coupons.features.min_cart_total', true) && config('coupons.features.expires_at', true)) md:grid-cols-2 @endif gap-4">
             <!-- Min Cart Total Field -->
+            @if(config('coupons.features.min_cart_total', true))
             <div>
-                <label for="min_cart_total" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Minimum Cart Subtotal Required ($)</label>
+                <label for="min_cart_total" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Minimum Cart Subtotal Required (₹)</label>
                 <input type="number" step="0.01" min="0" name="min_cart_total" id="min_cart_total" value="{{ old('min_cart_total', $coupon->min_cart_total) }}"
                     class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('min_cart_total') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror">
                 @error('min_cart_total')
                     <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p>
                 @enderror
             </div>
+            @endif
 
             <!-- Expires At Field -->
+            @if(config('coupons.features.expires_at', true))
             <div>
                 <label for="expires_at" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Expiry Date (Optional)</label>
                 <input type="date" name="expires_at" id="expires_at" value="{{ old('expires_at', $coupon->expires_at ? \Carbon\Carbon::parse($coupon->expires_at)->format('Y-m-d') : '') }}"
@@ -83,7 +87,9 @@
                     <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p>
                 @enderror
             </div>
+            @endif
         </div>
+        @endif
 
         <!-- Status Checkbox -->
         <div>
