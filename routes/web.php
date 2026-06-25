@@ -36,16 +36,25 @@ Route::middleware('guest:customer')->group(function () {
 // Storefront Auth Routes for Authenticated Customers
 Route::middleware('auth:customer')->group(function () {
     Route::post('/logout', [AuthController::class, 'storefrontLogout'])->name('store.logout');
-    Route::get('/checkout', [StoreController::class, 'checkout'])->name('store.checkout');
-    Route::post('/checkout/order', [StoreController::class, 'placeOrder'])->name('store.checkout.order');
-    Route::get('/account/order/{ulid}', [StoreController::class, 'viewOrder'])->name('store.account.order.view');
-    Route::get('/account/order/{ulid}/invoice', [StoreController::class, 'downloadInvoice'])->name('store.account.order.invoice');
-    Route::get('/account/{tab?}', [StoreController::class, 'account'])->name('store.account');
-    Route::post('/account/profile/update', [StoreController::class, 'updateProfile'])->name('store.account.profile.update');
-    Route::post('/account/address/add', [StoreController::class, 'addAddress'])->name('store.account.address.add');
-    Route::post('/account/address/update/{id}', [StoreController::class, 'updateAddress'])->name('store.account.address.update');
-    Route::get('/account/address/delete/{id}', [StoreController::class, 'deleteAddress'])->name('store.account.address.delete');
-    Route::get('/account/order/{ulid}/json', [StoreController::class, 'getOrderDetail'])->name('store.account.order.detail');
+
+    // OTP Verification Routes (accessible by authenticated but unverified customers)
+    Route::get('/otp/verify', [AuthController::class, 'showOtpVerify'])->name('store.otp.verify');
+    Route::post('/otp/verify', [AuthController::class, 'otpVerify'])->name('store.otp.verify.submit');
+    Route::post('/otp/resend', [AuthController::class, 'otpResend'])->name('store.otp.resend');
+
+    // Verified Customer Routes
+    Route::middleware('verified.customer')->group(function () {
+        Route::get('/checkout', [StoreController::class, 'checkout'])->name('store.checkout');
+        Route::post('/checkout/order', [StoreController::class, 'placeOrder'])->name('store.checkout.order');
+        Route::get('/account/order/{ulid}', [StoreController::class, 'viewOrder'])->name('store.account.order.view');
+        Route::get('/account/order/{ulid}/invoice', [StoreController::class, 'downloadInvoice'])->name('store.account.order.invoice');
+        Route::get('/account/{tab?}', [StoreController::class, 'account'])->name('store.account');
+        Route::post('/account/profile/update', [StoreController::class, 'updateProfile'])->name('store.account.profile.update');
+        Route::post('/account/address/add', [StoreController::class, 'addAddress'])->name('store.account.address.add');
+        Route::post('/account/address/update/{id}', [StoreController::class, 'updateAddress'])->name('store.account.address.update');
+        Route::get('/account/address/delete/{id}', [StoreController::class, 'deleteAddress'])->name('store.account.address.delete');
+        Route::get('/account/order/{ulid}/json', [StoreController::class, 'getOrderDetail'])->name('store.account.order.detail');
+    });
 });
 
 // Admin Routes (prefixed with admin)

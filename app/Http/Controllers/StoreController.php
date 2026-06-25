@@ -2,9 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Actions\LogActivity;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
+use App\Mail\CustomerOtpMail;
+use App\Models\Cart;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use SGCart\ProductVariants\Models\ProductVariant;
 
 class StoreController extends Controller
 {
@@ -14,11 +28,12 @@ class StoreController extends Controller
     public static function getProducts()
     {
         $relations = ['category.parent', 'images'];
-        if (class_exists(\SGCart\ProductVariants\Models\ProductVariant::class)) {
+        if (class_exists(ProductVariant::class)) {
             $relations[] = 'variants.color';
             $relations[] = 'variants.size';
         }
-        return \App\Models\Product::with($relations)->where('status', 'active')->get()->map(function ($p) {
+
+        return Product::with($relations)->where('status', 'active')->get()->map(function ($p) {
             $catName = 'Fashion';
             if ($p->category) {
                 $topParent = $p->category;
@@ -26,24 +41,30 @@ class StoreController extends Controller
                     $topParent = $topParent->parent;
                 }
                 $name = $topParent->name;
-                if (str_contains($name, 'Men')) $catName = 'Men';
-                elseif (str_contains($name, 'Women')) $catName = 'Women';
-                elseif (str_contains($name, 'Kids')) $catName = 'Kids';
-                elseif (str_contains($name, 'Footwear')) $catName = 'Footwear';
-                elseif (str_contains($name, 'Accessory') || str_contains($name, 'Accessories')) $catName = 'Accessories';
+                if (str_contains($name, 'Men')) {
+                    $catName = 'Men';
+                } elseif (str_contains($name, 'Women')) {
+                    $catName = 'Women';
+                } elseif (str_contains($name, 'Kids')) {
+                    $catName = 'Kids';
+                } elseif (str_contains($name, 'Footwear')) {
+                    $catName = 'Footwear';
+                } elseif (str_contains($name, 'Accessory') || str_contains($name, 'Accessories')) {
+                    $catName = 'Accessories';
+                }
             }
 
             // Determine sizes and colors dynamically from variants or database column values if present
             $sizes = [];
             $colors = [];
             if ($p->variants && $p->variants->isNotEmpty()) {
-                $colors = $p->variants->where('is_active', true)->map(fn($v) => $v->color?->hex_code)->filter()->unique()->values()->toArray();
-                $sizes = $p->variants->where('is_active', true)->map(fn($v) => $v->size?->code)->filter()->unique()->values()->toArray();
+                $colors = $p->variants->where('is_active', true)->map(fn ($v) => $v->color?->hex_code)->filter()->unique()->values()->toArray();
+                $sizes = $p->variants->where('is_active', true)->map(fn ($v) => $v->size?->code)->filter()->unique()->values()->toArray();
             } else {
-                if (isset($p->sizes) && !empty($p->sizes)) {
+                if (isset($p->sizes) && ! empty($p->sizes)) {
                     $sizes = is_array($p->sizes) ? $p->sizes : array_filter(array_map('trim', explode(',', $p->sizes)));
                 }
-                if (isset($p->colors) && !empty($p->colors)) {
+                if (isset($p->colors) && ! empty($p->colors)) {
                     $colors = is_array($p->colors) ? $p->colors : array_filter(array_map('trim', explode(',', $p->colors)));
                 }
             }
@@ -66,10 +87,10 @@ class StoreController extends Controller
                 'sku' => $p->sku,
                 'stock' => $p->stock,
                 'manufacturer' => $p->manufacturer ? $p->manufacturer->name : null,
-                'img' => $p->image ? \Illuminate\Support\Facades\Storage::url($p->image) : asset('images/no-image.svg'),
+                'img' => $p->image ? Storage::url($p->image) : asset('images/no-image.svg'),
                 'images' => $p->images->isNotEmpty()
-                    ? $p->images->sortByDesc('is_default')->map(fn($img) => \Illuminate\Support\Facades\Storage::url($img->image_path))->values()->toArray()
-                    : [asset('images/no-image.svg')]
+                    ? $p->images->sortByDesc('is_default')->map(fn ($img) => Storage::url($img->image_path))->values()->toArray()
+                    : [asset('images/no-image.svg')],
             ];
         })->toArray();
     }
@@ -84,6 +105,7 @@ class StoreController extends Controller
         if (empty($categories)) {
             $categories = ['Women', 'Men', 'Kids', 'Accessories', 'Footwear', 'Beauty'];
         }
+
         return view('welcome', compact('products', 'categories'));
     }
 
@@ -97,20 +119,19 @@ class StoreController extends Controller
         // Category filter
         if ($request->filled('category')) {
             $categories = (array) $request->input('category');
-            $products = $products->filter(fn($p) => in_array($p['cat'], $categories));
+            $products = $products->filter(fn ($p) => in_array($p['cat'], $categories));
         }
 
         // Price filter
         if ($request->filled('price_max')) {
             $maxPrice = (float) $request->input('price_max');
-            $products = $products->filter(fn($p) => $p['price'] <= $maxPrice);
+            $products = $products->filter(fn ($p) => $p['price'] <= $maxPrice);
         }
 
         // Search filter
         if ($request->filled('search')) {
             $search = strtolower($request->input('search'));
-            $products = $products->filter(fn($p) => 
-                str_contains(strtolower($p['name']), $search) || 
+            $products = $products->filter(fn ($p) => str_contains(strtolower($p['name']), $search) ||
                 str_contains(strtolower($p['desc']), $search)
             );
         }
@@ -134,7 +155,7 @@ class StoreController extends Controller
             'selectedCategories' => (array) $request->input('category', []),
             'selectedPriceMax' => $request->input('price_max', 10000),
             'selectedSort' => $sort,
-            'searchQuery' => $request->input('search')
+            'searchQuery' => $request->input('search'),
         ]);
     }
 
@@ -146,7 +167,7 @@ class StoreController extends Controller
         $products = collect(self::getProducts());
         $product = $products->firstWhere('slug', $slug);
 
-        if (!$product) {
+        if (! $product) {
             abort(404);
         }
 
@@ -163,7 +184,7 @@ class StoreController extends Controller
      */
     public function cart()
     {
-        $cartModel = \App\Models\Cart::getActiveCart();
+        $cartModel = Cart::getActiveCart();
         $cart = $cartModel->getFormattedItems();
 
         $subtotal = 0;
@@ -198,12 +219,12 @@ class StoreController extends Controller
         $size = $request->size;
         $color = $request->color;
 
-        $product = \App\Models\Product::find($productId);
-        if (!$product || $product->status !== 'active') {
+        $product = Product::find($productId);
+        if (! $product || $product->status !== 'active') {
             return redirect()->back()->with('error', 'Product not found.');
         }
 
-        $cartModel = \App\Models\Cart::getActiveCart();
+        $cartModel = Cart::getActiveCart();
 
         // Stock check
         $currentStock = $product->stock ?? 0;
@@ -256,14 +277,14 @@ class StoreController extends Controller
      */
     public function updateCart(Request $request)
     {
-        $cartModel = \App\Models\Cart::getActiveCart();
+        $cartModel = Cart::getActiveCart();
         $quantities = $request->input('quantities', []);
         $wasLimited = false;
 
         foreach ($quantities as $key => $qty) {
             $parts = explode('_', $key);
             if (count($parts) >= 1) {
-                $productId = (int)$parts[0];
+                $productId = (int) $parts[0];
                 $size = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : null;
                 $color = isset($parts[2]) && $parts[2] !== '' ? $parts[2] : null;
 
@@ -274,12 +295,12 @@ class StoreController extends Controller
                     ->first();
 
                 if ($cartItem) {
-                    if ((int)$qty <= 0) {
+                    if ((int) $qty <= 0) {
                         $cartItem->delete();
                     } else {
-                        $product = \App\Models\Product::find($productId);
+                        $product = Product::find($productId);
                         $currentStock = $product ? ($product->stock ?? 0) : 0;
-                        $requestedQty = (int)$qty;
+                        $requestedQty = (int) $qty;
 
                         if ($requestedQty > $currentStock) {
                             $cartItem->quantity = $currentStock;
@@ -311,11 +332,11 @@ class StoreController extends Controller
      */
     public function removeFromCart($key)
     {
-        $cartModel = \App\Models\Cart::getActiveCart();
+        $cartModel = Cart::getActiveCart();
 
         $parts = explode('_', $key);
         if (count($parts) >= 1) {
-            $productId = (int)$parts[0];
+            $productId = (int) $parts[0];
             $size = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : null;
             $color = isset($parts[2]) && $parts[2] !== '' ? $parts[2] : null;
 
@@ -339,11 +360,11 @@ class StoreController extends Controller
      */
     public function checkout()
     {
-        if (!auth('customer')->check()) {
+        if (! auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to proceed to checkout.');
         }
 
-        $cartModel = \App\Models\Cart::getActiveCart();
+        $cartModel = Cart::getActiveCart();
         $cart = $cartModel->getFormattedItems();
         if (empty($cart)) {
             return redirect()->route('store.shop')->with('error', 'Your cart is empty.');
@@ -371,7 +392,7 @@ class StoreController extends Controller
      */
     public function placeOrder(Request $request)
     {
-        if (!auth('customer')->check()) {
+        if (! auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to proceed to checkout.');
         }
 
@@ -391,7 +412,7 @@ class StoreController extends Controller
             'card_cvv' => 'required|string|max:4',
         ]);
 
-        $cartModel = \App\Models\Cart::getActiveCart();
+        $cartModel = Cart::getActiveCart();
         $cart = $cartModel->getFormattedItems();
         if (empty($cart)) {
             return redirect()->route('store.shop')->with('error', 'Your cart is empty.');
@@ -420,7 +441,7 @@ class StoreController extends Controller
 
         if ($request->filled('address_id')) {
             $savedAddress = auth('customer')->user()->addresses()->find($request->address_id);
-            if (!$savedAddress) {
+            if (! $savedAddress) {
                 return redirect()->back()->withErrors(['address_id' => 'Selected address is invalid.']);
             }
             $firstName = $savedAddress->first_name;
@@ -457,10 +478,10 @@ class StoreController extends Controller
         }
 
         // Generate dynamic unique order number
-        $orderNumber = 'SGCART-' . date('Ymd') . '-' . strtoupper(Str::random(6));
+        $orderNumber = 'SGCART-'.date('Ymd').'-'.strtoupper(Str::random(6));
 
         // Create Order in Database
-        $order = \App\Models\Order::create([
+        $order = Order::create([
             'order_number' => $orderNumber,
             'customer_id' => auth('customer')->id(),
             'first_name' => $firstName,
@@ -475,19 +496,19 @@ class StoreController extends Controller
             'tax' => $tax,
             'discount' => $discount,
             'total' => $total,
-            'status' => \App\Enums\OrderStatus::PROCESSING,
-            'payment_status' => \App\Enums\PaymentStatus::PAID,
+            'status' => OrderStatus::PROCESSING,
+            'payment_status' => PaymentStatus::PAID,
             'payment_method' => 'Card',
             'card_name' => $request->card_name,
             // Mask card number for PCI compliance standard
-            'card_number_masked' => '**** **** **** ' . substr(str_replace(' ', '', $request->card_num), -4),
+            'card_number_masked' => '**** **** **** '.substr(str_replace(' ', '', $request->card_num), -4),
         ]);
 
         // Create OrderItems in Database
         foreach ($cartModel->items as $cartItem) {
-            $product = \App\Models\Product::find($cartItem->product_id);
-            
-            \App\Models\OrderItem::create([
+            $product = Product::find($cartItem->product_id);
+
+            OrderItem::create([
                 'order_id' => $order->id,
                 'product_id' => $cartItem->product_id,
                 'product_name' => $product ? $product->name : 'Unknown Product',
@@ -520,6 +541,7 @@ class StoreController extends Controller
     public function success(Request $request)
     {
         $orderId = $request->input('order_id', 'SGCART-MOCK-ORDER');
+
         return view('store.success', compact('orderId'));
     }
 
@@ -528,7 +550,7 @@ class StoreController extends Controller
      */
     public function account($tab = 'orders')
     {
-        if (!auth('customer')->check()) {
+        if (! auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to access your account.');
         }
 
@@ -554,7 +576,7 @@ class StoreController extends Controller
 
         $wishlistIds = session()->get('wishlist', [3, 5, 6]);
         $allProducts = self::getProducts();
-        $wishlist = array_filter($allProducts, fn($p) => in_array($p['id'], $wishlistIds));
+        $wishlist = array_filter($allProducts, fn ($p) => in_array($p['id'], $wishlistIds));
 
         $addresses = auth('customer')->user()->addresses;
 
@@ -566,18 +588,131 @@ class StoreController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        if (!auth('customer')->check()) {
+        if (! auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to update your profile.');
         }
 
-        $request->validate([
+        $customer = auth('customer')->user();
+
+        // If email is already present, they cannot submit email
+        if ($customer->email && $request->has('email')) {
+            throw ValidationException::withMessages([
+                'email' => 'You are not allowed to update your registered email address.',
+            ]);
+        }
+
+        // If phone_no is already present, they cannot submit phone_no
+        if ($customer->phone_no && $request->has('phone_no')) {
+            throw ValidationException::withMessages([
+                'phone_no' => 'You are not allowed to update your registered phone number.',
+            ]);
+        }
+
+        // Both fields cannot be updated at the same time
+        if ($request->has('email') && $request->has('phone_no')) {
+            throw ValidationException::withMessages([
+                'email' => 'You cannot update both email and phone number at the same time.',
+            ]);
+        }
+
+        $rules = [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-        ]);
+        ];
+        $messages = [];
 
-        $customer = auth('customer')->user();
-        $customer->name = trim($request->first_name . ' ' . $request->last_name);
+        $addingEmail = ! $customer->email;
+        $addingPhone = ! $customer->phone_no;
+
+        if ($addingEmail) {
+            $rules['email'] = ['nullable', 'string', 'email', 'max:255', 'unique:customers,email'];
+            $messages['email.unique'] = 'The email address has already been taken.';
+            $messages['email.email'] = 'The email address must be a valid email address.';
+        }
+
+        if ($addingPhone) {
+            $rules['phone_no'] = [
+                'nullable',
+                'string',
+                'regex:/^\+\d{7,15}$/',
+                'unique:customers,phone_no',
+            ];
+            $messages['phone_no.regex'] = 'The phone number must include a country code starting with + followed by the number (e.g. +1234567890).';
+            $messages['phone_no.unique'] = 'The phone number has already been taken.';
+        }
+
+        $request->validate($rules, $messages);
+
+        $oldName = $customer->name;
+        $oldEmail = $customer->email;
+        $oldPhone = $customer->phone_no;
+
+        $customer->name = trim($request->first_name.' '.$request->last_name);
+
+        $emailAdded = false;
+
+        if ($addingEmail && $request->filled('email')) {
+            $customer->email = $request->email;
+            $customer->email_verified_at = null; // Mark as unverified
+            $emailAdded = true;
+        }
+
+        if ($addingPhone && $request->filled('phone_no')) {
+            $customer->phone_no = $request->phone_no;
+        }
+
         $customer->save();
+
+        // Detect and log changes
+        $changes = [];
+        $original = [];
+        if ($oldName !== $customer->name) {
+            $original['name'] = $oldName;
+            $changes['name'] = $customer->name;
+        }
+        if ($oldEmail !== $customer->email) {
+            $original['email'] = $oldEmail;
+            $changes['email'] = $customer->email;
+        }
+        if ($oldPhone !== $customer->phone_no) {
+            $original['phone_no'] = $oldPhone;
+            $changes['phone_no'] = $customer->phone_no;
+        }
+
+        if (! empty($changes)) {
+            app(LogActivity::class)->capture(
+                description: 'Customer profile updated',
+                event: 'profile.update',
+                subject: $customer,
+                attributeChanges: ['old' => $original, 'new' => $changes]
+            );
+        }
+
+        if ($emailAdded) {
+            // Generate and cache OTP (5 minutes valid)
+            $otp = sprintf('%06d', mt_rand(100000, 999999));
+            $otpKey = "customer_otp_{$customer->id}";
+            $cooldownKey = "customer_otp_cooldown_{$customer->id}";
+
+            Cache::put($otpKey, $otp, 300); // 5 minutes
+            Cache::put($cooldownKey, now()->addMinutes(5)->timestamp, 300); // 5 minutes cooldown
+
+            // Send OTP mail
+            try {
+                Mail::to($customer->email)->send(new CustomerOtpMail($customer, $otp));
+                app(LogActivity::class)->capture(
+                    description: "OTP sent to email: {$customer->email} on profile email update",
+                    event: 'otp.sent',
+                    subject: $customer,
+                    properties: ['email' => $customer->email, 'otp_sent_time' => now()->toIso8601String()],
+                    causer: $customer
+                );
+            } catch (\Exception $e) {
+                Log::error('Failed to send OTP email on profile email update: '.$e->getMessage());
+            }
+
+            return redirect()->route('store.otp.verify')->with('success', 'Profile updated. Please verify your new email address.');
+        }
 
         return redirect()->route('store.account', 'profile')->with('success', 'Profile details updated successfully!');
     }
@@ -618,17 +753,16 @@ class StoreController extends Controller
         }
 
         $products = collect(self::getProducts());
-        $results = $products->filter(fn($p) => 
-            str_contains(strtolower($p['name']), $query) || 
+        $results = $products->filter(fn ($p) => str_contains(strtolower($p['name']), $query) ||
             str_contains(strtolower($p['desc']), $query) ||
             str_contains(strtolower($p['cat']), $query)
-        )->map(fn($p) => [
+        )->map(fn ($p) => [
             'id' => $p['id'],
             'name' => $p['name'],
             'price' => (float) $p['price'],
             'cat' => $p['cat'],
             'img' => $p['img'],
-            'url' => route('store.product', $p['slug'])
+            'url' => route('store.product', $p['slug']),
         ])->values()->take(5);
 
         return response()->json($results);
@@ -639,7 +773,7 @@ class StoreController extends Controller
      */
     public function addAddress(Request $request)
     {
-        if (!auth('customer')->check()) {
+        if (! auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to manage your addresses.');
         }
 
@@ -654,7 +788,7 @@ class StoreController extends Controller
         ]);
 
         $customer = auth('customer')->user();
-        
+
         $address = $customer->addresses()->create([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
@@ -670,7 +804,7 @@ class StoreController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Address added successfully!',
-                'address' => $address
+                'address' => $address,
             ]);
         }
 
@@ -682,7 +816,7 @@ class StoreController extends Controller
      */
     public function deleteAddress(Request $request, $id)
     {
-        if (!auth('customer')->check()) {
+        if (! auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to manage your addresses.');
         }
 
@@ -703,7 +837,7 @@ class StoreController extends Controller
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Address deleted successfully!'
+                'message' => 'Address deleted successfully!',
             ]);
         }
 
@@ -715,7 +849,7 @@ class StoreController extends Controller
      */
     public function updateAddress(Request $request, $id)
     {
-        if (!auth('customer')->check()) {
+        if (! auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to manage your addresses.');
         }
 
@@ -730,10 +864,11 @@ class StoreController extends Controller
         ]);
 
         $address = auth('customer')->user()->addresses()->find($id);
-        if (!$address) {
+        if (! $address) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Address not found.'], 404);
             }
+
             return redirect()->back()->with('error', 'Address not found.');
         }
 
@@ -751,7 +886,7 @@ class StoreController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Address updated successfully!',
-                'address' => $address
+                'address' => $address,
             ]);
         }
 
@@ -763,7 +898,7 @@ class StoreController extends Controller
      */
     public function getOrderDetail($ulid)
     {
-        if (!auth('customer')->check()) {
+        if (! auth('customer')->check()) {
             return response()->json(['success' => false, 'message' => 'Please log in to view order details.'], 401);
         }
 
@@ -772,7 +907,7 @@ class StoreController extends Controller
             ->where('ulid', $ulid)
             ->first();
 
-        if (!$order) {
+        if (! $order) {
             return response()->json(['success' => false, 'message' => 'Order not found.'], 404);
         }
 
@@ -782,12 +917,12 @@ class StoreController extends Controller
             $items[] = [
                 'name' => $item->product_name,
                 'sku' => $item->product_sku,
-                'price' => (float)$item->price,
-                'quantity' => (int)$item->quantity,
+                'price' => (float) $item->price,
+                'quantity' => (int) $item->quantity,
                 'size' => $item->size,
                 'color' => $item->color,
-                'img' => $item->product && $item->product->image 
-                    ? \Illuminate\Support\Facades\Storage::url($item->product->image) 
+                'img' => $item->product && $item->product->image
+                    ? Storage::url($item->product->image)
                     : asset('images/no-image.svg'),
             ];
         }
@@ -801,18 +936,18 @@ class StoreController extends Controller
                 'payment_status' => $order->payment_status->value ?? $order->payment_status,
                 'payment_method' => $order->payment_method,
                 'card_number_masked' => $order->card_number_masked,
-                'recipient_name' => $order->first_name . ' ' . $order->last_name,
+                'recipient_name' => $order->first_name.' '.$order->last_name,
                 'address' => $order->address,
                 'city' => $order->city,
                 'state' => $order->state,
                 'zip' => $order->zip,
                 'country' => $order->country,
-                'subtotal' => (float)$order->subtotal,
-                'discount' => (float)$order->discount,
-                'tax' => (float)$order->tax,
-                'total' => (float)$order->total,
+                'subtotal' => (float) $order->subtotal,
+                'discount' => (float) $order->discount,
+                'tax' => (float) $order->tax,
+                'total' => (float) $order->total,
                 'items' => $items,
-            ]
+            ],
         ]);
     }
 
@@ -821,7 +956,7 @@ class StoreController extends Controller
      */
     public function viewOrder($ulid)
     {
-        if (!auth('customer')->check()) {
+        if (! auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to view order details.');
         }
 
@@ -830,7 +965,7 @@ class StoreController extends Controller
             ->where('ulid', $ulid)
             ->first();
 
-        if (!$order) {
+        if (! $order) {
             return redirect()->route('store.account', 'orders')->with('error', 'Order not found.');
         }
 
@@ -842,7 +977,7 @@ class StoreController extends Controller
      */
     public function downloadInvoice($ulid)
     {
-        if (!auth('customer')->check()) {
+        if (! auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to view/download invoices.');
         }
 
@@ -851,12 +986,12 @@ class StoreController extends Controller
             ->where('ulid', $ulid)
             ->first();
 
-        if (!$order) {
+        if (! $order) {
             return redirect()->route('store.account', 'orders')->with('error', 'Order not found.');
         }
 
         $pdf = Pdf::loadView('store.invoice-pdf', compact('order'));
-        
+
         return $pdf->download("invoice-{$order->order_number}.pdf");
     }
 }
