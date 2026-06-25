@@ -152,6 +152,24 @@ class AuthController extends Controller
         $guestSessionId = $request->session()->getId();
         $loginAttemptsKey = 'login_attempts_'.md5('customer_'.$loginInput);
 
+        // Check if customer exists
+        $customer = Customer::where($isEmail ? 'email' : 'phone_no', $loginInput)->first();
+        if (! $customer) {
+            $attempts = Cache::increment($loginAttemptsKey);
+            Cache::put($loginAttemptsKey, $attempts, 3600);
+
+            app(LogActivity::class)->capture(
+                description: "Failed customer login attempt (non-existent user): {$loginInput}",
+                event: 'login.failed',
+                subject: null,
+                properties: ['email_or_phone' => $loginInput, 'attempt_count' => $attempts]
+            );
+
+            return redirect()->route('store.register', ['email_or_phone' => $loginInput])
+                ->withInput(['email_or_phone' => $loginInput])
+                ->with('info', 'No account found. Please register to continue.');
+        }
+
         if (Auth::guard('customer')->attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
@@ -159,7 +177,6 @@ class AuthController extends Controller
             $customerId = Auth::guard('customer')->id();
             Cart::mergeGuestCart($customerId, $guestSessionId);
 
-            $customer = Auth::guard('customer')->user();
             Cache::forget($loginAttemptsKey);
             app(LogActivity::class)->capture(
                 description: 'Customer logged in',
@@ -174,7 +191,6 @@ class AuthController extends Controller
 
         $attempts = Cache::increment($loginAttemptsKey);
         Cache::put($loginAttemptsKey, $attempts, 3600);
-        $customer = Customer::where($isEmail ? 'email' : 'phone_no', $loginInput)->first();
 
         app(LogActivity::class)->capture(
             description: "Failed customer login attempt with identifier: {$loginInput}",

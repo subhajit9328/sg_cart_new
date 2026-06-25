@@ -20,7 +20,7 @@
 
             <div class="flex flex-col gap-1">
                 <label class="label">Email or Phone Number</label>
-                <input type="text" name="email_or_phone" id="email_or_phone" required class="inp" placeholder="email@example.com or +1234567890" value="{{ old('email_or_phone') }}"/>
+                <input type="text" name="email_or_phone" id="email_or_phone" required class="inp" placeholder="email@example.com or +1234567890" value="{{ old('email_or_phone', request('email_or_phone')) }}"/>
                 <p class="error-email-phone text-rose-500 text-xs mt-1 hidden"></p>
                 @error('email_or_phone') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>

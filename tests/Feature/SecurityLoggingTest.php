@@ -224,4 +224,22 @@ class SecurityLoggingTest extends TestCase
         $this->assertEquals(Customer::class, $logoutLog->causer_type);
         $this->assertEquals($customer->id, $logoutLog->causer_id);
     }
+
+    public function test_non_existent_customer_login_redirects_to_registration_page_with_prefilled_input()
+    {
+        $response = $this->post(route('store.login.submit'), [
+            'email_or_phone' => 'nonexistent@example.com',
+            'password' => 'some_password',
+        ]);
+
+        $response->assertRedirect(route('store.register', ['email_or_phone' => 'nonexistent@example.com']));
+        $response->assertSessionHasInput('email_or_phone', 'nonexistent@example.com');
+
+        $failLog = ActivityLog::where('event', 'login.failed')->first();
+        $this->assertNotNull($failLog);
+        $this->assertNull($failLog->subject_type);
+        $this->assertNull($failLog->subject_id);
+        $this->assertEquals(1, $failLog->properties['attempt_count']);
+        $this->assertEquals('nonexistent@example.com', $failLog->properties['email_or_phone']);
+    }
 }
