@@ -3307,7 +3307,7 @@
         },
         {
             "name": "sgcart/coupons",
-            "version": "dev-create_product_variant_package",
+            "version": "dev-optimize_refactor_packages",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/coupons",
@@ -3346,7 +3346,7 @@
         },
         {
             "name": "sgcart/product-variants",
-            "version": "dev-create_product_variant_package",
+            "version": "dev-optimize_refactor_packages",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/product-variants",

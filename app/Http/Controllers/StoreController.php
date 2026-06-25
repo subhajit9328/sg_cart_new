@@ -431,7 +431,7 @@ class StoreController extends Controller
             ]
         ]);
 
-        $wishlistIds = session()->get('wishlist', [3, 5, 6]);
+        $wishlistIds = session()->get('wishlist', []);
         $allProducts = self::getProducts();
         $wishlist = array_filter($allProducts, fn($p) => in_array($p['id'], $wishlistIds));
 
@@ -465,7 +465,7 @@ class StoreController extends Controller
     public function toggleWishlist(Request $request)
     {
         $productId = (int) $request->input('product_id');
-        $wishlist = session()->get('wishlist', [3, 5, 6]);
+        $wishlist = session()->get('wishlist', []);
 
         if (in_array($productId, $wishlist)) {
             $wishlist = array_values(array_diff($wishlist, [$productId]));
@@ -493,7 +493,7 @@ class StoreController extends Controller
             return redirect()->route('store.account', 'wishlist');
         }
 
-        $wishlistIds = session()->get('wishlist', [3, 5, 6]);
+        $wishlistIds = session()->get('wishlist', []);
         $allProducts = self::getProducts();
         $wishlist = array_filter($allProducts, fn($p) => in_array($p['id'], $wishlistIds));
 

@@ -187,7 +187,7 @@
                 <a href="{{ Auth::guard('customer')->check() ? route('store.account', 'wishlist') : route('store.wishlist') }}" class="header-wishlist-btn" title="Wishlist">
                     <i class="fa-solid fa-heart header-wishlist-icon"></i>
                     @php
-                        $wishlistCount = count(session('wishlist', [3, 5, 6]));
+                        $wishlistCount = count(session('wishlist', []));
                     @endphp
                     <span class="header-wishlist-count" id="wishlistBadge" style="{{ $wishlistCount > 0 ? '' : 'display: none;' }}">{{ $wishlistCount }}</span>
                 </a>

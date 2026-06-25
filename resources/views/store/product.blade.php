@@ -63,7 +63,7 @@
                 <div class="flex justify-between items-start gap-4 mb-2">
                     <h1 class="font-display font-extrabold text-3xl text-slate-900 leading-tight flex-1">{{ $product['name'] }}</h1>
                     @php
-                        $inWishlist = in_array($product['id'], session('wishlist', [3, 5, 6]));
+                        $inWishlist = in_array($product['id'], session('wishlist', []));
                     @endphp
                     <button type="button" 
                         class="wishlist-detail-btn {{ $inWishlist ? 'active' : '' }}" 
@@ -205,7 +205,7 @@
                     <div class="product-card-img">
                         <img src="{{ $rel['img'] }}" alt="{{ $rel['name'] }}"/>
                         @php
-                            $inWishlist = in_array($rel['id'], session('wishlist', [3, 5, 6]));
+                            $inWishlist = in_array($rel['id'], session('wishlist', []));
                         @endphp
                         <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}" 
                             data-product-id="{{ $rel['id'] }}"

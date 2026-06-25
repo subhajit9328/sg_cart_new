@@ -33,21 +33,28 @@ class CouponController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $rules = [
             'code' => 'required|string|max:50|unique:coupons,code',
             'type' => 'required|string',
             'value' => 'required|numeric|min:0.01',
-            'min_cart_total' => 'nullable|numeric|min:0',
-            'expires_at' => 'nullable|date|after_or_equal:today',
             'is_active' => 'nullable|boolean',
-        ]);
+        ];
+
+        if (config('coupons.features.min_cart_total', true)) {
+            $rules['min_cart_total'] = 'nullable|numeric|min:0';
+        }
+        if (config('coupons.features.expires_at', true)) {
+            $rules['expires_at'] = 'nullable|date|after_or_equal:today';
+        }
+
+        $request->validate($rules);
 
         Coupon::create([
             'code' => strtoupper(trim($request->code)),
             'type' => $request->type,
             'value' => $request->value,
-            'min_cart_total' => $request->min_cart_total ?? 0.00,
-            'expires_at' => $request->expires_at ? Carbon::parse($request->expires_at)->endOfDay() : null,
+            'min_cart_total' => config('coupons.features.min_cart_total', true) ? ($request->min_cart_total ?? 0.00) : 0.00,
+            'expires_at' => (config('coupons.features.expires_at', true) && $request->expires_at) ? Carbon::parse($request->expires_at)->endOfDay() : null,
             'is_active' => $request->has('is_active'),
         ]);
 
@@ -71,21 +78,28 @@ class CouponController extends Controller
     {
         $coupon = Coupon::findOrFail($id);
 
-        $request->validate([
+        $rules = [
             'code' => 'required|string|max:50|unique:coupons,code,' . $coupon->id,
             'type' => 'required|string',
             'value' => 'required|numeric|min:0.01',
-            'min_cart_total' => 'nullable|numeric|min:0',
-            'expires_at' => 'nullable|date',
             'is_active' => 'nullable|boolean',
-        ]);
+        ];
+
+        if (config('coupons.features.min_cart_total', true)) {
+            $rules['min_cart_total'] = 'nullable|numeric|min:0';
+        }
+        if (config('coupons.features.expires_at', true)) {
+            $rules['expires_at'] = 'nullable|date';
+        }
+
+        $request->validate($rules);
 
         $coupon->update([
             'code' => strtoupper(trim($request->code)),
             'type' => $request->type,
             'value' => $request->value,
-            'min_cart_total' => $request->min_cart_total ?? 0.00,
-            'expires_at' => $request->expires_at ? Carbon::parse($request->expires_at)->endOfDay() : null,
+            'min_cart_total' => config('coupons.features.min_cart_total', true) ? ($request->min_cart_total ?? 0.00) : 0.00,
+            'expires_at' => (config('coupons.features.expires_at', true) && $request->expires_at) ? Carbon::parse($request->expires_at)->endOfDay() : null,
             'is_active' => $request->has('is_active'),
         ]);
 
@@ -121,14 +135,16 @@ class CouponController extends Controller
         }
 
         // Validate subtotal against coupon requirement
-        $cart = session()->get('cart', []);
-        $subtotal = 0;
-        foreach ($cart as $item) {
-            $subtotal += $item['price'] * $item['quantity'];
-        }
+        if (config('coupons.features.min_cart_total', true)) {
+            $cart = session()->get('cart', []);
+            $subtotal = 0;
+            foreach ($cart as $item) {
+                $subtotal += $item['price'] * $item['quantity'];
+            }
 
-        if ($subtotal < (float) $coupon->min_cart_total) {
-            return redirect()->back()->with('error', 'Minimum cart total of $' . number_format($coupon->min_cart_total, 2) . ' required to use this coupon.');
+            if ($subtotal < (float) $coupon->min_cart_total) {
+                return redirect()->back()->with('error', 'Minimum cart total of $' . number_format($coupon->min_cart_total, 2) . ' required to use this coupon.');
+            }
         }
 
         // Store active coupon code in session

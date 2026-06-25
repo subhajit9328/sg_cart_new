@@ -1,33 +1,33 @@
 <?php
 
-namespace SGCart\Coupons\Console\Commands;
+namespace SGCart\ProductVariants\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
 
-class UninstallCommand extends Command
+class SyncCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'sgcart:coupons-uninstall';
+    protected $signature = 'sgcart:variants-sync';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Roll back coupons migrations and perform package clean up';
+    protected $description = 'Sync product variant database schemas to match configuration settings';
 
     /**
      * Execute the console command.
      */
     public function handle(): int
     {
-        $this->info('Starting SGCart Coupons uninstallation...');
+        $this->info('Syncing product variants features...');
 
         try {
             $migrationsPath = realpath(__DIR__ . '/../../../database/migrations');
@@ -44,7 +44,7 @@ class UninstallCommand extends Command
                         ->toArray();
 
                     if (!empty($ranMigrations)) {
-                        $this->comment('Found package migrations to rollback: ' . implode(', ', $ranMigrations));
+                        $this->comment('Rolling back package migrations to re-sync schema...');
 
                         // Temporarily set the batch of these migrations to a unique batch number
                         DB::table('migrations')
@@ -58,31 +58,23 @@ class UninstallCommand extends Command
                             '--batch' => 999999,
                             '--force' => true,
                         ]);
-
-                        $this->info(Artisan::output());
-                    } else {
-                        $this->info('No package migrations were found in the ran migrations database.');
                     }
                 }
+
+                $this->comment('Re-running migrations with new configuration settings...');
+                $relativePath = str_replace(base_path() . DIRECTORY_SEPARATOR, '', $migrationsPath);
+                Artisan::call('migrate', [
+                    '--path' => $relativePath,
+                    '--force' => true,
+                ]);
+
+                $this->info(Artisan::output());
             }
 
-            // Force drop remaining package tables in case configuration prevented migrations from rolling back them
-            \Illuminate\Support\Facades\Schema::dropIfExists('coupons');
-
-            // Delete configuration file if it exists
-            $configPath = config_path('coupons.php');
-            if (file_exists($configPath)) {
-                if (@unlink($configPath)) {
-                    $this->info('Deleted configuration file: ' . $configPath);
-                } else {
-                    $this->warn('Could not delete configuration file: ' . $configPath);
-                }
-            }
-
-            $this->info('SGCart Coupons uninstallation completed successfully.');
+            $this->info('Database schemas synced with configurations successfully.');
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            $this->error('An error occurred during uninstallation: ' . $e->getMessage());
+            $this->error('An error occurred during sync: ' . $e->getMessage());
             return Command::FAILURE;
         }
     }

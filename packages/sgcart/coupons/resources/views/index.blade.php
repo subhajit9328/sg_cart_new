@@ -23,8 +23,12 @@
                     <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Code</th>
                     <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Type</th>
                     <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Value</th>
+                    @if(config('coupons.features.min_cart_total', true))
                     <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Min. Cart Subtotal</th>
+                    @endif
+                    @if(config('coupons.features.expires_at', true))
                     <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Expires At</th>
+                    @endif
                     <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Status</th>
                     <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Actions</th>
                 </tr>
@@ -55,9 +59,12 @@
                             ${{ number_format($coupon->value, 2) }}
                         @endif
                     </td>
+                    @if(config('coupons.features.min_cart_total', true))
                     <td class="px-5 py-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">
                         ${{ number_format($coupon->min_cart_total, 2) }}
                     </td>
+                    @endif
+                    @if(config('coupons.features.expires_at', true))
                     <td class="px-5 py-4 text-slate-400 whitespace-nowrap">
                         @if($coupon->expires_at)
                             <span class="{{ \Carbon\Carbon::parse($coupon->expires_at)->isPast() ? 'text-rose-500 font-medium' : '' }}">
@@ -67,6 +74,7 @@
                             <span class="text-slate-300 dark:text-slate-600 italic">Never</span>
                         @endif
                     </td>
+                    @endif
                     <td class="px-5 py-4 whitespace-nowrap">
                         @if($coupon->is_active && (!$coupon->expires_at || !\Carbon\Carbon::parse($coupon->expires_at)->isPast()))
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
@@ -92,7 +100,12 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-5 py-12 text-center text-slate-400">
+                    @php
+                        $cols = 5;
+                        if(config('coupons.features.min_cart_total', true)) $cols++;
+                        if(config('coupons.features.expires_at', true)) $cols++;
+                    @endphp
+                    <td colspan="{{ $cols }}" class="px-5 py-12 text-center text-slate-400">
                         <i class="fa-solid fa-ticket text-4xl mb-3 opacity-20 block"></i>
                         No coupons found. Click "Add Coupon" to create one.
                     </td>
