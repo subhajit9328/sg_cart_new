@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
+use App\Traits\HasSearchTerms;
+
 class Product extends Model
 {
-    use SoftDeletes, HasUlids;
+    use SoftDeletes, HasUlids, HasSearchTerms;
 
     protected $fillable = [
         'name', 'slug', 'sku', 'category_id', 'manufacturer_id',

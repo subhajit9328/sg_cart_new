@@ -11,6 +11,7 @@
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
         "sgcart/coupons": "@dev",
+        "sgcart/image-search": "@dev",
         "sgcart/product-variants": "@dev",
         "spatie/laravel-permission": "^8.0"
     },
@@ -34,6 +35,13 @@
         {
             "type": "path",
             "url": "packages/sgcart/coupons",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/image-search",
             "options": {
                 "symlink": true
             }

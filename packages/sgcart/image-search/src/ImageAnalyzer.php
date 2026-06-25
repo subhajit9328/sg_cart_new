@@ -62,6 +62,9 @@ Example output:
     protected function resolveImageAttachment(mixed $image): mixed
     {
         if ($image instanceof UploadedFile) {
+            if (!$image->isValid()) {
+                throw new \Exception('Uploaded file is invalid: ' . $image->getErrorMessage());
+            }
             return Image::fromUpload($image);
         }
 

@@ -159,6 +159,12 @@
                     <button type="button" class="header-search-voice-btn" id="voiceSearchBtn" title="Search by Voice">
                         <i class="fa-solid fa-microphone"></i>
                     </button>
+                    @if(class_exists(\SGCart\ImageSearch\ImageSearchServiceProvider::class))
+                    <button type="button" class="header-search-camera-btn" id="cameraSearchBtn" title="Search by Image">
+                        <i class="fa-solid fa-camera"></i>
+                    </button>
+                    <input type="file" id="cameraSearchInput" accept="image/*" style="display:none;" />
+                    @endif
                     <button type="submit" class="header-search-btn" aria-label="Search">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </button>
@@ -789,6 +795,410 @@
 <form action="{{ route('store.logout') }}" method="POST" id="storeLogoutForm" class="hidden">
     @csrf
 </form>
+
+@if(class_exists(\SGCart\ImageSearch\ImageSearchServiceProvider::class))
+<!-- Image Crop Modal -->
+<div id="imageCropModal" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden" style="display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col" style="background: white; border-radius: 16px; width: 90%; max-width: 600px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); display: flex; flex-direction: column;">
+        <div class="flex justify-between items-center mb-4" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 class="text-lg font-bold text-ink" style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--color-ink);">Select Object to Search</h3>
+            <button id="closeCropModalBtn" class="text-slate-400 hover:text-slate-600 cursor-pointer border-none bg-transparent" style="border: none; background: transparent; cursor: pointer; color: #94a3b8; font-size: 1.25rem; padding: 4px;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <p class="text-sm text-stone mb-4" style="margin-top: 0; margin-bottom: 16px; font-size: 0.875rem; color: #6b7280; line-height: 1.5;">
+            Multiple products were detected in the image. Please click and drag on the image to select the specific product you want to search.
+        </p>
+        
+        <div class="flex items-center justify-center bg-slate-50 rounded-xl overflow-hidden relative border border-dashed border-slate-200" style="background: #f8fafc; border-radius: 12px; border: 2px dashed #e2e8f0; display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 12px; min-height: 300px; max-height: 450px;">
+            <canvas id="cropCanvas" style="max-width: 100%; max-height: 380px; cursor: crosshair; display: block; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"></canvas>
+        </div>
+        
+        <div class="flex justify-end gap-3 mt-5" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+            <button id="cancelCropBtn" class="border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer" style="border: 1px solid #cbd5e1; background: transparent; color: #334155; padding: 10px 20px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">Cancel</button>
+            <button id="confirmCropBtn" class="btn btn-accent px-6 py-2.5 rounded-lg text-sm font-semibold cursor-pointer" style="padding: 10px 20px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; color: white; background-color: var(--color-accent); border: none;">Search Product</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cameraBtn = document.getElementById('cameraSearchBtn');
+    const cameraInput = document.getElementById('cameraSearchInput');
+    const cropModal = document.getElementById('imageCropModal');
+    const closeCropModalBtn = document.getElementById('closeCropModalBtn');
+    const cancelCropBtn = document.getElementById('cancelCropBtn');
+    const confirmCropBtn = document.getElementById('confirmCropBtn');
+    const canvas = document.getElementById('cropCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let originalFile = null;
+    let img = new Image();
+    
+    // Canvas selection state
+    let isDrawing = false;
+    let startX = 0, startY = 0;
+    let rectX = 0, rectY = 0, rectWidth = 0, rectHeight = 0;
+    
+    if (cameraBtn && cameraInput) {
+        cameraBtn.addEventListener('click', () => {
+            cameraInput.click();
+        });
+        
+        cameraInput.addEventListener('change', function(e) {
+            if (e.target.files.length === 0) return;
+            
+            const file = e.target.files[0];
+            showToast('Uploading and analyzing image for products...', 'info');
+            preprocessAndDetect(file);
+            
+            // Reset input so change event fires again if user selects same file
+            cameraInput.value = '';
+        });
+    }
+
+    function preprocessAndDetect(file) {
+        // If file is smaller than 1.5MB, run detection directly to save client CPU
+        if (file.size < 1.5 * 1024 * 1024) {
+            runMultipleDetection(file);
+            return;
+        }
+
+        // Otherwise, downscale it to max 1000px first to avoid upload limit errors
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const tempImg = new Image();
+            tempImg.onload = function() {
+                const maxDim = 1000;
+                let w = tempImg.width;
+                let h = tempImg.height;
+
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) {
+                        h = h * (maxDim / w);
+                        w = maxDim;
+                    } else {
+                        w = w * (maxDim / h);
+                        h = maxDim;
+                    }
+                }
+
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = w;
+                tempCanvas.height = h;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(tempImg, 0, 0, w, h);
+
+                tempCanvas.toBlob(function(blob) {
+                    if (blob) {
+                        const resizedFile = new File([blob], file.name, { type: 'image/jpeg' });
+                        runMultipleDetection(resizedFile);
+                    } else {
+                        runMultipleDetection(file);
+                    }
+                }, 'image/jpeg', 0.85);
+            };
+            tempImg.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function runMultipleDetection(file) {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        fetch("{{ route('image-search.detect-multiple') }}", {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: formData
+        })
+        .then(res => {
+            if (!res.ok) {
+                throw new Error('Server returned ' + res.status + ' error.');
+            }
+            return res.json();
+        })
+        .then(data => {
+            if (data.success) {
+                if (data.multiple) {
+                    // Multiple objects found, open crop modal
+                    showToast('Multiple items detected. Please select one.', 'success');
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        img.onload = function() {
+                            setupCanvas();
+                            openModal();
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    // Single object, proceed directly to search
+                    showToast('Analyzing and searching...', 'info');
+                    submitSearchForm(file);
+                }
+            } else {
+                showToast(data.message || 'Multiple object detection failed.', 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Multiple object detection failed: ' + err.message, 'error');
+        });
+    }
+    
+    function openModal() {
+        cropModal.style.display = 'flex';
+        setTimeout(() => {
+            cropModal.style.opacity = '1';
+        }, 10);
+    }
+    
+    function closeModal() {
+        cropModal.style.opacity = '0';
+        setTimeout(() => {
+            cropModal.style.display = 'none';
+        }, 300);
+    }
+    
+    closeCropModalBtn.addEventListener('click', closeModal);
+    cancelCropBtn.addEventListener('click', closeModal);
+    
+    function setupCanvas() {
+        // Set canvas dimensions based on image aspect ratio inside container max dimensions
+        const maxW = 560; // Max width based on CSS max-width of container
+        const maxH = 380; // Max height based on CSS max-height of container
+        
+        let w = img.width;
+        let h = img.height;
+        
+        if (w > maxW) {
+            h = h * (maxW / w);
+            w = maxW;
+        }
+        if (h > maxH) {
+            w = w * (maxH / h);
+            h = maxH;
+        }
+        
+        canvas.width = w;
+        canvas.height = h;
+        
+        // Reset selection
+        rectX = 0;
+        rectY = 0;
+        rectWidth = 0;
+        rectHeight = 0;
+        
+        drawCanvas();
+    }
+    
+    function drawCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        if (rectWidth > 0 && rectHeight > 0) {
+            // Semi-transparent overlay
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Clear selected region
+            ctx.clearRect(rectX, rectY, rectWidth, rectHeight);
+            
+            // Redraw image portion inside selection to remove overlay
+            ctx.drawImage(img, 
+                rectX * (img.width / canvas.width), 
+                rectY * (img.height / canvas.height), 
+                rectWidth * (img.width / canvas.width), 
+                rectHeight * (img.height / canvas.height),
+                rectX, rectY, rectWidth, rectHeight
+            );
+            
+            // Border around selection
+            ctx.strokeStyle = '#c8a97e';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]);
+            ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
+        }
+    }
+    
+    // Mouse / Touch Event Handlers for drawing selection box
+    function getMousePos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+            x: clientX - rect.left,
+            y: clientY - rect.top
+        };
+    }
+    
+    function startDrawing(e) {
+        e.preventDefault();
+        isDrawing = true;
+        const pos = getMousePos(e);
+        startX = pos.x;
+        startY = pos.y;
+        
+        rectX = startX;
+        rectY = startY;
+        rectWidth = 0;
+        rectHeight = 0;
+    }
+    
+    function draw(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const pos = getMousePos(e);
+        
+        rectX = Math.min(startX, pos.x);
+        rectY = Math.min(startY, pos.y);
+        rectWidth = Math.abs(startX - pos.x);
+        rectHeight = Math.abs(startY - pos.y);
+        
+        drawCanvas();
+    }
+    
+    function stopDrawing(e) {
+        if (!isDrawing) return;
+        isDrawing = false;
+    }
+    
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    window.addEventListener('mouseup', stopDrawing);
+    
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    window.addEventListener('touchend', stopDrawing);
+    
+    confirmCropBtn.addEventListener('click', function() {
+        if (rectWidth < 10 || rectHeight < 10) {
+            showToast('Please draw a box over the item to select it.', 'warning');
+            return;
+        }
+        
+        // Crop the image using temp canvas
+        let targetWidth = rectWidth * (img.width / canvas.width);
+        let targetHeight = rectHeight * (img.height / canvas.height);
+        
+        // Resize if too large
+        const maxDimension = 800;
+        if (targetWidth > maxDimension || targetHeight > maxDimension) {
+            if (targetWidth > targetHeight) {
+                targetHeight = targetHeight * (maxDimension / targetWidth);
+                targetWidth = maxDimension;
+            } else {
+                targetWidth = targetWidth * (maxDimension / targetHeight);
+                targetHeight = maxDimension;
+            }
+        }
+        
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = targetWidth;
+        tempCanvas.height = targetHeight;
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        tempCtx.drawImage(img, 
+            rectX * (img.width / canvas.width), 
+            rectY * (img.height / canvas.height), 
+            rectWidth * (img.width / canvas.width), 
+            rectHeight * (img.height / canvas.height),
+            0, 0, tempCanvas.width, tempCanvas.height
+        );
+        
+        tempCanvas.toBlob(function(blob) {
+            if (blob) {
+                closeModal();
+                showToast('Searching for selected product...', 'info');
+                const croppedFile = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
+                submitSearchForm(croppedFile);
+            }
+        }, 'image/jpeg', 0.85);
+    });
+    
+    function resizeAndSubmit(file) {
+        // If file is smaller than 1.5MB, submit it directly to save client CPU/time
+        if (file.size < 1.5 * 1024 * 1024) {
+            submitSearchForm(file);
+            return;
+        }
+
+        // Otherwise, resize the image first
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const tempImg = new Image();
+            tempImg.onload = function() {
+                const maxDim = 1000;
+                let w = tempImg.width;
+                let h = tempImg.height;
+
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) {
+                        h = h * (maxDim / w);
+                        w = maxDim;
+                    } else {
+                        w = w * (maxDim / h);
+                        h = maxDim;
+                    }
+                }
+
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = w;
+                tempCanvas.height = h;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(tempImg, 0, 0, w, h);
+
+                tempCanvas.toBlob(function(blob) {
+                    if (blob) {
+                        const resizedFile = new File([blob], file.name, { type: 'image/jpeg' });
+                        submitSearchForm(resizedFile);
+                    } else {
+                        submitSearchForm(file);
+                    }
+                }, 'image/jpeg', 0.85);
+            };
+            tempImg.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    function submitSearchForm(file) {
+        // Build dynamic form to POST the file
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{{ route('image-search.search') }}";
+        form.enctype = 'multipart/form-data';
+        form.style.display = 'none';
+        
+        // Add CSRF token
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        form.appendChild(csrfInput);
+        
+        // Add File input using DataTransfer to assign file programmaticly
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.name = 'image';
+        
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+        
+        form.appendChild(fileInput);
+        document.body.appendChild(form);
+        
+        // Submit the form
+        form.submit();
+    }
+});
+</script>
+@endif
 
 @yield('scripts')
 </body>
