@@ -483,6 +483,19 @@ class StoreController extends Controller
         $state = null;
         $zip = null;
         $country = null;
+        $phone = null;
+        $alternatePhone = null;
+        $addressType = null;
+        $landmark = null;
+        $shippingAndBillingSame = true;
+        $billingFirstName = null;
+        $billingLastName = null;
+        $billingAddress = null;
+        $billingCity = null;
+        $billingState = null;
+        $billingZip = null;
+        $billingCountry = null;
+        $billingPhone = null;
 
         if ($request->filled('address_id')) {
             $savedAddress = auth('customer')->user()->addresses()->find($request->address_id);
@@ -497,6 +510,19 @@ class StoreController extends Controller
             $state = $savedAddress->state;
             $zip = $savedAddress->zip;
             $country = $savedAddress->country;
+            $phone = $savedAddress->phone;
+            $alternatePhone = $savedAddress->alternate_phone;
+            $addressType = $savedAddress->address_type;
+            $landmark = $savedAddress->landmark;
+            $shippingAndBillingSame = $savedAddress->shipping_and_billing_same;
+            $billingFirstName = $savedAddress->billing_first_name;
+            $billingLastName = $savedAddress->billing_last_name;
+            $billingAddress = $savedAddress->billing_address;
+            $billingCity = $savedAddress->billing_city;
+            $billingState = $savedAddress->billing_state;
+            $billingZip = $savedAddress->billing_zip;
+            $billingCountry = $savedAddress->billing_country;
+            $billingPhone = $savedAddress->billing_phone;
         } else {
             $firstName = $request->first_name;
             $lastName = $request->last_name;
@@ -506,6 +532,19 @@ class StoreController extends Controller
             $state = $request->state;
             $zip = $request->zip;
             $country = $request->country;
+            $phone = $request->phone;
+            $alternatePhone = $request->alternate_phone;
+            $addressType = $request->address_type ?? 'work';
+            $landmark = $request->landmark;
+            $shippingAndBillingSame = $request->has('shipping_and_billing_same') ? $request->boolean('shipping_and_billing_same') : true;
+            $billingFirstName = $shippingAndBillingSame ? $firstName : $request->billing_first_name;
+            $billingLastName = $shippingAndBillingSame ? $lastName : $request->billing_last_name;
+            $billingAddress = $shippingAndBillingSame ? $addressStr : $request->billing_address;
+            $billingCity = $shippingAndBillingSame ? $city : $request->billing_city;
+            $billingState = $shippingAndBillingSame ? $state : $request->billing_state;
+            $billingZip = $shippingAndBillingSame ? $zip : $request->billing_zip;
+            $billingCountry = $shippingAndBillingSame ? $country : $request->billing_country;
+            $billingPhone = $shippingAndBillingSame ? $phone : $request->billing_phone;
 
             // Optionally save the new address
             if ($request->boolean('save_address')) {
@@ -517,6 +556,19 @@ class StoreController extends Controller
                     'state' => $state,
                     'zip' => $zip,
                     'country' => $country,
+                    'phone' => $phone,
+                    'alternate_phone' => $alternatePhone,
+                    'address_type' => $addressType,
+                    'landmark' => $landmark,
+                    'shipping_and_billing_same' => $shippingAndBillingSame,
+                    'billing_first_name' => $billingFirstName,
+                    'billing_last_name' => $billingLastName,
+                    'billing_address' => $billingAddress,
+                    'billing_city' => $billingCity,
+                    'billing_state' => $billingState,
+                    'billing_zip' => $billingZip,
+                    'billing_country' => $billingCountry,
+                    'billing_phone' => $billingPhone,
                     'is_default' => auth('customer')->user()->addresses()->count() === 0,
                 ]);
             }
@@ -592,6 +644,19 @@ class StoreController extends Controller
             'first_name' => $firstName,
             'last_name' => $lastName,
             'email' => $email,
+            'phone' => $phone,
+            'alternate_phone' => $alternatePhone,
+            'address_type' => $addressType,
+            'landmark' => $landmark,
+            'shipping_and_billing_same' => $shippingAndBillingSame,
+            'billing_first_name' => $billingFirstName,
+            'billing_last_name' => $billingLastName,
+            'billing_address' => $billingAddress,
+            'billing_city' => $billingCity,
+            'billing_state' => $billingState,
+            'billing_zip' => $billingZip,
+            'billing_country' => $billingCountry,
+            'billing_phone' => $billingPhone,
             'address' => $addressStr,
             'city' => $city,
             'state' => $state,
@@ -796,7 +861,7 @@ class StoreController extends Controller
             return redirect()->route('store.login')->with('error', 'Please log in to manage your addresses.');
         }
 
-        $request->validate([
+        $rules = [
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
             'address' => 'required|string|max:255',
@@ -804,7 +869,27 @@ class StoreController extends Controller
             'state' => 'required|string|max:100',
             'zip' => 'required|string|max:20',
             'country' => 'required|string|max:100',
-        ]);
+            'phone' => 'required|string|max:20',
+            'alternate_phone' => 'nullable|string|max:20',
+            'address_type' => 'required|in:office,work,other',
+            'landmark' => 'nullable|string|max:255',
+            'shipping_and_billing_same' => 'nullable',
+        ];
+
+        $isSame = $request->has('shipping_and_billing_same') ? $request->boolean('shipping_and_billing_same') : false;
+
+        if (!$isSame) {
+            $rules['billing_first_name'] = 'required|string|max:100';
+            $rules['billing_last_name'] = 'required|string|max:100';
+            $rules['billing_address'] = 'required|string|max:255';
+            $rules['billing_city'] = 'required|string|max:100';
+            $rules['billing_state'] = 'required|string|max:100';
+            $rules['billing_zip'] = 'required|string|max:20';
+            $rules['billing_country'] = 'required|string|max:100';
+            $rules['billing_phone'] = 'required|string|max:20';
+        }
+
+        $request->validate($rules);
 
         $customer = auth('customer')->user();
         
@@ -816,6 +901,19 @@ class StoreController extends Controller
             'state' => $request->state,
             'zip' => $request->zip,
             'country' => $request->country,
+            'phone' => $request->phone,
+            'alternate_phone' => $request->alternate_phone,
+            'address_type' => $request->address_type,
+            'landmark' => $request->landmark,
+            'shipping_and_billing_same' => $isSame,
+            'billing_first_name' => $isSame ? $request->first_name : $request->billing_first_name,
+            'billing_last_name' => $isSame ? $request->last_name : $request->billing_last_name,
+            'billing_address' => $isSame ? $request->address : $request->billing_address,
+            'billing_city' => $isSame ? $request->city : $request->billing_city,
+            'billing_state' => $isSame ? $request->state : $request->billing_state,
+            'billing_zip' => $isSame ? $request->zip : $request->billing_zip,
+            'billing_country' => $isSame ? $request->country : $request->billing_country,
+            'billing_phone' => $isSame ? $request->phone : $request->billing_phone,
             'is_default' => $customer->addresses()->count() === 0,
         ]);
 
@@ -872,7 +970,7 @@ class StoreController extends Controller
             return redirect()->route('store.login')->with('error', 'Please log in to manage your addresses.');
         }
 
-        $request->validate([
+        $rules = [
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
             'address' => 'required|string|max:255',
@@ -880,7 +978,27 @@ class StoreController extends Controller
             'state' => 'required|string|max:100',
             'zip' => 'required|string|max:20',
             'country' => 'required|string|max:100',
-        ]);
+            'phone' => 'required|string|max:20',
+            'alternate_phone' => 'nullable|string|max:20',
+            'address_type' => 'required|in:office,work,other',
+            'landmark' => 'nullable|string|max:255',
+            'shipping_and_billing_same' => 'nullable',
+        ];
+
+        $isSame = $request->has('shipping_and_billing_same') ? $request->boolean('shipping_and_billing_same') : false;
+
+        if (!$isSame) {
+            $rules['billing_first_name'] = 'required|string|max:100';
+            $rules['billing_last_name'] = 'required|string|max:100';
+            $rules['billing_address'] = 'required|string|max:255';
+            $rules['billing_city'] = 'required|string|max:100';
+            $rules['billing_state'] = 'required|string|max:100';
+            $rules['billing_zip'] = 'required|string|max:20';
+            $rules['billing_country'] = 'required|string|max:100';
+            $rules['billing_phone'] = 'required|string|max:20';
+        }
+
+        $request->validate($rules);
 
         $address = auth('customer')->user()->addresses()->find($id);
         if (!$address) {
@@ -898,6 +1016,19 @@ class StoreController extends Controller
             'state' => $request->state,
             'zip' => $request->zip,
             'country' => $request->country,
+            'phone' => $request->phone,
+            'alternate_phone' => $request->alternate_phone,
+            'address_type' => $request->address_type,
+            'landmark' => $request->landmark,
+            'shipping_and_billing_same' => $isSame,
+            'billing_first_name' => $isSame ? $request->first_name : $request->billing_first_name,
+            'billing_last_name' => $isSame ? $request->last_name : $request->billing_last_name,
+            'billing_address' => $isSame ? $request->address : $request->billing_address,
+            'billing_city' => $isSame ? $request->city : $request->billing_city,
+            'billing_state' => $isSame ? $request->state : $request->billing_state,
+            'billing_zip' => $isSame ? $request->zip : $request->billing_zip,
+            'billing_country' => $isSame ? $request->country : $request->billing_country,
+            'billing_phone' => $isSame ? $request->phone : $request->billing_phone,
         ]);
 
         if ($request->ajax() || $request->wantsJson()) {

@@ -15,7 +15,6 @@
         "sgcart/payment-razorpay": "@dev",
         "sgcart/product-variants": "@dev",
         "sgcart/shipping": "@dev",
-        "sgcart/tax": "@dev",
         "spatie/laravel-permission": "^8.0"
     },
     "require-dev": {

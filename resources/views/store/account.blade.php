@@ -256,13 +256,39 @@
         form.action = "{{ route('store.account.address.update', ':id') }}".replace(':id', address.id);
         
         // Populate inputs
-        form.querySelector('input[name="first_name"]').value = address.first_name;
-        form.querySelector('input[name="last_name"]').value = address.last_name;
-        form.querySelector('input[name="address"]').value = address.address;
-        form.querySelector('input[name="city"]').value = address.city;
+        form.querySelector('input[name="first_name"]').value = address.first_name || '';
+        form.querySelector('input[name="last_name"]').value = address.last_name || '';
+        form.querySelector('input[name="address"]').value = address.address || '';
+        form.querySelector('input[name="city"]').value = address.city || '';
         form.querySelector('input[name="state"]').value = address.state || '';
-        form.querySelector('input[name="zip"]').value = address.zip;
+        form.querySelector('input[name="zip"]').value = address.zip || '';
         form.querySelector('input[name="country"]').value = address.country || '';
+
+        // New fields
+        form.querySelector('input[name="phone"]').value = address.phone || '';
+        form.querySelector('input[name="alternate_phone"]').value = address.alternate_phone || '';
+        form.querySelector('input[name="landmark"]').value = address.landmark || '';
+        
+        // Address type radio selection
+        const addrTypeRadio = form.querySelector(`input[name="address_type"][value="${address.address_type || 'work'}"]`);
+        if (addrTypeRadio) addrTypeRadio.checked = true;
+
+        // Same as shipping checkbox & billing details
+        const isSame = address.shipping_and_billing_same === undefined ? true : !!address.shipping_and_billing_same;
+        const sameCheckbox = document.getElementById('addressModalSameAsShipping');
+        if (sameCheckbox) {
+            sameCheckbox.checked = isSame;
+            sameCheckbox.dispatchEvent(new Event('change'));
+        }
+
+        form.querySelector('input[name="billing_first_name"]').value = address.billing_first_name || '';
+        form.querySelector('input[name="billing_last_name"]').value = address.billing_last_name || '';
+        form.querySelector('input[name="billing_phone"]').value = address.billing_phone || '';
+        form.querySelector('input[name="billing_address"]').value = address.billing_address || '';
+        form.querySelector('input[name="billing_city"]').value = address.billing_city || '';
+        form.querySelector('input[name="billing_state"]').value = address.billing_state || '';
+        form.querySelector('input[name="billing_zip"]').value = address.billing_zip || '';
+        form.querySelector('input[name="billing_country"]').value = address.billing_country || '';
 
         // Open modal
         modal.classList.remove('opacity-0', 'pointer-events-none');
@@ -287,10 +313,20 @@
             title.innerHTML = '<i class="fa-solid fa-map-location-dot text-accent"></i> Add New Address';
             form.action = "{{ route('store.account.address.add') }}";
             form.reset();
+
+            // Trigger checkbox change event to reset billing section visibility
+            const sameCheckbox = document.getElementById('addressModalSameAsShipping');
+            if (sameCheckbox) {
+                sameCheckbox.checked = true;
+                sameCheckbox.dispatchEvent(new Event('change'));
+            }
+            // Clear any error styles
+            form.querySelectorAll('.error-text').forEach(el => el.remove());
+            form.querySelectorAll('.border-rose-500').forEach(el => el.classList.remove('border-rose-500'));
         }, 300);
     }
 
-    // Close modals when clicking on the backdrop
+    // Close modals when clicking on the backdrop and auto-open on validation errors
     document.addEventListener('DOMContentLoaded', function() {
         const addressModal = document.getElementById('addressModal');
         if (addressModal) {
@@ -300,6 +336,12 @@
                 }
             });
         }
+
+        @if ($errors->any())
+        if (typeof openAddressModal === 'function') {
+            openAddressModal();
+        }
+        @endif
     });
 </script>
 @endsection
