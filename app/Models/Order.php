@@ -15,6 +15,19 @@ class Order extends Model
         'first_name',
         'last_name',
         'email',
+        'phone',
+        'alternate_phone',
+        'address_type',
+        'landmark',
+        'shipping_and_billing_same',
+        'billing_first_name',
+        'billing_last_name',
+        'billing_address',
+        'billing_city',
+        'billing_state',
+        'billing_zip',
+        'billing_country',
+        'billing_phone',
         'address',
         'city',
         'state',
@@ -32,6 +45,12 @@ class Order extends Model
         'payment_method',
         'card_name',
         'card_number_masked',
+        'payment_transaction_id',
+        'payment_gateway',
+        'tracking_number',
+        'shipping_carrier',
+        'tracking_url',
+        'estimated_delivery_at',
     ];
 
     /**
@@ -75,6 +94,7 @@ class Order extends Model
         return [
             'status' => \App\Enums\OrderStatus::class,
             'payment_status' => \App\Enums\PaymentStatus::class,
+            'estimated_delivery_at' => 'datetime',
         ];
     }
 }

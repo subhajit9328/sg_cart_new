@@ -203,6 +203,14 @@
                         <div class="text-[10px] text-slate-400 mt-0.5 font-mono">
                             {{ $order->email }}
                         </div>
+                        <div class="text-[9px] text-slate-500 mt-1.5 flex flex-col gap-0.5">
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-truck text-[8px] opacity-65 w-3"></i>Ship to: {{ $order->city }}, {{ $order->country }}</span>
+                            @if(!$order->shipping_and_billing_same)
+                                <span class="flex items-center gap-1 text-blue-600 dark:text-blue-450"><i class="fa-solid fa-receipt text-[8px] opacity-65 w-3"></i>Bill to: {{ $order->billing_city }}, {{ $order->billing_country }}</span>
+                            @else
+                                <span class="flex items-center gap-1 text-slate-400"><i class="fa-solid fa-clone text-[8px] opacity-65 w-3"></i>Billing Same</span>
+                            @endif
+                        </div>
                     </td>
                     <td class="px-5 py-3.5 whitespace-nowrap">
                         @php

@@ -244,13 +244,39 @@
         
         const form = document.getElementById('checkoutAddressForm');
         // Populate inputs
-        form.querySelector('input[name="first_name"]').value = address.first_name;
-        form.querySelector('input[name="last_name"]').value = address.last_name;
-        form.querySelector('input[name="address"]').value = address.address;
-        form.querySelector('input[name="city"]').value = address.city;
+        form.querySelector('input[name="first_name"]').value = address.first_name || '';
+        form.querySelector('input[name="last_name"]').value = address.last_name || '';
+        form.querySelector('input[name="address"]').value = address.address || '';
+        form.querySelector('input[name="city"]').value = address.city || '';
         form.querySelector('input[name="state"]').value = address.state || '';
-        form.querySelector('input[name="zip"]').value = address.zip;
+        form.querySelector('input[name="zip"]').value = address.zip || '';
         form.querySelector('input[name="country"]').value = address.country || '';
+        
+        // New fields
+        form.querySelector('input[name="phone"]').value = address.phone || '';
+        form.querySelector('input[name="alternate_phone"]').value = address.alternate_phone || '';
+        form.querySelector('input[name="landmark"]').value = address.landmark || '';
+        
+        // Address type radio selection
+        const addrTypeRadio = form.querySelector(`input[name="address_type"][value="${address.address_type || 'work'}"]`);
+        if (addrTypeRadio) addrTypeRadio.checked = true;
+
+        // Same as shipping checkbox & billing details
+        const isSame = address.shipping_and_billing_same === undefined ? true : !!address.shipping_and_billing_same;
+        const sameCheckbox = document.getElementById('checkoutAddressModalSameAsShipping');
+        if (sameCheckbox) {
+            sameCheckbox.checked = isSame;
+            sameCheckbox.dispatchEvent(new Event('change'));
+        }
+
+        form.querySelector('input[name="billing_first_name"]').value = address.billing_first_name || '';
+        form.querySelector('input[name="billing_last_name"]').value = address.billing_last_name || '';
+        form.querySelector('input[name="billing_phone"]').value = address.billing_phone || '';
+        form.querySelector('input[name="billing_address"]').value = address.billing_address || '';
+        form.querySelector('input[name="billing_city"]').value = address.billing_city || '';
+        form.querySelector('input[name="billing_state"]').value = address.billing_state || '';
+        form.querySelector('input[name="billing_zip"]').value = address.billing_zip || '';
+        form.querySelector('input[name="billing_country"]').value = address.billing_country || '';
         
         const modal = document.getElementById('checkoutAddressModal');
         const content = document.getElementById('checkoutAddressModalContent');
@@ -270,7 +296,19 @@
         
         // Reset after animation
         setTimeout(() => {
-            document.getElementById('checkoutAddressForm').reset();
+            const form = document.getElementById('checkoutAddressForm');
+            form.reset();
+            
+            // Trigger checkbox change event to reset billing section visibility
+            const sameCheckbox = document.getElementById('checkoutAddressModalSameAsShipping');
+            if (sameCheckbox) {
+                sameCheckbox.checked = true;
+                sameCheckbox.dispatchEvent(new Event('change'));
+            }
+            // Clear any error styles
+            form.querySelectorAll('.error-text').forEach(el => el.remove());
+            form.querySelectorAll('.border-rose-500').forEach(el => el.classList.remove('border-rose-500'));
+            
             isEditing = false;
             editAddressId = null;
             const title = document.getElementById('checkoutAddressModalTitle');
@@ -281,9 +319,19 @@
     function saveCheckoutAddress(e) {
         e.preventDefault();
         const form = document.getElementById('checkoutAddressForm');
+        
+        // Trigger Client-side Validation
+        if (window.validateAddressForm && !window.validateAddressForm('checkoutAddressForm')) {
+            return;
+        }
+
         const submitBtn = document.getElementById('saveAddressSubmitBtn');
         submitBtn.disabled = true;
         submitBtn.innerText = 'Saving...';
+
+        // Clear previous error messages/styles
+        form.querySelectorAll('.error-text').forEach(el => el.remove());
+        form.querySelectorAll('.border-rose-500').forEach(el => el.classList.remove('border-rose-500'));
 
         const formData = new FormData(form);
         
@@ -296,12 +344,16 @@
             method: "POST",
             body: formData,
             headers: {
+                "Accept": "application/json",
                 "X-Requested-With": "XMLHttpRequest"
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+        .then(async response => {
+            const data = await response.json();
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Save Address';
+
+            if (response.ok && data.success) {
                 const addr = data.address;
                 const grid = document.getElementById('addressCardsGrid');
                 
@@ -366,12 +418,32 @@
                 // Close modal
                 closeCheckoutAddressModal();
             } else {
-                showToast(data.message || 'Error saving address. Please try again.', 'error');
+                // Inline validation errors logic
+                if (response.status === 422 && data.errors) {
+                    Object.keys(data.errors).forEach(field => {
+                        const input = form.querySelector(`[name="${field}"]`);
+                        if (input) {
+                            input.classList.add('border-rose-500');
+                            const errorEl = document.createElement('span');
+                            errorEl.className = 'error-text text-rose-500 text-xs mt-1 block';
+                            errorEl.innerText = data.errors[field][0];
+                            
+                            if (field === 'address_type') {
+                                input.closest('.flex-col').appendChild(errorEl);
+                            } else {
+                                input.parentNode.appendChild(errorEl);
+                            }
+                        }
+                    });
+                    showToast('Please fix the validation errors.', 'error');
+                } else {
+                    showToast(data.message || 'Error saving address. Please try again.', 'error');
+                }
             }
         })
         .catch(err => {
             console.error(err);
-            showToast('Something went wrong.', 'error');
+            showToast('Something went wrong. Please check your connection.', 'error');
         })
         .finally(() => {
             submitBtn.disabled = false;

@@ -228,25 +228,95 @@
             </div>
         </div>
 
-        <!-- Shipping & Delivery Address Card -->
+        <!-- Shipping & Billing Address Card -->
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Shipping Details</h2>
+            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Address & Contact Information</h2>
+                @if($order->shipping_and_billing_same)
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/20">
+                        <i class="fa-solid fa-circle-check"></i> Billing same as Shipping
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200/20">
+                        <i class="fa-solid fa-receipt"></i> Separate Billing Address
+                    </span>
+                @endif
             </div>
-            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Recipient Info</h3>
-                    <div class="space-y-1.5 text-sm text-slate-700 dark:text-slate-300">
-                        <p class="font-semibold text-slate-800 dark:text-slate-100">{{ $order->first_name }} {{ $order->last_name }}</p>
-                        <p class="flex items-center gap-2"><i class="fa-regular fa-envelope text-slate-400 text-xs"></i> {{ $order->email }}</p>
+            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-6 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-800">
+                <!-- Shipping Address Column -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-truck text-slate-400"></i> Shipping Address
+                        </h3>
+                        @if($order->address_type)
+                            @php
+                                $typeIcons = [
+                                    'office' => 'fa-briefcase',
+                                    'work' => 'fa-laptop-code',
+                                    'other' => 'fa-location-dot'
+                                ];
+                                $icon = $typeIcons[strtolower($order->address_type)] ?? 'fa-location-dot';
+                            @endphp
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">
+                                <i class="fa-solid {{ $icon }}"></i> {{ $order->address_type }}
+                            </span>
+                        @endif
+                    </div>
+                    
+                    <div class="space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                        <p class="font-semibold text-slate-900 dark:text-white text-base">{{ $order->first_name }} {{ $order->last_name }}</p>
+                        
+                        <div class="space-y-1 text-slate-600 dark:text-slate-400">
+                            <p class="flex items-center gap-2"><i class="fa-regular fa-envelope w-4 text-slate-400"></i> {{ $order->email }}</p>
+                            <p class="flex items-center gap-2"><i class="fa-solid fa-phone w-4 text-slate-400"></i> {{ $order->phone ?? '—' }}</p>
+                            @if($order->alternate_phone)
+                                <p class="flex items-center gap-2"><i class="fa-solid fa-phone-volume w-4 text-slate-400"></i> {{ $order->alternate_phone }} (Alt)</p>
+                            @endif
+                        </div>
+
+                        <div class="pt-2 border-t border-slate-50 dark:border-slate-800 space-y-1">
+                            <p class="font-medium text-slate-850 dark:text-slate-200">{{ $order->address }}</p>
+                            @if($order->landmark)
+                                <p class="text-xs text-slate-500 dark:text-slate-400 italic">Landmark: {{ $order->landmark }}</p>
+                            @endif
+                            <p>{{ $order->city }}, {{ $order->state ?? '—' }} {{ $order->zip }}</p>
+                            <p class="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5"><i class="fa-solid fa-globe text-slate-400 text-xs"></i>{{ $order->country ?? '—' }}</p>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Delivery Address</h3>
-                    <div class="space-y-1 text-sm text-slate-700 dark:text-slate-300">
-                        <p>{{ $order->address }}</p>
-                        <p>{{ $order->city }}, {{ $order->state ?? '—' }} {{ $order->zip }}</p>
-                        <p class="font-semibold text-slate-800 dark:text-slate-100 mt-1"><i class="fa-solid fa-globe text-slate-400 text-xs mr-1"></i>{{ $order->country ?? '—' }}</p>
+
+                <!-- Billing Address Column -->
+                <div class="space-y-4 md:pl-6 pt-4 md:pt-0">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-receipt text-slate-400"></i> Billing Address
+                    </h3>
+                    
+                    @php
+                        $bFirstName = $order->shipping_and_billing_same ? $order->first_name : $order->billing_first_name;
+                        $bLastName = $order->shipping_and_billing_same ? $order->last_name : $order->billing_last_name;
+                        $bPhone = $order->shipping_and_billing_same ? $order->phone : $order->billing_phone;
+                        $bAddress = $order->shipping_and_billing_same ? $order->address : $order->billing_address;
+                        $bCity = $order->shipping_and_billing_same ? $order->city : $order->billing_city;
+                        $bState = $order->shipping_and_billing_same ? $order->state : $order->billing_state;
+                        $bZip = $order->shipping_and_billing_same ? $order->zip : $order->billing_zip;
+                        $bCountry = $order->shipping_and_billing_same ? $order->country : $order->billing_country;
+                    @endphp
+
+                    <div class="space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                        <p class="font-semibold text-slate-900 dark:text-white text-base">{{ $bFirstName }} {{ $bLastName }}</p>
+                        
+                        @if($bPhone)
+                        <div class="space-y-1 text-slate-600 dark:text-slate-400">
+                            <p class="flex items-center gap-2"><i class="fa-solid fa-phone w-4 text-slate-400"></i> {{ $bPhone }}</p>
+                        </div>
+                        @endif
+
+                        <div class="pt-2 border-t border-slate-50 dark:border-slate-800 space-y-1">
+                            <p class="font-medium text-slate-850 dark:text-slate-200">{{ $bAddress }}</p>
+                            <p>{{ $bCity }}, {{ $bState ?? '—' }} {{ $bZip }}</p>
+                            <p class="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5"><i class="fa-solid fa-globe text-slate-400 text-xs"></i>{{ $bCountry ?? '—' }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -258,9 +328,54 @@
                 <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Order Activity Log</h2>
             </div>
             <div class="p-5">
-                <ol class="relative border-l border-slate-200 dark:border-slate-800 space-y-5 ml-2.5">                  
+                <ol class="relative border-l border-slate-200 dark:border-slate-800 space-y-5 ml-2.5">
+                    @if($statusVal === 'Delivered')
+                    <li class="mb-4 ml-6">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-emerald-100 dark:bg-emerald-900/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-emerald-600">
+                            <i class="fa-solid fa-circle-check text-[8px]"></i>
+                        </span>
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Order Delivered</h4>
+                            <time class="text-[9px] font-semibold text-slate-400">{{ $order->updated_at->format('M d, Y H:i') }}</time>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Package successfully delivered to the recipient.</p>
+                    </li>
+                    @endif
+
+                    @if($statusVal === 'Shipped' || $statusVal === 'Delivered')
                     <li class="mb-4 ml-6">
                         <span class="absolute flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-900/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-blue-600">
+                            <i class="fa-solid fa-truck text-[8px]"></i>
+                        </span>
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Order Shipped (Transit Started)</h4>
+                            <time class="text-[9px] font-semibold text-slate-400">
+                                @if($statusVal === 'Delivered')
+                                    {{ $order->created_at->addDay()->format('M d, Y H:i') }}
+                                @else
+                                    {{ $order->updated_at->format('M d, Y H:i') }}
+                                @endif
+                            </time>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Dispatched via {{ $order->shipping_carrier ?? 'Delhivery Express' }} with Tracking ID: <span class="font-mono font-semibold">{{ $order->tracking_number }}</span>.</p>
+                    </li>
+                    @endif
+
+                    @if($statusVal === 'Cancelled')
+                    <li class="mb-4 ml-6">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-rose-100 dark:bg-rose-900/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-rose-600">
+                            <i class="fa-solid fa-ban text-[8px]"></i>
+                        </span>
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Order Cancelled</h4>
+                            <time class="text-[9px] font-semibold text-slate-400">{{ $order->updated_at->format('M d, Y H:i') }}</time>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">This order has been marked as Cancelled.</p>
+                    </li>
+                    @endif
+
+                    <li class="mb-4 ml-6">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-slate-100 dark:bg-slate-800 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-slate-500">
                             <i class="fa-solid fa-circle-check text-[8px]"></i>
                         </span>
                         <div class="flex items-center justify-between gap-4">
@@ -270,7 +385,7 @@
                         <p class="text-xs text-slate-400 mt-0.5">Order placed and payment charged via Card (masked reference: {{ $order->card_number_masked }}).</p>
                     </li>
                     <li class="ml-6">
-                        <span class="absolute flex items-center justify-center w-5 h-5 bg-slate-100 dark:bg-slate-800 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-slate-400">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-slate-100 dark:bg-slate-800 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-slate-450">
                             <i class="fa-solid fa-pen-nib text-[8px]"></i>
                         </span>
                         <div class="flex items-center justify-between gap-4">
@@ -314,6 +429,30 @@
                             <option value="Paid" {{ ($order->payment_status->value ?? $order->payment_status) === 'Paid' ? 'selected' : '' }}>Paid</option>
                             <option value="Failed" {{ ($order->payment_status->value ?? $order->payment_status) === 'Failed' ? 'selected' : '' }}>Failed</option>
                         </select>
+                    </div>
+
+                    <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-3">
+                        <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Logistics & Tracking Info</span>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tracking Number</label>
+                            <input type="text" name="tracking_number" value="{{ old('tracking_number', $order->tracking_number) }}" placeholder="e.g., SG-TRK-8327943" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Shipping Carrier</label>
+                            <input type="text" name="shipping_carrier" value="{{ old('shipping_carrier', $order->shipping_carrier) }}" placeholder="e.g., Delhivery Express" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tracking URL</label>
+                            <input type="url" name="tracking_url" value="{{ old('tracking_url', $order->tracking_url) }}" placeholder="https://..." class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Est. Delivery Date</label>
+                            <input type="date" name="estimated_delivery_at" value="{{ old('estimated_delivery_at', $order->estimated_delivery_at ? $order->estimated_delivery_at->format('Y-m-d') : '') }}" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
+                        </div>
                     </div>
 
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold py-2 px-4 rounded-lg shadow-md transition-all cursor-pointer">
@@ -368,6 +507,18 @@
                     <span>Payment Method</span>
                     <span class="font-semibold text-slate-800 dark:text-slate-100">{{ $order->payment_method }}</span>
                 </div>
+                @if($order->payment_gateway)
+                <div class="flex justify-between">
+                    <span>Payment Gateway</span>
+                    <span class="font-semibold text-slate-800 dark:text-slate-100">{{ $order->payment_gateway }}</span>
+                </div>
+                @endif
+                @if($order->payment_transaction_id)
+                <div class="flex justify-between">
+                    <span>Transaction ID</span>
+                    <span class="font-mono font-semibold text-slate-800 dark:text-slate-100">{{ $order->payment_transaction_id }}</span>
+                </div>
+                @endif
                 @if($order->card_number_masked)
                 <div class="flex justify-between">
                     <span>Card Number</span>
@@ -412,6 +563,38 @@
                 </div>
             </div>
         </div>
+
+        <!-- Shipping Tracking Card -->
+        @if($order->tracking_number)
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Shipment Tracking</h2>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-[9px] font-bold text-blue-700 dark:text-blue-400 uppercase">Active</span>
+            </div>
+            <div class="p-5 flex flex-col gap-3.5 text-xs text-slate-600 dark:text-slate-300">
+                <div class="flex justify-between">
+                    <span>Carrier</span>
+                    <span class="font-semibold text-slate-800 dark:text-slate-100">{{ $order->shipping_carrier ?? 'N/A' }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Tracking Number</span>
+                    <span class="font-mono font-semibold text-slate-800 dark:text-slate-100">{{ $order->tracking_number }}</span>
+                </div>
+                @if($order->tracking_url)
+                <div class="flex justify-between">
+                    <span>Tracking Link</span>
+                    <a href="{{ $order->tracking_url }}" target="_blank" class="text-blue-600 hover:text-blue-805 font-semibold flex items-center gap-1">Track Shipment <i class="fa-solid fa-up-right-from-square text-[9px]"></i></a>
+                </div>
+                @endif
+                @if($order->estimated_delivery_at)
+                <div class="flex justify-between">
+                    <span>Est. Delivery</span>
+                    <span class="font-semibold text-slate-800 dark:text-slate-100">{{ $order->estimated_delivery_at->format('M d, Y') }}</span>
+                </div>
+                @endif
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 @endsection
