@@ -1,14 +1,16 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\StoreController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ManufacturerController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\StoreController;
+use Illuminate\Support\Facades\Route;
 
 // Storefront Frontend Routes
 Route::get('/', [StoreController::class, 'home'])->name('store.home');
@@ -21,7 +23,6 @@ Route::post('/cart/add', [StoreController::class, 'addToCart'])->name('store.car
 Route::post('/cart/update', [StoreController::class, 'updateCart'])->name('store.cart.update');
 Route::get('/cart/remove/{key}', [StoreController::class, 'removeFromCart'])->name('store.cart.remove');
 
-
 Route::get('/success', [StoreController::class, 'success'])->name('store.success');
 Route::post('/wishlist/toggle', [StoreController::class, 'toggleWishlist'])->name('store.wishlist.toggle');
 
@@ -31,6 +32,15 @@ Route::middleware('guest:customer')->group(function () {
     Route::post('/login', [AuthController::class, 'storefrontLogin'])->name('store.login.submit');
     Route::get('/register', [AuthController::class, 'showStorefrontRegister'])->name('store.register');
     Route::post('/register', [AuthController::class, 'storefrontRegister'])->name('store.register.submit');
+
+    // Forgot Password Routes
+    Route::get('/forgot-password', [ForgotPasswordController::class, 'showForgotPassword'])->name('store.forgot-password');
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetOtp'])->name('store.forgot-password.submit');
+    Route::get('/forgot-password/verify', [ForgotPasswordController::class, 'showVerifyOtp'])->name('store.forgot-password.verify');
+    Route::post('/forgot-password/verify', [ForgotPasswordController::class, 'verifyOtp'])->name('store.forgot-password.verify.submit');
+    Route::post('/forgot-password/resend', [ForgotPasswordController::class, 'resendOtp'])->name('store.forgot-password.resend');
+    Route::get('/forgot-password/reset', [ForgotPasswordController::class, 'showResetPassword'])->name('store.forgot-password.reset');
+    Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword'])->name('store.forgot-password.reset.submit');
 });
 
 // Storefront Auth Routes for Authenticated Customers
@@ -97,12 +107,12 @@ Route::prefix('admin')->group(function () {
                 ->middleware('permission:manage products');
 
             // Order Management Invoice print/stream
-            Route::get('orders/{order}/invoice', [\App\Http\Controllers\Admin\OrderController::class, 'streamInvoice'])
+            Route::get('orders/{order}/invoice', [OrderController::class, 'streamInvoice'])
                 ->name('orders.invoice')
                 ->middleware('permission:manage products');
 
             // Order Management CRUD
-            Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class)
+            Route::resource('orders', OrderController::class)
                 ->middleware('permission:manage products');
 
             // Extra product sub-routes

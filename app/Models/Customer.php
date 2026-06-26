@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Mail\RegistrationSuccessMail;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -10,8 +9,6 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 /**
  * @property mixed $id
@@ -22,20 +19,6 @@ use Illuminate\Support\Facades\Mail;
 #[Hidden(['password', 'remember_token'])]
 class Customer extends Authenticatable
 {
-    protected static function booted(): void
-    {
-        static::created(function ($customer) {
-            if ($customer->email) {
-                try {
-                    Mail::to($customer->email)
-                        ->send(new RegistrationSuccessMail($customer));
-                } catch (\Exception $e) {
-                    Log::error('Failed to send registration success mail: '.$e->getMessage());
-                }
-            }
-        });
-    }
-
     use HasFactory, HasUlids, Notifiable;
 
     /**

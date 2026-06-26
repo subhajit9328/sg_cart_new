@@ -2,7 +2,11 @@
 
 namespace App\Actions;
 
+use App\Mail\RegistrationSuccessMail;
 use App\Models\Customer;
+use Exception;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class CustomerEmailVerifiedAction
 {
@@ -19,11 +23,20 @@ class CustomerEmailVerifiedAction
 
             $this->logActivity->capture(
                 description: "Customer email verified successfully: {$customer->email}",
-                event: 'email.verified',
+                event: 'otp.verified',
                 subject: $customer,
                 properties: ['email' => $customer->email],
                 causer: $customer
             );
+
+            // Send registration success welcome email
+            if ($customer->email) {
+                try {
+                    Mail::to($customer->email)->send(new RegistrationSuccessMail($customer));
+                } catch (Exception $e) {
+                    Log::error('Failed to send registration success email: '.$e->getMessage());
+                }
+            }
 
         } else {
 

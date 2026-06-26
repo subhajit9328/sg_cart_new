@@ -20,6 +20,8 @@ class ManageOtp
 
     public const string REASON_PROFILE_UPDATE = 'profile_update';
 
+    public const string REASON_FORGOT_PASSWORD = 'forgot_password';
+
     private const int OTP_LIFESPAN = 5; // 5 minutes
 
     public function __construct(protected LogActivity $logActivity) {}
@@ -77,12 +79,13 @@ class ManageOtp
                 self::REASON_AUTO_GENERATE => "Auto-generated and sent OTP to email: {$customer->email}",
                 self::REASON_RESEND => "OTP resent to email: {$customer->email}",
                 self::REASON_PROFILE_UPDATE => "OTP sent to email: {$customer->email} on profile email update",
+                self::REASON_FORGOT_PASSWORD => "Forgot password OTP sent to email: {$customer->email}",
                 default => "OTP sent to email: {$customer->email}",
             };
         }
 
         try {
-            Mail::to($customer->email)->send(new CustomerOtpMail($customer, $otp));
+            Mail::to($customer->email)->send(new CustomerOtpMail($customer, $otp, $reason));
 
             $this->logActivity->capture(
                 description: $customDescription,

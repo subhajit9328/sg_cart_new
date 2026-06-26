@@ -1,48 +1,40 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Mail;
 
+use App\Models\Customer;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use App\Models\Customer;
 
 class CustomerOtpMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     /**
-     * The customer instance.
-     *
-     * @var Customer
-     */
-    public $customer;
-
-    /**
-     * The OTP code.
-     *
-     * @var string
-     */
-    public $otp;
-
-    /**
      * Create a new message instance.
      */
-    public function __construct(Customer $customer, string $otp)
-    {
-        $this->customer = $customer;
-        $this->otp = $otp;
-    }
+    public function __construct(
+        public Customer $customer,
+        public string $otp,
+        public string $reason = 'registration'
+    ) {}
 
     /**
      * Get the message envelope.
      */
     public function envelope(): Envelope
     {
+        $subject = $this->reason === 'forgot_password'
+            ? 'Reset Your Password - '.config('app.name')
+            : 'Verify Your Email Address - '.config('app.name');
+
         return new Envelope(
-            subject: 'Verify Your Email Address - ' . config('app.name'),
+            subject: $subject,
         );
     }
 
@@ -51,8 +43,12 @@ class CustomerOtpMail extends Mailable
      */
     public function content(): Content
     {
+        $view = $this->reason === 'forgot_password'
+            ? 'emails.password_reset_otp'
+            : 'emails.otp';
+
         return new Content(
-            view: 'emails.otp',
+            view: $view,
         );
     }
 

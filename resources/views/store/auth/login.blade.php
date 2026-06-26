@@ -30,7 +30,7 @@
                     <input type="checkbox" name="remember" class="accent-ink w-4 h-4"/>
                     <span>Remember me</span>
                 </label>
-                <a href="#" class="text-accent hover:text-ink font-semibold no-underline transition-colors" onclick="showToast('Password reset is coming soon!','success')">Forgot password?</a>
+                <a href="{{ route('store.forgot-password') }}" class="text-accent hover:text-ink font-semibold no-underline transition-colors">Forgot password?</a>
             </div>
 
             <button type="submit" class="btn btn-primary w-full py-4 mt-2" style="height: 50px;">Sign In</button>

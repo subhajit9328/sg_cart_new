@@ -5,17 +5,14 @@ namespace App\Http\Controllers;
 use App\Actions\CustomerEmailVerifiedAction;
 use App\Actions\LogActivity;
 use App\Actions\ManageOtp;
-use App\Mail\RegistrationSuccessMail;
 use App\Models\Cart;
 use App\Models\Customer;
 use App\Models\User;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -277,12 +274,6 @@ class AuthController extends Controller
         );
 
         if ($isEmail) {
-            // Send registration success welcome email
-            try {
-                Mail::to($customer->email)->send(new RegistrationSuccessMail($customer));
-            } catch (Exception $e) {
-                Log::error('Failed to send registration success email: '.$e->getMessage());
-            }
             app(ManageOtp::class)->generate($customer, ManageOtp::REASON_REGISTRATION);
         }
 
