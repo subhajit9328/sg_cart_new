@@ -26,11 +26,30 @@ class ImageAnalyzer implements Agent
     {
         $attachment = $this->resolveImageAttachment($image);
 
-        $prompt = 'Identify the main product in this image and output a clean JSON array containing only the key search terms (like brand, color, material, product type) suitable for database search.
-Do NOT include conversational text, markdown formatting, or code blocks.
-If you cannot identify any product, return an empty JSON array [].
-Example output:
-["blue", "denim", "jacket"]';
+        $categoryList = 'Shirts, T-Shirts & Polos, Jeans & Trousers, Kurta & Ethnic, Dresses, Bags & Handbags, Footwear, Sunglasses, etc.';
+        if (class_exists(\App\Models\Category::class)) {
+            $names = \App\Models\Category::pluck('name')->unique()->toArray();
+            if (!empty($names)) {
+                $categoryList = implode(', ', $names);
+            }
+        }
+
+        $prompt = 'Identify the main product in this image and output a clean JSON object in this format:
+{
+  "object_type": "Must be one of the categories from this list: ' . $categoryList . '",
+  "gender": "male" or "female" or "kid" (ONLY specify gender if a person is shown wearing or presenting the product in the image. If there is no person in the image, you MUST return null for gender),
+  "color": "the primary color of the product (e.g. blue, red, black, light blue)",
+  "keywords": ["list", "of", "relevant", "keywords", "such as material type, dress type (e.g. shirt, kurty, jeans, jacket), style, etc. Do NOT include the color here as it is captured in color key."]
+}
+
+Do NOT include any conversational text, markdown formatting, or code blocks.
+If you cannot identify any product, return:
+{
+  "object_type": null,
+  "gender": null,
+  "color": null,
+  "keywords": []
+}';
 
         $provider = $provider ?: config('image-search.image_analyzer_provider') ?: config('ai.default');
         $model = $model ?: config('image-search.image_analyzer_model');
@@ -38,13 +57,23 @@ Example output:
         $response = $this->prompt($prompt, [$attachment], $provider, $model);
         $text = trim($response->text);
 
-        // Try to find a JSON array in the text response using regex
-        if (preg_match('/\[\s*.*?\s*\]/s', $text, $matches)) {
+        // Try to find a JSON object in the text response using regex
+        if (preg_match('/\{[^\}]*\}/s', $text, $matches)) {
             $jsonText = $matches[0];
-            $terms = json_decode($jsonText, true);
-            if (is_array($terms)) {
-                $terms = array_filter(array_map(fn($t) => strtolower(trim($t)), $terms));
-                return array_values(array_unique($terms));
+            $data = json_decode($jsonText, true);
+            if (is_array($data)) {
+                $keywords = $data['keywords'] ?? [];
+                if (is_string($keywords)) {
+                    $keywords = array_map('trim', explode(',', $keywords));
+                }
+                return [
+                    'object_type' => $data['object_type'] ?? null,
+                    'gender' => $data['gender'] ?? null,
+                    'color' => $data['color'] ?? null,
+                    'keywords' => is_array($keywords)
+                        ? array_values(array_unique(array_filter(array_map(fn($t) => strtolower(trim($t)), $keywords))))
+                        : []
+                ];
             }
         }
 
@@ -53,7 +82,12 @@ Example output:
         $cleanText = preg_replace('/[^\w\s]/u', ' ', $normalizedText);
         $words = preg_split('/\s+/', $cleanText, -1, PREG_SPLIT_NO_EMPTY);
 
-        return array_values(array_unique($words));
+        return [
+            'object_type' => null,
+            'gender' => null,
+            'color' => null,
+            'keywords' => array_values(array_unique($words))
+        ];
     }
 
     /**
