@@ -61,6 +61,43 @@
                     @error('address_id') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
+                <!-- Shipping Method Card -->
+                <div class="bg-white border border-[#e8e4df] rounded-2xl p-5 md:p-6">
+                    <div class="font-display font-bold text-base mb-4 flex items-center gap-2.5">
+                        <i class="fa-solid fa-truck text-accent text-sm"></i> Shipping Method
+                    </div>
+                    
+                    @if(($selectionMode ?? 'user_choice') === 'user_choice')
+                        <div class="flex flex-col gap-3">
+                            @forelse($shippingRates as $rate)
+                                <div class="border rounded-xl p-4 flex items-center justify-between cursor-pointer hover:border-slate-400 transition-all shipping-rate-item {{ $loop->first ? 'border-slate-900 bg-slate-50/10' : 'border-[#e8e4df]' }}" onclick="selectShippingRate(this, {{ $rate->id }}, {{ $rate->calculated_cost }})">
+                                    <div class="flex items-center gap-3">
+                                        <input type="radio" name="shipping_rate_id" value="{{ $rate->id }}" {{ $loop->first ? 'checked' : '' }} class="text-slate-900 focus:ring-slate-900 border-slate-300">
+                                        <div>
+                                            <p class="text-sm font-semibold text-slate-800">{{ $rate->name }}@if(($rate->type ?? 'flat') === 'percent') ({{ number_format($rate->cost, 1) }}%) @endif</p>
+                                            @if($rate->min_order_amount > 0)
+                                                <p class="text-[10px] text-slate-400">Min. order value: ₹{{ number_format($rate->min_order_amount, 2) }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <span class="text-sm font-bold text-slate-900">₹{{ number_format($rate->calculated_cost, 2) }}</span>
+                                </div>
+                            @empty
+                                <div class="text-xs text-slate-400 py-2">
+                                    <i class="fa-solid fa-circle-info mr-1 text-slate-400"></i> No shipping charges registered. Standard free shipping is applied.
+                                </div>
+                            @endforelse
+                        </div>
+                    @else
+                        <p class="text-xs text-slate-500 py-1 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                            <span>Cheapest shipping rate automatically applied based on cart: <strong>{{ $shippingRates->first() ? $shippingRates->first()->name : 'Free Shipping' }}</strong> (₹{{ number_format($shippingCost, 2) }})</span>
+                        </p>
+                    @endif
+                </div>
+
+
+
 
 
                 <!-- Payment Method Card -->
@@ -128,9 +165,14 @@
                     <div class="flex justify-between text-emerald-600 font-semibold"><span>Promo Discount</span><span>-₹{{ number_format($discount, 2) }}</span></div>
                 @endif
                 <div class="flex justify-between text-slate-500"><span>Tax (8%)</span><span>₹{{ number_format($tax, 2) }}</span></div>
-                <div class="flex justify-between text-slate-500"><span>Shipping</span><span class="text-emerald-600 font-semibold">Free</span></div>
+                <div class="flex justify-between text-slate-500">
+                    <span>Shipping</span>
+                    <span id="shipping-charge-display" class="{{ $shippingCost > 0 ? 'text-slate-900 font-semibold' : 'text-emerald-600 font-semibold' }}">
+                        {{ $shippingCost > 0 ? '₹' . number_format($shippingCost, 2) : 'Free' }}
+                    </span>
+                </div>
                 <div class="flex justify-between font-bold text-slate-900 text-sm border-t border-slate-100 pt-3 mt-1">
-                    <span>Order Total</span><span>₹{{ number_format($total, 2) }}</span>
+                    <span>Order Total</span><span id="order-total-display">₹{{ number_format($total, 2) }}</span>
                 </div>
             </div>
         </div>
@@ -376,6 +418,45 @@
                 showToast('Something went wrong.', 'error');
             });
         });
+    }
+
+    // Shipping Rate selection logic
+    function selectShippingRate(element, rateId, cost) {
+        document.querySelectorAll('.shipping-rate-item').forEach(item => {
+            item.classList.remove('border-slate-900', 'bg-slate-50/10');
+            item.classList.add('border-[#e8e4df]');
+            const radio = item.querySelector('input[type="radio"]');
+            if (radio) radio.checked = false;
+        });
+
+        element.classList.remove('border-[#e8e4df]');
+        element.classList.add('border-slate-900', 'bg-slate-50/10');
+        const radio = element.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+
+        updateOrderSummary(cost);
+    }
+
+    const baseSubtotal = {{ $subtotal }};
+    const baseTax = {{ $tax }};
+    const baseDiscount = {{ $discount }};
+
+    function updateOrderSummary(shippingCost) {
+        const shippingDisplay = document.getElementById('shipping-charge-display');
+        const totalDisplay = document.getElementById('order-total-display');
+        
+        if (shippingDisplay && totalDisplay) {
+            if (shippingCost > 0) {
+                shippingDisplay.textContent = '₹' + shippingCost.toFixed(2);
+                shippingDisplay.className = 'text-slate-900 font-semibold';
+            } else {
+                shippingDisplay.textContent = 'Free';
+                shippingDisplay.className = 'text-emerald-600 font-semibold';
+            }
+
+            const newTotal = Math.max(0, baseSubtotal + baseTax - baseDiscount + shippingCost);
+            totalDisplay.textContent = '₹' + newTotal.toFixed(2);
+        }
     }
 
     // Close modal when clicking backdrop

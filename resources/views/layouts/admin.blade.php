@@ -109,6 +109,7 @@
 
             @includeIf('coupons::admin-menu')
             @includeIf('product-variants::admin-menu')
+            @includeIf('shipping::admin-menu')
         </nav>
 
 

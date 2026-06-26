@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c84dc7fd91e2d2a4d59d0f7bb101e2ca",
+    "content-hash": "0cee0a57f62e668ca931f1a81830634f",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -3686,7 +3686,7 @@
         },
         {
             "name": "sgcart/coupons",
-            "version": "dev-feature/cart-checkout-system",
+            "version": "dev-implement_shipping_package",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/coupons",
@@ -3725,7 +3725,7 @@
         },
         {
             "name": "sgcart/product-variants",
-            "version": "dev-feature/cart-checkout-system",
+            "version": "dev-implement_shipping_package",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/product-variants",
@@ -3758,6 +3758,45 @@
                 }
             ],
             "description": "standalone plug-and-play product variants package for SGCart",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "sgcart/shipping",
+            "version": "dev-implement_shipping_package",
+            "dist": {
+                "type": "path",
+                "url": "packages/sgcart/shipping",
+                "reference": "4dfd8926ff48807d50bd2ebb8463b05b87c14b83"
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "SGCart\\Shipping\\Providers\\ShippingServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SGCart\\Shipping\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "SGCart Team",
+                    "email": "support@sgcart.com"
+                }
+            ],
+            "description": "Dynamic shipping package for SGCart",
             "transport-options": {
                 "symlink": true,
                 "relative": true
@@ -9146,7 +9185,8 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "sgcart/coupons": 20,
-        "sgcart/product-variants": 20
+        "sgcart/product-variants": 20,
+        "sgcart/shipping": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

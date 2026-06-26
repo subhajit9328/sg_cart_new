@@ -219,6 +219,11 @@
                     <td colspan="2" style="text-align: right; color: #64748b;">Tax:</td>
                     <td style="text-align: right;">₹{{ number_format($order->tax, 2) }}</td>
                 </tr>
+                <tr class="total-row">
+                    <td style="border: none;"></td>
+                    <td colspan="2" style="text-align: right; color: #64748b;">Shipping @if($order->shipping_method) ({{ $order->shipping_method }}) @endif:</td>
+                    <td style="text-align: right;">{{ $order->shipping_charge > 0 ? '₹' . number_format($order->shipping_charge, 2) : 'Free' }}</td>
+                </tr>
                 <tr class="grand-total-row">
                     <td style="border: none;"></td>
                     <td colspan="2" style="text-align: right;">Total Amount:</td>

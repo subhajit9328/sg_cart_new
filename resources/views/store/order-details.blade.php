@@ -200,6 +200,12 @@
                         <span>Tax</span>
                         <span>₹{{ number_format($order->tax, 2) }}</span>
                     </div>
+                    <div class="flex justify-between text-slate-500">
+                        <span>Shipping @if($order->shipping_method) ({{ $order->shipping_method }}) @endif</span>
+                        <span class="{{ $order->shipping_charge > 0 ? '' : 'text-emerald-600 font-bold' }}">
+                            {{ $order->shipping_charge > 0 ? '₹' . number_format($order->shipping_charge, 2) : 'Free' }}
+                        </span>
+                    </div>
                     <div class="flex justify-between text-slate-800 font-extrabold text-sm border-t border-slate-100 pt-3 mt-1.5">
                         <span>Total</span>
                         <span class="text-slate-950">₹{{ number_format($order->total, 2) }}</span>

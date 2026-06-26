@@ -86,7 +86,13 @@
                     </div>
                     <div class="flex justify-between">
                         <span>Shipping</span>
-                        <span class="text-emerald-600 font-semibold">Free</span>
+                        @if(($selectionMode ?? 'user_choice') === 'user_choice')
+                            <span class="text-slate-500 italic">Calculated at checkout</span>
+                        @else
+                            <span class="{{ $shippingCost > 0 ? 'text-slate-900 font-semibold' : 'text-emerald-600 font-semibold' }}">
+                                {{ $shippingCost > 0 ? '₹' . number_format($shippingCost, 2) : 'Free' }}
+                            </span>
+                        @endif
                     </div>
                     <div class="flex justify-between">
                         <span>Tax (8%)</span>

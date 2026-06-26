@@ -176,9 +176,30 @@ class StoreController extends Controller
             $discount = app('coupon.calculator')->calculate(session('coupon_code'), $subtotal);
         }
         $tax = $subtotal * 0.08;
-        $total = max(0, $subtotal + $tax - $discount);
+        $shippingCost = 0.0;
+        if (class_exists(\SGCart\Shipping\Models\ShippingRate::class)) {
+            $shippingRates = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+                ->where('min_order_amount', '<=', $subtotal)
+                ->get();
+            
+            $cheapestRate = $shippingRates->map(function ($rate) use ($subtotal) {
+                $rate->calculated_cost = $rate->calculateCost($subtotal);
+                return $rate;
+            })->sortBy('calculated_cost')->first();
 
-        return view('store.cart', compact('cart', 'subtotal', 'tax', 'discount', 'total'));
+            $shippingCost = $cheapestRate ? (float) $cheapestRate->calculated_cost : 0.0;
+        }
+
+        $selectionMode = 'user_choice';
+        if (class_exists(\SGCart\Shipping\Models\ShippingSetting::class)) {
+            $selectionMode = \SGCart\Shipping\Models\ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
+        }
+
+        // Only add shipping cost to cart total if not in user choice mode
+        $effectiveShippingCost = ($selectionMode === 'user_choice') ? 0.0 : $shippingCost;
+        $total = max(0, $subtotal + $tax - $discount + $effectiveShippingCost);
+
+        return view('store.cart', compact('cart', 'subtotal', 'tax', 'discount', 'total', 'shippingCost', 'selectionMode'));
     }
 
     /**
@@ -359,11 +380,30 @@ class StoreController extends Controller
             $discount = app('coupon.calculator')->calculate(session('coupon_code'), $subtotal);
         }
         $tax = $subtotal * 0.08;
-        $total = max(0, $subtotal + $tax - $discount);
+
+        $shippingRates = collect();
+        $selectionMode = 'user_choice';
+        if (class_exists(\SGCart\Shipping\Models\ShippingRate::class)) {
+            $shippingRates = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+                ->where('min_order_amount', '<=', $subtotal)
+                ->get();
+        }
+        if (class_exists(\SGCart\Shipping\Models\ShippingSetting::class)) {
+            $selectionMode = \SGCart\Shipping\Models\ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
+        }
+
+        // Map and compute dynamically based on rate type
+        $shippingRates = $shippingRates->map(function ($rate) use ($subtotal) {
+            $rate->calculated_cost = (float) $rate->calculateCost($subtotal);
+            return $rate;
+        })->sortBy('calculated_cost');
+
+        $shippingCost = $shippingRates->first() ? (float) $shippingRates->first()->calculated_cost : 0.0;
+        $total = max(0, $subtotal + $tax - $discount + $shippingCost);
 
         $addresses = auth('customer')->user()->addresses;
 
-        return view('store.checkout', compact('cart', 'subtotal', 'tax', 'discount', 'total', 'addresses'));
+        return view('store.checkout', compact('cart', 'subtotal', 'tax', 'discount', 'total', 'addresses', 'shippingRates', 'shippingCost', 'selectionMode'));
     }
 
     /**
@@ -377,6 +417,7 @@ class StoreController extends Controller
 
         $request->validate([
             'address_id' => 'nullable|integer',
+            'shipping_rate_id' => 'nullable|integer',
             'first_name' => 'required_without:address_id|nullable|string|max:100',
             'last_name' => 'required_without:address_id|nullable|string|max:100',
             'email' => 'required_without:address_id|nullable|email|max:150',
@@ -406,7 +447,41 @@ class StoreController extends Controller
             $discount = app('coupon.calculator')->calculate(session('coupon_code'), $subtotal);
         }
         $tax = $subtotal * 0.08;
-        $total = max(0, $subtotal + $tax - $discount);
+
+        $shippingCost = 0.0;
+        $shippingMethodName = null;
+        if (class_exists(\SGCart\Shipping\Models\ShippingRate::class)) {
+            $selectionMode = 'user_choice';
+            if (class_exists(\SGCart\Shipping\Models\ShippingSetting::class)) {
+                $selectionMode = \SGCart\Shipping\Models\ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
+            }
+
+            if ($selectionMode === 'user_choice' && $request->filled('shipping_rate_id')) {
+                $shippingRate = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+                    ->where('min_order_amount', '<=', $subtotal)
+                    ->find($request->shipping_rate_id);
+                if ($shippingRate) {
+                    $shippingCost = (float) $shippingRate->calculateCost($subtotal);
+                    $shippingMethodName = $shippingRate->name;
+                }
+            } else {
+                // Auto-select cheapest eligible rate
+                $eligibleRates = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+                    ->where('min_order_amount', '<=', $subtotal)
+                    ->get();
+                $cheapestRate = $eligibleRates->map(function ($rate) use ($subtotal) {
+                    $rate->calculated_cost = (float) $rate->calculateCost($subtotal);
+                    return $rate;
+                })->sortBy('calculated_cost')->first();
+
+                if ($cheapestRate) {
+                    $shippingCost = (float) $cheapestRate->calculated_cost;
+                    $shippingMethodName = $cheapestRate->name;
+                }
+            }
+        }
+
+        $total = max(0, $subtotal + $tax - $discount + $shippingCost);
 
         // Resolve address details
         $firstName = null;
@@ -473,6 +548,8 @@ class StoreController extends Controller
             'country' => $country,
             'subtotal' => $subtotal,
             'tax' => $tax,
+            'shipping_charge' => $shippingCost,
+            'shipping_method' => $shippingMethodName,
             'discount' => $discount,
             'total' => $total,
             'status' => \App\Enums\OrderStatus::PROCESSING,
