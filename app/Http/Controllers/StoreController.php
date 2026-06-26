@@ -673,7 +673,7 @@ class StoreController extends Controller
     /**
      * Account / Profile page.
      */
-    public function account($tab = 'orders')
+    public function account(Request $request, $tab = 'orders')
     {
         if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to access your account.');
@@ -683,11 +683,18 @@ class StoreController extends Controller
         $activeTab = in_array($tab, $validTabs) ? $tab : 'orders';
 
         // Load real orders from the database
-        $orders = auth('customer')->user()->orders()
+        $ordersQuery = auth('customer')->user()->orders()
             ->with('items')
-            ->latest()
-            ->get()
-            ->map(function ($order) {
+            ->latest();
+
+        if ($request->filled('order_search')) {
+            $search = $request->input('order_search');
+            $ordersQuery->where('order_number', 'like', "%{$search}%");
+        }
+
+        $orders = $ordersQuery->paginate(4)
+            ->withQueryString()
+            ->through(function ($order) {
                 return [
                     'id' => $order->order_number,
                     'ulid' => $order->ulid,
@@ -696,8 +703,7 @@ class StoreController extends Controller
                     'amount' => $order->total,
                     'status' => $order->status->value ?? $order->status,
                 ];
-            })
-            ->toArray();
+            });
 
         $wishlistIds = session()->get('wishlist', [3, 5, 6]);
         $allProducts = self::getProducts();

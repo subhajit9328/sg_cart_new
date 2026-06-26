@@ -11,12 +11,6 @@
     </div>
 </div>
 
-@if(session('success'))
-<div class="mb-6 px-4 py-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 rounded-xl text-emerald-800 dark:text-emerald-400 text-sm flex items-center gap-2.5">
-    <i class="fa-solid fa-circle-check text-emerald-500"></i>
-    <span>{{ session('success') }}</span>
-</div>
-@endif
 
 <div class="max-w-7xl mx-auto flex flex-col gap-6">
     <!-- 3-Column Grid of Premium Gateway Cards -->

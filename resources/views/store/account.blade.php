@@ -50,7 +50,26 @@
             
             <!-- Orders List Tab -->
             <div id="tab-orders" class="acc-content {{ $activeTab === 'orders' ? 'active' : '' }}">
-                <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-solid fa-clock-rotate-left text-accent text-sm"></i> Order History</h2>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-100">
+                    <h2 class="font-display font-bold text-base text-slate-900 flex items-center gap-2.5 mb-0" style="margin-bottom:0">
+                        <i class="fa-solid fa-clock-rotate-left text-accent text-sm"></i> Order History
+                    </h2>
+                    
+                    <!-- Search Bar Form -->
+                    <form action="{{ route('store.account', 'orders') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
+                        <div class="relative w-full sm:w-64">
+                            <input type="text" name="order_search" value="{{ request('order_search') }}" placeholder="Search by Order ID..." class="w-full px-3.5 py-2 border border-[#e8e4df] rounded-xl text-xs text-slate-800 bg-white outline-none focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]" style="padding-right: 32px;"/>
+                            @if(request('order_search'))
+                                <a href="{{ route('store.account', 'orders') }}" class="absolute right-3 text-slate-400 hover:text-slate-600 transition-colors" style="top: 50%; transform: translateY(-50%); text-decoration: none;">
+                                    <i class="fa-solid fa-circle-xmark text-xs"></i>
+                                </a>
+                            @endif
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm px-4" style="height: 33px; font-size: 11px; display: inline-flex; items-center; justify-content: center; border-radius: 10px;">
+                            Search
+                        </button>
+                    </form>
+                </div>
                 
                 <div class="flex flex-col gap-4">
                     @forelse($orders as $order)
@@ -94,6 +113,12 @@
                         </div>
                     @endforelse
                 </div>
+
+                @if($orders->hasPages())
+                    <div class="mt-8 pt-4 border-t border-slate-100 flex justify-center">
+                        {{ $orders->links() }}
+                    </div>
+                @endif
             </div>
 
             <!-- Profile Details Tab -->
