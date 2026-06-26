@@ -175,15 +175,17 @@ class StoreController extends Controller
         if (app()->bound('coupon.calculator')) {
             $discount = app('coupon.calculator')->calculate(session('coupon_code'), $subtotal);
         }
-        $taxResult = ['amount' => round($subtotal * 0.08, 2), 'label' => 'Tax (8%)'];
+        $tax = 0.0;
+        $taxLabel = null;
         if (app()->bound('tax.calculator')) {
             $taxResult = app('tax.calculator')->calculate($subtotal);
+            $tax = (float) $taxResult['amount'];
+            $taxLabel = $taxResult['label'];
         }
-        $tax = (float) $taxResult['amount'];
-        $taxLabel = $taxResult['label'];
 
         $shippingCost = 0.0;
-        if (class_exists(\SGCart\Shipping\Models\ShippingRate::class)) {
+        $hasShippingPackage = class_exists(\SGCart\Shipping\Models\ShippingRate::class);
+        if ($hasShippingPackage) {
             $shippingRates = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
                 ->where('min_order_amount', '<=', $subtotal)
                 ->get();
@@ -205,7 +207,7 @@ class StoreController extends Controller
         $effectiveShippingCost = ($selectionMode === 'user_choice') ? 0.0 : $shippingCost;
         $total = max(0, $subtotal + $tax - $discount + $effectiveShippingCost);
 
-        return view('store.cart', compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'shippingCost', 'selectionMode'));
+        return view('store.cart', compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'shippingCost', 'selectionMode', 'hasShippingPackage'));
     }
 
     /**
@@ -397,16 +399,18 @@ class StoreController extends Controller
             ];
         }
 
-        $taxResult = ['amount' => round($subtotal * 0.08, 2), 'label' => 'Tax (8%)'];
+        $tax = 0.0;
+        $taxLabel = null;
         if (app()->bound('tax.calculator')) {
             $taxResult = app('tax.calculator')->calculate($subtotal, $addressArray);
+            $tax = (float) $taxResult['amount'];
+            $taxLabel = $taxResult['label'];
         }
-        $tax = (float) $taxResult['amount'];
-        $taxLabel = $taxResult['label'];
 
         $shippingRates = collect();
         $selectionMode = 'user_choice';
-        if (class_exists(\SGCart\Shipping\Models\ShippingRate::class)) {
+        $hasShippingPackage = class_exists(\SGCart\Shipping\Models\ShippingRate::class);
+        if ($hasShippingPackage) {
             $shippingRates = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
                 ->where('min_order_amount', '<=', $subtotal)
                 ->get();
@@ -424,7 +428,7 @@ class StoreController extends Controller
         $shippingCost = $shippingRates->first() ? (float) $shippingRates->first()->calculated_cost : 0.0;
         $total = max(0, $subtotal + $tax - $discount + $shippingCost);
 
-        return view('store.checkout', compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'addresses', 'shippingRates', 'shippingCost', 'selectionMode'));
+        return view('store.checkout', compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'addresses', 'shippingRates', 'shippingCost', 'selectionMode', 'hasShippingPackage'));
     }
 
     /**
@@ -522,12 +526,13 @@ class StoreController extends Controller
             'state' => $state,
             'zip' => $zip,
         ];
-        $taxResult = ['amount' => round($subtotal * 0.08, 2), 'name' => 'Tax', 'label' => 'Tax (8%)'];
+        $tax = 0.0;
+        $taxMethod = null;
         if (app()->bound('tax.calculator')) {
             $taxResult = app('tax.calculator')->calculate($subtotal, $addressArray);
+            $tax = (float) $taxResult['amount'];
+            $taxMethod = $taxResult['label'] ?? $taxResult['name'];
         }
-        $tax = (float) $taxResult['amount'];
-        $taxMethod = $taxResult['label'] ?? $taxResult['name'];
 
         // Calculate shipping cost
         $shippingCost = 0.0;

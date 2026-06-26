@@ -61,6 +61,7 @@
                     @error('address_id') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
+                @if($hasShippingPackage)
                 <!-- Shipping Method Card -->
                 <div class="bg-white border border-[#e8e4df] rounded-2xl p-5 md:p-6">
                     <div class="font-display font-bold text-base mb-4 flex items-center gap-2.5">
@@ -95,6 +96,7 @@
                         </p>
                     @endif
                 </div>
+                @endif
 
 
 
@@ -164,13 +166,17 @@
                 @if($discount > 0)
                     <div class="flex justify-between text-emerald-600 font-semibold"><span>Promo Discount</span><span>-₹{{ number_format($discount, 2) }}</span></div>
                 @endif
-                <div class="flex justify-between text-slate-500"><span>{{ $taxLabel ?? 'Tax (8%)' }}</span><span>₹{{ number_format($tax, 2) }}</span></div>
+                @if($taxLabel)
+                <div class="flex justify-between text-slate-500"><span>{{ $taxLabel }}</span><span>₹{{ number_format($tax, 2) }}</span></div>
+                @endif
+                @if($hasShippingPackage)
                 <div class="flex justify-between text-slate-500">
                     <span>Shipping</span>
                     <span id="shipping-charge-display" class="{{ $shippingCost > 0 ? 'text-slate-900 font-semibold' : 'text-emerald-600 font-semibold' }}">
                         {{ $shippingCost > 0 ? '₹' . number_format($shippingCost, 2) : 'Free' }}
                     </span>
                 </div>
+                @endif
                 <div class="flex justify-between font-bold text-slate-900 text-sm border-t border-slate-100 pt-3 mt-1">
                     <span>Order Total</span><span id="order-total-display">₹{{ number_format($total, 2) }}</span>
                 </div>

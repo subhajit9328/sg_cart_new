@@ -84,6 +84,7 @@
                         <span>Subtotal</span>
                         <span class="text-slate-900 font-semibold">₹{{ number_format($subtotal, 2) }}</span>
                     </div>
+                    @if($hasShippingPackage)
                     <div class="flex justify-between">
                         <span>Shipping</span>
                         @if(($selectionMode ?? 'user_choice') === 'user_choice')
@@ -94,10 +95,13 @@
                             </span>
                         @endif
                     </div>
+                    @endif
+                    @if($taxLabel)
                     <div class="flex justify-between">
-                        <span>{{ $taxLabel ?? 'Tax (8%)' }}</span>
+                        <span>{{ $taxLabel }}</span>
                         <span class="text-slate-900 font-semibold">₹{{ number_format($tax, 2) }}</span>
                     </div>
+                    @endif
                     @if($discount > 0)
                         <div class="flex justify-between text-emerald-600 font-semibold">
                             <span>Discount</span>
