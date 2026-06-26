@@ -11,6 +11,8 @@
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
         "sgcart/coupons": "@dev",
+        "sgcart/payment-authorizenet": "@dev",
+        "sgcart/payment-razorpay": "@dev",
         "sgcart/product-variants": "@dev",
         "sgcart/shipping": "@dev",
         "sgcart/tax": "@dev",
@@ -50,6 +52,20 @@
         {
             "type": "path",
             "url": "packages/sgcart/tax",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/payment-razorpay",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/payment-authorizenet",
             "options": {
                 "symlink": true
             }

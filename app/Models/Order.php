@@ -28,11 +28,47 @@ class Order extends Model
         'discount',
         'total',
         'status',
-        'payment_status',
-        'payment_method',
-        'card_name',
-        'card_number_masked',
     ];
+
+    /**
+     * Get the latest payment status (dynamically computed from payments ledger).
+     */
+    public function getPaymentStatusAttribute()
+    {
+        return $this->payments()->latest()->first()?->status ?? \App\Enums\PaymentStatus::PENDING;
+    }
+
+    /**
+     * Get the latest payment method (dynamically computed from payments ledger).
+     */
+    public function getPaymentMethodAttribute()
+    {
+        return $this->payments()->latest()->first()?->payment_method ?? 'None';
+    }
+
+    /**
+     * Get the latest transaction id (dynamically computed from payments ledger).
+     */
+    public function getTransactionIdAttribute()
+    {
+        return $this->payments()->latest()->first()?->transaction_id;
+    }
+
+    /**
+     * Get the latest card name (dynamically computed from payments ledger).
+     */
+    public function getCardNameAttribute()
+    {
+        return $this->payments()->latest()->first()?->card_name;
+    }
+
+    /**
+     * Get the latest masked card number (dynamically computed from payments ledger).
+     */
+    public function getCardNumberMaskedAttribute()
+    {
+        return $this->payments()->latest()->first()?->card_number_masked;
+    }
 
     /**
      * Only auto-generate ULID for the `ulid` column.
@@ -68,13 +104,20 @@ class Order extends Model
     }
 
     /**
+     * Get the payments associated with this order.
+     */
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /**
      * Get the attributes that should be cast.
      */
     protected function casts(): array
     {
         return [
             'status' => \App\Enums\OrderStatus::class,
-            'payment_status' => \App\Enums\PaymentStatus::class,
         ];
     }
 }

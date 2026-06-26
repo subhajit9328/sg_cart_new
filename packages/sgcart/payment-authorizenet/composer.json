@@ -1,0 +1,27 @@
+{
+    "name": "sgcart/payment-authorizenet",
+    "description": "Authorize.Net payment gateway plugin for SGCart",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "SGCart Team",
+            "email": "support@sgcart.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "SGCart\\AuthorizeNet\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SGCart\\AuthorizeNet\\Providers\\AuthorizeNetServiceProvider"
+            ]
+        }
+    }
+}

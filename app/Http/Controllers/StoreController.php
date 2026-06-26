@@ -428,7 +428,12 @@ class StoreController extends Controller
         $shippingCost = $shippingRates->first() ? (float) $shippingRates->first()->calculated_cost : 0.0;
         $total = max(0, $subtotal + $tax - $discount + $shippingCost);
 
-        return view('store.checkout', compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'addresses', 'shippingRates', 'shippingCost', 'selectionMode', 'hasShippingPackage'));
+        $activeGateways = [];
+        if (app()->bound('payment.manager')) {
+            $activeGateways = app('payment.manager')->getActiveGateways();
+        }
+
+        return view('store.checkout', compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'addresses', 'shippingRates', 'shippingCost', 'selectionMode', 'hasShippingPackage', 'activeGateways'));
     }
 
     /**
@@ -451,10 +456,7 @@ class StoreController extends Controller
             'state' => 'required_without:address_id|nullable|string|max:100',
             'zip' => 'required_without:address_id|nullable|string|max:20',
             'country' => 'required_without:address_id|nullable|string|max:100',
-            'card_name' => 'required|string|max:255',
-            'card_num' => 'required|string|max:19',
-            'card_expiry' => 'required|string|max:5',
-            'card_cvv' => 'required|string|max:4',
+            'payment_method' => 'required|string',
         ]);
 
         $cartModel = \App\Models\Cart::getActiveCart();
@@ -569,9 +571,19 @@ class StoreController extends Controller
         }
 
         $total = max(0, $subtotal + $tax - $discount + $shippingCost);
-
         // Generate dynamic unique order number
         $orderNumber = 'SGCART-' . date('Ymd') . '-' . strtoupper(Str::random(6));
+
+        $paymentMethodName = 'Card';
+        $gateway = null;
+        
+        if (app()->bound('payment.manager')) {
+            $gateway = app('payment.manager')->getGateway($request->payment_method);
+            if (!$gateway || !app('payment.manager')->isEnabled($request->payment_method)) {
+                return redirect()->back()->withErrors(['payment_method' => 'Selected payment method is invalid or disabled.']);
+            }
+            $paymentMethodName = $gateway->getName();
+        }
 
         // Create Order in Database
         $order = \App\Models\Order::create([
@@ -593,12 +605,29 @@ class StoreController extends Controller
             'discount' => $discount,
             'total' => $total,
             'status' => \App\Enums\OrderStatus::PROCESSING,
-            'payment_status' => \App\Enums\PaymentStatus::PAID,
-            'payment_method' => 'Card',
-            'card_name' => $request->card_name,
-            // Mask card number for PCI compliance standard
-            'card_number_masked' => '**** **** **** ' . substr(str_replace(' ', '', $request->card_num), -4),
         ]);
+
+        if (!$gateway) {
+            $order->payments()->create([
+                'payment_method' => $paymentMethodName,
+                'amount' => $total,
+                'status' => \App\Enums\PaymentStatus::PAID,
+                'card_name' => $request->card_name,
+                'card_number_masked' => '**** **** **** ' . substr(str_replace(' ', '', $request->card_num), -4),
+            ]);
+        } else {
+            try {
+                $paymentResult = $gateway->processPayment($request, $order);
+            } catch (\Exception $e) {
+                $order->delete();
+                return redirect()->back()->withInput()->with('error', 'Payment failed: ' . $e->getMessage());
+            }
+
+            if (!$paymentResult['success']) {
+                $order->delete();
+                return redirect()->back()->withInput()->with('error', $paymentResult['message'] ?? 'Payment transaction failed.');
+            }
+        }
 
         // Create OrderItems in Database
         foreach ($cartModel->items as $cartItem) {
@@ -628,7 +657,8 @@ class StoreController extends Controller
         session()->forget('coupon_code');
         session()->forget('coupon_discount');
 
-        return redirect()->route('store.success', ['order_id' => $order->order_number]);
+        $redirectUrl = isset($paymentResult['redirect_url']) ? $paymentResult['redirect_url'] : route('store.success', ['order_id' => $order->order_number]);
+        return redirect($redirectUrl);
     }
 
     /**

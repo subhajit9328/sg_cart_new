@@ -169,9 +169,8 @@
         
         <!-- Order Items Card -->
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
-            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
+            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                 <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Products Ordered</h2>
-                <span class="text-[10px] font-mono text-slate-400">Order Ref: {{ $order->ulid }}</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
@@ -258,17 +257,47 @@
                 <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Order Activity Log</h2>
             </div>
             <div class="p-5">
-                <ol class="relative border-l border-slate-200 dark:border-slate-800 space-y-5 ml-2.5">                  
-                    <li class="mb-4 ml-6">
-                        <span class="absolute flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-900/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-blue-600">
-                            <i class="fa-solid fa-circle-check text-[8px]"></i>
-                        </span>
-                        <div class="flex items-center justify-between gap-4">
-                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Order Completed & Payment Authorized</h4>
-                            <time class="text-[9px] font-semibold text-slate-400">{{ $order->created_at->format('M d, Y H:i') }}</time>
-                        </div>
-                        <p class="text-xs text-slate-400 mt-0.5">Order placed and payment charged via Card (masked reference: {{ $order->card_number_masked }}).</p>
-                    </li>
+                <ol class="relative border-l border-slate-200 dark:border-slate-800 space-y-5 ml-2.5">
+                    @foreach($order->payments as $payment)
+                        @php
+                            $pStatus = $payment->status->value ?? $payment->status;
+                        @endphp
+                        <li class="mb-4 ml-6">
+                            @if($pStatus === 'Paid')
+                                <span class="absolute flex items-center justify-center w-5 h-5 bg-emerald-100 dark:bg-emerald-950/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-emerald-600">
+                                    <i class="fa-solid fa-circle-check text-[8px]"></i>
+                                </span>
+                            @elseif($pStatus === 'Pending')
+                                <span class="absolute flex items-center justify-center w-5 h-5 bg-amber-100 dark:bg-amber-900/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-amber-600 animate-pulse">
+                                    <i class="fa-solid fa-clock text-[8px]"></i>
+                                </span>
+                            @else
+                                <span class="absolute flex items-center justify-center w-5 h-5 bg-rose-100 dark:bg-rose-950/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-rose-600">
+                                    <i class="fa-solid fa-circle-xmark text-[8px]"></i>
+                                </span>
+                            @endif
+                            <div class="flex items-center justify-between gap-4">
+                                <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                                    Payment {{ $pStatus }}: {{ $payment->payment_method }}
+                                </h4>
+                                <time class="text-[9px] font-semibold text-slate-400">{{ $payment->created_at->format('M d, Y H:i') }}</time>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-0.5">
+                                @if($pStatus === 'Paid')
+                                    Payment of ₹{{ number_format($payment->amount, 2) }} was successfully processed.
+                                    @if($payment->card_number_masked) (Card: {{ $payment->card_number_masked }}) @endif
+                                @elseif($pStatus === 'Pending')
+                                    Payment of ₹{{ number_format($payment->amount, 2) }} is pending customer action or manual clearance.
+                                @else
+                                    Payment attempt of ₹{{ number_format($payment->amount, 2) }} failed.
+                                @endif
+                                @if($payment->transaction_id)
+                                    <span class="block text-[10px] text-slate-450 mt-0.5 font-mono">Txn ID: {{ $payment->transaction_id }}</span>
+                                @endif
+                            </p>
+                        </li>
+                    @endforeach
+
                     <li class="ml-6">
                         <span class="absolute flex items-center justify-center w-5 h-5 bg-slate-100 dark:bg-slate-800 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-slate-400">
                             <i class="fa-solid fa-pen-nib text-[8px]"></i>
@@ -352,7 +381,7 @@
                 </div>
                 <div class="flex justify-between">
                     <span>Lifetime LTV spend</span>
-                    <span class="font-bold text-slate-950 dark:text-white font-mono">₹{{ number_format($order->customer->orders()->where('payment_status', 'Paid')->sum('total'), 2) }}</span>
+                    <span class="font-bold text-slate-950 dark:text-white font-mono">₹{{ number_format($order->customer->orders()->whereHas('payments', fn($q) => $q->where('status', \App\Enums\PaymentStatus::PAID))->sum('total'), 2) }}</span>
                 </div>
             </div>
         </div>
@@ -410,6 +439,56 @@
                     <span>Total Amount</span>
                     <span class="font-mono">₹{{ number_format($order->total, 2) }}</span>
                 </div>
+            </div>
+        </div>
+
+        <!-- Decoupled Payment Transaction Ledger Card -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Transaction Ledger</h2>
+            </div>
+            <div class="p-5 flex flex-col gap-4">
+                @forelse($order->payments as $payment)
+                    <div class="flex flex-col gap-1.5 p-3 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/40 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $payment->payment_method }}</span>
+                            @php
+                                $statusStr = $payment->status->value ?? $payment->status;
+                            @endphp
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold
+                                @if($statusStr === 'Paid') bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/30
+                                @elseif($statusStr === 'Pending') bg-amber-50 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400 border border-amber-100 dark:border-amber-800/30
+                                @else bg-rose-50 text-rose-600 dark:bg-rose-955/20 dark:text-rose-455 border border-rose-100 dark:border-rose-900/30 @endif">
+                                {{ $statusStr }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between text-[11px] text-slate-400">
+                            <span>Amount</span>
+                            <span class="font-mono text-slate-700 dark:text-slate-350">₹{{ number_format($payment->amount, 2) }}</span>
+                        </div>
+                        @if($payment->transaction_id)
+                        <div class="flex justify-between text-[11px] text-slate-400">
+                            <span>Txn Ref</span>
+                            <span class="font-mono text-slate-700 dark:text-slate-350 select-all">{{ $payment->transaction_id }}</span>
+                        </div>
+                        @endif
+                        @if($payment->card_number_masked)
+                        <div class="flex justify-between text-[11px] text-slate-400">
+                            <span>Card</span>
+                            <span class="font-mono text-slate-700 dark:text-slate-350">{{ $payment->card_number_masked }}</span>
+                        </div>
+                        @endif
+                        <div class="flex justify-between text-[10px] text-slate-400 mt-1 border-t border-slate-100/50 dark:border-slate-800/50 pt-1.5">
+                            <span>Timestamp</span>
+                            <span>{{ $payment->created_at->format('M d, Y h:i A') }}</span>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center text-slate-400 dark:text-slate-500 py-4">
+                        <i class="fa-solid fa-credit-card text-xl mb-1.5 opacity-20 block"></i>
+                        No recorded transactions.
+                    </div>
+                @endforelse
             </div>
         </div>
     </div>

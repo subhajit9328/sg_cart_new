@@ -34,7 +34,9 @@ class OrderController extends Controller
 
         // Payment Status filter
         if ($request->filled('payment_status')) {
-            $query->where('payment_status', $request->input('payment_status'));
+            $query->whereHas('payments', function ($q) use ($request) {
+                $q->where('status', $request->input('payment_status'));
+            });
         }
 
         // Calculate KPI Metrics (overall database state)
@@ -48,8 +50,16 @@ class OrderController extends Controller
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
 
-        $allowedSortFields = ['order_number', 'first_name', 'status', 'payment_status', 'total', 'created_at'];
-        if (in_array($sortBy, $allowedSortFields)) {
+        $allowedSortFields = ['order_number', 'first_name', 'status', 'total', 'created_at'];
+        if ($sortBy === 'payment_status') {
+            $query->orderBy(
+                \App\Models\Payment::select('status')
+                    ->whereColumn('order_id', 'orders.id')
+                    ->latest()
+                    ->take(1),
+                $sortOrder === 'asc' ? 'asc' : 'desc'
+            );
+        } elseif (in_array($sortBy, $allowedSortFields)) {
             $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
         } else {
             $query->orderBy('created_at', 'desc');
@@ -72,7 +82,7 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        $order->load(['items', 'customer']);
+        $order->load(['items', 'customer', 'payments']);
         return view('admin.orders.show', compact('order'));
     }
 
@@ -86,7 +96,20 @@ class OrderController extends Controller
             'payment_status' => 'required|in:Pending,Paid,Failed',
         ]);
 
-        $order->update($data);
+        $order->update(['status' => $data['status']]);
+
+        // Update payment status in payments ledger (create a new entry if status changed)
+        $latestPayment = $order->payments()->latest()->first();
+        if (!$latestPayment || ($latestPayment->status->value ?? $latestPayment->status) !== $data['payment_status']) {
+            $order->payments()->create([
+                'payment_method' => $latestPayment ? $latestPayment->payment_method : 'Manual Update',
+                'amount' => $order->total,
+                'status' => $data['payment_status'],
+                'transaction_id' => $latestPayment ? $latestPayment->transaction_id : null,
+                'card_name' => $latestPayment ? $latestPayment->card_name : null,
+                'card_number_masked' => $latestPayment ? $latestPayment->card_number_masked : null,
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Order status has been updated successfully.');
     }

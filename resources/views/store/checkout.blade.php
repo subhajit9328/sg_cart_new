@@ -98,40 +98,125 @@
                 </div>
                 @endif
 
-
-
-
-
                 <!-- Payment Method Card -->
                 <div class="bg-white border border-[#e8e4df] rounded-2xl p-5 md:p-6">
                     <div class="font-display font-bold text-base mb-4 flex items-center gap-2.5">
                         <i class="fa-solid fa-credit-card text-accent text-sm"></i> Payment Method
                     </div>
                     
-                    <div class="mb-4">
-                        <label class="label">Name on Card <span class="text-rose-600">*</span></label>
-                        <input type="text" name="card_name" required value="{{ old('card_name') }}" class="inp" placeholder="John Doe"/>
-                        @error('card_name') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
-                    </div>
+                    @if(app()->bound('payment.manager'))
+                        @php
+                            $enabledGateways = app('payment.manager')->getEnabledGateways();
+                        @endphp
+                        
+                        <div class="flex flex-col gap-4">
+                            <!-- Compact Industry-Standard Options Grid -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                @forelse($enabledGateways as $gateway)
+                                    @php
+                                        $isFirst = $loop->first;
+                                        $activeClass = '';
+                                        if ($gateway->getIdentifier() === 'cod') {
+                                            $activeClass = 'border-emerald-600 ring-2 ring-emerald-500/10 bg-slate-50/30';
+                                        } elseif ($gateway->getIdentifier() === 'razorpay') {
+                                            $activeClass = 'border-blue-600 ring-2 ring-blue-500/10 bg-slate-50/30';
+                                        } else {
+                                            $activeClass = 'border-slate-900 ring-2 ring-slate-800/10 bg-slate-50/30';
+                                        }
+                                    @endphp
+                                    <div class="border border-slate-200 rounded-xl px-4 py-3 flex items-center justify-between cursor-pointer hover:border-slate-350 transition-all payment-method-item h-14 {{ $isFirst ? $activeClass : 'bg-white' }}" 
+                                         data-gateway="{{ $gateway->getIdentifier() }}"
+                                         data-active-class="@if($gateway->getIdentifier() === 'cod') border-emerald-600 ring-2 ring-emerald-500/10 bg-slate-50/30 @elseif($gateway->getIdentifier() === 'razorpay') border-blue-600 ring-2 ring-blue-500/10 bg-slate-50/30 @else border-slate-900 ring-2 ring-slate-800/10 bg-slate-50/30 @endif"
+                                         onclick="selectPaymentGateway(this, '{{ $gateway->getIdentifier() }}')">
+                                        
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <input type="radio" name="payment_method" value="{{ $gateway->getIdentifier() }}" {{ $isFirst ? 'checked' : '' }} class="text-slate-900 focus:ring-slate-900 border-slate-300 shrink-0">
+                                            <span class="text-xs font-semibold text-slate-700 truncate">
+                                                @if($gateway->getIdentifier() === 'cod')
+                                                    Cash on Delivery
+                                                @elseif($gateway->getIdentifier() === 'razorpay')
+                                                    Razorpay
+                                                @elseif($gateway->getIdentifier() === 'authorizenet')
+                                                    Credit Card
+                                                @else
+                                                    {{ $gateway->getTitle() }}
+                                                @endif
+                                            </span>
+                                        </div>
+                                        
+                                        <!-- Brand Graphic on Right -->
+                                        <div class="shrink-0 flex items-center">
+                                            @if($gateway->getIdentifier() === 'cod')
+                                                <svg class="h-4.5 text-slate-450" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="1" y="3" width="15" height="13" />
+                                                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                                                    <circle cx="5.5" cy="18.5" r="2.5" />
+                                                    <circle cx="18.5" cy="18.5" r="2.5" />
+                                                </svg>
+                                            @elseif($gateway->getIdentifier() === 'razorpay')
+                                                <svg class="h-4.5 text-[#0c66ff]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M18 2L4 16h8l-1 6 12-14H15l1-6z" fill="currentColor"/>
+                                                </svg>
+                                            @elseif($gateway->getIdentifier() === 'authorizenet')
+                                                <div class="flex items-center gap-1 opacity-90">
+                                                    <!-- Visa -->
+                                                    <svg class="h-3.5 w-6 rounded-xs" viewBox="0 0 36 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <rect width="36" height="24" rx="2" fill="#1A1F71"/>
+                                                        <path d="M13.2 16.5l1.6-4.9h2l-1.3 4.9h-2.3zm8.3-4.8c-.3-.2-.8-.4-1.4-.4-1.5 0-2.6.8-2.6 1.9 0 1.2 1.1 1.3 1.8 1.7.5.3.7.5.7.8 0 .5-.6.7-1.1.7-.8 0-1.3-.2-1.7-.4l-.3-.1-.3 1.7c.5.2 1.3.4 2.1.4 2 0 3.3-1 3.3-2.5 0-1.7-1.5-1.9-2.1-2.2-.4-.2-.7-.4-.7-.6 0-.3.4-.6 1-.6.5 0 .9.1 1.2.3l.1.1.5-1.8zm4.7-.1h-1.8c-.6 0-.9.3-1.1.8l-3.3 7.6h2.4l.5-1.3h2.9l.3 1.3h2.1l-2-8.4zm-2.4 5.2l1.4-3.8.8 3.8h-2.2zm-12.8-5.2l-2.2 5.9-.2-1.1c-.4-1.3-1.6-2.7-3-3.4l2 7h2.4l3.6-8.4h-2.6z" fill="white"/>
+                                                    </svg>
+                                                    <!-- Mastercard -->
+                                                    <svg class="h-3.5 w-6 rounded-xs" viewBox="0 0 36 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <rect width="36" height="24" rx="2" fill="#222"/>
+                                                        <circle cx="14.5" cy="12" r="7" fill="#EB001B"/>
+                                                        <circle cx="21.5" cy="12" r="7" fill="#F79E1B" fill-opacity="0.8"/>
+                                                    </svg>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="col-span-full text-xs text-slate-400 py-2">
+                                        <i class="fa-solid fa-circle-info mr-1 text-slate-400"></i> No payment methods enabled. Please contact support.
+                                    </div>
+                                @endforelse
+                            </div>
 
-                    <div class="mb-4">
-                        <label class="label">Credit Card Number <span class="text-rose-600">*</span></label>
-                        <input type="text" name="card_num" required value="{{ old('card_num') }}" class="inp" placeholder="4111 2222 3333 4444"/>
-                        @error('card_num') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
-                    </div>
+                            <!-- Single unified fields wrapper below the options -->
+                            <div class="mt-2 flex flex-col gap-3">
+                                @foreach($enabledGateways as $gateway)
+                                    <div class="gateway-fields-wrapper {{ $loop->first ? '' : 'hidden' }}" id="fields-{{ $gateway->getIdentifier() }}">
+                                        {!! $gateway->renderPaymentFields() !!}
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @else
+                        <!-- Fallback card input -->
+                        <div class="mb-4">
+                            <label class="label">Name on Card <span class="text-rose-600">*</span></label>
+                            <input type="text" name="card_name" required value="{{ old('card_name') }}" class="inp" placeholder="John Doe"/>
+                            @error('card_name') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="label">Expiry Date <span class="text-rose-600">*</span></label>
-                            <input type="text" name="card_expiry" required value="{{ old('card_expiry') }}" class="inp" placeholder="MM/YY"/>
-                            @error('card_expiry') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        <div class="mb-4">
+                            <label class="label">Credit Card Number <span class="text-rose-600">*</span></label>
+                            <input type="text" name="card_num" required value="{{ old('card_num') }}" class="inp" placeholder="4111 2222 3333 4444"/>
+                            @error('card_num') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
-                        <div>
-                            <label class="label">CVV Code <span class="text-rose-600">*</span></label>
-                            <input type="password" name="card_cvv" required value="{{ old('card_cvv') }}" class="inp" placeholder="123"/>
-                            @error('card_cvv') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="label">Expiry Date <span class="text-rose-600">*</span></label>
+                                <input type="text" name="card_expiry" required value="{{ old('card_expiry') }}" class="inp" placeholder="MM/YY"/>
+                                @error('card_expiry') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="label">CVV Code <span class="text-rose-600">*</span></label>
+                                <input type="password" name="card_cvv" required value="{{ old('card_cvv') }}" class="inp" placeholder="123"/>
+                                @error('card_cvv') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            </div>
                         </div>
-                    </div>
+                    @endif
                 </div>
                 
                 <!-- Place Order Button -->
@@ -475,6 +560,58 @@
                 }
             });
         }
+
+        // Initialize the active payment gateway inputs on page load
+        const checkedRadio = document.querySelector('input[name="payment_method"]:checked');
+        if (checkedRadio) {
+            const item = checkedRadio.closest('.payment-method-item');
+            if (item) {
+                selectPaymentGateway(item, checkedRadio.value);
+            }
+        }
     });
+
+    function selectPaymentGateway(element, gatewayId) {
+        // Unselect all payment method items
+        document.querySelectorAll('.payment-method-item').forEach(item => {
+            const activeClass = item.getAttribute('data-active-class');
+            if (activeClass) {
+                activeClass.split(' ').forEach(cls => {
+                    if (cls.trim()) item.classList.remove(cls);
+                });
+            }
+            item.classList.add('border-[#e8e4df]');
+            const radio = item.querySelector('input[type="radio"]');
+            if (radio) radio.checked = false;
+        });
+
+        // Select clicked payment item
+        element.classList.remove('border-[#e8e4df]');
+        const activeClass = element.getAttribute('data-active-class');
+        if (activeClass) {
+            activeClass.split(' ').forEach(cls => {
+                if (cls.trim()) element.classList.add(cls);
+            });
+        }
+        const radio = element.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+
+        // Hide all fields wrappers and disable inputs
+        document.querySelectorAll('.gateway-fields-wrapper').forEach(wrapper => {
+            wrapper.classList.add('hidden');
+            wrapper.querySelectorAll('input, select, textarea').forEach(input => {
+                input.disabled = true;
+            });
+        });
+
+        // Show active fields wrapper and enable inputs
+        const fieldsWrapper = document.getElementById('fields-' + gatewayId);
+        if (fieldsWrapper) {
+            fieldsWrapper.classList.remove('hidden');
+            fieldsWrapper.querySelectorAll('input, select, textarea').forEach(input => {
+                input.disabled = false;
+            });
+        }
+    }
 </script>
 @endsection

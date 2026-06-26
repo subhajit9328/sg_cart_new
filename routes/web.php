@@ -64,6 +64,14 @@ Route::prefix('admin')->group(function () {
             ->middleware('permission:view dashboard')
             ->name('admin.dashboard');
 
+        // Payment Settings Route
+        Route::get('payments/settings', [\App\Http\Controllers\Admin\PaymentMethodController::class, 'index'])
+            ->middleware('permission:manage payments')
+            ->name('admin.payments.settings');
+        Route::post('payments/settings', [\App\Http\Controllers\Admin\PaymentMethodController::class, 'update'])
+            ->middleware('permission:manage payments')
+            ->name('admin.payments.settings.update');
+
         // CRUD routes under admin namespace (e.g. admin.users.index)
         Route::name('admin.')->group(function () {
 

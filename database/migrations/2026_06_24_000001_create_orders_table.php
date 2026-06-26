@@ -29,10 +29,6 @@ return new class extends Migration
             $table->decimal('discount', 10, 2)->default(0);
             $table->decimal('total', 10, 2);
             $table->enum('status', ['Processing', 'Delivered', 'Shipped', 'Cancelled'])->default('Processing');
-            $table->enum('payment_status', ['Pending', 'Paid', 'Failed'])->default('Paid');
-            $table->string('payment_method')->default('Card');
-            $table->string('card_name')->nullable();
-            $table->string('card_number_masked')->nullable();
             $table->timestamps();
         });
     }
