@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0cee0a57f62e668ca931f1a81830634f",
+    "content-hash": "e81e7ef6ad6aecee519f556335f1abf9",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -3797,6 +3797,45 @@
                 }
             ],
             "description": "Dynamic shipping package for SGCart",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "sgcart/tax",
+            "version": "dev-implement_shipping_package",
+            "dist": {
+                "type": "path",
+                "url": "packages/sgcart/tax",
+                "reference": "cc2e3979d3f05cb177bb72e00b370bffb218b65e"
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "SGCart\\Tax\\Providers\\TaxServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SGCart\\Tax\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "SGCart Team",
+                    "email": "support@sgcart.com"
+                }
+            ],
+            "description": "Dynamic tax calculation package for SGCart",
             "transport-options": {
                 "symlink": true,
                 "relative": true
@@ -9186,7 +9225,8 @@
     "stability-flags": {
         "sgcart/coupons": 20,
         "sgcart/product-variants": 20,
-        "sgcart/shipping": 20
+        "sgcart/shipping": 20,
+        "sgcart/tax": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

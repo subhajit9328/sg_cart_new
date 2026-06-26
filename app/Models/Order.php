@@ -22,6 +22,7 @@ class Order extends Model
         'country',
         'subtotal',
         'tax',
+        'tax_method',
         'shipping_charge',
         'shipping_method',
         'discount',

@@ -216,7 +216,7 @@
                 @endif
                 <tr class="total-row">
                     <td style="border: none;"></td>
-                    <td colspan="2" style="text-align: right; color: #64748b;">Tax:</td>
+                    <td colspan="2" style="text-align: right; color: #64748b;">{{ $order->tax_method ?? 'Tax' }}:</td>
                     <td style="text-align: right;">₹{{ number_format($order->tax, 2) }}</td>
                 </tr>
                 <tr class="total-row">

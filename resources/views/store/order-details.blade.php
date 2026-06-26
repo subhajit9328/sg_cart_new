@@ -197,7 +197,7 @@
                         </div>
                     @endif
                     <div class="flex justify-between text-slate-500">
-                        <span>Tax</span>
+                        <span>{{ $order->tax_method ?? 'Tax' }}</span>
                         <span>₹{{ number_format($order->tax, 2) }}</span>
                     </div>
                     <div class="flex justify-between text-slate-500">

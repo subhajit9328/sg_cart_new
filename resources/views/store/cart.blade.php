@@ -95,7 +95,7 @@
                         @endif
                     </div>
                     <div class="flex justify-between">
-                        <span>Tax (8%)</span>
+                        <span>{{ $taxLabel ?? 'Tax (8%)' }}</span>
                         <span class="text-slate-900 font-semibold">₹{{ number_format($tax, 2) }}</span>
                     </div>
                     @if($discount > 0)

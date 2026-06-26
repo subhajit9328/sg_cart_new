@@ -164,7 +164,7 @@
                 @if($discount > 0)
                     <div class="flex justify-between text-emerald-600 font-semibold"><span>Promo Discount</span><span>-₹{{ number_format($discount, 2) }}</span></div>
                 @endif
-                <div class="flex justify-between text-slate-500"><span>Tax (8%)</span><span>₹{{ number_format($tax, 2) }}</span></div>
+                <div class="flex justify-between text-slate-500"><span>{{ $taxLabel ?? 'Tax (8%)' }}</span><span>₹{{ number_format($tax, 2) }}</span></div>
                 <div class="flex justify-between text-slate-500">
                     <span>Shipping</span>
                     <span id="shipping-charge-display" class="{{ $shippingCost > 0 ? 'text-slate-900 font-semibold' : 'text-emerald-600 font-semibold' }}">
