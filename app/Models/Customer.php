@@ -14,8 +14,9 @@ use Illuminate\Notifications\Notifiable;
  * @property mixed $id
  * @property mixed $email
  * @property CarbonInterface|mixed $email_verified_at
+ * @property mixed $profile_picture
  */
-#[Fillable(['name', 'email', 'password', 'phone_no'])]
+#[Fillable(['name', 'email', 'password', 'phone_no', 'profile_picture'])]
 #[Hidden(['password', 'remember_token'])]
 class Customer extends Authenticatable
 {

@@ -14,8 +14,23 @@
         <div class="bg-white border border-[#e8e4df] rounded-2xl p-5 md:p-6">
             <!-- User Info Summary Header -->
             <div class="flex items-center gap-4 mb-6 pb-6 border-b border-[#e8e4df]">
-                <div class="w-14 h-14 bg-slate-950 rounded-full flex items-center justify-center font-display text-xl font-extrabold text-white shadow-md">
-                    {{ strtoupper(substr(auth('customer')->user()?->name ?? 'John Doe', 0, 2)) }}
+                <div class="relative group w-14 h-14 shrink-0">
+                    <div id="profile-picture-container" class="w-14 h-14 bg-slate-950 rounded-full flex items-center justify-center font-display text-xl font-extrabold text-white shadow-md overflow-hidden relative">
+                        @if(auth('customer')->user()?->profile_picture)
+                            <img id="profile-picture-img" src="{{ Storage::url(auth('customer')->user()->profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover">
+                        @else
+                            <span id="profile-picture-initials">{{ strtoupper(substr(auth('customer')->user()?->name ?? 'John Doe', 0, 2)) }}</span>
+                        @endif
+                        <!-- Loading spinner overlay -->
+                        <div id="profile-picture-loader" class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200">
+                            <i class="fa-solid fa-spinner fa-spin text-white text-lg"></i>
+                        </div>
+                    </div>
+                    <!-- Pencil Icon -->
+                    <label for="profile-picture-input" class="absolute -bottom-1 -right-1 w-6 h-6 bg-white border border-[#e8e4df] rounded-full flex items-center justify-center cursor-pointer shadow-sm hover:bg-slate-50 hover:border-slate-400 transition-all select-none" title="Upload Profile Picture">
+                        <i class="fa-solid fa-pencil text-slate-500 text-[10px]"></i>
+                    </label>
+                    <input type="file" id="profile-picture-input" class="hidden" accept="image/*">
                 </div>
                 <div class="min-w-0">
                     <h3 class="font-display font-extrabold text-sm text-slate-800 truncate">{{ auth('customer')->user()?->name ?? 'John Doe' }}</h3>
@@ -333,6 +348,77 @@
                 if (!isValid) {
                     e.preventDefault();
                 }
+            });
+        }
+
+        // Profile Picture Upload AJAX
+        const profilePicInput = document.getElementById('profile-picture-input');
+        if (profilePicInput) {
+            profilePicInput.addEventListener('change', function(e) {
+                if (e.target.files.length === 0) return;
+                
+                const file = e.target.files[0];
+                
+                // Client-side quick size validation (2 MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    showToast('The profile picture size must not exceed 2 MB.', 'error');
+                    profilePicInput.value = '';
+                    return;
+                }
+                
+                const loader = document.getElementById('profile-picture-loader');
+                loader.classList.remove('opacity-0', 'pointer-events-none');
+                loader.classList.add('opacity-100');
+                
+                const formData = new FormData();
+                formData.append('profile_picture', file);
+                
+                fetch("{{ route('store.account.profile-picture.update') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: formData
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        return res.json().then(errData => {
+                            throw new Error(errData.message || 'Server error occurred.');
+                        });
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        
+                        // Update container content: remove initials/old image and set new image
+                        const container = document.getElementById('profile-picture-container');
+                        let img = document.getElementById('profile-picture-img');
+                        if (!img) {
+                            // Remove initials element
+                            const initials = document.getElementById('profile-picture-initials');
+                            if (initials) initials.remove();
+                            
+                            img = document.createElement('img');
+                            img.id = 'profile-picture-img';
+                            img.alt = 'Profile Picture';
+                            img.className = 'w-full h-full object-cover';
+                            container.insertBefore(img, loader);
+                        }
+                        img.src = data.url;
+                    } else {
+                        showToast(data.message || 'Profile picture upload failed.', 'error');
+                    }
+                })
+                .catch(err => {
+                    showToast(err.message || 'Something went wrong.', 'error');
+                })
+                .finally(() => {
+                    loader.classList.remove('opacity-100');
+                    loader.classList.add('opacity-0', 'pointer-events-none');
+                    profilePicInput.value = ''; // Reset input
+                });
             });
         }
     });
