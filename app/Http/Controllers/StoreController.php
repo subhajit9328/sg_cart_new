@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Actions\LogActivity;
+use App\Actions\ManageOtp;
+use App\Actions\CustomerEmailVerifiedAction;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Mail\CustomerOtpMail;
@@ -689,27 +691,7 @@ class StoreController extends Controller
         }
 
         if ($emailAdded) {
-            // Generate and cache OTP (5 minutes valid)
-            $otp = sprintf('%06d', mt_rand(100000, 999999));
-            $otpKey = "customer_otp_{$customer->id}";
-            $cooldownKey = "customer_otp_cooldown_{$customer->id}";
-
-            Cache::put($otpKey, $otp, 300); // 5 minutes
-            Cache::put($cooldownKey, now()->addMinutes(5)->timestamp, 300); // 5 minutes cooldown
-
-            // Send OTP mail
-            try {
-                Mail::to($customer->email)->send(new CustomerOtpMail($customer, $otp));
-                app(LogActivity::class)->capture(
-                    description: "OTP sent to email: {$customer->email} on profile email update",
-                    event: 'otp.sent',
-                    subject: $customer,
-                    properties: ['email' => $customer->email, 'otp_sent_time' => now()->toIso8601String()],
-                    causer: $customer
-                );
-            } catch (\Exception $e) {
-                Log::error('Failed to send OTP email on profile email update: '.$e->getMessage());
-            }
+            app(ManageOtp::class)->generate($customer, ManageOtp::REASON_PROFILE_UPDATE);
 
             return redirect()->route('store.otp.verify')->with('success', 'Profile updated. Please verify your new email address.');
         }

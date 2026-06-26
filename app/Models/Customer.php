@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Mail\RegistrationSuccessMail;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -12,6 +13,11 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
+/**
+ * @property mixed $id
+ * @property mixed $email
+ * @property CarbonInterface|mixed $email_verified_at
+ */
 #[Fillable(['name', 'email', 'password', 'phone_no'])]
 #[Hidden(['password', 'remember_token'])]
 class Customer extends Authenticatable

@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\CustomerEmailVerifiedAction;
 use App\Actions\LogActivity;
-use App\Mail\CustomerOtpMail;
+use App\Actions\ManageOtp;
+use App\Mail\RegistrationSuccessMail;
 use App\Models\Cart;
 use App\Models\Customer;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -274,27 +277,13 @@ class AuthController extends Controller
         );
 
         if ($isEmail) {
-            // Generate and cache OTP (5 minutes valid)
-            $otp = sprintf('%06d', mt_rand(100000, 999999));
-            $otpKey = "customer_otp_{$customer->id}";
-            $cooldownKey = "customer_otp_cooldown_{$customer->id}";
-
-            Cache::put($otpKey, $otp, 300); // 5 minutes
-            Cache::put($cooldownKey, now()->addMinutes(5)->timestamp, 300); // 5 minutes cooldown
-
-            // Send OTP mail
+            // Send registration success welcome email
             try {
-                Mail::to($customer->email)->send(new CustomerOtpMail($customer, $otp));
-                app(LogActivity::class)->capture(
-                    description: "OTP sent to email: {$customer->email}",
-                    event: 'otp.sent',
-                    subject: $customer,
-                    properties: ['email' => $customer->email, 'otp_sent_time' => now()->toIso8601String()],
-                    causer: $customer
-                );
-            } catch (\Exception $e) {
-                Log::error('Failed to send OTP email on registration: '.$e->getMessage());
+                Mail::to($customer->email)->send(new RegistrationSuccessMail($customer));
+            } catch (Exception $e) {
+                Log::error('Failed to send registration success email: '.$e->getMessage());
             }
+            app(ManageOtp::class)->generate($customer, ManageOtp::REASON_REGISTRATION);
         }
 
         Auth::guard('customer')->login($customer);
@@ -320,34 +309,15 @@ class AuthController extends Controller
             return redirect()->route('store.account');
         }
 
-        $otpKey = "customer_otp_{$customer->id}";
-        $cooldownKey = "customer_otp_cooldown_{$customer->id}";
-
-        $otp = Cache::get($otpKey);
-        $cooldownTimestamp = Cache::get($cooldownKey);
+        $manageOtp = app(ManageOtp::class);
+        $otp = $manageOtp->getOtp($customer);
+        $cooldownTimestamp = $manageOtp->getCooldownTimestamp($customer);
 
         // If no OTP exists and there is no cooldown, automatically generate and send a new one
         if (! $otp && ! $cooldownTimestamp) {
-            $otp = sprintf('%06d', mt_rand(100000, 999999));
-            Cache::put($otpKey, $otp, 300);
-
-            $cooldownTimestamp = now()->addMinutes(5)->timestamp;
-            Cache::put($cooldownKey, $cooldownTimestamp, 300);
-
-            try {
-                Mail::to($customer->email)->send(new CustomerOtpMail($customer, $otp));
-                session()->flash('success', 'A new verification code has been sent to your email.');
-
-                app(LogActivity::class)->capture(
-                    description: "Auto-generated and sent OTP to email: {$customer->email}",
-                    event: 'otp.sent',
-                    subject: $customer,
-                    properties: ['email' => $customer->email, 'otp_sent_time' => now()->toIso8601String()],
-                    causer: $customer
-                );
-            } catch (\Exception $e) {
-                Log::error('Failed to auto-send OTP email: '.$e->getMessage());
-            }
+            $manageOtp->generate($customer, ManageOtp::REASON_AUTO_GENERATE);
+            $cooldownTimestamp = $manageOtp->getCooldownTimestamp($customer);
+            session()->flash('success', 'A new verification code has been sent to your email.');
         }
 
         $remainingSeconds = $cooldownTimestamp ? max(0, $cooldownTimestamp - now()->timestamp) : 0;
@@ -372,38 +342,13 @@ class AuthController extends Controller
             return redirect()->route('store.account');
         }
 
-        $otpKey = "customer_otp_{$customer->id}";
-        $cachedOtp = Cache::get($otpKey);
-
-        if (! $cachedOtp || $cachedOtp !== $request->otp) {
-            app(LogActivity::class)->capture(
-                description: "Failed OTP verification attempt for email: {$customer->email}",
-                event: 'otp.failed',
-                subject: $customer,
-                properties: ['email' => $customer->email, 'entered_otp' => $request->otp],
-                causer: $customer
-            );
-
+        if (! app(ManageOtp::class)->verify($customer, $request->otp)) {
             throw ValidationException::withMessages([
                 'otp' => 'The entered OTP is incorrect or has expired.',
             ]);
         }
 
-        // Mark customer email as verified
-        $customer->email_verified_at = now();
-        $customer->save();
-
-        // Clear cached OTP and cooldown
-        Cache::forget($otpKey);
-        Cache::forget("customer_otp_cooldown_{$customer->id}");
-
-        app(LogActivity::class)->capture(
-            description: "Customer email verified successfully: {$customer->email}",
-            event: 'otp.verified',
-            subject: $customer,
-            properties: ['email' => $customer->email],
-            causer: $customer
-        );
+        app(CustomerEmailVerifiedAction::class)->execute($customer);
 
         return redirect()->intended(route('store.account'))->with('success', 'Email verified successfully! Welcome to SG CART.');
     }
@@ -418,8 +363,7 @@ class AuthController extends Controller
             return redirect()->route('store.account');
         }
 
-        $cooldownKey = "customer_otp_cooldown_{$customer->id}";
-        $cooldownTimestamp = Cache::get($cooldownKey);
+        $cooldownTimestamp = app(ManageOtp::class)->getCooldownTimestamp($customer);
 
         if ($cooldownTimestamp && $cooldownTimestamp > now()->timestamp) {
             $remaining = $cooldownTimestamp - now()->timestamp;
@@ -428,29 +372,7 @@ class AuthController extends Controller
             return back()->with('error', "Please wait {$minutes} minute(s) before requesting a new OTP.");
         }
 
-        // Generate and store new OTP (valid for 5 minutes)
-        $otp = sprintf('%06d', mt_rand(100000, 999999));
-        $otpKey = "customer_otp_{$customer->id}";
-        Cache::put($otpKey, $otp, 300); // 5 minutes
-
-        // Reset cooldown (5 minutes)
-        Cache::put($cooldownKey, now()->addMinutes(5)->timestamp, 300);
-
-        // Send OTP mail
-        try {
-            Mail::to($customer->email)->send(new CustomerOtpMail($customer, $otp));
-            app(LogActivity::class)->capture(
-                description: "OTP resent to email: {$customer->email}",
-                event: 'otp.sent',
-                subject: $customer,
-                properties: ['email' => $customer->email, 'otp_sent_time' => now()->toIso8601String()],
-                causer: $customer
-            );
-        } catch (\Exception $e) {
-            Log::error('Failed to send OTP email during regeneration: '.$e->getMessage());
-
-            return back()->with('error', 'Failed to send OTP email. Please try again.');
-        }
+        app(ManageOtp::class)->generate($customer, ManageOtp::REASON_RESEND);
 
         return back()->with('success', 'A new OTP has been sent to your email.');
     }
