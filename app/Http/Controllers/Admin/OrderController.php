@@ -91,14 +91,23 @@ class OrderController extends Controller
      */
     public function update(Request $request, Order $order)
     {
-        $data = $request->validate([
+        $validationRules = [
             'status' => 'required|in:Processing,Shipped,Delivered,Cancelled',
             'payment_status' => 'required|in:Pending,Paid,Failed',
-            'tracking_number' => 'nullable|string|max:100',
-            'shipping_carrier' => 'nullable|string|max:100',
-            'tracking_url' => 'nullable|url|max:255',
-            'estimated_delivery_at' => 'nullable|date',
-        ]);
+        ];
+
+        $packageInstalled = class_exists(\SGCart\LogisticTracking\Actions\UpdateLogisticTrackingAction::class);
+
+        if ($packageInstalled) {
+            $validationRules = array_merge($validationRules, [
+                'tracking_number' => 'nullable|string|max:100',
+                'shipping_carrier' => 'nullable|string|max:100',
+                'tracking_url' => 'nullable|url|max:255',
+                'estimated_delivery_at' => 'nullable|date',
+            ]);
+        }
+
+        $data = $request->validate($validationRules);
 
         $order->update(['status' => $data['status']]);
 
@@ -114,14 +123,18 @@ class OrderController extends Controller
                 'card_number_masked' => $latestPayment ? $latestPayment->card_number_masked : null,
             ]);
         }
-        if ($data['status'] === 'Shipped' && empty($data['tracking_number'])) {
-            $data['tracking_number'] = 'SG-TRK-' . rand(10000000, 99999999);
-            $data['shipping_carrier'] = $data['shipping_carrier'] ?? 'Delhivery Express';
-            $data['tracking_url'] = $data['tracking_url'] ?? 'https://www.delhivery.com/track/package/' . $data['tracking_number'];
-            $data['estimated_delivery_at'] = $data['estimated_delivery_at'] ?? now()->addDays(5)->format('Y-m-d H:i:s');
-        }
 
-        $order->update($data);
+        if ($packageInstalled) {
+            $dto = new \SGCart\LogisticTracking\DTO\LogisticTrackingData(
+                order_status: $data['status'],
+                tracking_number: $data['tracking_number'] ?? null,
+                shipping_carrier: $data['shipping_carrier'] ?? null,
+                tracking_url: $data['tracking_url'] ?? null,
+                estimated_delivery_at: $data['estimated_delivery_at'] ?? null
+            );
+
+            app(\SGCart\LogisticTracking\Actions\UpdateLogisticTrackingAction::class)->execute($order, $dto);
+        }
 
         return redirect()->back()->with('success', 'Order status has been updated successfully.');
     }

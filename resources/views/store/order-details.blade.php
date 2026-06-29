@@ -142,7 +142,11 @@
                                     </span>
                                     <div class="text-xs">
                                         <span class="font-bold text-slate-900 block">Order Shipped (Transit Started)</span>
-                                        <p class="text-slate-500 mt-0.5">Dispatched via <strong class="text-slate-700">{{ $order->shipping_carrier ?? 'Delhivery Express' }}</strong> (Tracking ID: <span class="font-mono text-slate-850 font-semibold">{{ $order->tracking_number }}</span>).</p>
+                                        @if($order->tracking_number)
+                                            <p class="text-slate-500 mt-0.5">Dispatched via <strong class="text-slate-700">{{ $order->shipping_carrier ?? 'Delhivery Express' }}</strong> (Tracking ID: <span class="font-mono text-slate-850 font-semibold">{{ $order->tracking_number }}</span>).</p>
+                                        @else
+                                            <p class="text-slate-500 mt-0.5">Order has been dispatched.</p>
+                                        @endif
                                         @if($order->tracking_url)
                                             <a href="{{ $order->tracking_url }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-accent hover:text-slate-900 mt-1.5 transition-colors" style="text-decoration:none">
                                                 Track Shipment Live <i class="fa-solid fa-up-right-from-square text-[8px]"></i>

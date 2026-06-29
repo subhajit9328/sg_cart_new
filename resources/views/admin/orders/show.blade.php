@@ -396,7 +396,11 @@
                                 @endif
                             </time>
                         </div>
+                        @if($order->tracking_number)
                         <p class="text-xs text-slate-400 mt-0.5">Dispatched via {{ $order->shipping_carrier ?? 'Delhivery Express' }} with Tracking ID: <span class="font-mono font-semibold">{{ $order->tracking_number }}</span>.</p>
+                        @else
+                        <p class="text-xs text-slate-400 mt-0.5">Order has been dispatched.</p>
+                        @endif
                     </li>
                     @endif
 
@@ -470,6 +474,7 @@
                         </select>
                     </div>
 
+                    @if(class_exists(\SGCart\LogisticTracking\Actions\UpdateLogisticTrackingAction::class))
                     <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-3">
                         <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Logistics & Tracking Info</span>
                         
@@ -493,6 +498,7 @@
                             <input type="date" name="estimated_delivery_at" value="{{ old('estimated_delivery_at', $order->estimated_delivery_at ? $order->estimated_delivery_at->format('Y-m-d') : '') }}" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
                         </div>
                     </div>
+                    @endif
 
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-semibold py-2 px-4 rounded-lg shadow-md transition-all cursor-pointer">
                         Save Status Updates
