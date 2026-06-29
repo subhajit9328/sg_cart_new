@@ -1,0 +1,27 @@
+{
+    "name": "sgcart/inventory",
+    "description": "Simple entry-level Inventory Management System for SGCart",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "SGCart Team",
+            "email": "support@sgcart.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "SGCart\\Inventory\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SGCart\\Inventory\\Providers\\InventoryServiceProvider"
+            ]
+        }
+    }
+}

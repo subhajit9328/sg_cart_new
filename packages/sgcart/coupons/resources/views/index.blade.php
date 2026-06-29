@@ -48,7 +48,7 @@
                             </span>
                         @else
                             <span class="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
-                                <i class="fa-solid fa-dollar-sign text-xs"></i> Flat
+                                <i class="fa-solid fa-indian-rupee-sign text-xs"></i> Flat
                             </span>
                         @endif
                     </td>
@@ -56,12 +56,12 @@
                         @if($coupon->type->value === 'percent')
                             {{ number_format($coupon->value, 0) }}%
                         @else
-                            ${{ number_format($coupon->value, 2) }}
+                            ₹{{ number_format($coupon->value, 2) }}
                         @endif
                     </td>
                     @if(config('coupons.features.min_cart_total', true))
                     <td class="px-5 py-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                        ${{ number_format($coupon->min_cart_total, 2) }}
+                        ₹{{ number_format($coupon->min_cart_total, 2) }}
                     </td>
                     @endif
                     @if(config('coupons.features.expires_at', true))
