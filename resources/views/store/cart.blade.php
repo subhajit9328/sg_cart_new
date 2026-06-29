@@ -6,12 +6,12 @@
 
 
 <div class="storefront-container">
-    <h1 class="font-display font-extrabold text-3xl md:text-4xl tracking-tight mb-8">Shopping Bag</h1>
+    <h1 class="font-display font-extrabold text-3xl md:text-4xl tracking-tight mb-8">Shopping Cart</h1>
     
     @if(empty($cart))
         <div class="text-center py-20 px-5">
             <i class="fa-solid fa-bag-shopping text-6xl text-slate-300 mb-5 block"></i>
-            <h3 class="font-display font-bold text-2xl mb-2">Your bag is empty</h3>
+            <h3 class="font-display font-bold text-2xl mb-2">Your cart is empty</h3>
             <p class="text-sm text-slate-400 mb-8">Looks like you haven't added anything yet.</p>
             <a href="{{ route('store.shop') }}" class="btn btn-primary"><i class="fa-solid fa-arrow-left"></i>Start Shopping</a>
         </div>
@@ -33,7 +33,7 @@
                                     <h3 class="font-display font-bold text-base mt-0.5 text-slate-900 hover:text-accent transition-colors">
                                         <a href="{{ route('store.product', $item['slug']) }}" style="color:inherit; text-decoration:none">{{ $item['name'] }}</a>
                                     </h3>
-                                    @if(!empty($item['size']) || !empty($item['color']))
+                                    @if(!empty($item['size']) || !empty($item['color']) || ($item['stock'] ?? 0) <= 5)
                                         <div class="flex flex-wrap gap-2 items-center mt-1.5 text-xs text-slate-400">
                                             @if(!empty($item['size']))
                                                 <span>Size: <strong class="text-slate-700">{{ $item['size'] }}</strong></span>
@@ -46,24 +46,30 @@
                                                     Color: <span class="w-3 h-3 rounded-full border border-slate-200 inline-block" style="background:{{ $item['color'] }}"></span>
                                                 </div>
                                             @endif
+                                            @if(($item['stock'] ?? 0) <= 5)
+                                                @if(!empty($item['size']) || !empty($item['color']))
+                                                    <span class="text-slate-200">•</span>
+                                                @endif
+                                                <span class="text-amber-600 font-bold">Only {{ $item['stock'] }} left!</span>
+                                            @endif
                                         </div>
                                     @endif
                                 </div>
                                 <button type="button" onclick="confirmRemove('{{ $key }}')" class="text-slate-300 hover:text-rose-500 text-base p-1 shrink-0 transition-colors border-none bg-transparent cursor-pointer" style="text-decoration:none">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
-                            </div>
-                            
-                            <div class="flex items-center justify-between mt-4">
-                                <form action="{{ route('store.cart.update') }}" method="POST" id="updateForm-{{ $key }}" class="contents">
-                                    @csrf
-                                    <div class="flex items-center bg-[#f8f7f5] border border-[#e8e4df] rounded-lg overflow-hidden w-fit">
-                                        <button type="button" class="w-9 h-9 text-base text-slate-400 hover:bg-[#e8e4df] hover:text-slate-800 transition-colors border-none background-none cursor-pointer" onclick="updateQty('{{ $key }}', -1)">−</button>
-                                        <input type="number" name="quantities[{{ $key }}]" id="qtyInput-{{ $key }}" value="{{ $item['quantity'] }}" min="1" class="w-10 h-9 text-xs font-semibold text-center bg-transparent border-none outline-none no-spinner p-0" onchange="this.form.submit()"/>
-                                        <button type="button" class="w-9 h-9 text-base text-slate-400 hover:bg-[#e8e4df] hover:text-slate-800 transition-colors border-none background-none cursor-pointer" onclick="updateQty('{{ $key }}', 1)">+</button>
-                                    </div>
-                                </form>
-                                <span class="font-display font-bold text-base text-slate-900">₹{{ number_format($item['price'] * $item['quantity'], 2) }}</span>
+                             </div>
+                             
+                             <div class="flex items-center justify-between mt-4">
+                                 <form action="{{ route('store.cart.update') }}" method="POST" id="updateForm-{{ $key }}" class="contents">
+                                     @csrf
+                                     <div class="flex items-center bg-[#f8f7f5] border border-[#e8e4df] rounded-lg overflow-hidden w-fit">
+                                         <button type="button" class="w-9 h-9 text-base text-slate-400 hover:bg-[#e8e4df] hover:text-slate-800 transition-colors border-none background-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed" onclick="updateQty('{{ $key }}', -1)" @if($item['quantity'] <= 1) disabled @endif>−</button>
+                                         <input type="number" name="quantities[{{ $key }}]" id="qtyInput-{{ $key }}" value="{{ $item['quantity'] }}" min="1" max="{{ $item['stock'] ?? 9999 }}" class="w-10 h-9 text-xs font-semibold text-center bg-transparent border-none outline-none no-spinner p-0" onchange="this.form.submit()"/>
+                                         <button type="button" class="w-9 h-9 text-base text-slate-400 hover:bg-[#e8e4df] hover:text-slate-800 transition-colors border-none background-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed" onclick="updateQty('{{ $key }}', 1)" @if($item['quantity'] >= ($item['stock'] ?? 0)) disabled @endif>+</button>
+                                     </div>
+                                 </form>
+                                 <span class="font-display font-bold text-base text-slate-900">₹{{ number_format($item['price'] * $item['quantity'], 2) }}</span>
                             </div>
                         </div>
                     </div>
@@ -78,14 +84,24 @@
                         <span>Subtotal</span>
                         <span class="text-slate-900 font-semibold">₹{{ number_format($subtotal, 2) }}</span>
                     </div>
+                    @if($hasShippingPackage)
                     <div class="flex justify-between">
                         <span>Shipping</span>
-                        <span class="text-emerald-600 font-semibold">Free</span>
+                        @if(($selectionMode ?? 'user_choice') === 'user_choice')
+                            <span class="text-slate-500 italic">Calculated at checkout</span>
+                        @else
+                            <span class="{{ $shippingCost > 0 ? 'text-slate-900 font-semibold' : 'text-emerald-600 font-semibold' }}">
+                                {{ $shippingCost > 0 ? '₹' . number_format($shippingCost, 2) : 'Free' }}
+                            </span>
+                        @endif
                     </div>
+                    @endif
+                    @if($taxLabel)
                     <div class="flex justify-between">
-                        <span>Tax (8%)</span>
+                        <span>{{ $taxLabel }}</span>
                         <span class="text-slate-900 font-semibold">₹{{ number_format($tax, 2) }}</span>
                     </div>
+                    @endif
                     @if($discount > 0)
                         <div class="flex justify-between text-emerald-600 font-semibold">
                             <span>Discount</span>
@@ -102,8 +118,8 @@
                     <span class="text-xl font-extrabold">₹{{ number_format($total, 2) }}</span>
                 </div>
                 
-                <a href="{{ route('store.checkout') }}" class="btn btn-primary w-full py-3.5 flex justify-center gap-2 items-center">
-                    <i class="fa-solid fa-lock"></i> Checkout Securely
+                <a href="{{ route('store.checkout') }}" onclick="handleCheckoutSubmit(event, this)" class="btn btn-primary w-full py-3.5 flex justify-center gap-2 items-center" id="checkoutBtn">
+                    <i class="fa-solid fa-lock" id="checkoutIcon"></i> <span id="checkoutText">Checkout Securely</span>
                 </a>
                 <a href="{{ route('store.shop') }}" class="block text-center mt-3.5 text-xs font-bold tracking-wider uppercase text-slate-400 hover:text-slate-900 transition-colors" style="text-decoration:none">
                     ← Continue Shopping
@@ -132,9 +148,30 @@
 
     function confirmRemove(key) {
         const url = "{{ route('store.cart.remove', ':key') }}".replace(':key', encodeURIComponent(key));
-        showConfirm('Are you sure you want to remove this item from your shopping bag?', () => {
+        showConfirm('Are you sure you want to remove this item from your shopping cart?', () => {
             window.location.href = url;
         }, 'Remove Item', 'danger');
+    }
+
+    let checkoutClicked = false;
+    function handleCheckoutSubmit(e, el) {
+        if (checkoutClicked) {
+            e.preventDefault();
+            return false;
+        }
+        checkoutClicked = true;
+        
+        el.classList.add('opacity-50', 'cursor-not-allowed');
+        el.style.pointerEvents = 'none';
+        
+        const icon = document.getElementById('checkoutIcon');
+        const text = document.getElementById('checkoutText');
+        if (icon) {
+            icon.className = 'fa-solid fa-spinner animate-spin text-sm';
+        }
+        if (text) {
+            text.innerText = 'Redirecting to Checkout...';
+        }
     }
 </script>
 @endsection

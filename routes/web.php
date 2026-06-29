@@ -39,8 +39,14 @@ Route::middleware('auth:customer')->group(function () {
     Route::post('/logout', [AuthController::class, 'storefrontLogout'])->name('store.logout');
     Route::get('/checkout', [StoreController::class, 'checkout'])->name('store.checkout');
     Route::post('/checkout/order', [StoreController::class, 'placeOrder'])->name('store.checkout.order');
+    Route::get('/account/order/{ulid}', [StoreController::class, 'viewOrder'])->name('store.account.order.view');
+    Route::get('/account/order/{ulid}/invoice', [StoreController::class, 'downloadInvoice'])->name('store.account.order.invoice');
     Route::get('/account/{tab?}', [StoreController::class, 'account'])->name('store.account');
     Route::post('/account/profile/update', [StoreController::class, 'updateProfile'])->name('store.account.profile.update');
+    Route::post('/account/address/add', [StoreController::class, 'addAddress'])->name('store.account.address.add');
+    Route::post('/account/address/update/{id}', [StoreController::class, 'updateAddress'])->name('store.account.address.update');
+    Route::get('/account/address/delete/{id}', [StoreController::class, 'deleteAddress'])->name('store.account.address.delete');
+    Route::get('/account/order/{ulid}/json', [StoreController::class, 'getOrderDetail'])->name('store.account.order.detail');
 });
 
 // Admin Routes (prefixed with admin)
@@ -58,6 +64,14 @@ Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->middleware('permission:view dashboard')
             ->name('admin.dashboard');
+
+        // Payment Settings Route
+        Route::get('payments/settings', [\App\Http\Controllers\Admin\PaymentMethodController::class, 'index'])
+            ->middleware('permission:manage payments')
+            ->name('admin.payments.settings');
+        Route::post('payments/settings', [\App\Http\Controllers\Admin\PaymentMethodController::class, 'update'])
+            ->middleware('permission:manage payments')
+            ->name('admin.payments.settings.update');
 
         // CRUD routes under admin namespace (e.g. admin.users.index)
         Route::name('admin.')->group(function () {
@@ -80,6 +94,15 @@ Route::prefix('admin')->group(function () {
 
             // Product Management CRUD
             Route::resource('products', ProductController::class)
+                ->middleware('permission:manage products');
+
+            // Order Management Invoice print/stream
+            Route::get('orders/{order}/invoice', [\App\Http\Controllers\Admin\OrderController::class, 'streamInvoice'])
+                ->name('orders.invoice')
+                ->middleware('permission:manage products');
+
+            // Order Management CRUD
+            Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class)
                 ->middleware('permission:manage products');
 
             // Extra product sub-routes

@@ -495,6 +495,20 @@
         });
     });
 
+    // Restore submit buttons when pageshow triggers (handles browser back button cache)
+    window.addEventListener('pageshow', (e) => {
+        const submitBtns = document.querySelectorAll('button[type="submit"], input[type="submit"]');
+        submitBtns.forEach(btn => {
+            btn.disabled = false;
+            btn.style.pointerEvents = '';
+            btn.style.opacity = '';
+            const spinner = btn.querySelector('.fa-spinner');
+            if (spinner) {
+                spinner.remove();
+            }
+        });
+    });
+
     // Password visibility toggle
     document.querySelectorAll('input[type="password"]:not([name="card_cvv"])').forEach(input => {
         let parent = input.parentNode;

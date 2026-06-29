@@ -33,6 +33,22 @@ class Customer extends Authenticatable
     }
 
     /**
+     * Get the orders placed by the customer.
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Get the saved addresses of the customer.
+     */
+    public function addresses()
+    {
+        return $this->hasMany(CustomerAddress::class);
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

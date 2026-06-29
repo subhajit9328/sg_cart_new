@@ -81,6 +81,14 @@
             @endcan
             @endcanany
 
+            @can('manage products')
+            <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Sales</p>
+            <a href="{{ route('admin.orders.index') }}" class="nav-link {{ Request::is('admin/orders*') ? 'active' : '' }}" data-tooltip="Orders">
+                <i class="fa-solid fa-receipt"></i>
+                <span class="sidebar-text">Orders</span>
+            </a>
+            @endcan
+
             @canany(['manage users', 'manage roles'])
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Access Control</p>
 
@@ -101,6 +109,14 @@
 
             @includeIf('coupons::admin-menu')
             @includeIf('product-variants::admin-menu')
+            @includeIf('shipping::admin-menu')
+            @includeIf('tax::admin-menu')
+            @can('manage payments')
+            <a href="{{ route('admin.payments.settings') }}" class="nav-link {{ Request::is('admin/payments*') ? 'active' : '' }}" data-tooltip="Payment Gateways">
+                <i class="fa-solid fa-credit-card"></i>
+                <span class="sidebar-text">Payment Gateways</span>
+            </a>
+            @endcan
         </nav>
 
 

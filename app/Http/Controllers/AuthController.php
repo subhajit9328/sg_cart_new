@@ -91,9 +91,15 @@ class AuthController extends Controller
         ]);
 
         $remember = $request->boolean('remember');
+        $guestSessionId = $request->session()->getId();
 
         if (Auth::guard('customer')->attempt($credentials, $remember)) {
             $request->session()->regenerate();
+            
+            // Merge guest cart with customer cart
+            $customerId = Auth::guard('customer')->id();
+            \App\Models\Cart::mergeGuestCart($customerId, $guestSessionId);
+
             return redirect()->intended(route('store.account'))->with('success', 'Logged in successfully!');
         }
 
@@ -124,6 +130,8 @@ class AuthController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
+        $guestSessionId = $request->session()->getId();
+
         $customer = \App\Models\Customer::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -137,6 +145,10 @@ class AuthController extends Controller
         }
 
         Auth::guard('customer')->login($customer);
+        $request->session()->regenerate();
+
+        // Merge guest cart with customer cart
+        \App\Models\Cart::mergeGuestCart($customer->id, $guestSessionId);
 
         return redirect()->route('store.account')->with('success', 'Account created successfully!');
     }

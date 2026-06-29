@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -60,6 +61,7 @@ class StoreController extends Controller
                 'weight' => $p->weight,
                 'dimensions' => $p->dimensions,
                 'sku' => $p->sku,
+                'stock' => $p->stock,
                 'manufacturer' => $p->manufacturer ? $p->manufacturer->name : null,
                 'img' => $p->image ? \Illuminate\Support\Facades\Storage::url($p->image) : asset('images/no-image.svg'),
                 'images' => $p->images->isNotEmpty()
@@ -180,26 +182,51 @@ class StoreController extends Controller
      */
     public function cart()
     {
-        $cart = session()->get('cart', []);
-        $products = collect(self::getProducts());
+        $cartModel = \App\Models\Cart::getActiveCart();
+        $cart = $cartModel->getFormattedItems();
 
         $subtotal = 0;
         foreach ($cart as $key => $item) {
             $subtotal += $item['price'] * $item['quantity'];
-            
-            // Resolve category dynamically
-            $prod = $products->firstWhere('id', $item['id']);
-            $cart[$key]['cat'] = $prod ? $prod['cat'] : 'Fashion';
         }
 
         $discount = 0;
         if (app()->bound('coupon.calculator')) {
             $discount = app('coupon.calculator')->calculate(session('coupon_code'), $subtotal);
         }
-        $tax = $subtotal * 0.08;
-        $total = max(0, $subtotal + $tax - $discount);
+        $tax = 0.0;
+        $taxLabel = null;
+        if (app()->bound('tax.calculator')) {
+            $taxResult = app('tax.calculator')->calculate($subtotal);
+            $tax = (float) $taxResult['amount'];
+            $taxLabel = $taxResult['label'];
+        }
 
-        return view('store.cart', compact('cart', 'subtotal', 'tax', 'discount', 'total'));
+        $shippingCost = 0.0;
+        $hasShippingPackage = class_exists(\SGCart\Shipping\Models\ShippingRate::class);
+        if ($hasShippingPackage) {
+            $shippingRates = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+                ->where('min_order_amount', '<=', $subtotal)
+                ->get();
+            
+            $cheapestRate = $shippingRates->map(function ($rate) use ($subtotal) {
+                $rate->calculated_cost = $rate->calculateCost($subtotal);
+                return $rate;
+            })->sortBy('calculated_cost')->first();
+
+            $shippingCost = $cheapestRate ? (float) $cheapestRate->calculated_cost : 0.0;
+        }
+
+        $selectionMode = 'user_choice';
+        if (class_exists(\SGCart\Shipping\Models\ShippingSetting::class)) {
+            $selectionMode = \SGCart\Shipping\Models\ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
+        }
+
+        // Only add shipping cost to cart total if not in user choice mode
+        $effectiveShippingCost = ($selectionMode === 'user_choice') ? 0.0 : $shippingCost;
+        $total = max(0, $subtotal + $tax - $discount + $effectiveShippingCost);
+
+        return view('store.cart', compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'shippingCost', 'selectionMode', 'hasShippingPackage'));
     }
 
     /**
@@ -219,34 +246,55 @@ class StoreController extends Controller
         $size = $request->size;
         $color = $request->color;
 
-        $products = collect(self::getProducts());
-        $product = $products->firstWhere('id', $productId);
-
-        if (!$product) {
+        $product = \App\Models\Product::find($productId);
+        if (!$product || $product->status !== 'active') {
             return redirect()->back()->with('error', 'Product not found.');
         }
 
-        $cart = session()->get('cart', []);
-        
-        // Generate unique key for cart item based on details (size & color)
-        $cartKey = $productId . '_' . ($size ?? '') . '_' . ($color ?? '');
+        $cartModel = \App\Models\Cart::getActiveCart();
 
-        if (isset($cart[$cartKey])) {
-            $cart[$cartKey]['quantity'] += $quantity;
-        } else {
-            $cart[$cartKey] = [
-                'id' => $product['id'],
-                'slug' => $product['slug'],
-                'name' => $product['name'],
-                'price' => $product['price'],
-                'img' => $product['img'],
-                'quantity' => $quantity,
-                'size' => $size,
-                'color' => $color,
-            ];
+        // Stock check
+        $currentStock = $product->stock ?? 0;
+        if ($currentStock <= 0) {
+            return redirect()->back()->with('error', 'Sorry, this product is currently out of stock.');
         }
 
-        session()->put('cart', $cart);
+        $cartItem = $cartModel->items()
+            ->where('product_id', $productId)
+            ->where('size', $size)
+            ->where('color', $color)
+            ->first();
+
+        $existingQty = $cartItem ? $cartItem->quantity : 0;
+        $allowableAdd = $currentStock - $existingQty;
+
+        if ($allowableAdd <= 0) {
+            return redirect()->route('store.cart')->with('warning', "Your cart already contains the maximum available stock ({$currentStock} items) for this product.");
+        }
+
+        if ($quantity > $allowableAdd) {
+            $qtyToAdd = $allowableAdd;
+            $wasCapped = true;
+        } else {
+            $qtyToAdd = $quantity;
+            $wasCapped = false;
+        }
+
+        if ($cartItem) {
+            $cartItem->quantity += $qtyToAdd;
+            $cartItem->save();
+        } else {
+            $cartModel->items()->create([
+                'product_id' => $productId,
+                'quantity' => $qtyToAdd,
+                'size' => $size,
+                'color' => $color,
+            ]);
+        }
+
+        if ($wasCapped) {
+            return redirect()->route('store.cart')->with('warning', "Only {$currentStock} items are available in stock. We added {$qtyToAdd} items to your cart (bringing it to maximum available stock).");
+        }
 
         return redirect()->route('store.cart')->with('success', 'Product added to cart!');
     }
@@ -256,24 +304,51 @@ class StoreController extends Controller
      */
     public function updateCart(Request $request)
     {
-        $cart = session()->get('cart', []);
+        $cartModel = \App\Models\Cart::getActiveCart();
         $quantities = $request->input('quantities', []);
+        $wasLimited = false;
 
         foreach ($quantities as $key => $qty) {
-            if (isset($cart[$key])) {
-                if ((int)$qty <= 0) {
-                    unset($cart[$key]);
-                } else {
-                    $cart[$key]['quantity'] = (int)$qty;
+            $parts = explode('_', $key);
+            if (count($parts) >= 1) {
+                $productId = (int)$parts[0];
+                $size = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : null;
+                $color = isset($parts[2]) && $parts[2] !== '' ? $parts[2] : null;
+
+                $cartItem = $cartModel->items()
+                    ->where('product_id', $productId)
+                    ->where('size', $size)
+                    ->where('color', $color)
+                    ->first();
+
+                if ($cartItem) {
+                    if ((int)$qty <= 0) {
+                        $cartItem->delete();
+                    } else {
+                        $product = \App\Models\Product::find($productId);
+                        $currentStock = $product ? ($product->stock ?? 0) : 0;
+                        $requestedQty = (int)$qty;
+
+                        if ($requestedQty > $currentStock) {
+                            $cartItem->quantity = $currentStock;
+                            $cartItem->save();
+                            $wasLimited = true;
+                        } else {
+                            $cartItem->quantity = $requestedQty;
+                            $cartItem->save();
+                        }
+                    }
                 }
             }
         }
 
-        session()->put('cart', $cart);
-
-        if (empty($cart)) {
+        if ($cartModel->items()->count() === 0) {
             session()->forget('coupon_code');
             session()->forget('coupon_discount');
+        }
+
+        if ($wasLimited) {
+            return redirect()->route('store.cart')->with('warning', 'Some items were limited to the maximum available stock.');
         }
 
         return redirect()->route('store.cart')->with('success', 'Cart updated successfully.');
@@ -284,22 +359,28 @@ class StoreController extends Controller
      */
     public function removeFromCart($key)
     {
-        $cart = session()->get('cart', []);
+        $cartModel = \App\Models\Cart::getActiveCart();
 
-        if (isset($cart[$key])) {
-            unset($cart[$key]);
-            session()->put('cart', $cart);
+        $parts = explode('_', $key);
+        if (count($parts) >= 1) {
+            $productId = (int)$parts[0];
+            $size = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : null;
+            $color = isset($parts[2]) && $parts[2] !== '' ? $parts[2] : null;
+
+            $cartModel->items()
+                ->where('product_id', $productId)
+                ->where('size', $size)
+                ->where('color', $color)
+                ->delete();
         }
 
-        if (empty($cart)) {
+        if ($cartModel->items()->count() === 0) {
             session()->forget('coupon_code');
             session()->forget('coupon_discount');
         }
 
         return redirect()->route('store.cart')->with('success', 'Item removed from cart.');
     }
-
-
 
     /**
      * Checkout page.
@@ -310,7 +391,8 @@ class StoreController extends Controller
             return redirect()->route('store.login')->with('error', 'Please log in to proceed to checkout.');
         }
 
-        $cart = session()->get('cart', []);
+        $cartModel = \App\Models\Cart::getActiveCart();
+        $cart = $cartModel->getFormattedItems();
         if (empty($cart)) {
             return redirect()->route('store.shop')->with('error', 'Your cart is empty.');
         }
@@ -324,10 +406,53 @@ class StoreController extends Controller
         if (app()->bound('coupon.calculator')) {
             $discount = app('coupon.calculator')->calculate(session('coupon_code'), $subtotal);
         }
-        $tax = $subtotal * 0.08;
-        $total = max(0, $subtotal + $tax - $discount);
 
-        return view('store.checkout', compact('cart', 'subtotal', 'tax', 'discount', 'total'));
+        $addresses = auth('customer')->user()->addresses;
+        $defaultAddress = $addresses->where('is_default', true)->first() ?? $addresses->first();
+        $addressArray = null;
+        if ($defaultAddress) {
+            $addressArray = [
+                'country' => $defaultAddress->country,
+                'state' => $defaultAddress->state,
+                'zip' => $defaultAddress->zip,
+            ];
+        }
+
+        $tax = 0.0;
+        $taxLabel = null;
+        if (app()->bound('tax.calculator')) {
+            $taxResult = app('tax.calculator')->calculate($subtotal, $addressArray);
+            $tax = (float) $taxResult['amount'];
+            $taxLabel = $taxResult['label'];
+        }
+
+        $shippingRates = collect();
+        $selectionMode = 'user_choice';
+        $hasShippingPackage = class_exists(\SGCart\Shipping\Models\ShippingRate::class);
+        if ($hasShippingPackage) {
+            $shippingRates = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+                ->where('min_order_amount', '<=', $subtotal)
+                ->get();
+        }
+        if (class_exists(\SGCart\Shipping\Models\ShippingSetting::class)) {
+            $selectionMode = \SGCart\Shipping\Models\ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
+        }
+
+        // Map and compute dynamically based on rate type
+        $shippingRates = $shippingRates->map(function ($rate) use ($subtotal) {
+            $rate->calculated_cost = (float) $rate->calculateCost($subtotal);
+            return $rate;
+        })->sortBy('calculated_cost');
+
+        $shippingCost = $shippingRates->first() ? (float) $shippingRates->first()->calculated_cost : 0.0;
+        $total = max(0, $subtotal + $tax - $discount + $shippingCost);
+
+        $activeGateways = [];
+        if (app()->bound('payment.manager')) {
+            $activeGateways = app('payment.manager')->getActiveGateways();
+        }
+
+        return view('store.checkout', compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'addresses', 'shippingRates', 'shippingCost', 'selectionMode', 'hasShippingPackage', 'activeGateways'));
     }
 
     /**
@@ -340,19 +465,21 @@ class StoreController extends Controller
         }
 
         $request->validate([
-            'first_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'email' => 'required|email|max:150',
-            'address' => 'required|string|max:255',
-            'city' => 'required|string|max:100',
-            'zip' => 'required|string|max:20',
-            'card_name' => 'required|string|max:255',
-            'card_num' => 'required|string|max:19',
-            'card_expiry' => 'required|string|max:5',
-            'card_cvv' => 'required|string|max:4',
+            'address_id' => 'nullable|integer',
+            'shipping_rate_id' => 'nullable|integer',
+            'first_name' => 'required_without:address_id|nullable|string|max:100',
+            'last_name' => 'required_without:address_id|nullable|string|max:100',
+            'email' => 'required_without:address_id|nullable|email|max:150',
+            'address' => 'required_without:address_id|nullable|string|max:255',
+            'city' => 'required_without:address_id|nullable|string|max:100',
+            'state' => 'required_without:address_id|nullable|string|max:100',
+            'zip' => 'required_without:address_id|nullable|string|max:20',
+            'country' => 'required_without:address_id|nullable|string|max:100',
+            'payment_method' => 'required|string',
         ]);
 
-        $cart = session()->get('cart', []);
+        $cartModel = \App\Models\Cart::getActiveCart();
+        $cart = $cartModel->getFormattedItems();
         if (empty($cart)) {
             return redirect()->route('store.shop')->with('error', 'Your cart is empty.');
         }
@@ -365,32 +492,367 @@ class StoreController extends Controller
         if (app()->bound('coupon.calculator')) {
             $discount = app('coupon.calculator')->calculate(session('coupon_code'), $subtotal);
         }
-        $tax = $subtotal * 0.08;
-        $total = max(0, $subtotal + $tax - $discount);
 
-        // Generate dynamic order data
-        $orderId = 'SGCART-' . date('Ymd') . '-' . rand(1000, 9999);
-        $orderDate = date('M d, Y');
+        // Resolve address details first
+        $firstName = null;
+        $lastName = null;
+        $email = null;
+        $addressStr = null;
+        $city = null;
+        $state = null;
+        $zip = null;
+        $country = null;
+        $phone = null;
+        $alternatePhone = null;
+        $addressType = null;
+        $landmark = null;
+        $shippingAndBillingSame = true;
+        $billingFirstName = null;
+        $billingLastName = null;
+        $billingAddress = null;
+        $billingCity = null;
+        $billingState = null;
+        $billingZip = null;
+        $billingCountry = null;
+        $billingPhone = null;
 
-        $order = [
-            'id' => $orderId,
-            'date' => $orderDate,
-            'items_count' => count($cart),
-            'amount' => $total,
-            'status' => 'Processing',
+        if ($request->filled('address_id')) {
+            $savedAddress = auth('customer')->user()->addresses()->find($request->address_id);
+            if (!$savedAddress) {
+                return redirect()->back()->withErrors(['address_id' => 'Selected address is invalid.']);
+            }
+            $firstName = $savedAddress->first_name;
+            $lastName = $savedAddress->last_name;
+            $email = auth('customer')->user()->email;
+            $addressStr = $savedAddress->address;
+            $city = $savedAddress->city;
+            $state = $savedAddress->state;
+            $zip = $savedAddress->zip;
+            $country = $savedAddress->country;
+            $phone = $savedAddress->phone;
+            $alternatePhone = $savedAddress->alternate_phone;
+            $addressType = $savedAddress->address_type;
+            $landmark = $savedAddress->landmark;
+            $shippingAndBillingSame = $savedAddress->shipping_and_billing_same;
+            $billingFirstName = $savedAddress->billing_first_name;
+            $billingLastName = $savedAddress->billing_last_name;
+            $billingAddress = $savedAddress->billing_address;
+            $billingCity = $savedAddress->billing_city;
+            $billingState = $savedAddress->billing_state;
+            $billingZip = $savedAddress->billing_zip;
+            $billingCountry = $savedAddress->billing_country;
+            $billingPhone = $savedAddress->billing_phone;
+        } else {
+            $firstName = $request->first_name;
+            $lastName = $request->last_name;
+            $email = $request->email;
+            $addressStr = $request->address;
+            $city = $request->city;
+            $state = $request->state;
+            $zip = $request->zip;
+            $country = $request->country;
+            $phone = $request->phone;
+            $alternatePhone = $request->alternate_phone;
+            $addressType = $request->address_type ?? 'work';
+            $landmark = $request->landmark;
+            $shippingAndBillingSame = $request->has('shipping_and_billing_same') ? $request->boolean('shipping_and_billing_same') : true;
+            $billingFirstName = $shippingAndBillingSame ? $firstName : $request->billing_first_name;
+            $billingLastName = $shippingAndBillingSame ? $lastName : $request->billing_last_name;
+            $billingAddress = $shippingAndBillingSame ? $addressStr : $request->billing_address;
+            $billingCity = $shippingAndBillingSame ? $city : $request->billing_city;
+            $billingState = $shippingAndBillingSame ? $state : $request->billing_state;
+            $billingZip = $shippingAndBillingSame ? $zip : $request->billing_zip;
+            $billingCountry = $shippingAndBillingSame ? $country : $request->billing_country;
+            $billingPhone = $shippingAndBillingSame ? $phone : $request->billing_phone;
+
+            // Optionally save the new address
+            if ($request->boolean('save_address')) {
+                auth('customer')->user()->addresses()->create([
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'address' => $addressStr,
+                    'city' => $city,
+                    'state' => $state,
+                    'zip' => $zip,
+                    'country' => $country,
+                    'phone' => $phone,
+                    'alternate_phone' => $alternatePhone,
+                    'address_type' => $addressType,
+                    'landmark' => $landmark,
+                    'shipping_and_billing_same' => $shippingAndBillingSame,
+                    'billing_first_name' => $billingFirstName,
+                    'billing_last_name' => $billingLastName,
+                    'billing_address' => $billingAddress,
+                    'billing_city' => $billingCity,
+                    'billing_state' => $billingState,
+                    'billing_zip' => $billingZip,
+                    'billing_country' => $billingCountry,
+                    'billing_phone' => $billingPhone,
+                    'is_default' => auth('customer')->user()->addresses()->count() === 0,
+                ]);
+            }
+        }
+
+        // Calculate dynamic tax based on resolved address
+        $addressArray = [
+            'country' => $country,
+            'state' => $state,
+            'zip' => $zip,
         ];
+        $tax = 0.0;
+        $taxMethod = null;
+        if (app()->bound('tax.calculator')) {
+            $taxResult = app('tax.calculator')->calculate($subtotal, $addressArray);
+            $tax = (float) $taxResult['amount'];
+            $taxMethod = $taxResult['label'] ?? $taxResult['name'];
+        }
 
-        // Store order in session history
-        $ordersHistory = session()->get('orders_history', []);
-        array_unshift($ordersHistory, $order);
-        session()->put('orders_history', $ordersHistory);
+        // Calculate shipping cost
+        $shippingCost = 0.0;
+        $shippingMethodName = null;
+        if (class_exists(\SGCart\Shipping\Models\ShippingRate::class)) {
+            $selectionMode = 'user_choice';
+            if (class_exists(\SGCart\Shipping\Models\ShippingSetting::class)) {
+                $selectionMode = \SGCart\Shipping\Models\ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
+            }
 
-        // Clear Cart
-        session()->forget('cart');
-        session()->forget('coupon_code');
-        session()->forget('coupon_discount');
+            if ($selectionMode === 'user_choice' && $request->filled('shipping_rate_id')) {
+                $shippingRate = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+                    ->where('min_order_amount', '<=', $subtotal)
+                    ->find($request->shipping_rate_id);
+                if ($shippingRate) {
+                    $shippingCost = (float) $shippingRate->calculateCost($subtotal);
+                    $shippingMethodName = $shippingRate->name;
+                }
+            } else {
+                // Auto-select cheapest eligible rate
+                $eligibleRates = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+                    ->where('min_order_amount', '<=', $subtotal)
+                    ->get();
+                $cheapestRate = $eligibleRates->map(function ($rate) use ($subtotal) {
+                    $rate->calculated_cost = (float) $rate->calculateCost($subtotal);
+                    return $rate;
+                })->sortBy('calculated_cost')->first();
 
-        return redirect()->route('store.success', ['order_id' => $orderId]);
+                if ($cheapestRate) {
+                    $shippingCost = (float) $cheapestRate->calculated_cost;
+                    $shippingMethodName = $cheapestRate->name;
+                }
+            }
+        }
+
+        $total = max(0, $subtotal + $tax - $discount + $shippingCost);
+        // Generate dynamic unique order number
+        $orderNumber = 'SG' . date('ymd') . strtoupper(Str::random(4));
+
+        $paymentMethodName = 'Card';
+        $gateway = null;
+        
+        if (app()->bound('payment.manager')) {
+            $gateway = app('payment.manager')->getGateway($request->payment_method);
+            if (!$gateway || !app('payment.manager')->isEnabled($request->payment_method)) {
+                return redirect()->back()->withErrors(['payment_method' => 'Selected payment method is invalid or disabled.']);
+            }
+            $paymentMethodName = $gateway->getName();
+        }
+
+        $pendingOrderUlid = session('pending_checkout_order_id');
+        $order = null;
+
+        if ($pendingOrderUlid) {
+            $order = \App\Models\Order::with('items')->where('ulid', $pendingOrderUlid)->first();
+            if ($order) {
+                if ($order->payment_status === \App\Enums\PaymentStatus::PAID) {
+                    $cartModel->items()->delete();
+                    session()->forget('pending_checkout_order_id');
+                    session()->forget('coupon_code');
+                    session()->forget('coupon_discount');
+                    return redirect()->route('store.success', ['order_id' => $order->order_number]);
+                }
+
+                // Check if cart matches
+                $cartMatches = false;
+                if ((float)$order->total === (float)$total && $order->items->count() === $cartModel->items->count()) {
+                    $cartMatches = true;
+                    foreach ($cartModel->items as $cartItem) {
+                        $orderItem = $order->items->where('product_id', $cartItem->product_id)
+                            ->where('quantity', $cartItem->quantity)
+                            ->where('size', $cartItem->size)
+                            ->where('color', $cartItem->color)
+                            ->first();
+                        if (!$orderItem) {
+                            $cartMatches = false;
+                            break;
+                        }
+                    }
+                }
+
+                if ($cartMatches) {
+                    $order->update([
+                        'order_number' => $orderNumber,
+                        'first_name' => $firstName,
+                        'last_name' => $lastName,
+                        'email' => $email,
+                        'phone' => $phone,
+                        'alternate_phone' => $alternatePhone,
+                        'address_type' => $addressType,
+                        'landmark' => $landmark,
+                        'shipping_and_billing_same' => $shippingAndBillingSame,
+                        'billing_first_name' => $billingFirstName,
+                        'billing_last_name' => $billingLastName,
+                        'billing_address' => $billingAddress,
+                        'billing_city' => $billingCity,
+                        'billing_state' => $billingState,
+                        'billing_zip' => $billingZip,
+                        'billing_country' => $billingCountry,
+                        'billing_phone' => $billingPhone,
+                        'address' => $addressStr,
+                        'city' => $city,
+                        'state' => $state,
+                        'zip' => $zip,
+                        'country' => $country,
+                        'subtotal' => $subtotal,
+                        'tax' => $tax,
+                        'tax_method' => $taxMethod,
+                        'shipping_charge' => $shippingCost,
+                        'shipping_method' => $shippingMethodName,
+                        'discount' => $discount,
+                        'total' => $total,
+                    ]);
+                } else {
+                    // Restock old order
+                    foreach ($order->items as $oldItem) {
+                        $prod = \App\Models\Product::find($oldItem->product_id);
+                        if ($prod) {
+                            $prod->increment('stock', $oldItem->quantity);
+                        }
+                    }
+                    $order->items()->delete();
+                    $order->delete();
+                    $order = null;
+                }
+            }
+        }
+
+        $isNewOrder = false;
+        if (!$order) {
+            $isNewOrder = true;
+            // Create Order in Database
+            $order = \App\Models\Order::create([
+                'order_number' => $orderNumber,
+                'customer_id' => auth('customer')->id(),
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $email,
+                'phone' => $phone,
+                'alternate_phone' => $alternatePhone,
+                'address_type' => $addressType,
+                'landmark' => $landmark,
+                'shipping_and_billing_same' => $shippingAndBillingSame,
+                'billing_first_name' => $billingFirstName,
+                'billing_last_name' => $billingLastName,
+                'billing_address' => $billingAddress,
+                'billing_city' => $billingCity,
+                'billing_state' => $billingState,
+                'billing_zip' => $billingZip,
+                'billing_country' => $billingCountry,
+                'billing_phone' => $billingPhone,
+                'address' => $addressStr,
+                'city' => $city,
+                'state' => $state,
+                'zip' => $zip,
+                'country' => $country,
+                'subtotal' => $subtotal,
+                'tax' => $tax,
+                'tax_method' => $taxMethod,
+                'shipping_charge' => $shippingCost,
+                'shipping_method' => $shippingMethodName,
+                'discount' => $discount,
+                'total' => $total,
+                'status' => \App\Enums\OrderStatus::PROCESSING,
+            ]);
+        }
+
+        if (!$gateway) {
+            $order->payments()->create([
+                'payment_method' => $paymentMethodName,
+                'amount' => $total,
+                'status' => \App\Enums\PaymentStatus::PAID,
+                'card_name' => $request->card_name,
+                'card_number_masked' => '**** **** **** ' . substr(str_replace(' ', '', $request->card_num), -4),
+            ]);
+        } else {
+            try {
+                $paymentResult = $gateway->processPayment($request, $order);
+            } catch (\Exception $e) {
+                // Restock items and delete the order
+                foreach ($order->items as $item) {
+                    $product = \App\Models\Product::find($item->product_id);
+                    if ($product) {
+                        $product->increment('stock', $item->quantity);
+                    }
+                }
+                $order->items()->delete();
+                $order->delete();
+                session()->forget('pending_checkout_order_id');
+                return redirect()->back()->withInput()->with('error', 'Payment failed: ' . $e->getMessage());
+            }
+
+            if (!$paymentResult['success']) {
+                // Restock items and delete the order
+                foreach ($order->items as $item) {
+                    $product = \App\Models\Product::find($item->product_id);
+                    if ($product) {
+                        $product->increment('stock', $item->quantity);
+                    }
+                }
+                $order->items()->delete();
+                $order->delete();
+                session()->forget('pending_checkout_order_id');
+                return redirect()->back()->withInput()->with('error', $paymentResult['message'] ?? 'Payment transaction failed.');
+            }
+        }
+
+        if ($isNewOrder) {
+            // Create OrderItems in Database
+            foreach ($cartModel->items as $cartItem) {
+                $product = \App\Models\Product::find($cartItem->product_id);
+                
+                \App\Models\OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $cartItem->product_id,
+                    'product_name' => $product ? $product->name : 'Unknown Product',
+                    'product_sku' => $product ? $product->sku : null,
+                    'price' => $product ? ($product->sale_price ?? $product->price) : 0,
+                    'quantity' => $cartItem->quantity,
+                    'size' => $cartItem->size,
+                    'color' => $cartItem->color,
+                ]);
+
+                // Optional: decrement product stock
+                if ($product) {
+                    $product->decrement('stock', $cartItem->quantity);
+                }
+            }
+        }
+
+        $redirectUrl = isset($paymentResult['redirect_url']) ? $paymentResult['redirect_url'] : null;
+
+        if ($redirectUrl) {
+            // Save pending order ID in session so we do not clear the cart yet
+            session(['pending_checkout_order_id' => $order->ulid]);
+        } else {
+            // Clear Database Cart immediately for synchronous checkouts
+            $cartModel->items()->delete();
+
+            // Clear coupon and session info
+            session()->forget('coupon_code');
+            session()->forget('coupon_discount');
+            session()->forget('pending_checkout_order_id');
+        }
+
+        $redirectUrl = $redirectUrl ?? route('store.success', ['order_id' => $order->order_number]);
+        return redirect($redirectUrl);
     }
 
     /**
@@ -398,14 +860,29 @@ class StoreController extends Controller
      */
     public function success(Request $request)
     {
-        $orderId = $request->input('order_id', 'SGCART-MOCK-ORDER');
+        $orderId = $request->input('order_id', 'SGMOCKORDER');
+
+        $order = \App\Models\Order::where('order_number', $orderId)->first();
+        if ($order && $order->customer_id === auth('customer')->id()) {
+            if ($order->payment_status === \App\Enums\PaymentStatus::PAID) {
+                // Clear active cart since payment succeeded
+                $cartModel = \App\Models\Cart::getActiveCart();
+                if ($cartModel) {
+                    $cartModel->items()->delete();
+                }
+                session()->forget('pending_checkout_order_id');
+                session()->forget('coupon_code');
+                session()->forget('coupon_discount');
+            }
+        }
+
         return view('store.success', compact('orderId'));
     }
 
     /**
      * Account / Profile page.
      */
-    public function account($tab = 'orders')
+    public function account(Request $request, $tab = 'orders')
     {
         if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to access your account.');
@@ -414,28 +891,36 @@ class StoreController extends Controller
         $validTabs = ['orders', 'profile', 'address', 'wishlist'];
         $activeTab = in_array($tab, $validTabs) ? $tab : 'orders';
 
-        $orders = session()->get('orders_history', [
-            [
-                'id' => 'SGCART-2026-8821',
-                'date' => 'May 15, 2026',
-                'items_count' => 3,
-                'amount' => 127.50,
-                'status' => 'Delivered'
-            ],
-            [
-                'id' => 'SGCART-2026-8907',
-                'date' => 'Jun 02, 2026',
-                'items_count' => 1,
-                'amount' => 59.99,
-                'status' => 'In Transit'
-            ]
-        ]);
+        // Load real orders from the database
+        $ordersQuery = auth('customer')->user()->orders()
+            ->with('items')
+            ->latest();
+
+        if ($request->filled('order_search')) {
+            $search = $request->input('order_search');
+            $ordersQuery->where('order_number', 'like', "%{$search}%");
+        }
+
+        $orders = $ordersQuery->paginate(4)
+            ->withQueryString()
+            ->through(function ($order) {
+                return [
+                    'id' => $order->order_number,
+                    'ulid' => $order->ulid,
+                    'items_count' => $order->items->sum('quantity'),
+                    'date' => $order->created_at->format('M d, Y'),
+                    'amount' => $order->total,
+                    'status' => $order->status->value ?? $order->status,
+                ];
+            });
 
         $wishlistIds = session()->get('wishlist', []);
         $allProducts = self::getProducts();
         $wishlist = array_filter($allProducts, fn($p) => in_array($p['id'], $wishlistIds));
 
-        return view('store.account', compact('orders', 'wishlist', 'activeTab'));
+        $addresses = auth('customer')->user()->addresses;
+
+        return view('store.account', compact('orders', 'wishlist', 'activeTab', 'addresses'));
     }
 
     /**
@@ -525,5 +1010,297 @@ class StoreController extends Controller
         ])->values()->take(5);
 
         return response()->json($results);
+    }
+
+    /**
+     * Add new customer address.
+     */
+    public function addAddress(Request $request)
+    {
+        if (!auth('customer')->check()) {
+            return redirect()->route('store.login')->with('error', 'Please log in to manage your addresses.');
+        }
+
+        $rules = [
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'address' => 'required|string|max:255',
+            'city' => 'required|string|max:100',
+            'state' => 'required|string|max:100',
+            'zip' => 'required|string|max:20',
+            'country' => 'required|string|max:100',
+            'phone' => 'required|string|max:20',
+            'alternate_phone' => 'nullable|string|max:20',
+            'address_type' => 'required|in:office,work,other',
+            'landmark' => 'nullable|string|max:255',
+            'shipping_and_billing_same' => 'nullable',
+        ];
+
+        $isSame = $request->has('shipping_and_billing_same') ? $request->boolean('shipping_and_billing_same') : false;
+
+        if (!$isSame) {
+            $rules['billing_first_name'] = 'required|string|max:100';
+            $rules['billing_last_name'] = 'required|string|max:100';
+            $rules['billing_address'] = 'required|string|max:255';
+            $rules['billing_city'] = 'required|string|max:100';
+            $rules['billing_state'] = 'required|string|max:100';
+            $rules['billing_zip'] = 'required|string|max:20';
+            $rules['billing_country'] = 'required|string|max:100';
+            $rules['billing_phone'] = 'required|string|max:20';
+        }
+
+        $request->validate($rules);
+
+        $customer = auth('customer')->user();
+        
+        $address = $customer->addresses()->create([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'address' => $request->address,
+            'city' => $request->city,
+            'state' => $request->state,
+            'zip' => $request->zip,
+            'country' => $request->country,
+            'phone' => $request->phone,
+            'alternate_phone' => $request->alternate_phone,
+            'address_type' => $request->address_type,
+            'landmark' => $request->landmark,
+            'shipping_and_billing_same' => $isSame,
+            'billing_first_name' => $isSame ? $request->first_name : $request->billing_first_name,
+            'billing_last_name' => $isSame ? $request->last_name : $request->billing_last_name,
+            'billing_address' => $isSame ? $request->address : $request->billing_address,
+            'billing_city' => $isSame ? $request->city : $request->billing_city,
+            'billing_state' => $isSame ? $request->state : $request->billing_state,
+            'billing_zip' => $isSame ? $request->zip : $request->billing_zip,
+            'billing_country' => $isSame ? $request->country : $request->billing_country,
+            'billing_phone' => $isSame ? $request->phone : $request->billing_phone,
+            'is_default' => $customer->addresses()->count() === 0,
+        ]);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Address added successfully!',
+                'address' => $address
+            ]);
+        }
+
+        return redirect()->route('store.account', 'address')->with('success', 'Address added successfully!');
+    }
+
+    /**
+     * Delete customer address.
+     */
+    public function deleteAddress(Request $request, $id)
+    {
+        if (!auth('customer')->check()) {
+            return redirect()->route('store.login')->with('error', 'Please log in to manage your addresses.');
+        }
+
+        $address = auth('customer')->user()->addresses()->find($id);
+        if ($address) {
+            $wasDefault = $address->is_default;
+            $address->delete();
+
+            // If we deleted the default address, make another one default
+            if ($wasDefault) {
+                $nextAddress = auth('customer')->user()->addresses()->first();
+                if ($nextAddress) {
+                    $nextAddress->update(['is_default' => true]);
+                }
+            }
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Address deleted successfully!'
+            ]);
+        }
+
+        return redirect()->route('store.account', 'address')->with('success', 'Address deleted successfully!');
+    }
+
+    /**
+     * Update customer address.
+     */
+    public function updateAddress(Request $request, $id)
+    {
+        if (!auth('customer')->check()) {
+            return redirect()->route('store.login')->with('error', 'Please log in to manage your addresses.');
+        }
+
+        $rules = [
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'address' => 'required|string|max:255',
+            'city' => 'required|string|max:100',
+            'state' => 'required|string|max:100',
+            'zip' => 'required|string|max:20',
+            'country' => 'required|string|max:100',
+            'phone' => 'required|string|max:20',
+            'alternate_phone' => 'nullable|string|max:20',
+            'address_type' => 'required|in:office,work,other',
+            'landmark' => 'nullable|string|max:255',
+            'shipping_and_billing_same' => 'nullable',
+        ];
+
+        $isSame = $request->has('shipping_and_billing_same') ? $request->boolean('shipping_and_billing_same') : false;
+
+        if (!$isSame) {
+            $rules['billing_first_name'] = 'required|string|max:100';
+            $rules['billing_last_name'] = 'required|string|max:100';
+            $rules['billing_address'] = 'required|string|max:255';
+            $rules['billing_city'] = 'required|string|max:100';
+            $rules['billing_state'] = 'required|string|max:100';
+            $rules['billing_zip'] = 'required|string|max:20';
+            $rules['billing_country'] = 'required|string|max:100';
+            $rules['billing_phone'] = 'required|string|max:20';
+        }
+
+        $request->validate($rules);
+
+        $address = auth('customer')->user()->addresses()->find($id);
+        if (!$address) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Address not found.'], 404);
+            }
+            return redirect()->back()->with('error', 'Address not found.');
+        }
+
+        $address->update([
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'address' => $request->address,
+            'city' => $request->city,
+            'state' => $request->state,
+            'zip' => $request->zip,
+            'country' => $request->country,
+            'phone' => $request->phone,
+            'alternate_phone' => $request->alternate_phone,
+            'address_type' => $request->address_type,
+            'landmark' => $request->landmark,
+            'shipping_and_billing_same' => $isSame,
+            'billing_first_name' => $isSame ? $request->first_name : $request->billing_first_name,
+            'billing_last_name' => $isSame ? $request->last_name : $request->billing_last_name,
+            'billing_address' => $isSame ? $request->address : $request->billing_address,
+            'billing_city' => $isSame ? $request->city : $request->billing_city,
+            'billing_state' => $isSame ? $request->state : $request->billing_state,
+            'billing_zip' => $isSame ? $request->zip : $request->billing_zip,
+            'billing_country' => $isSame ? $request->country : $request->billing_country,
+            'billing_phone' => $isSame ? $request->phone : $request->billing_phone,
+        ]);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Address updated successfully!',
+                'address' => $address
+            ]);
+        }
+
+        return redirect()->route('store.account', 'address')->with('success', 'Address updated successfully!');
+    }
+
+    /**
+     * Get order details for modal view.
+     */
+    public function getOrderDetail($ulid)
+    {
+        if (!auth('customer')->check()) {
+            return response()->json(['success' => false, 'message' => 'Please log in to view order details.'], 401);
+        }
+
+        $order = auth('customer')->user()->orders()
+            ->with(['items.product'])
+            ->where('ulid', $ulid)
+            ->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Order not found.'], 404);
+        }
+
+        // Format for JSON response
+        $items = [];
+        foreach ($order->items as $item) {
+            $items[] = [
+                'name' => $item->product_name,
+                'sku' => $item->product_sku,
+                'price' => (float)$item->price,
+                'quantity' => (int)$item->quantity,
+                'size' => $item->size,
+                'color' => $item->color,
+                'img' => $item->product && $item->product->image 
+                    ? \Illuminate\Support\Facades\Storage::url($item->product->image) 
+                    : asset('images/no-image.svg'),
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'order' => [
+                'order_number' => $order->order_number,
+                'date' => $order->created_at->format('M d, Y h:i A'),
+                'status' => $order->status->value ?? $order->status,
+                'payment_status' => $order->payment_status->value ?? $order->payment_status,
+                'payment_method' => $order->payment_method,
+                'card_number_masked' => $order->card_number_masked,
+                'recipient_name' => $order->first_name . ' ' . $order->last_name,
+                'address' => $order->address,
+                'city' => $order->city,
+                'state' => $order->state,
+                'zip' => $order->zip,
+                'country' => $order->country,
+                'subtotal' => (float)$order->subtotal,
+                'discount' => (float)$order->discount,
+                'tax' => (float)$order->tax,
+                'total' => (float)$order->total,
+                'items' => $items,
+            ]
+        ]);
+    }
+
+    /**
+     * View a single order in a dedicated storefront page.
+     */
+    public function viewOrder($ulid)
+    {
+        if (!auth('customer')->check()) {
+            return redirect()->route('store.login')->with('error', 'Please log in to view order details.');
+        }
+
+        $order = auth('customer')->user()->orders()
+            ->with(['items.product'])
+            ->where('ulid', $ulid)
+            ->first();
+
+        if (!$order) {
+            return redirect()->route('store.account', 'orders')->with('error', 'Order not found.');
+        }
+
+        return view('store.order-details', compact('order'));
+    }
+
+    /**
+     * Generate and download PDF Invoice.
+     */
+    public function downloadInvoice($ulid)
+    {
+        if (!auth('customer')->check()) {
+            return redirect()->route('store.login')->with('error', 'Please log in to view/download invoices.');
+        }
+
+        $order = auth('customer')->user()->orders()
+            ->with(['items.product'])
+            ->where('ulid', $ulid)
+            ->first();
+
+        if (!$order) {
+            return redirect()->route('store.account', 'orders')->with('error', 'Order not found.');
+        }
+
+        $pdf = Pdf::loadView('store.invoice-pdf', compact('order'));
+        
+        return $pdf->download("invoice-{$order->order_number}.pdf");
     }
 }
