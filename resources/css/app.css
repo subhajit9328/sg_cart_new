@@ -44,17 +44,12 @@ body.storefront {
     left: 0;
     right: 0;
     z-index: 50;
-    /* Subtle glassmorphism: mostly solid with soft blur behind */
-    backdrop-filter: blur(12px) saturate(160%);
-    -webkit-backdrop-filter: blur(12px) saturate(160%);
     box-shadow:
         0 1px 0 rgba(255,255,255,0.06) inset,
         0 4px 20px rgba(0,0,0,0.30);
     transition: box-shadow 0.3s ease;
 }
 #siteHeader.scrolled {
-    backdrop-filter: blur(16px) saturate(170%);
-    -webkit-backdrop-filter: blur(16px) saturate(170%);
     box-shadow:
         0 1px 0 rgba(255,255,255,0.08) inset,
         0 6px 28px rgba(0,0,0,0.38);
@@ -62,7 +57,6 @@ body.storefront {
 
 /* --- ROW 1: Main Header (solid dark + blur depth) --- */
 .header-main {
-    background: rgba(10, 10, 13, 0.96);
     border-bottom: 1px solid rgba(255,255,255,0.08);
     position: relative;
 }
@@ -231,6 +225,23 @@ body.storefront {
     color: #ef4444;
     animation: voice-pulse 1.2s infinite ease-in-out;
 }
+
+.header-search-camera-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    color: #6b7280;
+    font-size: 16px;
+    transition: color 0.15s, transform 0.15s;
+}
+.header-search-camera-btn:hover {
+    color: var(--color-accent);
+}
 @keyframes voice-pulse {
     0% {
         transform: scale(1);
@@ -378,7 +389,6 @@ body.storefront {
 
 /* --- ROW 2: Sub Header (solid dark + blur depth) --- */
 .header-sub {
-    background: rgba(14, 12, 18, 0.97);
     border-top: 1px solid rgba(255,255,255,0.06);
     position: relative;
 }
@@ -735,9 +745,21 @@ body.storefront {
 /* Dark mode glass header rows — solid dark, blur for depth */
 .dark .header-main {
     background: rgba(6, 5, 8, 0.97) !important;
+    transition: background 0.3s ease, backdrop-filter 0.3s ease, -webkit-backdrop-filter 0.3s ease;
 }
 .dark .header-sub {
     background: rgba(8, 6, 12, 0.97) !important;
+    transition: background 0.3s ease, backdrop-filter 0.3s ease, -webkit-backdrop-filter 0.3s ease;
+}
+.dark #siteHeader.scrolled .header-main {
+    background: rgba(6, 5, 8, 0.75) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+}
+.dark #siteHeader.scrolled .header-sub {
+    background: rgba(8, 6, 12, 0.8) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
 }
 
 @media (min-width: 769px) {
@@ -1889,4 +1911,13 @@ a[href*="/cart/coupon/remove"]:hover {
 .dark a[href*="/cart/coupon/remove"]:hover {
     background-color: #e11d48 !important;
     border-color: #e11d48 !important;
+}
+
+/* Scrollbar hide utility */
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }

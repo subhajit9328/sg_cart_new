@@ -172,7 +172,7 @@
                         @if(!empty($product['sku']) || !empty($product['manufacturer']) || !empty($product['weight']) || !empty($product['dimensions']))
                             <button type="button" class="tab-btn" onclick="setSpecTab('specs')">Specifications</button>
                         @endif
-                        <button type="button" class="tab-btn" onclick="setSpecTab('shipping')">Shipping</button>
+
                     </div>
                     <div id="spec-description" class="spec-content">
                         <p class="text-xs text-slate-500 leading-relaxed">{!! nl2br(e($product['description'])) !!}</p>
@@ -209,9 +209,7 @@
                             </table>
                         </div>
                     @endif
-                    <div id="spec-shipping" class="spec-content" style="display:none">
-                        <p class="text-xs text-slate-500 leading-relaxed">Standard shipping takes between 3 to 7 business days depending on location. Tracking information is sent automatically via email once shipped.</p>
-                    </div>
+
                 </div>
             </div>
 

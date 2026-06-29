@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -9,11 +10,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
+/**
+ * @property mixed $id
+ * @property mixed $email
+ * @property CarbonInterface|mixed $email_verified_at
+ * @property mixed $profile_picture
+ */
+#[Fillable(['name', 'email', 'password', 'phone_no', 'profile_picture'])]
 #[Hidden(['password', 'remember_token'])]
 class Customer extends Authenticatable
 {
-    use HasFactory, Notifiable, HasUlids;
+    use HasFactory, HasUlids, Notifiable;
 
     /**
      * Only auto-generate ULID for the `ulid` column.
@@ -57,6 +64,7 @@ class Customer extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

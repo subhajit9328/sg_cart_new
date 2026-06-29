@@ -1,14 +1,17 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\StoreController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ManufacturerController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\ProfilePictureController;
+use App\Http\Controllers\StoreController;
+use Illuminate\Support\Facades\Route;
 
 // Storefront Frontend Routes
 Route::get('/', [StoreController::class, 'home'])->name('store.home');
@@ -21,7 +24,6 @@ Route::post('/cart/add', [StoreController::class, 'addToCart'])->name('store.car
 Route::post('/cart/update', [StoreController::class, 'updateCart'])->name('store.cart.update');
 Route::get('/cart/remove/{key}', [StoreController::class, 'removeFromCart'])->name('store.cart.remove');
 
-
 Route::get('/success', [StoreController::class, 'success'])->name('store.success');
 Route::post('/wishlist/toggle', [StoreController::class, 'toggleWishlist'])->name('store.wishlist.toggle');
 Route::get('/wishlist', [StoreController::class, 'guestWishlist'])->name('store.wishlist');
@@ -32,21 +34,40 @@ Route::middleware('guest:customer')->group(function () {
     Route::post('/login', [AuthController::class, 'storefrontLogin'])->name('store.login.submit');
     Route::get('/register', [AuthController::class, 'showStorefrontRegister'])->name('store.register');
     Route::post('/register', [AuthController::class, 'storefrontRegister'])->name('store.register.submit');
+
+    // Forgot Password Routes
+    Route::get('/forgot-password', [ForgotPasswordController::class, 'showForgotPassword'])->name('store.forgot-password');
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetOtp'])->name('store.forgot-password.submit');
+    Route::get('/forgot-password/verify', [ForgotPasswordController::class, 'showVerifyOtp'])->name('store.forgot-password.verify');
+    Route::post('/forgot-password/verify', [ForgotPasswordController::class, 'verifyOtp'])->name('store.forgot-password.verify.submit');
+    Route::post('/forgot-password/resend', [ForgotPasswordController::class, 'resendOtp'])->name('store.forgot-password.resend');
+    Route::get('/forgot-password/reset', [ForgotPasswordController::class, 'showResetPassword'])->name('store.forgot-password.reset');
+    Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword'])->name('store.forgot-password.reset.submit');
 });
 
 // Storefront Auth Routes for Authenticated Customers
 Route::middleware('auth:customer')->group(function () {
     Route::post('/logout', [AuthController::class, 'storefrontLogout'])->name('store.logout');
-    Route::get('/checkout', [StoreController::class, 'checkout'])->name('store.checkout');
-    Route::post('/checkout/order', [StoreController::class, 'placeOrder'])->name('store.checkout.order');
-    Route::get('/account/order/{ulid}', [StoreController::class, 'viewOrder'])->name('store.account.order.view');
-    Route::get('/account/order/{ulid}/invoice', [StoreController::class, 'downloadInvoice'])->name('store.account.order.invoice');
-    Route::get('/account/{tab?}', [StoreController::class, 'account'])->name('store.account');
-    Route::post('/account/profile/update', [StoreController::class, 'updateProfile'])->name('store.account.profile.update');
-    Route::post('/account/address/add', [StoreController::class, 'addAddress'])->name('store.account.address.add');
-    Route::post('/account/address/update/{id}', [StoreController::class, 'updateAddress'])->name('store.account.address.update');
-    Route::get('/account/address/delete/{id}', [StoreController::class, 'deleteAddress'])->name('store.account.address.delete');
-    Route::get('/account/order/{ulid}/json', [StoreController::class, 'getOrderDetail'])->name('store.account.order.detail');
+
+    // OTP Verification Routes (accessible by authenticated but unverified customers)
+    Route::get('/otp/verify', [AuthController::class, 'showOtpVerify'])->name('store.otp.verify');
+    Route::post('/otp/verify', [AuthController::class, 'otpVerify'])->name('store.otp.verify.submit');
+    Route::post('/otp/resend', [AuthController::class, 'otpResend'])->name('store.otp.resend');
+
+    // Verified Customer Routes
+    Route::middleware('verified.customer')->group(function () {
+        Route::get('/checkout', [StoreController::class, 'checkout'])->name('store.checkout');
+        Route::post('/checkout/order', [StoreController::class, 'placeOrder'])->name('store.checkout.order');
+        Route::get('/account/order/{ulid}', [StoreController::class, 'viewOrder'])->name('store.account.order.view');
+        Route::get('/account/order/{ulid}/invoice', [StoreController::class, 'downloadInvoice'])->name('store.account.order.invoice');
+        Route::get('/account/{tab?}', [StoreController::class, 'account'])->name('store.account');
+        Route::post('/account/profile/update', [StoreController::class, 'updateProfile'])->name('store.account.profile.update');
+        Route::post('/account/profile-picture', [ProfilePictureController::class, 'update'])->name('store.account.profile-picture.update');
+        Route::post('/account/address/add', [StoreController::class, 'addAddress'])->name('store.account.address.add');
+        Route::post('/account/address/update/{id}', [StoreController::class, 'updateAddress'])->name('store.account.address.update');
+        Route::get('/account/address/delete/{id}', [StoreController::class, 'deleteAddress'])->name('store.account.address.delete');
+        Route::get('/account/order/{ulid}/json', [StoreController::class, 'getOrderDetail'])->name('store.account.order.detail');
+    });
 });
 
 // Admin Routes (prefixed with admin)
@@ -97,12 +118,12 @@ Route::prefix('admin')->group(function () {
                 ->middleware('permission:manage products');
 
             // Order Management Invoice print/stream
-            Route::get('orders/{order}/invoice', [\App\Http\Controllers\Admin\OrderController::class, 'streamInvoice'])
+            Route::get('orders/{order}/invoice', [OrderController::class, 'streamInvoice'])
                 ->name('orders.invoice')
                 ->middleware('permission:manage products');
 
             // Order Management CRUD
-            Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class)
+            Route::resource('orders', OrderController::class)
                 ->middleware('permission:manage products');
 
             // Extra product sub-routes

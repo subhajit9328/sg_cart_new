@@ -1,0 +1,25 @@
+{
+    "name": "sgcart/image-search",
+    "description": "provides image search capability",
+    "autoload": {
+        "psr-4": {
+            "SGCart\\ImageSearch\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "SGCart Team",
+            "email": "support@sgcart.com"
+        }
+    ],
+    "require": {
+        "laravel/ai": "*"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SGCart\\ImageSearch\\ImageSearchServiceProvider"
+            ]
+        }
+    }
+}
