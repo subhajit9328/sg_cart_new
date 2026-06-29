@@ -1,16 +1,21 @@
 @extends('layouts.store')
 
-@section('title', 'Verify Email — sgcart')
+@section('title', $isEmail ? 'Verify Email — sgcart' : 'Verify Phone — sgcart')
 
 @section('content')
 <div class="max-w-[480px] mx-auto px-6 pt-8 pb-12 md:pt-12 md:pb-20">
     <div class="bg-white border border-border rounded-2xl p-6 md:p-8 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
-        <h2 class="font-display font-extrabold text-2xl text-slate-800 text-center mb-2">Verify Email</h2>
-        <p class="text-xs text-slate-400 text-center mb-8">We've sent a 6-digit verification code to <strong class="text-slate-600">{{ $email }}</strong>. The code will expire in 5 minutes.</p>
+        <h2 class="font-display font-extrabold text-2xl text-slate-800 text-center mb-2">
+            {{ $isEmail ? 'Verify Email' : 'Verify Phone Number' }}
+        </h2>
+        <p class="text-xs text-slate-400 text-center mb-8">
+                We've sent a 6-digit verification code to your <strong class="text-slate-600">{{$isEmail ? 'Email' : 'Phone No'}}</strong>.
+            The code will expire in 5 minutes.
+        </p>
 
         <form action="{{ route('store.otp.verify.submit') }}" method="POST" class="flex flex-col gap-4" novalidate>
             @csrf
-            
+
             <div class="flex flex-col gap-1">
                 <label class="label">Verification Code (OTP)</label>
                 <input type="text" name="otp" id="otp" required maxlength="6" pattern="[0-9]{6}" class="inp text-center tracking-[8px] font-mono text-xl" placeholder="••••••" autofocus value="{{ old('otp') }}"/>
@@ -31,7 +36,7 @@
                     </button>
                 </form>
             </div>
-            
+
             <div id="countdown-wrapper" class="{{ $remainingSeconds > 0 ? '' : 'hidden' }}">
                 <span class="text-xs text-slate-400">
                     Resend code in <span id="timer" class="font-bold text-slate-600">{{ sprintf('%02d:%02d', floor($remainingSeconds / 60), $remainingSeconds % 60) }}</span>

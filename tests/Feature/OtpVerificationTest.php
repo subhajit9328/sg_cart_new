@@ -165,7 +165,7 @@ class OtpVerificationTest extends TestCase
         $response->assertRedirect(route('store.otp.verify'));
     }
 
-    public function test_registration_with_phone_number_redirects_directly_without_otp()
+    public function test_registration_with_phone_number_redirects_to_otp_verification()
     {
         Mail::fake();
 
@@ -181,12 +181,12 @@ class OtpVerificationTest extends TestCase
         $this->assertNull($customer->email);
         $this->assertNull($customer->email_verified_at);
 
-        // Verify redirect is directly to account (dashboard)
-        $response->assertRedirect(route('store.account'));
+        // Verify redirect is to OTP verify page
+        $response->assertRedirect(route('store.otp.verify'));
 
-        // Verify no OTP is in cache and no mail sent
+        // Verify OTP is in cache and no mail sent
         $otpKey = "customer_otp_{$customer->id}";
-        $this->assertFalse(Cache::has($otpKey));
+        $this->assertTrue(Cache::has($otpKey));
         Mail::assertNothingSent();
     }
 
@@ -286,6 +286,8 @@ class OtpVerificationTest extends TestCase
             'phone_no' => '+919999999999',
             'password' => Hash::make('password123'),
         ]);
+        $customer->phone_verified_at = now();
+        $customer->save();
 
         $this->actingAs($customer, 'customer');
 
@@ -311,7 +313,7 @@ class OtpVerificationTest extends TestCase
         Mail::assertSent(CustomerOtpMail::class);
     }
 
-    public function test_profile_update_adds_missing_phone_without_otp()
+    public function test_profile_update_adds_missing_phone_and_generates_otp()
     {
         Mail::fake();
 
@@ -335,12 +337,12 @@ class OtpVerificationTest extends TestCase
         $this->assertEquals('Updated User', $customer->name);
         $this->assertEquals('+919999999999', $customer->phone_no);
 
-        // Redirects back to profile page
-        $response->assertRedirect(route('store.account', 'profile'));
+        // Redirects to OTP verify page
+        $response->assertRedirect(route('store.otp.verify'));
 
-        // No OTP generated or mail sent
+        // OTP generated but no mail sent
         $otpKey = "customer_otp_{$customer->id}";
-        $this->assertFalse(Cache::has($otpKey));
+        $this->assertTrue(Cache::has($otpKey));
         Mail::assertNotSent(CustomerOtpMail::class);
     }
 
@@ -375,6 +377,8 @@ class OtpVerificationTest extends TestCase
             'phone_no' => '+917777777777',
             'password' => Hash::make('password123'),
         ]);
+        $customer2->phone_verified_at = now();
+        $customer2->save();
 
         $this->actingAs($customer2, 'customer');
 

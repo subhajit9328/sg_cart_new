@@ -273,9 +273,7 @@ class AuthController extends Controller
             causer: $customer
         );
 
-        if ($isEmail) {
-            app(ManageOtp::class)->generate($customer, ManageOtp::REASON_REGISTRATION);
-        }
+        app(ManageOtp::class)->generate($customer, ManageOtp::REASON_REGISTRATION);
 
         Auth::guard('customer')->login($customer);
         $request->session()->regenerate();
@@ -283,11 +281,9 @@ class AuthController extends Controller
         // Merge guest cart with customer cart
         Cart::mergeGuestCart($customer->id, $guestSessionId);
 
-        if ($isEmail) {
-            return redirect()->route('store.otp.verify')->with('success', 'Account created successfully! Please verify your email.');
-        }
-
-        return redirect()->route('store.account')->with('success', 'Account created successfully! Welcome to SG CART.');
+        return redirect()->route('store.otp.verify')->with('success', $isEmail
+            ? 'Account created successfully! Please verify your email.'
+            : 'Account created successfully! Please verify your phone number.');
     }
 
     /**
@@ -296,7 +292,11 @@ class AuthController extends Controller
     public function showOtpVerify()
     {
         $customer = Auth::guard('customer')->user();
-        if ($customer->email_verified_at) {
+
+        $isEmail = $customer->email && ! $customer->email_verified_at;
+        $isPhone = $customer->phone_no && ! $customer->phone_verified_at;
+
+        if (! $isEmail && ! $isPhone) {
             return redirect()->route('store.account');
         }
 
@@ -308,13 +308,16 @@ class AuthController extends Controller
         if (! $otp && ! $cooldownTimestamp) {
             $manageOtp->generate($customer, ManageOtp::REASON_AUTO_GENERATE);
             $cooldownTimestamp = $manageOtp->getCooldownTimestamp($customer);
-            session()->flash('success', 'A new verification code has been sent to your email.');
+            session()->flash('success', $isEmail
+                ? 'A new verification code has been sent to your email.'
+                : 'A new verification code has been generated for your phone number.');
         }
 
         $remainingSeconds = $cooldownTimestamp ? max(0, $cooldownTimestamp - now()->timestamp) : 0;
 
         return view('store.auth.otp-verify', [
-            'email' => $customer->email,
+            'email' => $customer->email ?? $customer->phone_no,
+            'isEmail' => $isEmail,
             'remainingSeconds' => $remainingSeconds,
         ]);
     }
@@ -329,7 +332,11 @@ class AuthController extends Controller
         ]);
 
         $customer = Auth::guard('customer')->user();
-        if ($customer->email_verified_at) {
+
+        $isEmail = $customer->email && ! $customer->email_verified_at;
+        $isPhone = $customer->phone_no && ! $customer->phone_verified_at;
+
+        if (! $isEmail && ! $isPhone) {
             return redirect()->route('store.account');
         }
 
@@ -339,9 +346,24 @@ class AuthController extends Controller
             ]);
         }
 
-        app(CustomerEmailVerifiedAction::class)->execute($customer);
+        if ($isEmail) {
+            app(CustomerEmailVerifiedAction::class)->execute($customer);
+        } else {
+            $customer->phone_verified_at = now();
+            $customer->save();
 
-        return redirect()->intended(route('store.account'))->with('success', 'Email verified successfully! Welcome to SG CART.');
+            app(LogActivity::class)->capture(
+                description: "Customer phone verified successfully: {$customer->phone_no}",
+                event: 'otp.verified',
+                subject: $customer,
+                properties: ['phone_no' => $customer->phone_no],
+                causer: $customer
+            );
+        }
+
+        return redirect()->intended(route('store.account'))->with('success', $isEmail
+            ? 'Email verified successfully! Welcome to SG CART.'
+            : 'Phone number verified successfully! Welcome to SG CART.');
     }
 
     /**
@@ -350,7 +372,11 @@ class AuthController extends Controller
     public function otpResend(Request $request)
     {
         $customer = Auth::guard('customer')->user();
-        if ($customer->email_verified_at) {
+
+        $isEmail = $customer->email && ! $customer->email_verified_at;
+        $isPhone = $customer->phone_no && ! $customer->phone_verified_at;
+
+        if (! $isEmail && ! $isPhone) {
             return redirect()->route('store.account');
         }
 
@@ -365,7 +391,9 @@ class AuthController extends Controller
 
         app(ManageOtp::class)->generate($customer, ManageOtp::REASON_RESEND);
 
-        return back()->with('success', 'A new OTP has been sent to your email.');
+        return back()->with('success', $isEmail
+            ? 'A new OTP has been sent to your email.'
+            : 'A new OTP has been generated for your phone number.');
     }
 
     /**

@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            'verified.customer' => \App\Http\Middleware\EnsureCustomerEmailIsVerified::class,
+            'verified.customer' => \App\Http\Middleware\EnsureCustomerIsVerified::class,
         ]);
 
         $middleware->redirectGuestsTo(fn (Request $request) => $request->is('admin*') ? route('login') : route('store.login'));

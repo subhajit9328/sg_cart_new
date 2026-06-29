@@ -191,7 +191,7 @@ class SecurityLoggingTest extends TestCase
             'phone_no' => '+919999999999',
         ]);
 
-        $response->assertRedirect(route('store.account', 'profile'));
+        $response->assertRedirect(route('store.otp.verify'));
 
         $profileLog = ActivityLog::where('event', 'profile.update')->first();
         $this->assertNotNull($profileLog);
