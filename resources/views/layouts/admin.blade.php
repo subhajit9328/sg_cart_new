@@ -110,6 +110,7 @@
             @includeIf('coupons::admin-menu')
             @includeIf('product-variants::admin-menu')
             @includeIf('shipping::admin-menu')
+            @includeIf('logistic-tracking::admin-menu')
             @includeIf('tax::admin-menu')
             @can('manage payments')
             <a href="{{ route('admin.payments.settings') }}" class="nav-link {{ Request::is('admin/payments*') ? 'active' : '' }}" data-tooltip="Payment Gateways">

@@ -30,10 +30,15 @@ class UninstallCommand extends Command
     {
         $this->components->info('Uninstalling LogisticTracking package resources...');
 
-        // 1. Drop the order_trackings table
+        // 1. Drop the tables
         if (Schema::hasTable('order_trackings')) {
             Schema::drop('order_trackings');
             $this->components->info('Database table "order_trackings" dropped successfully.');
+        }
+
+        if (Schema::hasTable('shipping_couriers')) {
+            Schema::drop('shipping_couriers');
+            $this->components->info('Database table "shipping_couriers" dropped successfully.');
         }
 
         // 2. Clean up migration record in the migrations table

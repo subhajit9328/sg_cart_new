@@ -13,7 +13,8 @@ It stores order-specific logistics details (tracking number, carrier, URL, and e
 - **DTO-Driven Updates**: Passes validated data to the package via the `LogisticTrackingData` DTO.
 - **Action-Encapsulated Logic**: The `UpdateLogisticTrackingAction` class handles saving/updating and auto-generates tracking numbers and estimated delivery dates when an order is marked as `Shipped` without tracking details.
 - **Activity Logging**: Captures changes to tracking details (old vs. new values) and logs them via the application's `LogActivity` action.
-- **Seamless Uninstallation**: Automatically drops the table, cleans up migration records, and deletes published migration files on uninstallation.
+- **Shipping Couriers Management**: Includes an admin dashboard under the "Logistics" sidebar section to list, add, and delete shipping courier options with their name, website/tracking URL, and support email.
+- **Seamless Uninstallation**: Automatically drops the tables (`order_trackings`, `shipping_couriers`), cleans up migration records, and deletes published migration files on uninstallation.
 
 ---
 
@@ -110,7 +111,7 @@ ddev composer remove sgcart/logistic-tracking
 
 ### Automatic Cleanup
 When the package is removed via Composer, the `composer_package.sgcart/logistic-tracking:pre_uninstall` event listener automatically triggers the `logistic-tracking:uninstall` command. This will:
-1. Drop the `order_trackings` table.
+1. Drop the `order_trackings` and `shipping_couriers` tables.
 2. Remove all related migration records from the `migrations` table.
 3. Delete any published migration files from the main application's `database/migrations` directory.
 

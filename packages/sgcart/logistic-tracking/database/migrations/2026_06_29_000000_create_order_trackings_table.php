@@ -20,6 +20,14 @@ return new class extends Migration
             $table->timestamp('estimated_delivery_at')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('shipping_couriers', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('url')->nullable();
+            $table->string('support_email')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**
@@ -28,5 +36,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('order_trackings');
+        Schema::dropIfExists('shipping_couriers');
     }
 };

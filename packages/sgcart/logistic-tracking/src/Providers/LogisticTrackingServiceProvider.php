@@ -21,7 +21,9 @@ class LogisticTrackingServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Load package migrations
+        // Load package routes, views and migrations
+        $this->loadRoutesFrom(__DIR__.'/../../routes/web.php');
+        $this->loadViewsFrom(__DIR__.'/../../resources/views', 'logistic-tracking');
         $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
 
         // Dynamically define the tracking relationship on the Order model

@@ -151,6 +151,7 @@ class LogisticTrackingTest extends TestCase
 
         // 5. Assert table is dropped
         $this->assertFalse(\Illuminate\Support\Facades\Schema::hasTable('order_trackings'));
+        $this->assertFalse(\Illuminate\Support\Facades\Schema::hasTable('shipping_couriers'));
 
         // 6. Assert migration record is deleted
         $this->assertDatabaseMissing('migrations', [
@@ -162,5 +163,63 @@ class LogisticTrackingTest extends TestCase
 
         // 8. Re-run migrations to restore the table for other tests
         $this->artisan('migrate');
+    }
+
+    /**
+     * Test that admin can view shipping couriers page.
+     */
+    public function test_admin_can_view_shipping_couriers_page(): void
+    {
+        $response = $this->actingAs($this->admin)->get(route('admin.couriers.index'));
+        $response->assertStatus(200);
+        $response->assertSee('Shipping Couriers');
+    }
+
+    /**
+     * Test that admin can view create shipping courier page.
+     */
+    public function test_admin_can_view_create_shipping_courier_page(): void
+    {
+        $response = $this->actingAs($this->admin)->get(route('admin.couriers.create'));
+        $response->assertStatus(200);
+        $response->assertSee('Add Shipping Courier');
+    }
+
+    /**
+     * Test that admin can add shipping courier.
+     */
+    public function test_admin_can_add_shipping_courier(): void
+    {
+        $response = $this->actingAs($this->admin)->post(route('admin.couriers.store'), [
+            'name' => 'DHL Express',
+            'url' => 'https://dhl.com',
+            'support_email' => 'support@dhl.com',
+        ]);
+
+        $response->assertRedirect(route('admin.couriers.index'));
+        $this->assertDatabaseHas('shipping_couriers', [
+            'name' => 'DHL Express',
+            'url' => 'https://dhl.com',
+            'support_email' => 'support@dhl.com',
+        ]);
+    }
+
+    /**
+     * Test that admin can delete shipping courier.
+     */
+    public function test_admin_can_delete_shipping_courier(): void
+    {
+        $courier = \SGCart\LogisticTracking\Models\ShippingCourier::create([
+            'name' => 'FedEx',
+            'url' => 'https://fedex.com',
+            'support_email' => 'support@fedex.com',
+        ]);
+
+        $response = $this->actingAs($this->admin)->delete(route('admin.couriers.destroy', $courier->id));
+
+        $response->assertRedirect(route('admin.couriers.index'));
+        $this->assertDatabaseMissing('shipping_couriers', [
+            'id' => $courier->id,
+        ]);
     }
 }
