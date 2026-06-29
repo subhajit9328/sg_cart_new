@@ -624,7 +624,7 @@ class StoreController extends Controller
 
         $total = max(0, $subtotal + $tax - $discount + $shippingCost);
         // Generate dynamic unique order number
-        $orderNumber = 'SGCART-' . date('Ymd') . '-' . strtoupper(Str::random(6));
+        $orderNumber = 'SG' . date('ymd') . strtoupper(Str::random(4));
 
         $paymentMethodName = 'Card';
         $gateway = null;
@@ -731,7 +731,7 @@ class StoreController extends Controller
      */
     public function success(Request $request)
     {
-        $orderId = $request->input('order_id', 'SGCART-MOCK-ORDER');
+        $orderId = $request->input('order_id', 'SGMOCKORDER');
         return view('store.success', compact('orderId'));
     }
 

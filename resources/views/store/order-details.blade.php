@@ -336,16 +336,16 @@
                     </div>
                 </div>
 
-                @if($order->payment_transaction_id)
+                @if($order->transaction_id)
                 <div class="text-xs text-slate-500 leading-relaxed pt-3 border-t border-slate-100 space-y-1">
                     <span class="font-bold text-slate-700 block mb-1">Transaction Log:</span>
                     <div class="flex justify-between">
                         <span>Gateway:</span>
-                        <span class="font-medium text-slate-800">{{ $order->payment_gateway ?? 'SGCart Gateway' }}</span>
+                        <span class="font-medium text-slate-800">{{ $order->payment_method ?? 'SGCart Gateway' }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Transaction ID:</span>
-                        <span class="font-mono text-slate-800">{{ $order->payment_transaction_id }}</span>
+                        <span class="font-mono text-slate-800">{{ $order->transaction_id }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Status:</span>

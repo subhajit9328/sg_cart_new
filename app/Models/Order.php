@@ -41,12 +41,6 @@ class Order extends Model
         'discount',
         'total',
         'status',
-        'payment_status',
-        'payment_method',
-        'card_name',
-        'card_number_masked',
-        'payment_transaction_id',
-        'payment_gateway',
         'tracking_number',
         'shipping_carrier',
         'tracking_url',
@@ -141,7 +135,6 @@ class Order extends Model
     {
         return [
             'status' => \App\Enums\OrderStatus::class,
-            'payment_status' => \App\Enums\PaymentStatus::class,
             'estimated_delivery_at' => 'datetime',
         ];
     }

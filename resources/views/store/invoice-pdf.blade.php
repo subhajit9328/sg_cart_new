@@ -187,11 +187,8 @@
                     <div class="section-title">Payment Info</div>
                     <div class="address-box">
                         <strong>Method:</strong> {{ $order->payment_method ?? 'N/A' }}<br>
-                        @if($order->payment_gateway)
-                            <strong>Gateway:</strong> {{ $order->payment_gateway }}<br>
-                        @endif
-                        @if($order->payment_transaction_id)
-                            <strong>Transaction ID:</strong> {{ $order->payment_transaction_id }}<br>
+                        @if($order->transaction_id)
+                            <strong>Transaction ID:</strong> {{ $order->transaction_id }}<br>
                         @endif
                         @if($order->card_number_masked)
                             <strong>Card:</strong> {{ $order->card_number_masked }}<br>

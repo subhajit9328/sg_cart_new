@@ -546,16 +546,10 @@
                     <span>Payment Method</span>
                     <span class="font-semibold text-slate-800 dark:text-slate-100">{{ $order->payment_method }}</span>
                 </div>
-                @if($order->payment_gateway)
-                <div class="flex justify-between">
-                    <span>Payment Gateway</span>
-                    <span class="font-semibold text-slate-800 dark:text-slate-100">{{ $order->payment_gateway }}</span>
-                </div>
-                @endif
-                @if($order->payment_transaction_id)
+                @if($order->transaction_id)
                 <div class="flex justify-between">
                     <span>Transaction ID</span>
-                    <span class="font-mono font-semibold text-slate-800 dark:text-slate-100">{{ $order->payment_transaction_id }}</span>
+                    <span class="font-mono font-semibold text-slate-800 dark:text-slate-100">{{ $order->transaction_id }}</span>
                 </div>
                 @endif
                 @if($order->card_number_masked)
