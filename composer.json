@@ -11,9 +11,11 @@
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
         "sgcart/coupons": "@dev",
+        "sgcart/image-search": "@dev",
         "sgcart/payment-razorpay": "@dev",
         "sgcart/product-variants": "@dev",
         "sgcart/shipping": "@dev",
+        "sgcart/tax": "@dev",
         "spatie/laravel-permission": "^8.0"
     },
     "require-dev": {

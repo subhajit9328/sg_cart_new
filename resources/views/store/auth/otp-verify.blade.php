@@ -3,13 +3,34 @@
 @section('title', $isEmail ? 'Verify Email — sgcart' : 'Verify Phone — sgcart')
 
 @section('content')
+@php
+    $displayTarget = $email;
+    if ($isEmail) {
+        $parts = explode('@', $email);
+        $name = $parts[0];
+        $domain = $parts[1] ?? '';
+        $len = strlen($name);
+        if ($len > 4) {
+            $displayTarget = substr($name, 0, 2) . '***' . substr($name, -2) . '@' . $domain;
+        } elseif ($len > 2) {
+            $displayTarget = substr($name, 0, 1) . '***' . substr($name, -1) . '@' . $domain;
+        } else {
+            $displayTarget = '***@' . $domain;
+        }
+    } else {
+        $len = strlen($email);
+        if ($len > 4) {
+            $displayTarget = str_repeat('*', $len - 4) . substr($email, -4);
+        }
+    }
+@endphp
 <div class="max-w-[480px] mx-auto px-6 pt-8 pb-12 md:pt-12 md:pb-20">
     <div class="bg-white border border-border rounded-2xl p-6 md:p-8 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
         <h2 class="font-display font-extrabold text-2xl text-slate-800 text-center mb-2">
             {{ $isEmail ? 'Verify Email' : 'Verify Phone Number' }}
         </h2>
         <p class="text-xs text-slate-400 text-center mb-8">
-                We've sent a 6-digit verification code to your <strong class="text-slate-600">{{$isEmail ? 'Email' : 'Phone No'}}</strong>.
+            We've sent a 6-digit verification code to your <strong class="text-slate-600">{{ $displayTarget }}</strong>.
             The code will expire in 5 minutes.
         </p>
 

@@ -140,7 +140,7 @@
 
 <header id="siteHeader">
     <!-- ROW 1: Main Header -->
-    <div class="header-main">
+    <div class="header-main bg-[#0a0a0d] transition-all duration-300" id="headerMain">
         <div class="header-main-inner">
 
             <!-- Hamburger Menu Button (Mobile only) -->
@@ -162,6 +162,17 @@
                            autocomplete="off"
                            value="{{ request('search') }}"
                            class="header-search-input"/>
+                    @if(request()->filled('category'))
+                        @foreach((array)request('category') as $cat)
+                            <input type="hidden" name="category[]" value="{{ $cat }}">
+                        @endforeach
+                    @endif
+                    @if(request()->filled('price_max'))
+                        <input type="hidden" name="price_max" value="{{ request('price_max') }}">
+                    @endif
+                    @if(request()->filled('sort'))
+                        <input type="hidden" name="sort" value="{{ request('sort') }}">
+                    @endif
                     <button type="button" class="header-search-clear-btn" id="clearSearchBtn" title="Clear Search" style="display: none;">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
@@ -221,7 +232,7 @@
     </div>
 
     <!-- ROW 2: Sub Navigation Bar -->
-    <div class="header-sub">
+    <div class="header-sub bg-[#0e0c12] transition-all duration-300" id="headerSub">
         <div class="header-sub-inner">
 
             <!-- Navigation Links -->
@@ -287,7 +298,7 @@
             <p class="footer-desc" style="margin-bottom:16px">Subscribe to get updates on new drops, private sales, and fashion edits.</p>
             <div class="footer-newsletter" style="display:flex;gap:8px">
                 <input class="inp" placeholder="your.email@domain.com" style="flex:1;height:42px"/>
-                <button class="btn btn-primary btn-sm" onclick="showToast('Subscribed!','success')" style="height:42px">Join</button>
+                <button class="btn btn-accent btn-sm" onclick="showToast('Subscribed!','success')" style="height:42px">Join</button>
             </div>
         </div>
     </div>
@@ -474,6 +485,30 @@
         showToast("{{ session('info') }}", 'info');
     @endif
 
+    // Header Scroll Glass Effect
+    const header = document.getElementById('siteHeader');
+    const headerMain = document.getElementById('headerMain');
+    const headerSub = document.getElementById('headerSub');
+    if (header && headerMain && headerSub) {
+        const checkScroll = () => {
+            if (window.scrollY > 20) {
+                header.classList.add('scrolled');
+                headerMain.classList.remove('bg-[#0a0a0d]');
+                headerMain.classList.add('bg-[#0a0a0d]/75', 'backdrop-blur-sm');
+                headerSub.classList.remove('bg-[#0e0c12]');
+                headerSub.classList.add('bg-[#0e0c12]/80', 'backdrop-blur-sm');
+            } else {
+                header.classList.remove('scrolled');
+                headerMain.classList.remove('bg-[#0a0a0d]/75', 'backdrop-blur-sm');
+                headerMain.classList.add('bg-[#0a0a0d]');
+                headerSub.classList.remove('bg-[#0e0c12]/80', 'backdrop-blur-sm');
+                headerSub.classList.add('bg-[#0e0c12]');
+            }
+        };
+        window.addEventListener('scroll', checkScroll);
+        checkScroll();
+    }
+
     // Global Form Submit Loader
     document.addEventListener('submit', (e) => {
         if (e.defaultPrevented) return;
@@ -613,9 +648,13 @@
                             `;
                         });
                         html += '</div>';
+                        const urlParams = new URLSearchParams(window.location.search);
+                        urlParams.set('search', query);
+                        urlParams.delete('page');
+                        const viewAllUrl = `/shop?${urlParams.toString()}`;
                         html += `
                             <div class="search-result-footer">
-                                <a href="/shop?search=${encodeURIComponent(query)}">View All Results</a>
+                                <a href="${viewAllUrl}">View All Results</a>
                             </div>
                         `;
                         searchDropdown.innerHTML = html;
@@ -824,7 +863,15 @@
                 searchInput.dispatchEvent(new Event('input'));
                 
                 clearBtn.style.display = 'none';
-                searchInput.focus();
+
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('search')) {
+                    urlParams.delete('search');
+                    urlParams.delete('page');
+                    window.location.search = urlParams.toString();
+                } else {
+                    searchInput.focus();
+                }
             });
         }
     })();
