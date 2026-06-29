@@ -168,6 +168,12 @@
                     <button type="button" class="header-search-voice-btn" id="voiceSearchBtn" title="Search by Voice">
                         <i class="fa-solid fa-microphone"></i>
                     </button>
+                    @if(class_exists(\SGCart\ImageSearch\ImageSearchServiceProvider::class))
+                    <button type="button" class="header-search-camera-btn" id="cameraSearchBtn" title="Search by Image">
+                        <i class="fa-solid fa-camera"></i>
+                    </button>
+                    <input type="file" id="cameraSearchInput" accept="image/*" style="display:none;" />
+                    @endif
                     <button type="submit" class="header-search-btn" aria-label="Search">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </button>
@@ -998,10 +1004,433 @@
         });
     };
 </script>
-
 <form action="{{ route('store.logout') }}" method="POST" id="storeLogoutForm" class="hidden">
     @csrf
 </form>
+
+@if(class_exists(\SGCart\ImageSearch\ImageSearchServiceProvider::class))
+<!-- Image Crop Modal -->
+<div id="imageCropModal" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden" style="display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col" style="background: white; border-radius: 16px; width: 90%; max-width: 600px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); display: flex; flex-direction: column;">
+        <div class="flex justify-between items-center mb-4" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 class="text-lg font-bold text-ink" style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--color-ink);">Select Object to Search</h3>
+            <button id="closeCropModalBtn" class="text-slate-400 hover:text-slate-600 cursor-pointer border-none bg-transparent" style="border: none; background: transparent; cursor: pointer; color: #94a3b8; font-size: 1.25rem; padding: 4px;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <p class="text-sm text-stone mb-4" style="margin-top: 0; margin-bottom: 16px; font-size: 0.875rem; color: #6b7280; line-height: 1.5;">
+            Please adjust the selection box or draw a new one to select the specific product you want to search.
+        </p>
+        
+        <div class="flex items-center justify-center bg-slate-50 rounded-xl overflow-hidden relative border border-dashed border-slate-200" style="background: #f8fafc; border-radius: 12px; border: 2px dashed #e2e8f0; display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 12px; min-height: 300px; max-height: 450px;">
+            <canvas id="cropCanvas" style="max-width: 100%; max-height: 380px; display: block; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"></canvas>
+        </div>
+        
+        <div class="flex justify-end gap-3 mt-5" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+            <button id="cancelCropBtn" class="border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer" style="border: 1px solid #cbd5e1; background: transparent; color: #334155; padding: 10px 20px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer;">Cancel</button>
+            <button id="confirmCropBtn" class="btn btn-accent px-6 py-2.5 rounded-lg text-sm font-semibold cursor-pointer" style="padding: 10px 20px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; color: white; background-color: var(--color-accent); border: none;">Search Product</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cameraBtn = document.getElementById('cameraSearchBtn');
+    const cameraInput = document.getElementById('cameraSearchInput');
+    const cropModal = document.getElementById('imageCropModal');
+    const closeCropModalBtn = document.getElementById('closeCropModalBtn');
+    const cancelCropBtn = document.getElementById('cancelCropBtn');
+    const confirmCropBtn = document.getElementById('confirmCropBtn');
+    const canvas = document.getElementById('cropCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    let originalFile = null;
+    let img = new Image();
+    
+    // Canvas selection state
+    let isDrawing = false;
+    let interactionMode = null; // 'draw', 'move', or handle name ('tl', 'tr', etc.)
+    
+    let rectX = 0, rectY = 0, rectWidth = 0, rectHeight = 0;
+    let startX = 0, startY = 0;
+    
+    let dragStartX = 0, dragStartY = 0;
+    let initialRectX = 0, initialRectY = 0;
+    let initialRectWidth = 0, initialRectHeight = 0;
+    
+    const handleRadius = 6;
+    const hitRadius = 12; // larger hit area for easier touch/click
+    
+    if (cameraBtn && cameraInput) {
+        cameraBtn.addEventListener('click', () => {
+            cameraInput.click();
+        });
+        
+        cameraInput.addEventListener('change', function(e) {
+            if (e.target.files.length === 0) return;
+            
+            const file = e.target.files[0];
+            originalFile = file;
+            
+            showToast('Loading image for cropping...', 'info');
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                img = new Image();
+                img.onload = function() {
+                    setupCanvas();
+                    openModal();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+            
+            // Reset input so change event fires again if user selects same file
+            cameraInput.value = '';
+        });
+    }
+    
+    function openModal() {
+        cropModal.style.display = 'flex';
+        setTimeout(() => {
+            cropModal.style.opacity = '1';
+        }, 10);
+    }
+    
+    function closeModal() {
+        cropModal.style.opacity = '0';
+        setTimeout(() => {
+            cropModal.style.display = 'none';
+        }, 300);
+    }
+    
+    closeCropModalBtn.addEventListener('click', closeModal);
+    cancelCropBtn.addEventListener('click', closeModal);
+    
+    function setupCanvas() {
+        // Set canvas dimensions based on image aspect ratio inside container max dimensions
+        const maxW = 560; // Max width based on CSS max-width of container
+        const maxH = 380; // Max height based on CSS max-height of container
+        
+        let w = img.width;
+        let h = img.height;
+        
+        if (w > maxW) {
+            h = h * (maxW / w);
+            w = maxW;
+        }
+        if (h > maxH) {
+            w = w * (maxH / h);
+            h = maxH;
+        }
+        
+        canvas.width = w;
+        canvas.height = h;
+        
+        // Reset selection to select the full image by default (shrunk slightly to keep handles visible)
+        const margin = 12;
+        rectX = margin;
+        rectY = margin;
+        rectWidth = Math.max(10, w - 2 * margin);
+        rectHeight = Math.max(10, h - 2 * margin);
+        
+        drawCanvas();
+    }
+    
+    function getHandles() {
+        return {
+            tl: { x: rectX, y: rectY, cursor: 'nwse-resize' },
+            tr: { x: rectX + rectWidth, y: rectY, cursor: 'nesw-resize' },
+            bl: { x: rectX, y: rectY + rectHeight, cursor: 'nesw-resize' },
+            br: { x: rectX + rectWidth, y: rectY + rectHeight, cursor: 'nwse-resize' },
+            t:  { x: rectX + rectWidth / 2, y: rectY, cursor: 'ns-resize' },
+            b:  { x: rectX + rectWidth / 2, y: rectY + rectHeight, cursor: 'ns-resize' },
+            l:  { x: rectX, y: rectY + rectHeight / 2, cursor: 'ew-resize' },
+            r:  { x: rectX + rectWidth, y: rectY + rectHeight / 2, cursor: 'ew-resize' }
+        };
+    }
+    
+    function drawHandles() {
+        if (rectWidth <= 0 || rectHeight <= 0) return;
+        
+        const handles = getHandles();
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#c8a97e';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([]); // solid border for handles
+        
+        for (const key in handles) {
+            const h = handles[key];
+            ctx.beginPath();
+            ctx.arc(h.x, h.y, handleRadius, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+        }
+    }
+    
+    function drawCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        if (rectWidth > 0 && rectHeight > 0) {
+            // Semi-transparent overlay
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Clear selected region
+            ctx.clearRect(rectX, rectY, rectWidth, rectHeight);
+            
+            // Redraw image portion inside selection to remove overlay
+            ctx.drawImage(img, 
+                rectX * (img.width / canvas.width), 
+                rectY * (img.height / canvas.height), 
+                rectWidth * (img.width / canvas.width), 
+                rectHeight * (img.height / canvas.height),
+                rectX, rectY, rectWidth, rectHeight
+            );
+            
+            // Border around selection
+            ctx.strokeStyle = '#c8a97e';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]);
+            ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
+            
+            // Draw handles
+            drawHandles();
+        }
+    }
+    
+    // Mouse / Touch Event Handlers for drawing and resizing selection box
+    function getMousePos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
+        return {
+            x: Math.max(0, Math.min(clientX - rect.left, canvas.width)),
+            y: Math.max(0, Math.min(clientY - rect.top, canvas.height))
+        };
+    }
+    
+    function getInteractionAt(pos) {
+        const handles = getHandles();
+        
+        // 1. Check if over any handle (using hitRadius for easier click/touch targeting)
+        for (const key in handles) {
+            const h = handles[key];
+            const dist = Math.hypot(pos.x - h.x, pos.y - h.y);
+            if (dist <= hitRadius) {
+                return key;
+            }
+        }
+        
+        // 2. Check if inside selection box
+        if (pos.x >= rectX && pos.x <= rectX + rectWidth &&
+            pos.y >= rectY && pos.y <= rectY + rectHeight) {
+            return 'move';
+        }
+        
+        // 3. Otherwise, draw a new box
+        return 'draw';
+    }
+    
+    function updateCursor(e) {
+        if (isDrawing) return;
+        
+        const pos = getMousePos(e);
+        const mode = getInteractionAt(pos);
+        
+        if (mode === 'move') {
+            canvas.style.cursor = 'move';
+        } else if (mode === 'draw') {
+            canvas.style.cursor = 'crosshair';
+        } else {
+            const handles = getHandles();
+            canvas.style.cursor = handles[mode].cursor;
+        }
+    }
+    
+    function startDrawing(e) {
+        e.preventDefault();
+        const pos = getMousePos(e);
+        
+        interactionMode = getInteractionAt(pos);
+        isDrawing = true;
+        
+        dragStartX = pos.x;
+        dragStartY = pos.y;
+        
+        initialRectX = rectX;
+        initialRectY = rectY;
+        initialRectWidth = rectWidth;
+        initialRectHeight = rectHeight;
+        
+        if (interactionMode === 'draw') {
+            rectX = pos.x;
+            rectY = pos.y;
+            rectWidth = 0;
+            rectHeight = 0;
+            startX = pos.x;
+            startY = pos.y;
+        }
+    }
+    
+    function draw(e) {
+        if (!isDrawing) {
+            updateCursor(e);
+            return;
+        }
+        e.preventDefault();
+        const pos = getMousePos(e);
+        
+        const dx = pos.x - dragStartX;
+        const dy = pos.y - dragStartY;
+        
+        if (interactionMode === 'draw') {
+            rectX = Math.min(startX, pos.x);
+            rectY = Math.min(startY, pos.y);
+            rectWidth = Math.abs(startX - pos.x);
+            rectHeight = Math.abs(startY - pos.y);
+        } else if (interactionMode === 'move') {
+            let newX = initialRectX + dx;
+            let newY = initialRectY + dy;
+            
+            // Clamp within canvas boundaries
+            newX = Math.max(0, Math.min(newX, canvas.width - rectWidth));
+            newY = Math.max(0, Math.min(newY, canvas.height - rectHeight));
+            
+            rectX = newX;
+            rectY = newY;
+        } else {
+            // Handle resizing
+            let x1 = rectX;
+            let x2 = rectX + rectWidth;
+            let y1 = rectY;
+            let y2 = rectY + rectHeight;
+            
+            const minSize = 15;
+            
+            // Left-side resizing
+            if (interactionMode === 'tl' || interactionMode === 'l' || interactionMode === 'bl') {
+                x1 = initialRectX + dx;
+                x1 = Math.max(0, Math.min(x1, x2 - minSize));
+            }
+            // Right-side resizing
+            if (interactionMode === 'tr' || interactionMode === 'r' || interactionMode === 'br') {
+                x2 = initialRectX + initialRectWidth + dx;
+                x2 = Math.max(x1 + minSize, Math.min(x2, canvas.width));
+            }
+            // Top-side resizing
+            if (interactionMode === 'tl' || interactionMode === 't' || interactionMode === 'tr') {
+                y1 = initialRectY + dy;
+                y1 = Math.max(0, Math.min(y1, y2 - minSize));
+            }
+            // Bottom-side resizing
+            if (interactionMode === 'bl' || interactionMode === 'b' || interactionMode === 'br') {
+                y2 = initialRectY + initialRectHeight + dy;
+                y2 = Math.max(y1 + minSize, Math.min(y2, canvas.height));
+            }
+            
+            rectX = x1;
+            rectY = y1;
+            rectWidth = x2 - x1;
+            rectHeight = y2 - y1;
+        }
+        
+        drawCanvas();
+    }
+    
+    function stopDrawing(e) {
+        if (!isDrawing) return;
+        isDrawing = false;
+        interactionMode = null;
+    }
+    
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    window.addEventListener('mouseup', stopDrawing);
+    
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    window.addEventListener('touchend', stopDrawing);
+    
+    confirmCropBtn.addEventListener('click', function() {
+        if (rectWidth < 10 || rectHeight < 10) {
+            showToast('Please select a valid search area.', 'warning');
+            return;
+        }
+        
+        // Crop the image using temp canvas
+        let targetWidth = rectWidth * (img.width / canvas.width);
+        let targetHeight = rectHeight * (img.height / canvas.height);
+        
+        // Resize if too large
+        const maxDimension = 800;
+        if (targetWidth > maxDimension || targetHeight > maxDimension) {
+            if (targetWidth > targetHeight) {
+                targetHeight = targetHeight * (maxDimension / targetWidth);
+                targetWidth = maxDimension;
+            } else {
+                targetWidth = targetWidth * (maxDimension / targetHeight);
+                targetHeight = maxDimension;
+            }
+        }
+        
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = targetWidth;
+        tempCanvas.height = targetHeight;
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        tempCtx.drawImage(img, 
+            rectX * (img.width / canvas.width), 
+            rectY * (img.height / canvas.height), 
+            rectWidth * (img.width / canvas.width), 
+            rectHeight * (img.height / canvas.height),
+            0, 0, tempCanvas.width, tempCanvas.height
+        );
+        
+        tempCanvas.toBlob(function(blob) {
+            if (blob) {
+                closeModal();
+                showToast('Searching for selected product...', 'info');
+                const croppedFile = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
+                submitSearchForm(croppedFile);
+            }
+        }, 'image/jpeg', 0.85);
+    });
+    
+    function submitSearchForm(file) {
+        // Build dynamic form to POST the file
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{{ route('image-search.search') }}";
+        form.enctype = 'multipart/form-data';
+        form.style.display = 'none';
+        
+        // Add CSRF token
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        form.appendChild(csrfInput);
+        
+        // Add File input using DataTransfer to assign file programmaticly
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.name = 'image';
+        
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+        
+        form.appendChild(fileInput);
+        document.body.appendChild(form);
+        
+        // Submit the form
+        form.submit();
+    }
+});
+</script>
+@endif
 
 @yield('scripts')
 </body>

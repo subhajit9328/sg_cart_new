@@ -231,6 +231,23 @@ body.storefront {
     color: #ef4444;
     animation: voice-pulse 1.2s infinite ease-in-out;
 }
+
+.header-search-camera-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    color: #6b7280;
+    font-size: 16px;
+    transition: color 0.15s, transform 0.15s;
+}
+.header-search-camera-btn:hover {
+    color: var(--color-accent);
+}
 @keyframes voice-pulse {
     0% {
         transform: scale(1);

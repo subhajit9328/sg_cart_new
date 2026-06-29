@@ -64,6 +64,7 @@
         {
             "type": "path",
             "url": "packages/sgcart/payment-authorizenet",
+            "url": "packages/sgcart/image-search",
             "options": {
                 "symlink": true
             }
