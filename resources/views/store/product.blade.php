@@ -57,9 +57,23 @@
             <form action="{{ route('store.cart.add') }}" method="POST" id="purchaseForm">
                 @csrf
                 <input type="hidden" name="product_id" value="{{ $product['id'] }}"/>
+            </form>
                 
                 <p class="text-xs font-bold text-accent uppercase tracking-widest mb-1.5">{{ $product['cat'] }} Capsule</p>
-                <h1 class="font-display font-extrabold text-3xl text-slate-900 leading-tight mb-2">{{ $product['name'] }}</h1>
+                <div class="flex justify-between items-start gap-4 mb-2">
+                    <h1 class="font-display font-extrabold text-3xl text-slate-900 leading-tight flex-1">{{ $product['name'] }}</h1>
+                    @php
+                        $inWishlist = in_array($product['id'], session('wishlist', []));
+                    @endphp
+                    <button type="button" 
+                        class="wishlist-detail-btn {{ $inWishlist ? 'active' : '' }}" 
+                        data-product-id="{{ $product['id'] }}"
+                        onclick="toggleWishlist(this)"
+                        title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}"
+                        style="margin-top: 4px; flex-shrink: 0;">
+                        <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart text-base"></i>
+                    </button>
+                </div>
                 
 
 
@@ -91,7 +105,7 @@
                 @if(!empty($product['sizes']))
                     <div class="mb-5">
                         <label class="label">Select Size</label>
-                        <input type="hidden" name="size" id="sizeInput" value="{{ $product['sizes'][0] ?? '' }}"/>
+                        <input type="hidden" name="size" id="sizeInput" value="{{ $product['sizes'][0] ?? '' }}" form="purchaseForm"/>
                         <div class="flex flex-wrap gap-2">
                             @foreach($product['sizes'] as $sz)
                                 <button type="button" class="size-btn {{ $loop->first ? 'active' : '' }}" onclick="selectSize('{{ $sz }}', this)">
@@ -106,7 +120,7 @@
                 @if(!empty($product['colors']))
                     <div class="mb-6">
                         <label class="label">Select Color</label>
-                        <input type="hidden" name="color" id="colorInput" value="{{ $product['colors'][0] ?? '' }}"/>
+                        <input type="hidden" name="color" id="colorInput" value="{{ $product['colors'][0] ?? '' }}" form="purchaseForm"/>
                         <div class="flex gap-3">
                             @foreach($product['colors'] as $col)
                                 <button type="button" class="color-btn {{ $loop->first ? 'active' : '' }}" 
@@ -118,7 +132,6 @@
                     </div>
                 @endif
 
-                <!-- Quantity & Actions -->
                 <!-- Quantity & Actions -->
                 <div class="flex gap-3 items-end pt-5 border-t border-slate-100 mb-6">
                     @if(($product['stock'] ?? 0) <= 0)
@@ -132,24 +145,14 @@
                             <label class="label">Quantity</label>
                             <div class="qty-row" style="height:46px">
                                 <button type="button" class="qty-btn" onclick="adjQty(-1)"><i class="fa-solid fa-minus text-xs"></i></button>
-                                <input type="number" name="quantity" id="qtyInput" value="1" min="1" class="qty-num" readonly/>
+                                <input type="number" name="quantity" id="qtyInput" value="1" min="1" class="qty-num" readonly form="purchaseForm"/>
                                 <button type="button" class="qty-btn" onclick="adjQty(1)"><i class="fa-solid fa-plus text-xs"></i></button>
                             </div>
                         </div>
                         <div class="flex-1">
-                            <button type="submit" class="btn btn-primary w-full" style="height:46px"><i class="fa-solid fa-bag-shopping"></i> Add To Cart</button>
+                            <button type="submit" class="btn btn-primary w-full" style="height:46px" form="purchaseForm"><i class="fa-solid fa-cart-shopping"></i> Add To Cart</button>
                         </div>
                     @endif
-                    <div>
-                        @php
-                            $inWishlist = in_array($product['id'], session('wishlist', [3, 5, 6]));
-                        @endphp
-                        <button type="button" onclick="document.getElementById('wlForm').submit();" 
-                            class="btn btn-outline" style="height:46px; width:46px; padding:0; display:flex; align-items:center; justify-content:center;" 
-                            title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
-                            <i class="{{ $inWishlist ? 'fa-solid fa-heart text-rose-500' : 'fa-regular fa-heart text-slate-500' }} text-base"></i>
-                        </button>
-                    </div>
                 </div>
 
                 @if(($product['stock'] ?? 0) > 0 && ($product['stock'] ?? 0) <= 5)
@@ -210,39 +213,45 @@
                         <p class="text-xs text-slate-500 leading-relaxed">Standard shipping takes between 3 to 7 business days depending on location. Tracking information is sent automatically via email once shipped.</p>
                     </div>
                 </div>
-            </form>
-        </div>
+            </div>
 
     </div>
 
-    <!-- Hidden form for Wishlist -->
-    <form id="wlForm" action="{{ route('store.wishlist.toggle') }}" method="POST" class="hidden">
-        @csrf
-        <input type="hidden" name="product_id" value="{{ $product['id'] }}"/>
-    </form>
+
 
     <!-- RELATED PRODUCTS -->
-    <div class="section" style="margin-top:40px">
-        <div class="section-header">
-            <h2 class="section-title">Related Products</h2>
-        </div>
-        <div class="grid-4">
-            @foreach($related as $rel)
-                <div class="product-card" onclick="window.location.href='{{ route('store.product', $rel['slug']) }}'">
-                    <div class="product-card-img">
-                        <img src="{{ $rel['img'] }}" alt="{{ $rel['name'] }}"/>
-                    </div>
-                    <div class="product-card-body">
-                        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $rel['cat'] }}</p>
-                        <h3 class="font-display font-bold text-sm mt-1 text-slate-800 line-clamp-1">{{ $rel['name'] }}</h3>
-                        <div class="flex items-center gap-1.5 mt-2">
-                            <span class="font-bold text-sm text-slate-900">₹{{ number_format($rel['price'], 2) }}</span>
+    @if(isset($related) && count($related) > 0)
+        <div class="section" style="margin-top:40px">
+            <div class="section-header">
+                <h2 class="section-title">Related Products</h2>
+            </div>
+            <div class="grid-4">
+                @foreach($related as $rel)
+                    <div class="product-card" onclick="window.location.href='{{ route('store.product', $rel['slug']) }}'">
+                        <div class="product-card-img">
+                            <img src="{{ $rel['img'] }}" alt="{{ $rel['name'] }}"/>
+                            @php
+                                $inWishlist = in_array($rel['id'], session('wishlist', []));
+                            @endphp
+                            <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}" 
+                                data-product-id="{{ $rel['id'] }}"
+                                onclick="event.stopPropagation(); toggleWishlist(this)"
+                                title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                                <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
+                            </button>
+                        </div>
+                        <div class="product-card-body">
+                            <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $rel['cat'] }}</p>
+                            <h3 class="font-display font-bold text-sm mt-1 text-slate-800 line-clamp-1">{{ $rel['name'] }}</h3>
+                            <div class="flex items-center gap-1.5 mt-2">
+                                <span class="font-bold text-sm text-slate-900">₹{{ number_format($rel['price'], 2) }}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            @endforeach
+                @endforeach
+            </div>
         </div>
-    </div>
+    @endif
 
 </div>
 @endsection

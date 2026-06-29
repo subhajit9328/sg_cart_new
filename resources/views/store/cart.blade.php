@@ -1,6 +1,6 @@
 @extends('layouts.store')
 
-@section('title', 'Shopping Bag — sgcart')
+@section('title', 'Shopping Cart — sgcart')
 
 @section('content')
 
@@ -10,7 +10,7 @@
     
     @if(empty($cart))
         <div class="text-center py-20 px-5">
-            <i class="fa-solid fa-bag-shopping text-6xl text-slate-300 mb-5 block"></i>
+            <i class="fa-solid fa-cart-shopping text-6xl text-slate-300 mb-5 block"></i>
             <h3 class="font-display font-bold text-2xl mb-2">Your cart is empty</h3>
             <p class="text-sm text-slate-400 mb-8">Looks like you haven't added anything yet.</p>
             <a href="{{ route('store.shop') }}" class="btn btn-primary"><i class="fa-solid fa-arrow-left"></i>Start Shopping</a>
@@ -84,14 +84,24 @@
                         <span>Subtotal</span>
                         <span class="text-slate-900 font-semibold">₹{{ number_format($subtotal, 2) }}</span>
                     </div>
+                    @if($hasShippingPackage)
                     <div class="flex justify-between">
                         <span>Shipping</span>
-                        <span class="text-emerald-600 font-semibold">Free</span>
+                        @if(($selectionMode ?? 'user_choice') === 'user_choice')
+                            <span class="text-slate-500 italic">Calculated at checkout</span>
+                        @else
+                            <span class="{{ $shippingCost > 0 ? 'text-slate-900 font-semibold' : 'text-emerald-600 font-semibold' }}">
+                                {{ $shippingCost > 0 ? '₹' . number_format($shippingCost, 2) : 'Free' }}
+                            </span>
+                        @endif
                     </div>
+                    @endif
+                    @if($taxLabel)
                     <div class="flex justify-between">
-                        <span>Tax (8%)</span>
+                        <span>{{ $taxLabel }}</span>
                         <span class="text-slate-900 font-semibold">₹{{ number_format($tax, 2) }}</span>
                     </div>
+                    @endif
                     @if($discount > 0)
                         <div class="flex justify-between text-emerald-600 font-semibold">
                             <span>Discount</span>

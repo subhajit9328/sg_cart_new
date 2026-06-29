@@ -14,17 +14,23 @@ Route::middleware(['web'])->group(function () {
         // Group permissions checks
         Route::middleware(['permission:manage variants'])->group(function () {
             
-            // Nested Product Variant management endpoints
-            Route::get('products/{product_id}/variants', [VariantController::class, 'getGrid'])->name('products.variants.grid');
-            Route::post('products/{product_id}/variants', [VariantController::class, 'saveGrid'])->name('products.variants.save');
-            Route::post('products/{product_id}/variants/quick-add-attribute', [VariantController::class, 'quickAddAttribute'])->name('products.variants.quick-add-attribute');
-            Route::delete('variants/image/{productVariantImage}', [VariantController::class, 'deleteProductVariantImage'])->name('variants.delete-image');
+            if (config('product-variants.features.color', true) || config('product-variants.features.size', true)) {
+                // Nested Product Variant management endpoints
+                Route::get('products/{product_id}/variants', [VariantController::class, 'getGrid'])->name('products.variants.grid');
+                Route::post('products/{product_id}/variants', [VariantController::class, 'saveGrid'])->name('products.variants.save');
+                Route::post('products/{product_id}/variants/quick-add-attribute', [VariantController::class, 'quickAddAttribute'])->name('products.variants.quick-add-attribute');
+                Route::delete('variants/image/{productVariantImage}', [VariantController::class, 'deleteProductVariantImage'])->name('variants.delete-image');
 
-            // Color Swatches CRUD resource routes
-            Route::resource('colors', ColorController::class);
+                // Color Swatches CRUD resource routes
+                if (config('product-variants.features.color', true)) {
+                    Route::resource('colors', ColorController::class);
+                }
 
-            // Size Swatches CRUD resource routes
-            Route::resource('sizes', SizeController::class);
+                // Size Swatches CRUD resource routes
+                if (config('product-variants.features.size', true)) {
+                    Route::resource('sizes', SizeController::class);
+                }
+            }
         });
     });
 });

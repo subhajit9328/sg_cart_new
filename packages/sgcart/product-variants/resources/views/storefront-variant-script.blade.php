@@ -1,14 +1,19 @@
 <script>
 (function() {
+    const hasColor = {{ config('product-variants.features.color', true) ? 'true' : 'false' }};
+    const hasSize = {{ config('product-variants.features.size', true) ? 'true' : 'false' }};
+
     const originalSelectSize = window.selectSize;
     const originalSelectColor = window.selectColor;
 
     window.selectSize = function(val, el) {
+        if (!hasSize) return;
         if (originalSelectSize) originalSelectSize(val, el);
         checkVariant();
     };
 
     window.selectColor = function(val, el) {
+        if (!hasColor) return;
         if (originalSelectColor) originalSelectColor(val, el);
         checkVariant();
     };
@@ -103,6 +108,7 @@
     // Helper to filter and select size options based on selected color
     let isUpdatingSize = false;
     function updateSizeAvailability(currentColor) {
+        if (!hasSize) return;
         const sizeButtons = document.querySelectorAll('.size-btn');
         if (sizeButtons.length === 0) return;
 
@@ -191,18 +197,20 @@
     function checkVariant() {
         if (productVariants.length === 0) return;
 
-        const currentColor = document.getElementById('colorInput') ? document.getElementById('colorInput').value : null;
+        const currentColor = (hasColor && document.getElementById('colorInput')) ? document.getElementById('colorInput').value : null;
         
         // Update size options availability based on selected color
-        updateSizeAvailability(currentColor);
+        if (hasSize) {
+            updateSizeAvailability(currentColor);
+        }
         
-        const currentSize  = document.getElementById('sizeInput')  ? document.getElementById('sizeInput').value  : null;
+        const currentSize  = (hasSize && document.getElementById('sizeInput'))  ? document.getElementById('sizeInput').value  : null;
 
         // Try exact match first
         let match = productVariants.find(function(v) {
-            const colorMatch = (!currentColor && !v.color_hex) ||
+            const colorMatch = !hasColor || (!currentColor && !v.color_hex) ||
                 (currentColor && v.color_hex && currentColor.toLowerCase() === v.color_hex.toLowerCase());
-            const sizeMatch  = (!currentSize  && !v.size_code)  ||
+            const sizeMatch  = !hasSize || (!currentSize  && !v.size_code)  ||
                 (currentSize  && v.size_code  && currentSize.toUpperCase()  === v.size_code.toUpperCase());
             return colorMatch && sizeMatch;
         });
@@ -210,8 +218,8 @@
         // Fallback: partial match (color only or size only)
         if (!match) {
             match = productVariants.find(function(v) {
-                const colorMatch = currentColor && v.color_hex && currentColor.toLowerCase() === v.color_hex.toLowerCase();
-                const sizeMatch  = currentSize  && v.size_code  && currentSize.toUpperCase()  === v.size_code.toUpperCase();
+                const colorMatch = hasColor && currentColor && v.color_hex && currentColor.toLowerCase() === v.color_hex.toLowerCase();
+                const sizeMatch  = hasSize && currentSize  && v.size_code  && currentSize.toUpperCase()  === v.size_code.toUpperCase();
                 return colorMatch || sizeMatch;
             });
         }

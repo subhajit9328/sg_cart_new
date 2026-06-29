@@ -22,20 +22,27 @@ class VariantController extends Controller
         $colorId = $request->query('color_id');
         $sizeId = $request->query('size_id');
 
+        $colorEnabled = config('product-variants.features.color', true);
+        $sizeEnabled = config('product-variants.features.size', true);
+
         $query = ProductVariant::with(['images'])
             ->where('product_id', $productId)
             ->where('is_active', true);
 
-        if ($colorId) {
-            $query->where('color_id', $colorId);
-        } else {
-            $query->whereNull('color_id');
+        if ($colorEnabled) {
+            if ($colorId) {
+                $query->where('color_id', $colorId);
+            } else {
+                $query->whereNull('color_id');
+            }
         }
 
-        if ($sizeId) {
-            $query->where('size_id', $sizeId);
-        } else {
-            $query->whereNull('size_id');
+        if ($sizeEnabled) {
+            if ($sizeId) {
+                $query->where('size_id', $sizeId);
+            } else {
+                $query->whereNull('size_id');
+            }
         }
 
         $variant = $query->first();
@@ -45,8 +52,8 @@ class VariantController extends Controller
             $variant = ProductVariant::with(['images'])
                 ->where('product_id', $productId)
                 ->where('is_active', true)
-                ->when($colorId, fn($q) => $q->where('color_id', $colorId))
-                ->when($sizeId, fn($q) => $q->where('size_id', $sizeId))
+                ->when($colorEnabled && $colorId, fn($q) => $q->where('color_id', $colorId))
+                ->when($sizeEnabled && $sizeId, fn($q) => $q->where('size_id', $sizeId))
                 ->first();
         }
 
@@ -82,8 +89,8 @@ class VariantController extends Controller
             ->where('product_id', $product->id)
             ->get();
             
-        $colors = Color::all();
-        $sizes = Size::all();
+        $colors = config('product-variants.features.color', true) ? Color::all() : collect();
+        $sizes = config('product-variants.features.size', true) ? Size::all() : collect();
 
         if ($request->ajax()) {
             return view('product-variants::admin-product-variants-partial', compact('product', 'variants', 'colors', 'sizes'));
@@ -99,14 +106,21 @@ class VariantController extends Controller
     {
         $product = \App\Models\Product::where('id', $productId)->orWhere('ulid', $productId)->firstOrFail();
         
-        $request->validate([
+        $rules = [
             'variants' => 'nullable|array',
             'variants.*.price' => 'nullable|numeric|gt:0',
             'variants.*.sale_price' => 'nullable|numeric|min:0',
             'variants.*.stock' => 'nullable|integer|min:0',
-            'variants.*.color_id' => 'nullable|exists:colors,id',
-            'variants.*.size_id' => 'nullable|exists:sizes,id',
-        ]);
+        ];
+
+        if (config('product-variants.features.color', true)) {
+            $rules['variants.*.color_id'] = 'nullable|exists:colors,id';
+        }
+        if (config('product-variants.features.size', true)) {
+            $rules['variants.*.size_id'] = 'nullable|exists:sizes,id';
+        }
+
+        $request->validate($rules);
 
         $submittedVariants = $request->input('variants', []);
 
@@ -139,31 +153,34 @@ class VariantController extends Controller
                 $vToDelete->delete();
             }
 
+            $colorEnabled = config('product-variants.features.color', true);
+            $sizeEnabled = config('product-variants.features.size', true);
+
             // 2. Create / Update rows
             foreach ($submittedVariants as $index => $varData) {
                 $variant = null;
+                
+                $data = [
+                    'sku'        => $varData['sku'] ?: null,
+                    'price'      => $varData['price'] ?: null,
+                    'sale_price' => $varData['sale_price'] ?: null,
+                    'stock'      => (int) ($varData['stock'] ?? 0),
+                    'is_active'  => isset($varData['is_active']) ? (bool)$varData['is_active'] : false,
+                ];
+
+                if ($colorEnabled) {
+                    $data['color_id'] = $varData['color_id'] ?: null;
+                }
+                if ($sizeEnabled) {
+                    $data['size_id'] = $varData['size_id'] ?: null;
+                }
+
                 if (!empty($varData['id'])) {
                     $variant = ProductVariant::findOrFail($varData['id']);
-                    $variant->update([
-                        'color_id'   => $varData['color_id'] ?: null,
-                        'size_id'    => $varData['size_id'] ?: null,
-                        'sku'        => $varData['sku'] ?: null,
-                        'price'      => $varData['price'] ?: null,
-                        'sale_price' => $varData['sale_price'] ?: null,
-                        'stock'      => (int) ($varData['stock'] ?? 0),
-                        'is_active'  => isset($varData['is_active']) ? (bool)$varData['is_active'] : false,
-                    ]);
+                    $variant->update($data);
                 } else {
-                    $variant = ProductVariant::create([
-                        'product_id' => $product->id,
-                        'color_id'   => $varData['color_id'] ?: null,
-                        'size_id'    => $varData['size_id'] ?: null,
-                        'sku'        => $varData['sku'] ?: null,
-                        'price'      => $varData['price'] ?: null,
-                        'sale_price' => $varData['sale_price'] ?: null,
-                        'stock'      => (int) ($varData['stock'] ?? 0),
-                        'is_active'  => isset($varData['is_active']) ? (bool)$varData['is_active'] : false,
-                    ]);
+                    $data['product_id'] = $product->id;
+                    $variant = ProductVariant::create($data);
                 }
 
                 // Delete variant images submitted for removal
@@ -243,6 +260,9 @@ class VariantController extends Controller
         $type = $request->input('type');
         
         if ($type === 'color') {
+            if (!config('product-variants.features.color', true)) {
+                return response()->json(['success' => false, 'message' => 'Color feature is uninstalled.'], 400);
+            }
             $data = $request->validate([
                 'name' => 'required|string|unique:colors,name|max:255',
                 'hex_code' => 'required|string|max:10',
@@ -255,6 +275,9 @@ class VariantController extends Controller
                 'extra' => $color->hex_code
             ]);
         } elseif ($type === 'size') {
+            if (!config('product-variants.features.size', true)) {
+                return response()->json(['success' => false, 'message' => 'Size feature is uninstalled.'], 400);
+            }
             $data = $request->validate([
                 'name' => 'required|string|max:255',
                 'code' => 'required|string|unique:sizes,code|max:10',

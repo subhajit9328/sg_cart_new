@@ -9,15 +9,17 @@ use SGCart\Coupons\Services\CouponDiscountCalculator;
 
 class CouponServiceProvider extends ServiceProvider
 {
-    /**
-     * Register services.
-     */
     public function register(): void
     {
         // Bind the dynamic discount calculator singleton to the container
         $this->app->singleton('coupon.calculator', function ($app) {
             return new CouponDiscountCalculator();
         });
+
+        // Merge configuration
+        $this->mergeConfigFrom(
+            __DIR__.'/../../config/coupons.php', 'coupons'
+        );
     }
 
     /**
@@ -26,8 +28,20 @@ class CouponServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../../config/coupons.php' => config_path('coupons.php'),
+            ], 'sgcart-coupons-config');
+
+            // Auto-publish config file if it does not exist
+            $targetConfig = config_path('coupons.php');
+            if (!file_exists($targetConfig)) {
+                @copy(__DIR__.'/../../config/coupons.php', $targetConfig);
+            }
+
             $this->commands([
+                \SGCart\Coupons\Console\Commands\ConfigCommand::class,
                 \SGCart\Coupons\Console\Commands\UninstallCommand::class,
+                \SGCart\Coupons\Console\Commands\SyncCommand::class,
             ]);
         }
 
@@ -54,12 +68,12 @@ class CouponServiceProvider extends ServiceProvider
             if ($this->app->runningInConsole()) {
                 $command = $_SERVER['argv'][1] ?? null;
                 if (in_array($command, [
-                    'sgcart:variants-uninstall',
                     'sgcart:coupons-uninstall',
+                    'sgcart:coupons-sync',
                     'migrate:rollback',
                     'migrate:reset',
                     'migrate:refresh',
-                ])) {
+                ]) || (is_string($command) && (str_contains($command, 'uninstall') || str_contains($command, 'sync')))) {
                     return;
                 }
             }

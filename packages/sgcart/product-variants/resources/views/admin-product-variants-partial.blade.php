@@ -7,12 +7,16 @@
             <p class="text-xs text-slate-400 mt-1">Define combinations of colors and sizes. Override SKU, price, and track individual inventory.</p>
         </div>
         <div class="flex gap-2">
+            @if(config('product-variants.features.color', true))
             <button type="button" onclick="openQuickAttributeModal('color')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold transition-all shadow-sm cursor-pointer">
                 <i class="fa-solid fa-palette text-blue-500"></i> Quick Add Color
             </button>
+            @endif
+            @if(config('product-variants.features.size', true))
             <button type="button" onclick="openQuickAttributeModal('size')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold transition-all shadow-sm cursor-pointer">
                 <i class="fa-solid fa-ruler-horizontal text-emerald-500"></i> Quick Add Size
             </button>
+            @endif
             <button type="button" onclick="addVariantRow()" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all shadow-sm shadow-blue-600/10 border-none cursor-pointer">
                 <i class="fa-solid fa-plus"></i> Add Variant Row
             </button>
@@ -25,8 +29,12 @@
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/50">
+                        @if(config('product-variants.features.color', true))
                         <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-44">Color</th>
+                        @endif
+                        @if(config('product-variants.features.size', true))
                         <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-44">Size</th>
+                        @endif
                         <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">SKU Override</th>
                         <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-36">
                             Price(₹)
@@ -47,6 +55,7 @@
                     <tr data-row-index="{{ $index }}" class="hover:bg-slate-50/30 dark:hover:bg-slate-800/10 transition-colors">
                         <input type="hidden" name="variants[{{ $index }}][id]" value="{{ $v->id }}">
                         
+                        @if(config('product-variants.features.color', true))
                         <td class="px-4 py-3.5">
                             <select name="variants[{{ $index }}][color_id]" class="color-select w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-2.5 text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-blue-500 transition-all">
                                 <option value="">— No Color —</option>
@@ -56,7 +65,9 @@
                             </select>
                             <div class="variant-error-msg text-[9.5px] text-rose-500 mt-1 hidden font-medium whitespace-nowrap"></div>
                         </td>
+                        @endif
 
+                        @if(config('product-variants.features.size', true))
                         <td class="px-4 py-3.5">
                             <select name="variants[{{ $index }}][size_id]" class="size-select w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-2.5 text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-blue-500 transition-all">
                                 <option value="">— No Size —</option>
@@ -66,6 +77,7 @@
                             </select>
                             <div class="variant-error-msg text-[9.5px] text-rose-500 mt-1 hidden font-medium whitespace-nowrap"></div>
                         </td>
+                        @endif
 
                         <td class="px-4 py-3.5">
                             <input type="text" name="variants[{{ $index }}][sku]" value="{{ $v->sku }}" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 font-mono" placeholder="Leave empty for default">
@@ -223,6 +235,7 @@
 <!-- Templates for dynamically created Rows & Modals -->
 <template id="variantRowTemplate">
     <tr data-row-index="__INDEX__" class="hover:bg-slate-50/30 dark:hover:bg-slate-800/10 transition-colors">
+        @if(config('product-variants.features.color', true))
         <td class="px-4 py-3.5">
             <select name="variants[__INDEX__][color_id]" class="color-select w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-2.5 text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-blue-500 transition-all">
                 <option value="">— No Color —</option>
@@ -232,7 +245,9 @@
             </select>
             <div class="variant-error-msg text-[9.5px] text-rose-500 mt-1 hidden font-medium whitespace-nowrap"></div>
         </td>
+        @endif
 
+        @if(config('product-variants.features.size', true))
         <td class="px-4 py-3.5">
             <select name="variants[__INDEX__][size_id]" class="size-select w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-2.5 text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-blue-500 transition-all">
                 <option value="">— No Size —</option>
@@ -242,6 +257,7 @@
             </select>
             <div class="variant-error-msg text-[9.5px] text-rose-500 mt-1 hidden font-medium whitespace-nowrap"></div>
         </td>
+        @endif
 
         <td class="px-4 py-3.5">
             <input type="text" name="variants[__INDEX__][sku]" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 font-mono" placeholder="Leave empty for default">
@@ -624,10 +640,22 @@
         rows.forEach(row => {
             const colorSelect = row.querySelector('.color-select');
             const sizeSelect = row.querySelector('.size-select');
-            const colorId = colorSelect.value;
-            const sizeId = sizeSelect.value;
+            const colorId = colorSelect ? colorSelect.value : '';
+            const sizeId = sizeSelect ? sizeSelect.value : '';
 
-            if (!colorId && !sizeId) {
+            const hasColorSelect = !!colorSelect;
+            const hasSizeSelect = !!sizeSelect;
+
+            let isEmpty = false;
+            if (hasColorSelect && hasSizeSelect) {
+                isEmpty = !colorId && !sizeId;
+            } else if (hasColorSelect) {
+                isEmpty = !colorId;
+            } else if (hasSizeSelect) {
+                isEmpty = !sizeId;
+            }
+
+            if (isEmpty) {
                 emptyRows.push(row);
                 hasEmpty = true;
             } else {
@@ -644,13 +672,17 @@
             row.classList.add('bg-rose-50/50', 'dark:bg-rose-950/20');
             const colorSelect = row.querySelector('.color-select');
             const sizeSelect = row.querySelector('.size-select');
-            [colorSelect, sizeSelect].forEach(select => {
+            const selects = [];
+            if (colorSelect) selects.push(colorSelect);
+            if (sizeSelect) selects.push(sizeSelect);
+            
+            selects.forEach(select => {
                 select.classList.remove('border-slate-200', 'dark:border-slate-700');
                 select.classList.add('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
             });
             const errorMsgs = row.querySelectorAll('.variant-error-msg');
             errorMsgs.forEach(msg => {
-                msg.textContent = 'Color or Size required';
+                msg.textContent = 'Required selection';
                 msg.classList.remove('hidden');
             });
         });
@@ -664,7 +696,11 @@
                     row.classList.add('bg-rose-50/50', 'dark:bg-rose-950/20');
                     const colorSelect = row.querySelector('.color-select');
                     const sizeSelect = row.querySelector('.size-select');
-                    [colorSelect, sizeSelect].forEach(select => {
+                    const selects = [];
+                    if (colorSelect) selects.push(colorSelect);
+                    if (sizeSelect) selects.push(sizeSelect);
+                    
+                    selects.forEach(select => {
                         select.classList.remove('border-slate-200', 'dark:border-slate-700');
                         select.classList.add('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
                     });
@@ -678,7 +714,17 @@
         });
 
         if (hasEmpty) {
-            showToast('Each variant must have at least a Color or a Size selected.', 'error');
+            const hasColorSelect = !!document.querySelector('.color-select');
+            const hasSizeSelect = !!document.querySelector('.size-select');
+            let msg = 'Each variant must have a valid configuration.';
+            if (hasColorSelect && hasSizeSelect) {
+                msg = 'Each variant must have at least a Color or a Size selected.';
+            } else if (hasColorSelect) {
+                msg = 'Each variant must have a Color selected.';
+            } else if (hasSizeSelect) {
+                msg = 'Each variant must have a Size selected.';
+            }
+            showToast(msg, 'error');
             if (event) {
                 event.preventDefault();
             }
@@ -686,7 +732,7 @@
         }
 
         if (hasDuplicate) {
-            showToast('Duplicate variant combinations (e.g. same color and size) are not allowed.', 'error');
+            showToast('Duplicate variant combinations are not allowed.', 'error');
             if (event) {
                 event.preventDefault();
             }

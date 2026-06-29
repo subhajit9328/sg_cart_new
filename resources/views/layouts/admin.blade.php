@@ -109,6 +109,14 @@
 
             @includeIf('coupons::admin-menu')
             @includeIf('product-variants::admin-menu')
+            @includeIf('shipping::admin-menu')
+            @includeIf('tax::admin-menu')
+            @can('manage payments')
+            <a href="{{ route('admin.payments.settings') }}" class="nav-link {{ Request::is('admin/payments*') ? 'active' : '' }}" data-tooltip="Payment Gateways">
+                <i class="fa-solid fa-credit-card"></i>
+                <span class="sidebar-text">Payment Gateways</span>
+            </a>
+            @endcan
         </nav>
 
 
@@ -352,8 +360,8 @@
                 </div>
                 <p class="text-sm text-stone dark:text-slate-400 mb-6 leading-relaxed">${text}</p>
                 <div class="flex justify-end gap-3">
-                    <button class="modal-cancel border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-colors bg-transparent">Cancel</button>
-                    <button class="modal-confirm ${confirmBtnClass} px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer">${confirmText}</button>
+                    <button class="modal-cancel border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-colors bg-transparent" style="text-transform: none;">Cancel</button>
+                    <button class="modal-confirm ${confirmBtnClass} px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer" style="text-transform: none;">${confirmText}</button>
                 </div>
             </div>
         `;

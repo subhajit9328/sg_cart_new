@@ -75,7 +75,11 @@
             <div class="filter-bar">
                 <div class="flex flex-wrap items-center gap-2 sm:gap-4">
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                        Showing <span class="text-slate-800 font-bold">{{ $products->count() }}</span> Products
+                        @if($products->total() > 0)
+                            Showing <span class="text-slate-800 font-bold">{{ $products->firstItem() }}–{{ $products->lastItem() }}</span> of <span class="text-slate-800 font-bold">{{ $products->total() }}</span> Products
+                        @else
+                            Showing <span class="text-slate-800 font-bold">0</span> Products
+                        @endif
                     </p>
                     @if($searchQuery)
                         <span class="text-xs bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg inline-flex items-center">
@@ -115,9 +119,15 @@
                                 <span class="product-badge badge-{{ strtolower($product['badge']) }}">{{ $product['badge'] }}</span>
                             @endif
                             <img src="{{ $product['img'] }}" alt="{{ $product['name'] }}"/>
-                            <div class="product-card-overlay">
-                                <button onclick="event.stopPropagation(); window.location.href='{{ route('store.product', $product['slug']) }}'" class="btn btn-primary btn-sm w-full"><i class="fa-solid fa-cart-shopping"></i> Quick Buy</button>
-                            </div>
+                            @php
+                                $inWishlist = in_array($product['id'], session('wishlist', []));
+                            @endphp
+                            <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}" 
+                                data-product-id="{{ $product['id'] }}"
+                                onclick="event.stopPropagation(); toggleWishlist(this)"
+                                title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                                <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
+                            </button>
                         </div>
                         <div class="product-card-body">
                             <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $product['cat'] }}</p>
@@ -138,6 +148,34 @@
                     </div>
                 @endforelse
             </div>
+
+            <!-- PAGINATION -->
+            @if($products->hasPages())
+                <div class="flex items-center justify-center gap-2 mt-12 mb-6">
+                    {{-- Previous Page Link --}}
+                    @if($products->onFirstPage())
+                        <span class="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-xs font-semibold text-stone bg-white opacity-40 cursor-not-allowed select-none dark:bg-[#171614] dark:border-[#2b2a27] dark:text-[#9ca3af] dark:opacity-25"><i class="fa-solid fa-chevron-left"></i></span>
+                    @else
+                        <a href="{{ $products->previousPageUrl() }}" class="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-xs font-semibold text-stone hover:text-ink hover:border-stone hover:bg-silk bg-white transition-all no-underline select-none dark:bg-[#171614] dark:border-[#2b2a27] dark:text-[#9ca3af] dark:hover:border-[#6b7280] dark:hover:bg-[#2b2925] dark:hover:text-[#f3f4f6]" rel="prev"><i class="fa-solid fa-chevron-left"></i></a>
+                    @endif
+
+                    {{-- Pagination Elements --}}
+                    @foreach($products->getUrlRange(1, $products->lastPage()) as $page => $url)
+                        @if($page == $products->currentPage())
+                            <span class="w-10 h-10 rounded-xl border border-accent bg-[#fbfaf8] flex items-center justify-center text-xs font-bold text-accent select-none dark:border-accent dark:bg-[#c8a97e]/15 dark:text-accent">{{ $page }}</span>
+                        @else
+                            <a href="{{ $url }}" class="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-xs font-semibold text-stone hover:text-ink hover:border-stone hover:bg-silk bg-white transition-all no-underline select-none dark:bg-[#171614] dark:border-[#2b2a27] dark:text-[#9ca3af] dark:hover:border-[#6b7280] dark:hover:bg-[#2b2925] dark:hover:text-[#f3f4f6]">{{ $page }}</a>
+                        @endif
+                    @endforeach
+
+                    {{-- Next Page Link --}}
+                    @if($products->hasMorePages())
+                        <a href="{{ $products->nextPageUrl() }}" class="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-xs font-semibold text-stone hover:text-ink hover:border-stone hover:bg-silk bg-white transition-all no-underline select-none dark:bg-[#171614] dark:border-[#2b2a27] dark:text-[#9ca3af] dark:hover:border-[#6b7280] dark:hover:bg-[#2b2925] dark:hover:text-[#f3f4f6]" rel="next"><i class="fa-solid fa-chevron-right"></i></a>
+                    @else
+                        <span class="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-xs font-semibold text-stone bg-white opacity-40 cursor-not-allowed select-none dark:bg-[#171614] dark:border-[#2b2a27] dark:text-[#9ca3af] dark:opacity-25"><i class="fa-solid fa-chevron-right"></i></span>
+                    @endif
+                </div>
+            @endif
         </div>
 
     </div>

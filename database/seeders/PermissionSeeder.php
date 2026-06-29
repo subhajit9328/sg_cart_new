@@ -28,6 +28,12 @@ class PermissionSeeder extends Seeder
             'manage products',
             'manage categories',
             'manage manufacturers',
+
+            // Shipping management
+            'manage shipping',
+
+            // Tax management
+            'manage tax',
         ];
 
         foreach ($permissions as $permission) {
@@ -40,11 +46,17 @@ class PermissionSeeder extends Seeder
         // ── Define roles and assign permissions ────────────────────────────
 
         // Super Admin — all permissions
-        $superAdmin = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
+        $superAdmin = Role::firstOrCreate(
+            ['name' => 'super-admin'],
+            ['guard_name' => 'web', 'ulid' => (string) \Illuminate\Support\Str::ulid()]
+        );
         $superAdmin->syncPermissions($permissions);
 
         // Admin — all except role management
-        $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $admin = Role::firstOrCreate(
+            ['name' => 'admin'],
+            ['guard_name' => 'web', 'ulid' => (string) \Illuminate\Support\Str::ulid()]
+        );
         $admin->syncPermissions([
             'view dashboard',
             'manage users',
@@ -54,7 +66,10 @@ class PermissionSeeder extends Seeder
         ]);
 
         // Product Manager — only catalogue
-        $productManager = Role::firstOrCreate(['name' => 'product-manager', 'guard_name' => 'web']);
+        $productManager = Role::firstOrCreate(
+            ['name' => 'product-manager'],
+            ['guard_name' => 'web', 'ulid' => (string) \Illuminate\Support\Str::ulid()]
+        );
         $productManager->syncPermissions([
             'view dashboard',
             'manage products',
@@ -63,7 +78,10 @@ class PermissionSeeder extends Seeder
         ]);
 
         // Viewer — read-only dashboard access
-        $viewer = Role::firstOrCreate(['name' => 'viewer', 'guard_name' => 'web']);
+        $viewer = Role::firstOrCreate(
+            ['name' => 'viewer'],
+            ['guard_name' => 'web', 'ulid' => (string) \Illuminate\Support\Str::ulid()]
+        );
         $viewer->syncPermissions([
             'view dashboard',
         ]);

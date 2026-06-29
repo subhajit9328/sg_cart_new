@@ -112,6 +112,78 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Detailed Tracking Events Specific to this Order -->
+                    <div class="mt-8 pt-6 border-t border-slate-100">
+                        <h5 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-map-location-dot text-slate-400"></i> Shipment Log & Milestones
+                        </h5>
+                        
+                        <div class="relative pl-6 border-l border-slate-200 space-y-6 ml-2.5">
+                            <!-- Event: Delivered -->
+                            @if($status === 'Delivered')
+                                <div class="relative">
+                                    <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-emerald-100 text-emerald-600 rounded-full ring-4 ring-white">
+                                        <i class="fa-solid fa-circle-check text-[10px]"></i>
+                                    </span>
+                                    <div class="text-xs">
+                                        <span class="font-bold text-slate-900 block">Package Delivered</span>
+                                        <p class="text-slate-500 mt-0.5">Package successfully delivered to the recipient address.</p>
+                                        <span class="text-[10px] text-slate-400 mt-1 block">{{ $order->updated_at->format('M d, Y h:i A') }}</span>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- Event: Shipped / In Transit -->
+                            @if($status === 'Shipped' || $status === 'Delivered')
+                                <div class="relative">
+                                    <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-blue-100 text-blue-600 rounded-full ring-4 ring-white">
+                                        <i class="fa-solid fa-truck text-[9px]"></i>
+                                    </span>
+                                    <div class="text-xs">
+                                        <span class="font-bold text-slate-900 block">Order Shipped (Transit Started)</span>
+                                        <p class="text-slate-500 mt-0.5">Dispatched via <strong class="text-slate-700">{{ $order->shipping_carrier ?? 'Delhivery Express' }}</strong> (Tracking ID: <span class="font-mono text-slate-850 font-semibold">{{ $order->tracking_number }}</span>).</p>
+                                        @if($order->tracking_url)
+                                            <a href="{{ $order->tracking_url }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-accent hover:text-slate-900 mt-1.5 transition-colors" style="text-decoration:none">
+                                                Track Shipment Live <i class="fa-solid fa-up-right-from-square text-[8px]"></i>
+                                            </a>
+                                        @endif
+                                        <span class="text-[10px] text-slate-400 mt-1 block">
+                                            @if($status === 'Delivered')
+                                                {{ $order->created_at->addDay()->format('M d, Y') }} 11:30 AM
+                                            @else
+                                                {{ $order->updated_at->format('M d, Y h:i A') }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- Event: Processed & Packed -->
+                            <div class="relative">
+                                <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-slate-100 text-slate-500 rounded-full ring-4 ring-white">
+                                    <i class="fa-solid fa-box text-[9px]"></i>
+                                </span>
+                                <div class="text-xs">
+                                    <span class="font-bold text-slate-950 block">Processed & Packed</span>
+                                    <p class="text-slate-500 mt-0.5">Your items have been carefully packaged and are ready for handover to our courier partner.</p>
+                                    <span class="text-[10px] text-slate-400 mt-1 block">{{ $order->created_at->addHours(3)->format('M d, Y h:i A') }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Event: Placed & Confirmed -->
+                            <div class="relative">
+                                <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-slate-100 text-slate-500 rounded-full ring-4 ring-white">
+                                    <i class="fa-solid fa-check text-[9px]"></i>
+                                </span>
+                                <div class="text-xs">
+                                    <span class="font-bold text-slate-950 block">Order Placed & Confirmed</span>
+                                    <p class="text-slate-500 mt-0.5">Order record created with reference number <span class="font-mono text-slate-800 font-semibold">{{ $order->order_number }}</span>. Payment authorized successfully.</p>
+                                    <span class="text-[10px] text-slate-400 mt-1 block">{{ $order->created_at->format('M d, Y h:i A') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 @endif
             </div>
 
@@ -156,20 +228,99 @@
         <!-- Right Side: Shipping & Cost details -->
         <div class="flex flex-col gap-6">
             
-            <!-- Shipping Card -->
+            <!-- Shipping Details Card -->
             <div class="bg-white border border-[#e8e4df] rounded-2xl p-6">
-                <h4 class="font-display font-extrabold text-xs text-slate-400 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 flex items-center gap-1.5">
-                    <i class="fa-solid fa-map-location-dot"></i> Shipping Details
+                <h4 class="font-display font-extrabold text-xs text-slate-400 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-truck"></i> Shipping Details</span>
+                    @if($order->address_type)
+                        <span class="inline-flex px-1.5 py-0.5 rounded bg-slate-100 text-[9px] font-bold text-slate-600 uppercase">{{ $order->address_type }}</span>
+                    @endif
                 </h4>
                 <div class="text-sm font-bold text-slate-800">{{ $order->first_name }} {{ $order->last_name }}</div>
-                <div class="text-xs text-slate-500 leading-relaxed mt-1.5">
-                    {{ $order->address }}<br/>
-                    @if($order->city) {{ $order->city }}, @endif
-                    @if($order->state) {{ $order->state }} @endif
-                    @if($order->zip) {{ $order->zip }} @endif
-                    @if($order->country) <br/>{{ $order->country }} @endif
+                <div class="text-xs text-slate-500 leading-relaxed mt-1.5 space-y-1">
+                    <p>{{ $order->address }}</p>
+                    @if($order->landmark)
+                        <p class="italic text-slate-400">Landmark: {{ $order->landmark }}</p>
+                    @endif
+                    <p>
+                        @if($order->city) {{ $order->city }}, @endif
+                        @if($order->state) {{ $order->state }} @endif
+                        @if($order->zip) {{ $order->zip }} @endif
+                    </p>
+                    @if($order->country) <p>{{ $order->country }}</p> @endif
+                    @if($order->phone)
+                        <p class="text-slate-600 mt-2 font-medium flex items-center gap-1"><i class="fa-solid fa-phone text-[10px] text-slate-400"></i> {{ $order->phone }}@if($order->alternate_phone) / {{ $order->alternate_phone }} (Alt)@endif</p>
+                    @endif
                 </div>
             </div>
+
+            <!-- Billing Details Card -->
+            <div class="bg-white border border-[#e8e4df] rounded-2xl p-6">
+                <h4 class="font-display font-extrabold text-xs text-slate-400 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 flex items-center gap-1.5">
+                    <i class="fa-solid fa-receipt"></i> Billing Details
+                </h4>
+                @php
+                    $bFirstName = $order->shipping_and_billing_same ? $order->first_name : $order->billing_first_name;
+                    $bLastName = $order->shipping_and_billing_same ? $order->last_name : $order->billing_last_name;
+                    $bPhone = $order->shipping_and_billing_same ? $order->phone : $order->billing_phone;
+                    $bAddress = $order->shipping_and_billing_same ? $order->address : $order->billing_address;
+                    $bCity = $order->shipping_and_billing_same ? $order->city : $order->billing_city;
+                    $bState = $order->shipping_and_billing_same ? $order->state : $order->billing_state;
+                    $bZip = $order->shipping_and_billing_same ? $order->zip : $order->billing_zip;
+                    $bCountry = $order->shipping_and_billing_same ? $order->country : $order->billing_country;
+                @endphp
+                <div class="text-sm font-bold text-slate-800">{{ $bFirstName }} {{ $bLastName }}</div>
+                <div class="text-xs text-slate-500 leading-relaxed mt-1.5 space-y-1">
+                    <p>{{ $bAddress }}</p>
+                    <p>
+                        @if($bCity) {{ $bCity }}, @endif
+                        @if($bState) {{ $bState }} @endif
+                        @if($bZip) {{ $bZip }} @endif
+                    </p>
+                    @if($bCountry) <p>{{ $bCountry }}</p> @endif
+                    @if($bPhone)
+                        <p class="text-slate-600 mt-2 font-medium flex items-center gap-1"><i class="fa-solid fa-phone text-[10px] text-slate-400"></i> {{ $bPhone }}</p>
+                    @endif
+                </div>
+                @if($order->shipping_and_billing_same)
+                    <p class="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-3 pt-2 border-t border-slate-100">
+                        <i class="fa-solid fa-circle-check"></i> Same as shipping details
+                    </p>
+                @endif
+            </div>
+
+            <!-- Shipment Tracking Card -->
+            @if($order->tracking_number)
+            <div class="bg-white border border-[#e8e4df] rounded-2xl p-6">
+                <h4 class="font-display font-extrabold text-xs text-slate-400 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-truck-fast"></i> Shipment Tracking</span>
+                    <span class="inline-flex px-1.5 py-0.5 rounded bg-blue-50 text-[9px] font-bold text-blue-600 uppercase">{{ $order->status->value ?? $order->status }}</span>
+                </h4>
+                <div class="text-xs text-slate-500 leading-relaxed space-y-2">
+                    <div class="flex justify-between">
+                        <span class="font-bold text-slate-700">Courier Partner:</span>
+                        <span class="text-slate-800 font-medium">{{ $order->shipping_carrier ?? 'N/A' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-bold text-slate-700">Tracking Number:</span>
+                        <span class="font-mono text-slate-800 font-medium">{{ $order->tracking_number }}</span>
+                    </div>
+                    @if($order->estimated_delivery_at)
+                    <div class="flex justify-between">
+                        <span class="font-bold text-slate-700">Est. Delivery:</span>
+                        <span class="text-slate-800 font-medium">{{ $order->estimated_delivery_at->format('M d, Y') }}</span>
+                    </div>
+                    @endif
+                    @if($order->tracking_url)
+                    <div class="pt-2 border-t border-slate-100 mt-2">
+                        <a href="{{ $order->tracking_url }}" target="_blank" class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all text-center no-underline cursor-pointer">
+                            Track Package <i class="fa-solid fa-up-right-from-square text-[9px]"></i>
+                        </a>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @endif
 
             <!-- Payment & Summary Card -->
             <div class="bg-white border border-[#e8e4df] rounded-2xl p-6 flex flex-col gap-4">
@@ -185,6 +336,24 @@
                     </div>
                 </div>
 
+                @if($order->transaction_id)
+                <div class="text-xs text-slate-500 leading-relaxed pt-3 border-t border-slate-100 space-y-1">
+                    <span class="font-bold text-slate-700 block mb-1">Transaction Log:</span>
+                    <div class="flex justify-between">
+                        <span>Gateway:</span>
+                        <span class="font-medium text-slate-800">{{ $order->payment_method ?? 'SGCart Gateway' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Transaction ID:</span>
+                        <span class="font-mono text-slate-800">{{ $order->transaction_id }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Status:</span>
+                        <span class="font-bold text-emerald-605 uppercase text-[9px]">{{ $order->payment_status->value ?? $order->payment_status }}</span>
+                    </div>
+                </div>
+                @endif
+
                 <div class="flex flex-col gap-2.5 text-xs border-t border-slate-100 pt-4">
                     <div class="flex justify-between text-slate-500">
                         <span>Subtotal</span>
@@ -197,8 +366,14 @@
                         </div>
                     @endif
                     <div class="flex justify-between text-slate-500">
-                        <span>Tax</span>
+                        <span>{{ $order->tax_method ?? 'Tax' }}</span>
                         <span>₹{{ number_format($order->tax, 2) }}</span>
+                    </div>
+                    <div class="flex justify-between text-slate-500">
+                        <span>Shipping @if($order->shipping_method) ({{ $order->shipping_method }}) @endif</span>
+                        <span class="{{ $order->shipping_charge > 0 ? '' : 'text-emerald-600 font-bold' }}">
+                            {{ $order->shipping_charge > 0 ? '₹' . number_format($order->shipping_charge, 2) : 'Free' }}
+                        </span>
                     </div>
                     <div class="flex justify-between text-slate-800 font-extrabold text-sm border-t border-slate-100 pt-3 mt-1.5">
                         <span>Total</span>

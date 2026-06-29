@@ -26,6 +26,7 @@ Route::get('/cart/remove/{key}', [StoreController::class, 'removeFromCart'])->na
 
 Route::get('/success', [StoreController::class, 'success'])->name('store.success');
 Route::post('/wishlist/toggle', [StoreController::class, 'toggleWishlist'])->name('store.wishlist.toggle');
+Route::get('/wishlist', [StoreController::class, 'guestWishlist'])->name('store.wishlist');
 
 // Storefront Auth Routes for Guest Customers
 Route::middleware('guest:customer')->group(function () {
@@ -84,6 +85,14 @@ Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->middleware('permission:view dashboard')
             ->name('admin.dashboard');
+
+        // Payment Settings Route
+        Route::get('payments/settings', [\App\Http\Controllers\Admin\PaymentMethodController::class, 'index'])
+            ->middleware('permission:manage payments')
+            ->name('admin.payments.settings');
+        Route::post('payments/settings', [\App\Http\Controllers\Admin\PaymentMethodController::class, 'update'])
+            ->middleware('permission:manage payments')
+            ->name('admin.payments.settings.update');
 
         // CRUD routes under admin namespace (e.g. admin.users.index)
         Route::name('admin.')->group(function () {

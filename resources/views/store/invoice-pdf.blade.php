@@ -150,24 +150,63 @@
         <!-- Billing/Shipping Details -->
         <table class="details-table" style="margin-bottom: 20px;">
             <tr>
-                <td style="width: 50%; padding-right: 20px;">
-                    <div class="section-title">Invoiced To</div>
+                <td style="width: 50%; padding-right: 20px; vertical-align: top;">
+                    <div class="section-title">Shipping Address</div>
                     <div class="address-box">
                         <strong>{{ $order->first_name }} {{ $order->last_name }}</strong><br>
+                        @if($order->phone) Phone: {{ $order->phone }}@if($order->alternate_phone) / {{ $order->alternate_phone }}@endif<br>@endif
                         {{ $order->address }}<br>
+                        @if($order->landmark) Landmark: {{ $order->landmark }}<br>@endif
                         {{ $order->city }}, {{ $order->state }} {{ $order->zip }}<br>
-                        {{ $order->country }}
+                        {{ $order->country }} @if($order->address_type) ({{ strtoupper($order->address_type) }}) @endif
                     </div>
                 </td>
-                <td style="width: 50%; padding-left: 20px;">
+                <td style="width: 50%; padding-left: 20px; vertical-align: top;">
+                    <div class="section-title">Billing Address</div>
+                    <div class="address-box">
+                        @php
+                            $bFirstName = $order->shipping_and_billing_same ? $order->first_name : $order->billing_first_name;
+                            $bLastName = $order->shipping_and_billing_same ? $order->last_name : $order->billing_last_name;
+                            $bPhone = $order->shipping_and_billing_same ? $order->phone : $order->billing_phone;
+                            $bAddress = $order->shipping_and_billing_same ? $order->address : $order->billing_address;
+                            $bCity = $order->shipping_and_billing_same ? $order->city : $order->billing_city;
+                            $bState = $order->shipping_and_billing_same ? $order->state : $order->billing_state;
+                            $bZip = $order->shipping_and_billing_same ? $order->zip : $order->billing_zip;
+                            $bCountry = $order->shipping_and_billing_same ? $order->country : $order->billing_country;
+                        @endphp
+                        <strong>{{ $bFirstName }} {{ $bLastName }}</strong><br>
+                        @if($bPhone) Phone: {{ $bPhone }}<br>@endif
+                        {{ $bAddress }}<br>
+                        {{ $bCity }}, {{ $bState }} {{ $bZip }}<br>
+                        {{ $bCountry }} @if($order->shipping_and_billing_same) (Same as Shipping) @endif
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 50%; padding-right: 20px; padding-top: 15px; vertical-align: top;">
                     <div class="section-title">Payment Info</div>
                     <div class="address-box">
                         <strong>Method:</strong> {{ $order->payment_method ?? 'N/A' }}<br>
+                        @if($order->transaction_id)
+                            <strong>Transaction ID:</strong> {{ $order->transaction_id }}<br>
+                        @endif
                         @if($order->card_number_masked)
                             <strong>Card:</strong> {{ $order->card_number_masked }}<br>
                         @endif
                         <strong>Reference Order ID:</strong> {{ $order->order_number }}
                     </div>
+                </td>
+                <td style="width: 50%; padding-left: 20px; padding-top: 15px; vertical-align: top;">
+                    @if($order->tracking_number)
+                        <div class="section-title">Shipment Tracking</div>
+                        <div class="address-box">
+                            <strong>Carrier:</strong> {{ $order->shipping_carrier ?? 'N/A' }}<br>
+                            <strong>Tracking No:</strong> {{ $order->tracking_number }}<br>
+                            @if($order->estimated_delivery_at)
+                                <strong>Est. Delivery:</strong> {{ $order->estimated_delivery_at->format('M d, Y') }}<br>
+                            @endif
+                        </div>
+                    @endif
                 </td>
             </tr>
         </table>
@@ -216,8 +255,13 @@
                 @endif
                 <tr class="total-row">
                     <td style="border: none;"></td>
-                    <td colspan="2" style="text-align: right; color: #64748b;">Tax:</td>
+                    <td colspan="2" style="text-align: right; color: #64748b;">{{ $order->tax_method ?? 'Tax' }}:</td>
                     <td style="text-align: right;">₹{{ number_format($order->tax, 2) }}</td>
+                </tr>
+                <tr class="total-row">
+                    <td style="border: none;"></td>
+                    <td colspan="2" style="text-align: right; color: #64748b;">Shipping @if($order->shipping_method) ({{ $order->shipping_method }}) @endif:</td>
+                    <td style="text-align: right;">{{ $order->shipping_charge > 0 ? '₹' . number_format($order->shipping_charge, 2) : 'Free' }}</td>
                 </tr>
                 <tr class="grand-total-row">
                     <td style="border: none;"></td>

@@ -6,10 +6,10 @@
 
 
 <div class="storefront-container">
-    
+
     <!-- Account Wrap -->
     <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
-        
+
         <!-- Tab Selectors (Left Sidebar Card) -->
         <div class="bg-white border border-[#e8e4df] rounded-2xl p-5 md:p-6">
             <!-- User Info Summary Header -->
@@ -62,11 +62,30 @@
 
         <!-- Tab Content Box (Right Card) -->
         <div class="bg-white border border-[#e8e4df] rounded-2xl p-5 md:p-6">
-            
+
             <!-- Orders List Tab -->
             <div id="tab-orders" class="acc-content {{ $activeTab === 'orders' ? 'active' : '' }}">
-                <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-solid fa-clock-rotate-left text-accent text-sm"></i> Order History</h2>
-                
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-100">
+                    <h2 class="font-display font-bold text-base text-slate-900 flex items-center gap-2.5 mb-0" style="margin-bottom:0">
+                        <i class="fa-solid fa-clock-rotate-left text-accent text-sm"></i> Order History
+                    </h2>
+
+                    <!-- Search Bar Form -->
+                    <form action="{{ route('store.account', 'orders') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
+                        <div class="relative w-full sm:w-64">
+                            <input type="text" name="order_search" value="{{ request('order_search') }}" placeholder="Search by Order ID..." class="w-full px-3.5 py-2 border border-[#e8e4df] rounded-xl text-xs text-slate-800 bg-white outline-none focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]" style="padding-right: 32px;"/>
+                            @if(request('order_search'))
+                                <a href="{{ route('store.account', 'orders') }}" class="absolute right-3 text-slate-400 hover:text-slate-600 transition-colors" style="top: 50%; transform: translateY(-50%); text-decoration: none;">
+                                    <i class="fa-solid fa-circle-xmark text-xs"></i>
+                                </a>
+                            @endif
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm px-4" style="height: 33px; font-size: 11px; display: inline-flex; items-center; justify-content: center; border-radius: 10px;">
+                            Search
+                        </button>
+                    </form>
+                </div>
+
                 <div class="flex flex-col gap-4">
                     @forelse($orders as $order)
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border border-[#e8e4df] rounded-xl p-5 bg-white transition-all hover:shadow-[0_4px_15px_rgba(0,0,0,0.03)] gap-4">
@@ -109,12 +128,18 @@
                         </div>
                     @endforelse
                 </div>
+
+                @if($orders->hasPages())
+                    <div class="mt-8 pt-4 border-t border-slate-100 flex justify-center">
+                        {{ $orders->links() }}
+                    </div>
+                @endif
             </div>
 
             <!-- Profile Details Tab -->
             <div id="tab-profile" class="acc-content {{ $activeTab === 'profile' ? 'active' : '' }}">
                 <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-regular fa-user text-accent text-sm"></i> Profile Details</h2>
-                
+
                 <form action="{{ route('store.account.profile.update') }}" method="POST" class="w-full flex flex-col gap-4">
                     @csrf
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -149,7 +174,7 @@
                             @endif
                         </div>
                     </div>
-                    
+
                     <div class="pt-2">
                         <button type="submit" class="btn btn-primary btn-sm px-6">Save Changes</button>
                     </div>
@@ -159,7 +184,7 @@
             <!-- Addresses Tab -->
             <div id="tab-address" class="acc-content {{ $activeTab === 'address' ? 'active' : '' }}">
                 <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-solid fa-map-location-dot text-accent text-sm"></i> Manage Addresses</h2>
-                
+
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                     @foreach($addresses as $addr)
                         <div class="border border-[#e8e4df] rounded-xl p-5 relative transition-all hover:border-slate-400 {{ $addr->is_default ? 'border-slate-900 bg-slate-50/10' : '' }}">
@@ -175,7 +200,7 @@
                             </div>
                         </div>
                     @endforeach
-                    
+
                     <!-- Add Address Button Card -->
                     <div class="border-2 border-dashed border-[#e8e4df] hover:border-slate-400 hover:bg-slate-50/50 rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer gap-2 min-h-[150px] transition-all {{ $addresses->isEmpty() ? 'col-span-3' : '' }}" onclick="openAddressModal()">
                         <i class="fa-solid fa-plus text-2xl text-slate-300"></i>
@@ -184,31 +209,30 @@
                 </div>
 
                 <!-- Add Address Modal Markup -->
-                <x-address-modal 
-                    id="addressModal" 
-                    formId="addressForm" 
-                    onClose="closeAddressModal()" 
-                    submitBtnId="saveAddressSubmitBtn" 
-                    action="{{ route('store.account.address.add') }}" 
+                <x-address-modal
+                    id="addressModal"
+                    formId="addressForm"
+                    onClose="closeAddressModal()"
+                    submitBtnId="saveAddressSubmitBtn"
+                    action="{{ route('store.account.address.add') }}"
                 />
             </div>
 
             <!-- Wishlist Tab -->
             <div id="tab-wishlist" class="acc-content {{ $activeTab === 'wishlist' ? 'active' : '' }}">
                 <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-regular fa-heart text-accent text-sm"></i> My Wishlist</h2>
-                
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-5">
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     @forelse($wishlist as $wl)
                         <div class="product-card" onclick="window.location.href='{{ route('store.product', $wl['slug']) }}'">
                             <div class="product-card-img">
                                 <img src="{{ $wl['img'] }}" alt="{{ $wl['name'] }}"/>
-                                <div class="product-card-overlay">
-                                    <form action="{{ route('store.wishlist.toggle') }}" method="POST" class="w-full">
-                                        @csrf
-                                        <input type="hidden" name="product_id" value="{{ $wl['id'] }}"/>
-                                        <button type="submit" class="btn btn-outline btn-sm w-full bg-white hover:bg-black" style="padding:10px 0" onclick="event.stopPropagation()"><i class="fa-solid fa-heart-crack"></i> Remove</button>
-                                    </form>
-                                </div>
+                                <button type="button" class="wishlist-btn active"
+                                    data-product-id="{{ $wl['id'] }}"
+                                    onclick="event.stopPropagation(); toggleWishlist(this)"
+                                    title="Remove from Wishlist">
+                                    <i class="fa-solid fa-heart"></i>
+                                </button>
                             </div>
                             <div class="product-card-body" style="padding:10px">
                                 <h3 class="font-display font-bold text-xs text-slate-800 line-clamp-1">{{ $wl['name'] }}</h3>
@@ -216,7 +240,7 @@
                             </div>
                         </div>
                     @empty
-                        <div class="col-span-2 sm:col-span-3 py-12 text-center text-slate-400">
+                        <div class="col-span-2 sm:col-span-3 md:col-span-4 py-12 text-center text-slate-400">
                             <i class="fa-regular fa-heart text-4xl mb-3 opacity-20 block"></i>
                             <p class="text-sm">Your wishlist is empty.</p>
                             <a href="{{ route('store.shop') }}" class="btn btn-primary btn-sm mt-4">Discover Products</a>
@@ -253,18 +277,44 @@
 
         // Set Edit title
         title.innerHTML = '<i class="fa-solid fa-map-location-dot text-accent"></i> Edit Address';
-        
+
         // Update Form Action
         form.action = "{{ route('store.account.address.update', ':id') }}".replace(':id', address.id);
-        
+
         // Populate inputs
-        form.querySelector('input[name="first_name"]').value = address.first_name;
-        form.querySelector('input[name="last_name"]').value = address.last_name;
-        form.querySelector('input[name="address"]').value = address.address;
-        form.querySelector('input[name="city"]').value = address.city;
+        form.querySelector('input[name="first_name"]').value = address.first_name || '';
+        form.querySelector('input[name="last_name"]').value = address.last_name || '';
+        form.querySelector('input[name="address"]').value = address.address || '';
+        form.querySelector('input[name="city"]').value = address.city || '';
         form.querySelector('input[name="state"]').value = address.state || '';
-        form.querySelector('input[name="zip"]').value = address.zip;
+        form.querySelector('input[name="zip"]').value = address.zip || '';
         form.querySelector('input[name="country"]').value = address.country || '';
+
+        // New fields
+        form.querySelector('input[name="phone"]').value = address.phone || '';
+        form.querySelector('input[name="alternate_phone"]').value = address.alternate_phone || '';
+        form.querySelector('input[name="landmark"]').value = address.landmark || '';
+
+        // Address type radio selection
+        const addrTypeRadio = form.querySelector(`input[name="address_type"][value="${address.address_type || 'work'}"]`);
+        if (addrTypeRadio) addrTypeRadio.checked = true;
+
+        // Same as shipping checkbox & billing details
+        const isSame = address.shipping_and_billing_same === undefined ? true : !!address.shipping_and_billing_same;
+        const sameCheckbox = document.getElementById('addressModalSameAsShipping');
+        if (sameCheckbox) {
+            sameCheckbox.checked = isSame;
+            sameCheckbox.dispatchEvent(new Event('change'));
+        }
+
+        form.querySelector('input[name="billing_first_name"]').value = address.billing_first_name || '';
+        form.querySelector('input[name="billing_last_name"]').value = address.billing_last_name || '';
+        form.querySelector('input[name="billing_phone"]').value = address.billing_phone || '';
+        form.querySelector('input[name="billing_address"]').value = address.billing_address || '';
+        form.querySelector('input[name="billing_city"]').value = address.billing_city || '';
+        form.querySelector('input[name="billing_state"]').value = address.billing_state || '';
+        form.querySelector('input[name="billing_zip"]').value = address.billing_zip || '';
+        form.querySelector('input[name="billing_country"]').value = address.billing_country || '';
 
         // Open modal
         modal.classList.remove('opacity-0', 'pointer-events-none');
@@ -289,10 +339,20 @@
             title.innerHTML = '<i class="fa-solid fa-map-location-dot text-accent"></i> Add New Address';
             form.action = "{{ route('store.account.address.add') }}";
             form.reset();
+
+            // Trigger checkbox change event to reset billing section visibility
+            const sameCheckbox = document.getElementById('addressModalSameAsShipping');
+            if (sameCheckbox) {
+                sameCheckbox.checked = true;
+                sameCheckbox.dispatchEvent(new Event('change'));
+            }
+            // Clear any error styles
+            form.querySelectorAll('.error-text').forEach(el => el.remove());
+            form.querySelectorAll('.border-rose-500').forEach(el => el.classList.remove('border-rose-500'));
         }, 300);
     }
 
-    // Close modals when clicking on the backdrop
+    // Close modals when clicking on the backdrop and auto-open on validation errors
     document.addEventListener('DOMContentLoaded', function() {
         const addressModal = document.getElementById('addressModal');
         if (addressModal) {
@@ -302,6 +362,12 @@
                 }
             });
         }
+
+        @if ($errors->any())
+        if (typeof openAddressModal === 'function') {
+            openAddressModal();
+        }
+        @endif
 
         // Validate profile details form (missing fields)
         const profileForm = document.querySelector('#tab-profile form');
@@ -356,23 +422,23 @@
         if (profilePicInput) {
             profilePicInput.addEventListener('change', function(e) {
                 if (e.target.files.length === 0) return;
-                
+
                 const file = e.target.files[0];
-                
+
                 // Client-side quick size validation (2 MB)
                 if (file.size > 2 * 1024 * 1024) {
                     showToast('The profile picture size must not exceed 2 MB.', 'error');
                     profilePicInput.value = '';
                     return;
                 }
-                
+
                 const loader = document.getElementById('profile-picture-loader');
                 loader.classList.remove('opacity-0', 'pointer-events-none');
                 loader.classList.add('opacity-100');
-                
+
                 const formData = new FormData();
                 formData.append('profile_picture', file);
-                
+
                 fetch("{{ route('store.account.profile-picture.update') }}", {
                     method: 'POST',
                     headers: {
@@ -391,7 +457,7 @@
                 .then(data => {
                     if (data.success) {
                         showToast(data.message, 'success');
-                        
+
                         // Update container content: remove initials/old image and set new image
                         const container = document.getElementById('profile-picture-container');
                         let img = document.getElementById('profile-picture-img');
@@ -399,7 +465,7 @@
                             // Remove initials element
                             const initials = document.getElementById('profile-picture-initials');
                             if (initials) initials.remove();
-                            
+
                             img = document.createElement('img');
                             img.id = 'profile-picture-img';
                             img.alt = 'Profile Picture';

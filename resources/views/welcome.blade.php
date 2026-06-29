@@ -14,7 +14,7 @@
         <p class="hero-sub">Discover high-quality linen shirts, structured accessories, and lightweight knitwear engineered for maximum ease and durability.</p>
         <div class="hero-actions">
             <a href="{{ route('store.shop') }}" class="btn btn-accent">Shop The Drop <i class="fa-solid fa-arrow-right"></i></a>
-            <a href="{{ route('store.shop', ['category' => 'Women']) }}" class="btn btn-ghost">View Editorial</a>
+            <a href="{{ route('store.shop', ['category' => "Women's Clothing"]) }}" class="btn btn-ghost">View Editorial</a>
         </div>
     </div>
     <div class="hero-right">
@@ -46,20 +46,10 @@
         </div>
         <div class="cat-grid">
             @foreach($categories as $cat)
-                <a href="{{ route('store.shop', ['category' => $cat]) }}" class="cat-card">
-                    @php
-                        $catImgs = [
-                            'Women' => 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400&auto=format&fit=crop&q=80',
-                            'Men' => 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=400&auto=format&fit=crop&q=80',
-                            'Accessories' => 'https://images.unsplash.com/photo-1509319117193-57bab727e09d?w=400&auto=format&fit=crop&q=80',
-                            'Footwear' => 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&auto=format&fit=crop&q=80',
-                            'Beauty' => 'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?w=400&auto=format&fit=crop&q=80',
-                            'Kids' => 'https://images.unsplash.com/photo-1519457431-44ccd64a579b?w=400&auto=format&fit=crop&q=80'
-                        ];
-                    @endphp
-                    <img src="{{ $catImgs[$cat] ?? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&auto=format&fit=crop&q=80' }}" alt="{{ $cat }}"/>
+                <a href="{{ route('store.shop', ['category' => $cat->name]) }}" class="cat-card">
+                    <img src="{{ $cat->image ? \Illuminate\Support\Facades\Storage::url($cat->image) : asset('images/no-image.svg') }}" alt="{{ $cat->name }}"/>
                     <div class="cat-card-label">
-                        <p>{{ $cat }}</p>
+                        <p>{{ $cat->name }}</p>
                         <span>Shop Capsule <i class="fa-solid fa-chevron-right text-[10px] ml-0.5"></i></span>
                     </div>
                 </a>
@@ -87,9 +77,15 @@
                             <span class="product-badge badge-{{ strtolower($product['badge']) }}">{{ $product['badge'] }}</span>
                         @endif
                         <img src="{{ $product['img'] }}" alt="{{ $product['name'] }}"/>
-                        <div class="product-card-overlay">
-                            <button onclick="event.stopPropagation(); window.location.href='{{ route('store.product', $product['slug']) }}'" class="btn btn-primary btn-sm w-full"><i class="fa-solid fa-cart-shopping"></i> Quick Buy</button>
-                        </div>
+                        @php
+                            $inWishlist = in_array($product['id'], session('wishlist', []));
+                        @endphp
+                        <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}" 
+                            data-product-id="{{ $product['id'] }}"
+                            onclick="event.stopPropagation(); toggleWishlist(this)"
+                            title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                            <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
+                        </button>
                     </div>
                     <div class="product-card-body">
                         <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $product['cat'] }}</p>

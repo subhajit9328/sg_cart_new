@@ -10,14 +10,28 @@ class ProductVariantServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Bind variants logic if needed
+        $this->mergeConfigFrom(
+            __DIR__.'/../../config/product-variants.php', 'product-variants'
+        );
     }
 
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../../config/product-variants.php' => config_path('product-variants.php'),
+            ], 'sgcart-variants-config');
+
+            // Auto-publish config file if it does not exist
+            $targetConfig = config_path('product-variants.php');
+            if (!file_exists($targetConfig)) {
+                @copy(__DIR__.'/../../config/product-variants.php', $targetConfig);
+            }
+
             $this->commands([
+                \SGCart\ProductVariants\Console\Commands\ConfigCommand::class,
                 \SGCart\ProductVariants\Console\Commands\UninstallCommand::class,
+                \SGCart\ProductVariants\Console\Commands\SyncCommand::class,
             ]);
         }
 
@@ -40,11 +54,11 @@ class ProductVariantServiceProvider extends ServiceProvider
                 $command = $_SERVER['argv'][1] ?? null;
                 if (in_array($command, [
                     'sgcart:variants-uninstall',
-                    'sgcart:coupons-uninstall',
+                    'sgcart:variants-sync',
                     'migrate:rollback',
                     'migrate:reset',
                     'migrate:refresh',
-                ])) {
+                ]) || (is_string($command) && (str_contains($command, 'uninstall') || str_contains($command, 'sync')))) {
                     return;
                 }
             }
@@ -56,14 +70,6 @@ class ProductVariantServiceProvider extends ServiceProvider
                     '--force' => true
                 ]);
             }
-
-            // Seed colors and sizes if the tables are empty
-            // if (Schema::hasTable('colors') && Schema::hasTable('sizes')) {
-            //     Artisan::call('db:seed', [
-            //         '--class' => \SGCart\ProductVariants\Database\Seeders\VariantDatabaseSeeder::class,
-            //         '--force' => true,
-            //     ]);
-            // }
 
             // Seed Spatie manage permission for admin panel
             if (class_exists(\Spatie\Permission\Models\Permission::class)) {

@@ -11,8 +11,10 @@
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
         "sgcart/coupons": "@dev",
+        "sgcart/payment-razorpay": "@dev",
         "sgcart/image-search": "@dev",
         "sgcart/product-variants": "@dev",
+        "sgcart/shipping": "@dev",
         "spatie/laravel-permission": "^8.0"
     },
     "require-dev": {
@@ -42,6 +44,34 @@
         {
             "type": "path",
             "url": "packages/sgcart/image-search",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/shipping",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/tax",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/payment-razorpay",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/payment-authorizenet",
             "options": {
                 "symlink": true
             }

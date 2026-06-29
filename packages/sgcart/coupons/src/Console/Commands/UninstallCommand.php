@@ -66,6 +66,19 @@ class UninstallCommand extends Command
                 }
             }
 
+            // Force drop remaining package tables in case configuration prevented migrations from rolling back them
+            \Illuminate\Support\Facades\Schema::dropIfExists('coupons');
+
+            // Delete configuration file if it exists
+            $configPath = config_path('coupons.php');
+            if (file_exists($configPath)) {
+                if (@unlink($configPath)) {
+                    $this->info('Deleted configuration file: ' . $configPath);
+                } else {
+                    $this->warn('Could not delete configuration file: ' . $configPath);
+                }
+            }
+
             $this->info('SGCart Coupons uninstallation completed successfully.');
             return Command::SUCCESS;
         } catch (\Exception $e) {
