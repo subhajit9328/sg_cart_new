@@ -82,9 +82,34 @@ class ImageSearchController extends Controller
             }
 
             $color = $analysis['color'] ?? null;
+            if (is_string($color)) {
+                $color = trim($color);
+                if (in_array(strtolower($color), ['null', 'none', 'undefined', ''])) {
+                    $color = null;
+                }
+            } else {
+                $color = null;
+            }
+
             $keywords = $analysis['keywords'] ?? [];
 
             Log::info('Image analysis result: '.json_encode($analysis));
+
+            // If keywords is empty and object_type is null then show no products found
+            if (empty($keywords) && is_null($objectType)) {
+                $allCategories = collect(StoreController::getProducts())->pluck('cat')->unique()->values()->toArray();
+                if (empty($allCategories)) {
+                    $allCategories = ['Women', 'Men', 'Accessories', 'Footwear', 'Beauty'];
+                }
+                return view('store.shop', [
+                    'products' => collect(),
+                    'allCategories' => $allCategories,
+                    'selectedCategories' => (array) $request->input('category', []),
+                    'selectedPriceMax' => $request->input('price_max', 10000),
+                    'selectedSort' => $request->input('sort', 'default'),
+                    'searchQuery' => '',
+                ]);
+            }
 
             // Start the query builder for Product
             $productQuery = Product::query();
@@ -196,7 +221,6 @@ class ImageSearchController extends Controller
             // Fetch matched product IDs from the query builder
             $matchedIds = $productQuery->pluck('id');
 
-
             // Get all products using the existing StoreController logic
             $products = collect(StoreController::getProducts());
 
@@ -236,7 +260,9 @@ class ImageSearchController extends Controller
                 'searchQuery' => '',
             ]);
         } catch (\Exception $e) {
-            return redirect()->route('store.shop')->with('error', 'Image search failed: '.$e->getMessage());
+            Log::error('Image search error: '.$e->getMessage(), ['error' => $e]);
+
+            return redirect()->route('store.shop')->with('error', 'Image search failed');
         }
     }
 }

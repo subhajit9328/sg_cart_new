@@ -791,7 +791,6 @@
         }
     })();
 </script>
-
 <form action="{{ route('store.logout') }}" method="POST" id="storeLogoutForm" class="hidden">
     @csrf
 </form>
@@ -807,11 +806,11 @@
             </button>
         </div>
         <p class="text-sm text-stone mb-4" style="margin-top: 0; margin-bottom: 16px; font-size: 0.875rem; color: #6b7280; line-height: 1.5;">
-            Multiple products were detected in the image. Please click and drag on the image to select the specific product you want to search.
+            Please adjust the selection box or draw a new one to select the specific product you want to search.
         </p>
         
         <div class="flex items-center justify-center bg-slate-50 rounded-xl overflow-hidden relative border border-dashed border-slate-200" style="background: #f8fafc; border-radius: 12px; border: 2px dashed #e2e8f0; display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 12px; min-height: 300px; max-height: 450px;">
-            <canvas id="cropCanvas" style="max-width: 100%; max-height: 380px; cursor: crosshair; display: block; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"></canvas>
+            <canvas id="cropCanvas" style="max-width: 100%; max-height: 380px; display: block; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"></canvas>
         </div>
         
         <div class="flex justify-end gap-3 mt-5" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
@@ -837,8 +836,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Canvas selection state
     let isDrawing = false;
-    let startX = 0, startY = 0;
+    let interactionMode = null; // 'draw', 'move', or handle name ('tl', 'tr', etc.)
+    
     let rectX = 0, rectY = 0, rectWidth = 0, rectHeight = 0;
+    let startX = 0, startY = 0;
+    
+    let dragStartX = 0, dragStartY = 0;
+    let initialRectX = 0, initialRectY = 0;
+    let initialRectWidth = 0, initialRectHeight = 0;
+    
+    const handleRadius = 6;
+    const hitRadius = 12; // larger hit area for easier touch/click
     
     if (cameraBtn && cameraInput) {
         cameraBtn.addEventListener('click', () => {
@@ -849,104 +857,23 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.target.files.length === 0) return;
             
             const file = e.target.files[0];
-            showToast('Uploading and analyzing image for products...', 'info');
-            preprocessAndDetect(file);
+            originalFile = file;
+            
+            showToast('Loading image for cropping...', 'info');
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                img = new Image();
+                img.onload = function() {
+                    setupCanvas();
+                    openModal();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
             
             // Reset input so change event fires again if user selects same file
             cameraInput.value = '';
-        });
-    }
-
-    function preprocessAndDetect(file) {
-        // If file is smaller than 1.5MB, run detection directly to save client CPU
-        if (file.size < 1.5 * 1024 * 1024) {
-            runMultipleDetection(file);
-            return;
-        }
-
-        // Otherwise, downscale it to max 1000px first to avoid upload limit errors
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const tempImg = new Image();
-            tempImg.onload = function() {
-                const maxDim = 1000;
-                let w = tempImg.width;
-                let h = tempImg.height;
-
-                if (w > maxDim || h > maxDim) {
-                    if (w > h) {
-                        h = h * (maxDim / w);
-                        w = maxDim;
-                    } else {
-                        w = w * (maxDim / h);
-                        h = maxDim;
-                    }
-                }
-
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = w;
-                tempCanvas.height = h;
-                const tempCtx = tempCanvas.getContext('2d');
-                tempCtx.drawImage(tempImg, 0, 0, w, h);
-
-                tempCanvas.toBlob(function(blob) {
-                    if (blob) {
-                        const resizedFile = new File([blob], file.name, { type: 'image/jpeg' });
-                        runMultipleDetection(resizedFile);
-                    } else {
-                        runMultipleDetection(file);
-                    }
-                }, 'image/jpeg', 0.85);
-            };
-            tempImg.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function runMultipleDetection(file) {
-        const formData = new FormData();
-        formData.append('image', file);
-        
-        fetch("{{ route('image-search.detect-multiple') }}", {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: formData
-        })
-        .then(res => {
-            if (!res.ok) {
-                throw new Error('Server returned ' + res.status + ' error.');
-            }
-            return res.json();
-        })
-        .then(data => {
-            if (data.success) {
-                if (data.multiple) {
-                    // Multiple objects found, open crop modal
-                    showToast('Multiple items detected. Please select one.', 'success');
-                    
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        img.onload = function() {
-                            setupCanvas();
-                            openModal();
-                        };
-                        img.src = event.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    // Single object, proceed directly to search
-                    showToast('Analyzing and searching...', 'info');
-                    submitSearchForm(file);
-                }
-            } else {
-                showToast(data.message || 'Multiple object detection failed.', 'error');
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            showToast('Multiple object detection failed: ' + err.message, 'error');
         });
     }
     
@@ -987,13 +914,45 @@ document.addEventListener('DOMContentLoaded', function() {
         canvas.width = w;
         canvas.height = h;
         
-        // Reset selection
-        rectX = 0;
-        rectY = 0;
-        rectWidth = 0;
-        rectHeight = 0;
+        // Reset selection to select the full image by default (shrunk slightly to keep handles visible)
+        const margin = 12;
+        rectX = margin;
+        rectY = margin;
+        rectWidth = Math.max(10, w - 2 * margin);
+        rectHeight = Math.max(10, h - 2 * margin);
         
         drawCanvas();
+    }
+    
+    function getHandles() {
+        return {
+            tl: { x: rectX, y: rectY, cursor: 'nwse-resize' },
+            tr: { x: rectX + rectWidth, y: rectY, cursor: 'nesw-resize' },
+            bl: { x: rectX, y: rectY + rectHeight, cursor: 'nesw-resize' },
+            br: { x: rectX + rectWidth, y: rectY + rectHeight, cursor: 'nwse-resize' },
+            t:  { x: rectX + rectWidth / 2, y: rectY, cursor: 'ns-resize' },
+            b:  { x: rectX + rectWidth / 2, y: rectY + rectHeight, cursor: 'ns-resize' },
+            l:  { x: rectX, y: rectY + rectHeight / 2, cursor: 'ew-resize' },
+            r:  { x: rectX + rectWidth, y: rectY + rectHeight / 2, cursor: 'ew-resize' }
+        };
+    }
+    
+    function drawHandles() {
+        if (rectWidth <= 0 || rectHeight <= 0) return;
+        
+        const handles = getHandles();
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#c8a97e';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([]); // solid border for handles
+        
+        for (const key in handles) {
+            const h = handles[key];
+            ctx.beginPath();
+            ctx.arc(h.x, h.y, handleRadius, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+        }
     }
     
     function drawCanvas() {
@@ -1022,42 +981,147 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.lineWidth = 2;
             ctx.setLineDash([6, 4]);
             ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
+            
+            // Draw handles
+            drawHandles();
         }
     }
     
-    // Mouse / Touch Event Handlers for drawing selection box
+    // Mouse / Touch Event Handlers for drawing and resizing selection box
     function getMousePos(e) {
         const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const clientX = e.touches && e.touches.length > 0 ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches && e.touches.length > 0 ? e.touches[0].clientY : e.clientY;
         return {
-            x: clientX - rect.left,
-            y: clientY - rect.top
+            x: Math.max(0, Math.min(clientX - rect.left, canvas.width)),
+            y: Math.max(0, Math.min(clientY - rect.top, canvas.height))
         };
+    }
+    
+    function getInteractionAt(pos) {
+        const handles = getHandles();
+        
+        // 1. Check if over any handle (using hitRadius for easier click/touch targeting)
+        for (const key in handles) {
+            const h = handles[key];
+            const dist = Math.hypot(pos.x - h.x, pos.y - h.y);
+            if (dist <= hitRadius) {
+                return key;
+            }
+        }
+        
+        // 2. Check if inside selection box
+        if (pos.x >= rectX && pos.x <= rectX + rectWidth &&
+            pos.y >= rectY && pos.y <= rectY + rectHeight) {
+            return 'move';
+        }
+        
+        // 3. Otherwise, draw a new box
+        return 'draw';
+    }
+    
+    function updateCursor(e) {
+        if (isDrawing) return;
+        
+        const pos = getMousePos(e);
+        const mode = getInteractionAt(pos);
+        
+        if (mode === 'move') {
+            canvas.style.cursor = 'move';
+        } else if (mode === 'draw') {
+            canvas.style.cursor = 'crosshair';
+        } else {
+            const handles = getHandles();
+            canvas.style.cursor = handles[mode].cursor;
+        }
     }
     
     function startDrawing(e) {
         e.preventDefault();
-        isDrawing = true;
         const pos = getMousePos(e);
-        startX = pos.x;
-        startY = pos.y;
         
-        rectX = startX;
-        rectY = startY;
-        rectWidth = 0;
-        rectHeight = 0;
+        interactionMode = getInteractionAt(pos);
+        isDrawing = true;
+        
+        dragStartX = pos.x;
+        dragStartY = pos.y;
+        
+        initialRectX = rectX;
+        initialRectY = rectY;
+        initialRectWidth = rectWidth;
+        initialRectHeight = rectHeight;
+        
+        if (interactionMode === 'draw') {
+            rectX = pos.x;
+            rectY = pos.y;
+            rectWidth = 0;
+            rectHeight = 0;
+            startX = pos.x;
+            startY = pos.y;
+        }
     }
     
     function draw(e) {
-        if (!isDrawing) return;
+        if (!isDrawing) {
+            updateCursor(e);
+            return;
+        }
         e.preventDefault();
         const pos = getMousePos(e);
         
-        rectX = Math.min(startX, pos.x);
-        rectY = Math.min(startY, pos.y);
-        rectWidth = Math.abs(startX - pos.x);
-        rectHeight = Math.abs(startY - pos.y);
+        const dx = pos.x - dragStartX;
+        const dy = pos.y - dragStartY;
+        
+        if (interactionMode === 'draw') {
+            rectX = Math.min(startX, pos.x);
+            rectY = Math.min(startY, pos.y);
+            rectWidth = Math.abs(startX - pos.x);
+            rectHeight = Math.abs(startY - pos.y);
+        } else if (interactionMode === 'move') {
+            let newX = initialRectX + dx;
+            let newY = initialRectY + dy;
+            
+            // Clamp within canvas boundaries
+            newX = Math.max(0, Math.min(newX, canvas.width - rectWidth));
+            newY = Math.max(0, Math.min(newY, canvas.height - rectHeight));
+            
+            rectX = newX;
+            rectY = newY;
+        } else {
+            // Handle resizing
+            let x1 = rectX;
+            let x2 = rectX + rectWidth;
+            let y1 = rectY;
+            let y2 = rectY + rectHeight;
+            
+            const minSize = 15;
+            
+            // Left-side resizing
+            if (interactionMode === 'tl' || interactionMode === 'l' || interactionMode === 'bl') {
+                x1 = initialRectX + dx;
+                x1 = Math.max(0, Math.min(x1, x2 - minSize));
+            }
+            // Right-side resizing
+            if (interactionMode === 'tr' || interactionMode === 'r' || interactionMode === 'br') {
+                x2 = initialRectX + initialRectWidth + dx;
+                x2 = Math.max(x1 + minSize, Math.min(x2, canvas.width));
+            }
+            // Top-side resizing
+            if (interactionMode === 'tl' || interactionMode === 't' || interactionMode === 'tr') {
+                y1 = initialRectY + dy;
+                y1 = Math.max(0, Math.min(y1, y2 - minSize));
+            }
+            // Bottom-side resizing
+            if (interactionMode === 'bl' || interactionMode === 'b' || interactionMode === 'br') {
+                y2 = initialRectY + initialRectHeight + dy;
+                y2 = Math.max(y1 + minSize, Math.min(y2, canvas.height));
+            }
+            
+            rectX = x1;
+            rectY = y1;
+            rectWidth = x2 - x1;
+            rectHeight = y2 - y1;
+        }
         
         drawCanvas();
     }
@@ -1065,6 +1129,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function stopDrawing(e) {
         if (!isDrawing) return;
         isDrawing = false;
+        interactionMode = null;
     }
     
     canvas.addEventListener('mousedown', startDrawing);
@@ -1077,7 +1142,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     confirmCropBtn.addEventListener('click', function() {
         if (rectWidth < 10 || rectHeight < 10) {
-            showToast('Please draw a box over the item to select it.', 'warning');
+            showToast('Please select a valid search area.', 'warning');
             return;
         }
         
@@ -1119,52 +1184,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 'image/jpeg', 0.85);
     });
-    
-    function resizeAndSubmit(file) {
-        // If file is smaller than 1.5MB, submit it directly to save client CPU/time
-        if (file.size < 1.5 * 1024 * 1024) {
-            submitSearchForm(file);
-            return;
-        }
-
-        // Otherwise, resize the image first
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const tempImg = new Image();
-            tempImg.onload = function() {
-                const maxDim = 1000;
-                let w = tempImg.width;
-                let h = tempImg.height;
-
-                if (w > maxDim || h > maxDim) {
-                    if (w > h) {
-                        h = h * (maxDim / w);
-                        w = maxDim;
-                    } else {
-                        w = w * (maxDim / h);
-                        h = maxDim;
-                    }
-                }
-
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = w;
-                tempCanvas.height = h;
-                const tempCtx = tempCanvas.getContext('2d');
-                tempCtx.drawImage(tempImg, 0, 0, w, h);
-
-                tempCanvas.toBlob(function(blob) {
-                    if (blob) {
-                        const resizedFile = new File([blob], file.name, { type: 'image/jpeg' });
-                        submitSearchForm(resizedFile);
-                    } else {
-                        submitSearchForm(file);
-                    }
-                }, 'image/jpeg', 0.85);
-            };
-            tempImg.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
     
     function submitSearchForm(file) {
         // Build dynamic form to POST the file
