@@ -294,28 +294,32 @@
             </div>
 
             <!-- Shipment Tracking Card -->
-            @if($order->tracking_number)
+            @if(class_exists(\SGCart\LogisticTracking\Actions\UpdateLogisticTrackingAction::class) && $order->tracking_number)
             <div class="bg-white border border-[#e8e4df] rounded-2xl p-6">
                 <h4 class="font-display font-extrabold text-xs text-slate-400 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
                     <span class="flex items-center gap-1.5"><i class="fa-solid fa-truck-fast"></i> Shipment Tracking</span>
                     <span class="inline-flex px-1.5 py-0.5 rounded bg-blue-50 text-[9px] font-bold text-blue-600 uppercase">{{ $order->status->value ?? $order->status }}</span>
                 </h4>
-                <div class="text-xs text-slate-500 leading-relaxed space-y-2">
+                <div class="text-xs text-slate-500 leading-relaxed space-y-3">
+                    @if($order->estimated_delivery_at)
+                    <div class="p-3 bg-slate-50 rounded-xl mb-3 border border-slate-100">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Estimated Delivery</span>
+                        <span class="text-sm font-bold text-slate-800">Arrive by {{ $order->estimated_delivery_at->format('l, M d, Y') }}</span>
+                    </div>
+                    @endif
                     <div class="flex justify-between">
                         <span class="font-bold text-slate-700">Courier Partner:</span>
                         <span class="text-slate-800 font-medium">{{ $order->shipping_carrier ?? 'N/A' }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="font-bold text-slate-700">Tracking Number:</span>
+                        <span class="font-bold text-slate-700">Tracking ID:</span>
                         <span class="font-mono text-slate-800 font-medium">{{ $order->tracking_number }}</span>
                     </div>
-                    @if($order->estimated_delivery_at)
-                    <div class="flex justify-between">
-                        <span class="font-bold text-slate-700">Est. Delivery:</span>
-                        <span class="text-slate-800 font-medium">{{ $order->estimated_delivery_at->format('M d, Y') }}</span>
-                    </div>
-                    @endif
                     @if($order->tracking_url)
+                    <div class="flex justify-between">
+                        <span class="font-bold text-slate-700">Redirect URL:</span>
+                        <a href="{{ $order->tracking_url }}" target="_blank" class="text-blue-600 hover:underline font-medium truncate max-w-[180px]">{{ $order->tracking_url }}</a>
+                    </div>
                     <div class="pt-2 border-t border-slate-100 mt-2">
                         <a href="{{ $order->tracking_url }}" target="_blank" class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all text-center no-underline cursor-pointer">
                             Track Package <i class="fa-solid fa-up-right-from-square text-[9px]"></i>
