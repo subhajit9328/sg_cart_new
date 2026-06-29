@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "295b5061eaf2d24205c535c038a32b66",
+    "content-hash": "0a048158385abf168aecf4e120c97ed8",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -3685,7 +3685,7 @@
         },
         {
             "name": "sgcart/coupons",
-            "version": "dev-subhajit_changes_26_06",
+            "version": "dev-implement_shipping_package",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/coupons",
@@ -3717,45 +3717,6 @@
                 }
             ],
             "description": "Dynamic coupon code plugin for SGCart",
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
-        },
-        {
-            "name": "sgcart/payment-authorizenet",
-            "version": "dev-implement_shipping_package",
-            "dist": {
-                "type": "path",
-                "url": "packages/sgcart/payment-authorizenet",
-                "reference": "b40a16d6f07f0979b0d03c2ea10805784f6a0865"
-            },
-            "require": {
-                "php": "^8.2"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "SGCart\\AuthorizeNet\\Providers\\AuthorizeNetServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "SGCart\\AuthorizeNet\\": "src/"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "SGCart Team",
-                    "email": "support@sgcart.com"
-                }
-            ],
-            "description": "Authorize.Net payment gateway plugin for SGCart",
             "transport-options": {
                 "symlink": true,
                 "relative": true
@@ -3802,7 +3763,7 @@
         },
         {
             "name": "sgcart/product-variants",
-            "version": "dev-subhajit_changes_26_06",
+            "version": "dev-implement_shipping_package",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/product-variants",
@@ -3842,7 +3803,7 @@
         },
         {
             "name": "sgcart/shipping",
-            "version": "dev-subhajit_changes_26_06",
+            "version": "dev-implement_shipping_package",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/shipping",
@@ -9262,7 +9223,6 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "sgcart/coupons": 20,
-        "sgcart/payment-authorizenet": 20,
         "sgcart/payment-razorpay": 20,
         "sgcart/product-variants": 20,
         "sgcart/shipping": 20
@@ -9273,5 +9233,5 @@
         "php": "^8.3"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }

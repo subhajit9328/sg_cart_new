@@ -81,13 +81,18 @@
 
                         <!-- Section 2: Config Credentials -->
                         @if(count($gateway->getConfigSchema()) > 0)
-                            <div class="border-t border-slate-100 dark:border-slate-800 pt-4 mt-2">
-                                <div class="flex items-center gap-1.5 mb-3">
-                                    <i class="fa-solid fa-key text-[10px] text-slate-400 dark:text-slate-500"></i>
-                                    <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">API Credentials</span>
-                                </div>
+                            <details class="border-t border-slate-100 dark:border-slate-800 pt-4 mt-2 group">
+                                <summary class="flex items-center justify-between cursor-pointer list-none outline-none focus:outline-none mb-3">
+                                    <div class="flex items-center gap-1.5 select-none">
+                                        <i class="fa-solid fa-key text-[10px] text-slate-400 dark:text-slate-500"></i>
+                                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">API Credentials</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dark:text-slate-500 transition-transform duration-200 group-open:rotate-180"></i>
+                                    </div>
+                                </summary>
                                 
-                                <div class="flex flex-col gap-3">
+                                <div class="flex flex-col gap-3 pt-2">
                                     @foreach($gateway->getConfigSchema() as $key => $field)
                                         @php
                                             $value = $configValues[$key] ?? $field['default'] ?? null;
@@ -111,7 +116,7 @@
                                         </div>
                                     @endforeach
                                 </div>
-                            </div>
+                            </details>
                         @endif
                     </div>
                 </form>
@@ -201,4 +206,15 @@
         });
     });
 </script>
+@endpush
+
+@push('styles')
+<style>
+    summary::-webkit-details-marker {
+        display: none !important;
+    }
+    summary {
+        list-style: none !important;
+    }
+</style>
 @endpush

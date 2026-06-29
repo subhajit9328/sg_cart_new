@@ -13,8 +13,9 @@ class PaymentMethodController extends Controller
      */
     public function index()
     {
-        $paymentManager = app('payment.manager');
-        $gateways = $paymentManager->getRegisteredGateways();
+        $gateways = collect(app('payment.manager')->getRegisteredGateways())
+            ->sortBy(fn($gateway) => strtolower($gateway->getName()))
+            ->all();
 
         // Get DB configuration/states for all registered gateways
         $dbMethods = PaymentMethod::all()->keyBy('id');

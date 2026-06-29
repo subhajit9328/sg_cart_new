@@ -89,10 +89,10 @@ class DatabaseSeeder extends Seeder
         }
 
         // Call child seeders
-        $this->call([
-            CategorySeeder::class,
-            ManufacturerSeeder::class,
-            ProductSeeder::class,
-        ]);
+        // $this->call([
+        //     CategorySeeder::class,
+        //     ManufacturerSeeder::class,
+        //     ProductSeeder::class,
+        // ]);
     }
 }
