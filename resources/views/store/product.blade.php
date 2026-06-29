@@ -150,7 +150,7 @@
                             </div>
                         </div>
                         <div class="flex-1">
-                            <button type="submit" class="btn btn-primary w-full" style="height:46px" form="purchaseForm"><i class="fa-solid fa-bag-shopping"></i> Add To Bag</button>
+                            <button type="submit" class="btn btn-primary w-full" style="height:46px" form="purchaseForm"><i class="fa-solid fa-cart-shopping"></i> Add To Cart</button>
                         </div>
                     @endif
                 </div>
@@ -220,36 +220,38 @@
 
 
     <!-- RELATED PRODUCTS -->
-    <div class="section" style="margin-top:40px">
-        <div class="section-header">
-            <h2 class="section-title">Related Products</h2>
-        </div>
-        <div class="grid-4">
-            @foreach($related as $rel)
-                <div class="product-card" onclick="window.location.href='{{ route('store.product', $rel['slug']) }}'">
-                    <div class="product-card-img">
-                        <img src="{{ $rel['img'] }}" alt="{{ $rel['name'] }}"/>
-                        @php
-                            $inWishlist = in_array($rel['id'], session('wishlist', []));
-                        @endphp
-                        <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}" 
-                            data-product-id="{{ $rel['id'] }}"
-                            onclick="event.stopPropagation(); toggleWishlist(this)"
-                            title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
-                            <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
-                        </button>
-                    </div>
-                    <div class="product-card-body">
-                        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $rel['cat'] }}</p>
-                        <h3 class="font-display font-bold text-sm mt-1 text-slate-800 line-clamp-1">{{ $rel['name'] }}</h3>
-                        <div class="flex items-center gap-1.5 mt-2">
-                            <span class="font-bold text-sm text-slate-900">₹{{ number_format($rel['price'], 2) }}</span>
+    @if(isset($related) && count($related) > 0)
+        <div class="section" style="margin-top:40px">
+            <div class="section-header">
+                <h2 class="section-title">Related Products</h2>
+            </div>
+            <div class="grid-4">
+                @foreach($related as $rel)
+                    <div class="product-card" onclick="window.location.href='{{ route('store.product', $rel['slug']) }}'">
+                        <div class="product-card-img">
+                            <img src="{{ $rel['img'] }}" alt="{{ $rel['name'] }}"/>
+                            @php
+                                $inWishlist = in_array($rel['id'], session('wishlist', []));
+                            @endphp
+                            <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}" 
+                                data-product-id="{{ $rel['id'] }}"
+                                onclick="event.stopPropagation(); toggleWishlist(this)"
+                                title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                                <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
+                            </button>
+                        </div>
+                        <div class="product-card-body">
+                            <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $rel['cat'] }}</p>
+                            <h3 class="font-display font-bold text-sm mt-1 text-slate-800 line-clamp-1">{{ $rel['name'] }}</h3>
+                            <div class="flex items-center gap-1.5 mt-2">
+                                <span class="font-bold text-sm text-slate-900">₹{{ number_format($rel['price'], 2) }}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            @endforeach
+                @endforeach
+            </div>
         </div>
-    </div>
+    @endif
 
 </div>
 @endsection

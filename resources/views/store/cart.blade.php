@@ -1,6 +1,6 @@
 @extends('layouts.store')
 
-@section('title', 'Shopping Bag — sgcart')
+@section('title', 'Shopping Cart — sgcart')
 
 @section('content')
 
@@ -10,7 +10,7 @@
     
     @if(empty($cart))
         <div class="text-center py-20 px-5">
-            <i class="fa-solid fa-bag-shopping text-6xl text-slate-300 mb-5 block"></i>
+            <i class="fa-solid fa-cart-shopping text-6xl text-slate-300 mb-5 block"></i>
             <h3 class="font-display font-bold text-2xl mb-2">Your cart is empty</h3>
             <p class="text-sm text-slate-400 mb-8">Looks like you haven't added anything yet.</p>
             <a href="{{ route('store.shop') }}" class="btn btn-primary"><i class="fa-solid fa-arrow-left"></i>Start Shopping</a>
