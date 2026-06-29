@@ -637,40 +637,122 @@ class StoreController extends Controller
             $paymentMethodName = $gateway->getName();
         }
 
-        // Create Order in Database
-        $order = \App\Models\Order::create([
-            'order_number' => $orderNumber,
-            'customer_id' => auth('customer')->id(),
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'email' => $email,
-            'phone' => $phone,
-            'alternate_phone' => $alternatePhone,
-            'address_type' => $addressType,
-            'landmark' => $landmark,
-            'shipping_and_billing_same' => $shippingAndBillingSame,
-            'billing_first_name' => $billingFirstName,
-            'billing_last_name' => $billingLastName,
-            'billing_address' => $billingAddress,
-            'billing_city' => $billingCity,
-            'billing_state' => $billingState,
-            'billing_zip' => $billingZip,
-            'billing_country' => $billingCountry,
-            'billing_phone' => $billingPhone,
-            'address' => $addressStr,
-            'city' => $city,
-            'state' => $state,
-            'zip' => $zip,
-            'country' => $country,
-            'subtotal' => $subtotal,
-            'tax' => $tax,
-            'tax_method' => $taxMethod,
-            'shipping_charge' => $shippingCost,
-            'shipping_method' => $shippingMethodName,
-            'discount' => $discount,
-            'total' => $total,
-            'status' => \App\Enums\OrderStatus::PROCESSING,
-        ]);
+        $pendingOrderUlid = session('pending_checkout_order_id');
+        $order = null;
+
+        if ($pendingOrderUlid) {
+            $order = \App\Models\Order::with('items')->where('ulid', $pendingOrderUlid)->first();
+            if ($order) {
+                if ($order->payment_status === \App\Enums\PaymentStatus::PAID) {
+                    $cartModel->items()->delete();
+                    session()->forget('pending_checkout_order_id');
+                    session()->forget('coupon_code');
+                    session()->forget('coupon_discount');
+                    return redirect()->route('store.success', ['order_id' => $order->order_number]);
+                }
+
+                // Check if cart matches
+                $cartMatches = false;
+                if ((float)$order->total === (float)$total && $order->items->count() === $cartModel->items->count()) {
+                    $cartMatches = true;
+                    foreach ($cartModel->items as $cartItem) {
+                        $orderItem = $order->items->where('product_id', $cartItem->product_id)
+                            ->where('quantity', $cartItem->quantity)
+                            ->where('size', $cartItem->size)
+                            ->where('color', $cartItem->color)
+                            ->first();
+                        if (!$orderItem) {
+                            $cartMatches = false;
+                            break;
+                        }
+                    }
+                }
+
+                if ($cartMatches) {
+                    $order->update([
+                        'order_number' => $orderNumber,
+                        'first_name' => $firstName,
+                        'last_name' => $lastName,
+                        'email' => $email,
+                        'phone' => $phone,
+                        'alternate_phone' => $alternatePhone,
+                        'address_type' => $addressType,
+                        'landmark' => $landmark,
+                        'shipping_and_billing_same' => $shippingAndBillingSame,
+                        'billing_first_name' => $billingFirstName,
+                        'billing_last_name' => $billingLastName,
+                        'billing_address' => $billingAddress,
+                        'billing_city' => $billingCity,
+                        'billing_state' => $billingState,
+                        'billing_zip' => $billingZip,
+                        'billing_country' => $billingCountry,
+                        'billing_phone' => $billingPhone,
+                        'address' => $addressStr,
+                        'city' => $city,
+                        'state' => $state,
+                        'zip' => $zip,
+                        'country' => $country,
+                        'subtotal' => $subtotal,
+                        'tax' => $tax,
+                        'tax_method' => $taxMethod,
+                        'shipping_charge' => $shippingCost,
+                        'shipping_method' => $shippingMethodName,
+                        'discount' => $discount,
+                        'total' => $total,
+                    ]);
+                } else {
+                    // Restock old order
+                    foreach ($order->items as $oldItem) {
+                        $prod = \App\Models\Product::find($oldItem->product_id);
+                        if ($prod) {
+                            $prod->increment('stock', $oldItem->quantity);
+                        }
+                    }
+                    $order->items()->delete();
+                    $order->delete();
+                    $order = null;
+                }
+            }
+        }
+
+        $isNewOrder = false;
+        if (!$order) {
+            $isNewOrder = true;
+            // Create Order in Database
+            $order = \App\Models\Order::create([
+                'order_number' => $orderNumber,
+                'customer_id' => auth('customer')->id(),
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $email,
+                'phone' => $phone,
+                'alternate_phone' => $alternatePhone,
+                'address_type' => $addressType,
+                'landmark' => $landmark,
+                'shipping_and_billing_same' => $shippingAndBillingSame,
+                'billing_first_name' => $billingFirstName,
+                'billing_last_name' => $billingLastName,
+                'billing_address' => $billingAddress,
+                'billing_city' => $billingCity,
+                'billing_state' => $billingState,
+                'billing_zip' => $billingZip,
+                'billing_country' => $billingCountry,
+                'billing_phone' => $billingPhone,
+                'address' => $addressStr,
+                'city' => $city,
+                'state' => $state,
+                'zip' => $zip,
+                'country' => $country,
+                'subtotal' => $subtotal,
+                'tax' => $tax,
+                'tax_method' => $taxMethod,
+                'shipping_charge' => $shippingCost,
+                'shipping_method' => $shippingMethodName,
+                'discount' => $discount,
+                'total' => $total,
+                'status' => \App\Enums\OrderStatus::PROCESSING,
+            ]);
+        }
 
         if (!$gateway) {
             $order->payments()->create([
@@ -684,45 +766,73 @@ class StoreController extends Controller
             try {
                 $paymentResult = $gateway->processPayment($request, $order);
             } catch (\Exception $e) {
+                // Restock items and delete the order
+                foreach ($order->items as $item) {
+                    $product = \App\Models\Product::find($item->product_id);
+                    if ($product) {
+                        $product->increment('stock', $item->quantity);
+                    }
+                }
+                $order->items()->delete();
                 $order->delete();
+                session()->forget('pending_checkout_order_id');
                 return redirect()->back()->withInput()->with('error', 'Payment failed: ' . $e->getMessage());
             }
 
             if (!$paymentResult['success']) {
+                // Restock items and delete the order
+                foreach ($order->items as $item) {
+                    $product = \App\Models\Product::find($item->product_id);
+                    if ($product) {
+                        $product->increment('stock', $item->quantity);
+                    }
+                }
+                $order->items()->delete();
                 $order->delete();
+                session()->forget('pending_checkout_order_id');
                 return redirect()->back()->withInput()->with('error', $paymentResult['message'] ?? 'Payment transaction failed.');
             }
         }
 
-        // Create OrderItems in Database
-        foreach ($cartModel->items as $cartItem) {
-            $product = \App\Models\Product::find($cartItem->product_id);
-            
-            \App\Models\OrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $cartItem->product_id,
-                'product_name' => $product ? $product->name : 'Unknown Product',
-                'product_sku' => $product ? $product->sku : null,
-                'price' => $product ? ($product->sale_price ?? $product->price) : 0,
-                'quantity' => $cartItem->quantity,
-                'size' => $cartItem->size,
-                'color' => $cartItem->color,
-            ]);
+        if ($isNewOrder) {
+            // Create OrderItems in Database
+            foreach ($cartModel->items as $cartItem) {
+                $product = \App\Models\Product::find($cartItem->product_id);
+                
+                \App\Models\OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $cartItem->product_id,
+                    'product_name' => $product ? $product->name : 'Unknown Product',
+                    'product_sku' => $product ? $product->sku : null,
+                    'price' => $product ? ($product->sale_price ?? $product->price) : 0,
+                    'quantity' => $cartItem->quantity,
+                    'size' => $cartItem->size,
+                    'color' => $cartItem->color,
+                ]);
 
-            // Optional: decrement product stock
-            if ($product) {
-                $product->decrement('stock', $cartItem->quantity);
+                // Optional: decrement product stock
+                if ($product) {
+                    $product->decrement('stock', $cartItem->quantity);
+                }
             }
         }
 
-        // Clear Database Cart
-        $cartModel->items()->delete();
+        $redirectUrl = isset($paymentResult['redirect_url']) ? $paymentResult['redirect_url'] : null;
 
-        // Clear coupon info from session
-        session()->forget('coupon_code');
-        session()->forget('coupon_discount');
+        if ($redirectUrl) {
+            // Save pending order ID in session so we do not clear the cart yet
+            session(['pending_checkout_order_id' => $order->ulid]);
+        } else {
+            // Clear Database Cart immediately for synchronous checkouts
+            $cartModel->items()->delete();
 
-        $redirectUrl = isset($paymentResult['redirect_url']) ? $paymentResult['redirect_url'] : route('store.success', ['order_id' => $order->order_number]);
+            // Clear coupon and session info
+            session()->forget('coupon_code');
+            session()->forget('coupon_discount');
+            session()->forget('pending_checkout_order_id');
+        }
+
+        $redirectUrl = $redirectUrl ?? route('store.success', ['order_id' => $order->order_number]);
         return redirect($redirectUrl);
     }
 
@@ -732,6 +842,21 @@ class StoreController extends Controller
     public function success(Request $request)
     {
         $orderId = $request->input('order_id', 'SGMOCKORDER');
+
+        $order = \App\Models\Order::where('order_number', $orderId)->first();
+        if ($order && $order->customer_id === auth('customer')->id()) {
+            if ($order->payment_status === \App\Enums\PaymentStatus::PAID) {
+                // Clear active cart since payment succeeded
+                $cartModel = \App\Models\Cart::getActiveCart();
+                if ($cartModel) {
+                    $cartModel->items()->delete();
+                }
+                session()->forget('pending_checkout_order_id');
+                session()->forget('coupon_code');
+                session()->forget('coupon_discount');
+            }
+        }
+
         return view('store.success', compact('orderId'));
     }
 

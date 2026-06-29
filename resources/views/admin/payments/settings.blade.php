@@ -152,3 +152,53 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function () {
+                let submitBtn = null;
+                if (form.id) {
+                    submitBtn = document.querySelector(`button[form="${form.id}"]`);
+                }
+                if (!submitBtn) {
+                    submitBtn = form.querySelector('button[type="submit"]');
+                }
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+
+                    const icon = submitBtn.querySelector('i');
+                    if (icon) {
+                        submitBtn.dataset.originalIconClass = icon.className;
+                        icon.className = 'fa-solid fa-spinner animate-spin text-xs';
+                    } else {
+                        submitBtn.insertAdjacentHTML('afterbegin', '<i class="fa-solid fa-spinner animate-spin text-xs mr-1.5 tmp-spinner"></i>');
+                    }
+                }
+            });
+        });
+    });
+
+    window.addEventListener('pageshow', function () {
+        const submitBtns = document.querySelectorAll('button[type="submit"], button[form]');
+        submitBtns.forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            
+            const icon = btn.querySelector('i');
+            if (icon) {
+                if (btn.dataset.originalIconClass) {
+                    icon.className = btn.dataset.originalIconClass;
+                    delete btn.dataset.originalIconClass;
+                } else if (icon.classList.contains('tmp-spinner')) {
+                    icon.remove();
+                }
+            }
+        });
+    });
+</script>
+@endpush

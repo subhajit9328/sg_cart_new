@@ -69,7 +69,7 @@ class RazorpayGateway implements PaymentGatewayInterface
         $keySecret = $config['key_secret'] ?? '';
 
         if (empty($keyId) || empty($keySecret)) {
-            throw new \Exception("Razorpay credentials (Key ID/Secret) are missing or not configured.");
+            throw new \Exception("Payment gateway is temporarily unavailable. Please try again or select another payment method.");
         }
 
         // Amount in paise (INR sub-units)
@@ -98,7 +98,10 @@ class RazorpayGateway implements PaymentGatewayInterface
 
             if ($response->failed()) {
                 Log::error('Razorpay API Error', ['response' => $response->body()]);
-                throw new \Exception('Razorpay API: ' . ($response->json('error.description') ?? 'Connection failed.'));
+                if ($response->status() === 401) {
+                    throw new \Exception("Payment gateway is temporarily unavailable. Please try again or select another payment method.");
+                }
+                throw new \Exception("Payment gateway is temporarily unavailable. Please try again or select another payment method.");
             }
 
             $shortUrl = $response->json('short_url');
