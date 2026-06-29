@@ -4,19 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Actions\LogActivity;
 use App\Actions\ManageOtp;
-use App\Actions\CustomerEmailVerifiedAction;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
-use App\Mail\CustomerOtpMail;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -659,8 +655,12 @@ class StoreController extends Controller
             $emailAdded = true;
         }
 
+        $phoneAdded = false;
+
         if ($addingPhone && $request->filled('phone_no')) {
             $customer->phone_no = $request->phone_no;
+            $customer->phone_verified_at = null; // Mark as unverified
+            $phoneAdded = true;
         }
 
         $customer->save();
@@ -690,10 +690,14 @@ class StoreController extends Controller
             );
         }
 
-        if ($emailAdded) {
-            app(ManageOtp::class)->generate($customer, ManageOtp::REASON_PROFILE_UPDATE);
+        app(ManageOtp::class)->generate($customer, ManageOtp::REASON_PROFILE_UPDATE);
 
+        if ($emailAdded) {
             return redirect()->route('store.otp.verify')->with('success', 'Profile updated. Please verify your new email address.');
+        }
+
+        if ($phoneAdded) {
+            return redirect()->route('store.otp.verify')->with('success', 'Profile updated. Please verify your new phone number.');
         }
 
         return redirect()->route('store.account', 'profile')->with('success', 'Profile details updated successfully!');

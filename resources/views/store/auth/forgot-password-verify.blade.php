@@ -1,12 +1,21 @@
 @extends('layouts.store')
 
-@section('title', 'Verify Code — sgcart')
+@section('title', $isEmail ? 'Verify Code — sgcart' : 'Verify Phone Reset Code — sgcart')
 
 @section('content')
 <div class="max-w-[480px] mx-auto px-6 pt-8 pb-12 md:pt-12 md:pb-20">
     <div class="bg-white border border-border rounded-2xl p-6 md:p-8 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
-        <h2 class="font-display font-extrabold text-2xl text-slate-800 text-center mb-2">Verify Reset Code</h2>
-        <p class="text-xs text-slate-400 text-center mb-8">We've sent a 6-digit password reset code to <strong class="text-slate-600">{{ $email }}</strong>. The code will expire in 5 minutes.</p>
+        <h2 class="font-display font-extrabold text-2xl text-slate-800 text-center mb-2">
+            {{ $isEmail ? 'Verify Reset Code' : 'Verify Phone Reset Code' }}
+        </h2>
+        <p class="text-xs text-slate-400 text-center mb-8">
+            @if($isEmail)
+                We've sent a 6-digit password reset code to <strong class="text-slate-600">{{ $email }}</strong>.
+            @else
+                A 6-digit password reset code has been generated for <strong class="text-slate-600">{{ $email }}</strong>.
+            @endif
+            The code will expire in 5 minutes.
+        </p>
 
         <form action="{{ route('store.forgot-password.verify.submit') }}" method="POST" class="flex flex-col gap-4" novalidate>
             @csrf

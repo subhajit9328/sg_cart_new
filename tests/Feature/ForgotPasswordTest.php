@@ -59,7 +59,7 @@ class ForgotPasswordTest extends TestCase
         $this->assertEquals('email', $log->properties['method']);
     }
 
-    public function test_request_forgot_password_via_phone_does_not_send_otp_and_logs_event(): void
+    public function test_request_forgot_password_via_phone_generates_otp_and_logs_event(): void
     {
         Mail::fake();
 
@@ -73,12 +73,12 @@ class ForgotPasswordTest extends TestCase
             'email_or_phone' => '+919999999999',
         ]);
 
-        $response->assertRedirect();
-        $response->assertSessionHas('info');
+        $response->assertRedirect(route('store.forgot-password.verify'));
+        $response->assertSessionHas('success');
 
-        // Verify no OTP is generated in cache
+        // Verify OTP is generated in cache
         $otpKey = "customer_otp_{$customer->id}";
-        $this->assertFalse(Cache::has($otpKey));
+        $this->assertTrue(Cache::has($otpKey));
         Mail::assertNothingSent();
 
         // Verify Activity Log
