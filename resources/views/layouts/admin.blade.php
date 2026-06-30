@@ -118,6 +118,7 @@
                 <span class="sidebar-text">Payment Gateways</span>
             </a>
             @endcan
+            @includeIf('image-search::admin-menu')
         </nav>
 
 
