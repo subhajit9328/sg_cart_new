@@ -12,9 +12,24 @@ class ShippingRateController extends Controller
     /**
      * Display a listing of shipping rates (Admin).
      */
-    public function index()
+    public function index(Request $request)
     {
-        $rates = ShippingRate::orderBy('id', 'desc')->paginate(10);
+        $query = ShippingRate::query();
+        if ($search = $request->input('search')) {
+            $query->where('name', 'like', '%' . $search . '%');
+        }
+
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order') ?? $request->input('sort_dir') ?? 'desc';
+        $allowedSortFields = ['name', 'cost', 'min_order_amount', 'is_active', 'created_at'];
+
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->orderBy('id', 'desc');
+        }
+
+        $rates = $query->paginate(10);
         $selectionMode = ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
         return view('shipping::index', compact('rates', 'selectionMode'));
     }

@@ -23,6 +23,16 @@ class ManufacturerController extends Controller
             });
         }
 
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order') ?? $request->input('sort_dir') ?? 'desc';
+        $allowedSortFields = ['name', 'email', 'is_active', 'created_at'];
+
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->latest();
+        }
+
         $manufacturers = $query->paginate(10)->withQueryString();
         return view('admin.manufacturers.index', compact('manufacturers'));
     }

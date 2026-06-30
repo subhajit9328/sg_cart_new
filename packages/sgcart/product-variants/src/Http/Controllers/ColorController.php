@@ -8,9 +8,26 @@ use Illuminate\Http\Request;
 
 class ColorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $colors = Color::latest()->paginate(10);
+        $query = Color::query();
+
+        if ($search = $request->input('search')) {
+            $query->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('hex_code', 'like', '%' . $search . '%');
+        }
+
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order') ?? $request->input('sort_dir') ?? 'desc';
+        $allowedSortFields = ['name', 'hex_code', 'created_at'];
+
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->latest();
+        }
+
+        $colors = $query->paginate(10)->withQueryString();
         return view('product-variants::colors.index', compact('colors'));
     }
 

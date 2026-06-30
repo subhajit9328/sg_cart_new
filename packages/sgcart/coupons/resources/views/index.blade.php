@@ -14,114 +14,111 @@
     </a>
 </div>
 
-<!-- Coupons Table -->
-<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead>
-                <tr>
-                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Code</th>
-                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Type</th>
-                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Value</th>
-                    @if(config('coupons.features.min_cart_total', true))
-                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Min. Cart Subtotal</th>
-                    @endif
-                    @if(config('coupons.features.expires_at', true))
-                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Expires At</th>
-                    @endif
-                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Status</th>
-                    <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                @forelse($coupons as $coupon)
-                <tr>
-                    <td class="px-5 py-4 font-semibold whitespace-nowrap text-slate-800 dark:text-slate-100">
-                        <span class="inline-block px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono tracking-wider border border-slate-200 dark:border-slate-700">
-                            {{ $coupon->code }}
-                        </span>
-                    </td>
-                    <td class="px-5 py-4 text-slate-600 dark:text-slate-300 whitespace-nowrap capitalize">
-                        @if($coupon->type->value === 'percent')
-                            <span class="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
-                                <i class="fa-solid fa-percent text-xs"></i> Percent
-                            </span>
-                        @else
-                            <span class="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
-                                <i class="fa-solid fa-indian-rupee-sign text-xs"></i> Flat
-                            </span>
-                        @endif
-                    </td>
-                    <td class="px-5 py-4 text-slate-800 dark:text-slate-200 font-medium whitespace-nowrap">
-                        @if($coupon->type->value === 'percent')
-                            {{ number_format($coupon->value, 0) }}%
-                        @else
-                            ₹{{ number_format($coupon->value, 2) }}
-                        @endif
-                    </td>
-                    @if(config('coupons.features.min_cart_total', true))
-                    <td class="px-5 py-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                        ₹{{ number_format($coupon->min_cart_total, 2) }}
-                    </td>
-                    @endif
-                    @if(config('coupons.features.expires_at', true))
-                    <td class="px-5 py-4 text-slate-400 whitespace-nowrap">
-                        @if($coupon->expires_at)
-                            <span class="{{ \Carbon\Carbon::parse($coupon->expires_at)->isPast() ? 'text-rose-500 font-medium' : '' }}">
-                                {{ \Carbon\Carbon::parse($coupon->expires_at)->format('d M Y') }}
-                            </span>
-                        @else
-                            <span class="text-slate-300 dark:text-slate-600 italic">Never</span>
-                        @endif
-                    </td>
-                    @endif
-                    <td class="px-5 py-4 whitespace-nowrap">
-                        @if($coupon->is_active && (!$coupon->expires_at || !\Carbon\Carbon::parse($coupon->expires_at)->isPast()))
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-                                Active
-                            </span>
-                        @else
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400">
-                                {{ (!$coupon->is_active) ? 'Disabled' : 'Expired' }}
-                            </span>
-                        @endif
-                    </td>
-                    <td class="px-5 py-4 text-right whitespace-nowrap">
-                        <div class="inline-flex gap-1.5">
-                            <a href="{{ route('admin.coupons.edit', $coupon->id) }}" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors" title="Edit Coupon">
-                                <i class="fa-solid fa-pen text-slate-500 dark:text-slate-400 text-xs"></i>
-                            </a>
-                            
-                            <button onclick="openDeleteModal('{{ $coupon->id }}', '{{ $coupon->code }}')" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center transition-colors" title="Delete Coupon">
-                                <i class="fa-solid fa-trash text-rose-500 text-xs"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    @php
-                        $cols = 5;
-                        if(config('coupons.features.min_cart_total', true)) $cols++;
-                        if(config('coupons.features.expires_at', true)) $cols++;
-                    @endphp
-                    <td colspan="{{ $cols }}" class="px-5 py-12 text-center text-slate-400">
-                        <i class="fa-solid fa-ticket text-4xl mb-3 opacity-20 block"></i>
-                        No coupons found. Click "Add Coupon" to create one.
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+@php
+    $headers = [
+        ['label' => 'Code', 'key' => 'code', 'sortable' => true],
+        ['label' => 'Type', 'key' => 'type', 'sortable' => true],
+        ['label' => 'Value', 'key' => 'value', 'sortable' => true],
+    ];
+    if (config('coupons.features.min_cart_total', true)) {
+        $headers[] = ['label' => 'Min. Cart Subtotal', 'key' => 'min_cart_total', 'sortable' => true];
+    }
+    if (config('coupons.features.expires_at', true)) {
+        $headers[] = ['label' => 'Expires At', 'key' => 'expires_at', 'sortable' => true];
+    }
+    $headers[] = ['label' => 'Status', 'key' => 'is_active', 'sortable' => true];
+    $headers[] = ['label' => 'Actions', 'key' => 'actions', 'sortable' => false, 'align' => 'right'];
+@endphp
 
-    <!-- Pagination Footer -->
-    @if($coupons->hasPages())
-        <div class="px-5 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-            {{ $coupons->links() }}
-        </div>
-    @endif
-</div>
+<x-data-table
+    title="Shipping Charge Rates"
+    :totalCount="$coupons->total()"
+    searchPlaceholder="Search coupons by code..."
+    action="{{ route('admin.coupons.index') }}"
+    tableId="couponsTableWrapper"
+    searchInputId="couponSearchInput"
+    totalCountId="couponsTotalCount"
+    :items="$coupons"
+    :headers="$headers"
+>
+    @forelse($coupons as $coupon)
+        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/15 transition-colors">
+            <td class="px-5 py-4 font-semibold whitespace-nowrap text-slate-800 dark:text-slate-100">
+                <span class="inline-block px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono tracking-wider border border-slate-200 dark:border-slate-700">
+                    {{ $coupon->code }}
+                </span>
+            </td>
+            <td class="px-5 py-4 text-slate-600 dark:text-slate-300 whitespace-nowrap capitalize">
+                @if($coupon->type->value === 'percent')
+                    <span class="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-450">
+                        <i class="fa-solid fa-percent text-xs"></i> Percent
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                        <i class="fa-solid fa-indian-rupee-sign text-xs"></i> Flat
+                    </span>
+                @endif
+            </td>
+            <td class="px-5 py-4 text-slate-800 dark:text-slate-200 font-medium whitespace-nowrap">
+                @if($coupon->type->value === 'percent')
+                    {{ number_format($coupon->value, 0) }}%
+                @else
+                    ₹{{ number_format($coupon->value, 2) }}
+                @endif
+            </td>
+            @if(config('coupons.features.min_cart_total', true))
+                <td class="px-5 py-4 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                    ₹{{ number_format($coupon->min_cart_total, 2) }}
+                </td>
+            @endif
+            @if(config('coupons.features.expires_at', true))
+                <td class="px-5 py-4 text-slate-400 dark:text-slate-400 whitespace-nowrap">
+                    @if($coupon->expires_at)
+                        <span class="{{ \Carbon\Carbon::parse($coupon->expires_at)->isPast() ? 'text-rose-500 font-medium' : '' }}">
+                            {{ \Carbon\Carbon::parse($coupon->expires_at)->format('d M Y') }}
+                        </span>
+                    @else
+                        <span class="text-slate-300 dark:text-slate-600 italic">Never</span>
+                    @endif
+                </td>
+            @endif
+            <td class="px-5 py-4 whitespace-nowrap">
+                @if($coupon->is_active && (!$coupon->expires_at || !\Carbon\Carbon::parse($coupon->expires_at)->isPast()))
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/20">
+                        Active
+                    </span>
+                @else
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200/20">
+                        {{ (!$coupon->is_active) ? 'Disabled' : 'Expired' }}
+                    </span>
+                @endif
+            </td>
+            <td class="px-5 py-4 text-right whitespace-nowrap">
+                <div class="inline-flex gap-1.5">
+                    <a href="{{ route('admin.coupons.edit', $coupon->id) }}" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors" title="Edit Coupon">
+                        <i class="fa-solid fa-pen text-slate-500 dark:text-slate-400 text-xs"></i>
+                    </a>
+                    
+                    <button onclick="openDeleteModal('{{ $coupon->id }}', '{{ $coupon->code }}')" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center transition-colors" title="Delete Coupon">
+                        <i class="fa-solid fa-trash text-rose-500 text-xs"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    @empty
+        <tr>
+            @php
+                $cols = 5;
+                if(config('coupons.features.min_cart_total', true)) $cols++;
+                if(config('coupons.features.expires_at', true)) $cols++;
+            @endphp
+            <td colspan="{{ $cols }}" class="px-5 py-12 text-center text-slate-400">
+                <i class="fa-solid fa-ticket text-4xl mb-3 opacity-20 block"></i>
+                No coupons found. Click "Add Coupon" to create one.
+            </td>
+        </tr>
+    @endforelse
+</x-data-table>
 
 <form id="deleteForm" method="POST" class="hidden">
     @csrf

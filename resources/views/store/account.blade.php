@@ -110,6 +110,10 @@
                                 <div class="w-12 h-12 bg-[#f8f7f5] dark:bg-[#1d1b18] rounded-xl flex items-center justify-center shrink-0 border border-[#e8e4df] dark:border-[#2e2c28]">
                                     @if($order['status'] === 'Delivered')
                                         <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                                    @elseif($order['status'] === 'Cancelled')
+                                        <i class="fa-solid fa-circle-xmark text-rose-600 text-lg"></i>
+                                    @elseif($order['status'] === 'Processing')
+                                        <i class="fa-solid fa-spinner fa-spin text-blue-600 text-lg"></i>
                                     @else
                                         <i class="fa-solid fa-truck-fast text-amber-600 text-lg"></i>
                                     @endif
@@ -117,6 +121,9 @@
                                 <div>
                                     <p class="text-sm font-bold text-slate-800 dark:text-slate-200">{{ $order['id'] }}</p>
                                     <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">{{ $order['items_count'] }} items · Purchased on {{ $order['date'] }}</p>
+                                    @if($order['status'] === 'Cancelled')
+                                        <p class="text-[10px] text-rose-600 dark:text-rose-400 font-medium mt-0.5">Order Cancelled</p>
+                                    @endif
                                 </div>
                             </div>
                             <div class="flex items-center gap-5 w-full sm:w-auto justify-between sm:justify-end">
@@ -124,6 +131,10 @@
                                     <p class="text-sm font-extrabold text-slate-900 dark:text-slate-100">₹{{ number_format($order['amount'], 2) }}</p>
                                     @if($order['status'] === 'Delivered')
                                         <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 mt-1">Delivered</span>
+                                    @elseif($order['status'] === 'Cancelled')
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50 mt-1">Cancelled</span>
+                                    @elseif($order['status'] === 'Processing')
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 mt-1">Processing</span>
                                     @else
                                         <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 mt-1">In Transit</span>
                                     @endif

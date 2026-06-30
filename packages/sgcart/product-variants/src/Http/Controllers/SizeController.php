@@ -8,9 +8,26 @@ use Illuminate\Http\Request;
 
 class SizeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $sizes = Size::latest()->paginate(10);
+        $query = Size::query();
+
+        if ($search = $request->input('search')) {
+            $query->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('code', 'like', '%' . $search . '%');
+        }
+
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order') ?? $request->input('sort_dir') ?? 'desc';
+        $allowedSortFields = ['name', 'code', 'created_at'];
+
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->latest();
+        }
+
+        $sizes = $query->paginate(10)->withQueryString();
         return view('product-variants::sizes.index', compact('sizes'));
     }
 

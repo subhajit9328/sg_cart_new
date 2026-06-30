@@ -68,156 +68,125 @@
             <i class="fa-solid fa-circle-xmark text-lg"></i>
         </div>
     </div>
-</div>
+</div>@php
+    $headers = [
+        ['label' => 'Image', 'key' => 'image', 'sortable' => false, 'width' => '20'],
+        ['label' => 'Product / Item Name', 'key' => 'name', 'sortable' => true],
+        ['label' => 'SKU', 'key' => 'sku', 'sortable' => true],
+        ['label' => 'Price', 'key' => 'price', 'sortable' => true],
+        ['label' => 'Current Stock', 'key' => 'stock', 'sortable' => true],
+        ['label' => 'Status', 'key' => 'status', 'sortable' => true],
+        ['label' => 'Actions', 'key' => 'actions', 'sortable' => false, 'align' => 'right', 'width' => '36'],
+    ];
+@endphp
 
-<!-- Stock Levels Table Card -->
-<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
-    <!-- Card Header with Search -->
-    <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/50">
-        <div class="flex items-center gap-2">
-            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Stock Catalog</h2>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300/35 dark:border-slate-700/50">
-                {{ $products->total() }} Products
-            </span>
-        </div>
-        
-        <form action="{{ route('admin.inventory.index') }}" method="GET" class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-            <!-- Search Box -->
-            <div class="relative flex items-center w-full sm:w-56">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 text-slate-400 text-xs"></i>
-                <input type="text" name="search" value="{{ request('search') }}"
-                    class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 pl-8 pr-3 text-xs placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100"
-                    placeholder="Search products…">
-            </div>
-
-            @if(request()->filled('search'))
-                <a href="{{ route('admin.inventory.index') }}" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 dark:bg-rose-950/20 dark:border-rose-900/30 dark:text-rose-400 text-xs font-semibold transition-colors text-center no-underline flex items-center justify-center">
-                    Clear
-                </a>
-            @endif
-        </form>
-    </div>
-
-    <!-- Table Grid -->
-    <div class="overflow-x-hidden">
-        <table class="w-full text-sm">
-            <thead>
-                <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/50">
-                    <th class="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-20">Image</th>
-                    <th class="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Product / Item Name</th>
-                    <th class="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">SKU</th>
-                    <th class="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Price</th>
-                    <th class="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Current Stock</th>
-                    <th class="px-5 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Status</th>
-                    <th class="px-5 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-36">Actions</th>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                @forelse($products as $product)
-                    @php
-                        $hasActiveVariants = $hasVariants && $product->variants->where('is_active', true)->count() > 0;
-                    @endphp
-                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/15 transition-colors">
-                        <!-- Image -->
-                        <td class="px-5 py-3.5 whitespace-nowrap">
-                            @if($product->image)
-                                <img src="{{ Storage::url($product->image) }}" class="w-9 h-9 object-cover rounded-lg border border-slate-200 dark:border-slate-800 bg-white">
-                            @else
-                                <div class="w-9 h-9 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-[9px] text-slate-400 font-bold border border-slate-200 dark:border-slate-700/50">
-                                    NO IMG
-                                </div>
-                            @endif
-                        </td>
-                        <!-- Name -->
-                        <td class="px-5 py-3.5 font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap text-sm" title="{{ $product->name }}">
-                            {{ \Illuminate\Support\Str::limit($product->name, 25, '..') }}
-                            @if($hasActiveVariants)
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-violet-50 dark:bg-violet-950/20 text-violet-650 dark:text-violet-400 border border-violet-200/20 ml-1.5">
-                                    <i class="fa-solid fa-tags text-[8px] mr-1"></i> Has Variants
-                                </span>
-                            @endif
-                        </td>
-                        <!-- SKU -->
-                        <td class="px-5 py-3.5 text-slate-500 dark:text-slate-400 font-mono text-xs whitespace-nowrap">
-                            {{ $product->sku ?: '—' }}
-                        </td>
-                        <!-- Price -->
-                        <td class="px-5 py-3.5 text-slate-800 dark:text-slate-200 font-semibold whitespace-nowrap text-xs">
-                            ₹{{ number_format($product->price, 2) }}
-                            @if($product->sale_price)
-                                <span class="text-emerald-600 dark:text-emerald-400 text-[9px] block font-semibold mt-0.5">Sale: ₹{{ number_format($product->sale_price, 2) }}</span>
-                            @endif
-                        </td>
-                        <!-- Stock -->
-                        <td class="px-5 py-3.5 whitespace-nowrap">
-                            @if($product->stock > ($product->min_stock ?? 5))
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/30">
-                                    {{ $product->stock }} In Stock
-                                </span>
-                            @elseif($product->stock > 0)
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200/30">
-                                    {{ $product->stock }} Low Stock
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200/30">
-                                    Out of Stock
-                                </span>
-                            @endif
-                        </td>
-                        <!-- Status -->
-                        <td class="px-5 py-3.5 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold 
-                                {{ $product->status === 'active' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/20' :
-                                  ($product->status === 'draft'  ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200/20' : 
-                                  'bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200/50') }}">
-                                {{ ucfirst($product->status) }}
-                            </span>
-                        </td>
-                        <!-- Actions -->
-                        <td class="px-5 py-3.5 text-right whitespace-nowrap">
-                            @if($hasActiveVariants)
-                                <button type="button" 
-                                    onclick="openQuickAdjustModal('{{ $product->id }}', '{{ addslashes($product->name) }}', '{{ $product->stock }}', {{ json_encode($product->variants->where('is_active', true)->map(function($v) use ($product) {
-                                        $attrs = [];
-                                        if($v->color) $attrs[] = $v->color->name;
-                                        if($v->size) $attrs[] = $v->size->code;
-                                        return [
-                                            'id' => $v->id,
-                                            'name' => implode(' / ', $attrs) ?: 'Default Variant',
-                                            'sku' => $v->sku ?: ($product->sku ?: '—'),
-                                            'stock' => $v->stock
-                                        ];
-                                    })->values()->toArray()) }})" 
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-800 text-blue-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs cursor-pointer border-none">
-                                    <i class="fa-solid fa-plus-minus text-[10px]"></i> Adjust
-                                </button>
-                            @else
-                                <button type="button" 
-                                    onclick="openQuickAdjustModal('{{ $product->id }}', '{{ addslashes($product->name) }}', '{{ $product->stock }}', null)" 
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-800 text-blue-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs cursor-pointer border-none">
-                                    <i class="fa-solid fa-plus-minus text-[10px]"></i> Adjust
-                                </button>
-                            @endif
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="px-5 py-12 text-center text-slate-400">
-                            <i class="fa-solid fa-box-open text-4xl mb-3 opacity-20 block"></i>
-                            No products found in the catalog.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Pagination Footer -->
-    @if($products->hasPages())
-        <div class="px-5 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-            {{ $products->links() }}
-        </div>
-    @endif
-</div>
+<x-data-table
+    title="Stock Catalog"
+    :totalCount="$products->total()"
+    searchPlaceholder="Search products…"
+    action="{{ route('admin.inventory.index') }}"
+    tableId="inventoryTableWrapper"
+    searchInputId="inventorySearchInput"
+    totalCountId="inventoryTotalCount"
+    :items="$products"
+    :headers="$headers"
+>
+    @forelse($products as $product)
+        @php
+            $hasActiveVariants = $hasVariants && $product->variants->where('is_active', true)->count() > 0;
+        @endphp
+        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/15 transition-colors">
+            <!-- Image -->
+            <td class="px-5 py-3.5 whitespace-nowrap">
+                @if($product->image)
+                    <img src="{{ Storage::url($product->image) }}" class="w-9 h-9 object-cover rounded-lg border border-slate-200 dark:border-slate-800 bg-white">
+                @else
+                    <div class="w-9 h-9 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-[9px] text-slate-400 font-bold border border-slate-200 dark:border-slate-700/50">
+                        NO IMG
+                    </div>
+                @endif
+            </td>
+            <!-- Name -->
+            <td class="px-5 py-3.5 font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap text-sm" title="{{ $product->name }}">
+                {{ \Illuminate\Support\Str::limit($product->name, 25, '..') }}
+                @if($hasActiveVariants)
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-violet-50 dark:bg-violet-950/20 text-violet-650 dark:text-violet-400 border border-violet-200/20 ml-1.5">
+                        <i class="fa-solid fa-tags text-[8px] mr-1"></i> Has Variants
+                    </span>
+                @endif
+            </td>
+            <!-- SKU -->
+            <td class="px-5 py-3.5 text-slate-500 dark:text-slate-400 font-mono text-xs whitespace-nowrap">
+                {{ $product->sku ?: '—' }}
+            </td>
+            <!-- Price -->
+            <td class="px-5 py-3.5 text-slate-800 dark:text-slate-200 font-semibold whitespace-nowrap text-xs">
+                ₹{{ number_format($product->price, 2) }}
+                @if($product->sale_price)
+                    <span class="text-emerald-600 dark:text-emerald-400 text-[9px] block font-semibold mt-0.5">Sale: ₹{{ number_format($product->sale_price, 2) }}</span>
+                @endif
+            </td>
+            <!-- Stock -->
+            <td class="px-5 py-3.5 whitespace-nowrap">
+                @if($product->stock > ($product->min_stock ?? 5))
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/30">
+                        {{ $product->stock }} In Stock
+                    </span>
+                @elseif($product->stock > 0)
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200/30">
+                        {{ $product->stock }} Low Stock
+                    </span>
+                @else
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200/30">
+                        Out of Stock
+                    </span>
+                @endif
+            </td>
+            <!-- Status -->
+            <td class="px-5 py-3.5 whitespace-nowrap">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold 
+                    {{ $product->status === 'active' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/20' :
+                      ($product->status === 'draft'  ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200/20' : 
+                      'bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200/50') }}">
+                    {{ ucfirst($product->status) }}
+                </span>
+            </td>
+            <!-- Actions -->
+            <td class="px-5 py-3.5 text-right whitespace-nowrap">
+                @if($hasActiveVariants)
+                    <button type="button" 
+                        onclick="openQuickAdjustModal('{{ $product->id }}', '{{ addslashes($product->name) }}', '{{ $product->stock }}', {{ json_encode($product->variants->where('is_active', true)->map(function($v) use ($product) {
+                            $attrs = [];
+                            if($v->color) $attrs[] = $v->color->name;
+                            if($v->size) $attrs[] = $v->size->code;
+                            return [
+                                'id' => $v->id,
+                                'name' => implode(' / ', $attrs) ?: 'Default Variant',
+                                'sku' => $v->sku ?: ($product->sku ?: '—'),
+                                'stock' => $v->stock
+                            ];
+                        })->values()->toArray()) }})" 
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-800 text-blue-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs cursor-pointer border-none">
+                        <i class="fa-solid fa-plus-minus text-[10px]"></i> Adjust
+                    </button>
+                @else
+                    <button type="button" 
+                        onclick="openQuickAdjustModal('{{ $product->id }}', '{{ addslashes($product->name) }}', '{{ $product->stock }}', null)" 
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-800 text-blue-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs cursor-pointer border-none">
+                        <i class="fa-solid fa-plus-minus text-[10px]"></i> Adjust
+                    </button>
+                @endif
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="7" class="px-5 py-12 text-center text-slate-400">
+                <i class="fa-solid fa-box-open text-4xl mb-3 opacity-20 block"></i>
+                No products found in the catalog.
+            </td>
+        </tr>
+    @endforelse
+</x-data-table>
 
 <!-- Quick Adjustment Modal (Premium design with smooth transitions) -->
 <div id="quickAdjustModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden transition-opacity duration-300">
@@ -492,4 +461,10 @@
         }, 0);
     });
 </script>
+
+<x-table-ajax-handler
+    tableId="inventoryTableWrapper"
+    searchInputId="inventorySearchInput"
+    totalCountId="inventoryTotalCount"
+/>
 @endsection
