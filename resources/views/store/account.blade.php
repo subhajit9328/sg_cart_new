@@ -15,7 +15,7 @@
             <!-- User Info Summary Header -->
             <div class="flex items-center justify-between gap-4 mb-4 pb-4 lg:mb-6 lg:pb-6 border-b border-[#e8e4df] dark:border-[#2e2c28]">
                 <div class="flex items-center gap-3 lg:gap-4 min-w-0">
-                    <div class="relative group w-10 h-10 lg:w-14 lg:h-14 shrink-0">
+                    <div class="relative w-10 h-10 lg:w-14 lg:h-14 shrink-0">
                         <div id="profile-picture-container" class="w-10 h-10 lg:w-14 lg:h-14 bg-slate-950 dark:bg-accent/20 rounded-full flex items-center justify-center font-display text-base lg:text-xl font-extrabold text-white dark:text-accent shadow-md border dark:border-accent/30 overflow-hidden relative">
                             @if(auth('customer')->user()?->profile_picture)
                                 <img id="profile-picture-img" src="{{ Storage::url(auth('customer')->user()->profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover">
@@ -27,15 +27,16 @@
                                 <i class="fa-solid fa-spinner fa-spin text-white text-base lg:text-lg"></i>
                             </div>
                         </div>
-                        <!-- Pencil Icon -->
-                        <label for="profile-picture-input" class="absolute -bottom-0.5 -right-0.5 lg:-bottom-1 lg:-right-1 w-5 h-5 lg:w-6 lg:h-6 bg-white dark:bg-[#1c1a16] border border-[#e8e4df] dark:border-[#2e2c28] rounded-full flex items-center justify-center cursor-pointer shadow-sm hover:bg-slate-50 dark:hover:bg-accent/15 hover:border-slate-400 dark:hover:border-accent/55 transition-all select-none" title="Upload Profile Picture">
-                            <i class="fa-solid fa-pencil text-slate-500 dark:text-accent text-[9px] lg:text-[10px]"></i>
-                        </label>
                         <input type="file" id="profile-picture-input" class="hidden" accept="image/*">
                     </div>
                     <div class="min-w-0">
                         <h3 class="font-display font-extrabold text-xs lg:text-sm text-slate-800 dark:text-slate-200 truncate">{{ auth('customer')->user()?->name ?? 'John Doe' }}</h3>
-                        <p class="text-[10px] lg:text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5" title="{{ auth('customer')->user()?->email }}">{{ auth('customer')->user()?->email ?? auth('customer')->user()?->phone_no }}</p>
+                        <p class="text-[10px] lg:text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5 mb-1.5" title="{{ auth('customer')->user()?->email }}">{{ auth('customer')->user()?->email ?? auth('customer')->user()?->phone_no }}</p>
+                        <div class="flex items-center gap-2">
+                            <label for="profile-picture-input" class="text-[10px] font-bold text-accent hover:opacity-80 cursor-pointer transition-opacity" title="Change Photo">Change Photo</label>
+                            <span id="profile-picture-divider" class="text-slate-300 dark:text-slate-700 text-[10px] {{ auth('customer')->user()?->profile_picture ? '' : 'hidden' }}">|</span>
+                            <button type="button" id="profile-picture-delete-btn" class="text-[10px] font-bold text-rose-500 hover:opacity-80 transition-opacity bg-transparent border-none p-0 cursor-pointer {{ auth('customer')->user()?->profile_picture ? '' : 'hidden' }}" title="Remove Photo">Remove Photo</button>
+                        </div>
                     </div>
                 </div>
 
@@ -484,6 +485,26 @@
                             container.insertBefore(img, loader);
                         }
                         img.src = data.url;
+
+                        // Show the delete button and divider
+                        const deleteBtn = document.getElementById('profile-picture-delete-btn');
+                        const divider = document.getElementById('profile-picture-divider');
+                        if (deleteBtn) deleteBtn.classList.remove('hidden');
+                        if (divider) divider.classList.remove('hidden');
+
+                        // Update desktop header avatar
+                        const btn = document.getElementById('header-account-btn');
+                        if (btn) btn.classList.add('has-avatar');
+                        const headerAvatarContainer = document.getElementById('header-account-avatar-container');
+                        if (headerAvatarContainer) {
+                            headerAvatarContainer.innerHTML = `<img src="${data.url}" alt="Profile Picture">`;
+                        }
+                        
+                        // Update mobile navigation avatar
+                        const mobileAvatarContainer = document.getElementById('mobile-nav-avatar-container');
+                        if (mobileAvatarContainer) {
+                            mobileAvatarContainer.innerHTML = `<img src="${data.url}" class="w-10 h-10 rounded-full object-cover border border-accent/20" alt="Profile Picture">`;
+                        }
                     } else {
                         showToast(data.message || 'Profile picture upload failed.', 'error');
                     }
@@ -495,6 +516,84 @@
                     loader.classList.remove('opacity-100');
                     loader.classList.add('opacity-0', 'pointer-events-none');
                     profilePicInput.value = ''; // Reset input
+                });
+            });
+        }
+
+        // Profile Picture Delete AJAX
+        const profilePicDeleteBtn = document.getElementById('profile-picture-delete-btn');
+        if (profilePicDeleteBtn) {
+            profilePicDeleteBtn.addEventListener('click', function() {
+                showConfirm('Are you sure you want to delete your profile picture?', function() {
+                    const loader = document.getElementById('profile-picture-loader');
+                    if (loader) {
+                        loader.classList.remove('opacity-0', 'pointer-events-none');
+                        loader.classList.add('opacity-100');
+                    }
+
+                    fetch("{{ route('store.account.profile-picture.destroy') }}", {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(res => {
+                        if (!res.ok) {
+                            return res.json().then(errData => {
+                                throw new Error(errData.message || 'Server error occurred.');
+                            });
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message, 'success');
+                            
+                            // 1. Update main profile page picture container
+                            const img = document.getElementById('profile-picture-img');
+                            if (img) img.remove();
+                            
+                            const container = document.getElementById('profile-picture-container');
+                            let initials = document.getElementById('profile-picture-initials');
+                            if (!initials && container) {
+                                initials = document.createElement('span');
+                                initials.id = 'profile-picture-initials';
+                                const name = "{{ auth('customer')->user()?->name ?? 'John Doe' }}";
+                                initials.textContent = name.substring(0, 2).toUpperCase();
+                                container.insertBefore(initials, loader);
+                            }
+
+                            // 2. Hide delete button and divider
+                            profilePicDeleteBtn.classList.add('hidden');
+                            const divider = document.getElementById('profile-picture-divider');
+                            if (divider) divider.classList.add('hidden');
+
+                            // 3. Update desktop header avatar to default icon
+                            const btn = document.getElementById('header-account-btn');
+                            if (btn) btn.classList.remove('has-avatar');
+                            const headerAvatarContainer = document.getElementById('header-account-avatar-container');
+                            if (headerAvatarContainer) {
+                                headerAvatarContainer.innerHTML = `<i class="fa-regular fa-circle-user header-account-icon"></i>`;
+                            }
+
+                            // 4. Update mobile navigation avatar to default icon
+                            const mobileAvatarContainer = document.getElementById('mobile-nav-avatar-container');
+                            if (mobileAvatarContainer) {
+                                mobileAvatarContainer.innerHTML = `<div class="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent text-lg"><i class="fa-regular fa-user"></i></div>`;
+                            }
+                        } else {
+                            showToast(data.message || 'Failed to delete profile picture.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        showToast(err.message || 'Something went wrong.', 'error');
+                    })
+                    .finally(() => {
+                        if (loader) {
+                            loader.classList.remove('opacity-100');
+                            loader.classList.add('opacity-0', 'pointer-events-none');
+                        }
+                    });
                 });
             });
         }

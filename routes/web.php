@@ -63,6 +63,7 @@ Route::middleware('auth:customer')->group(function () {
         Route::get('/account/{tab?}', [StoreController::class, 'account'])->name('store.account');
         Route::post('/account/profile/update', [StoreController::class, 'updateProfile'])->name('store.account.profile.update');
         Route::post('/account/profile-picture', [ProfilePictureController::class, 'update'])->name('store.account.profile-picture.update');
+        Route::delete('/account/profile-picture', [ProfilePictureController::class, 'destroy'])->name('store.account.profile-picture.destroy');
         Route::post('/account/address/add', [StoreController::class, 'addAddress'])->name('store.account.address.add');
         Route::post('/account/address/update/{id}', [StoreController::class, 'updateAddress'])->name('store.account.address.update');
         Route::get('/account/address/delete/{id}', [StoreController::class, 'deleteAddress'])->name('store.account.address.delete');
