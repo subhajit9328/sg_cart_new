@@ -524,23 +524,38 @@
 
                     <div>
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Order Status</label>
-                        <select name="status" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-100 cursor-pointer">
+                        <x-select2 
+                            name="status" 
+                            id="order_status_update"
+                            placeholder=""
+                            :selected="$statusVal"
+                            :allowClear="false"
+                            :searchable="false"
+                        >   
+                        
                             <option value="New Order" {{ $statusVal === 'New Order' ? 'selected' : '' }}>New Order</option>
                             <option value="Processed" {{ $statusVal === 'Processed' ? 'selected' : '' }}>Processed</option>
                             <option value="Shipped" {{ $statusVal === 'Shipped' ? 'selected' : '' }}>Shipped</option>
                             <option value="Out for Delivery" {{ $statusVal === 'Out for Delivery' ? 'selected' : '' }}>Out for Delivery</option>
                             <option value="Delivered" {{ $statusVal === 'Delivered' ? 'selected' : '' }}>Delivered</option>
                             <option value="Cancelled" {{ $statusVal === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-                        </select>
+                        </x-select2>
                     </div>
 
                     <div>
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Payment Status</label>
-                        <select name="payment_status" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-100 cursor-pointer">
+                        <x-select2 
+                            name="payment_status" 
+                            id="order_payment_status_update"
+                            placeholder=""
+                            :selected="$order->payment_status->value ?? $order->payment_status"
+                            :allowClear="false"
+                            :searchable="false"
+                        >
                             <option value="Pending" {{ ($order->payment_status->value ?? $order->payment_status) === 'Pending' ? 'selected' : '' }}>Pending</option>
                             <option value="Paid" {{ ($order->payment_status->value ?? $order->payment_status) === 'Paid' ? 'selected' : '' }}>Paid</option>
                             <option value="Failed" {{ ($order->payment_status->value ?? $order->payment_status) === 'Failed' ? 'selected' : '' }}>Failed</option>
-                        </select>
+                        </x-select2>
                     </div>
 
                     <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-3">

@@ -133,23 +133,41 @@
 >
     <x-slot name="filters">
         <!-- Order Status Filter -->
-        <select name="status" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-100 cursor-pointer">
-            <option value="">All Order Statuses</option>
-            <option value="New Order" {{ request('status') === 'New Order' ? 'selected' : '' }}>New Order</option>
-            <option value="Processed" {{ request('status') === 'Processed' ? 'selected' : '' }}>Processed</option>
-            <option value="Shipped" {{ request('status') === 'Shipped' ? 'selected' : '' }}>Shipped</option>
-            <option value="Out for Delivery" {{ request('status') === 'Out for Delivery' ? 'selected' : '' }}>Out for Delivery</option>
-            <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
-            <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-        </select>
+        <div class="min-w-[170px]">
+            <x-select2 
+                name="status" 
+                id="order_status_filter"
+                placeholder="All Order Statuses"
+                :selected="request('status')"
+                :compact="true"
+                :allowClear="false"
+                :searchable="false"
+            >
+                <option value="New Order" {{ request('status') === 'New Order' ? 'selected' : '' }}>New Order</option>
+                <option value="Processed" {{ request('status') === 'Processed' ? 'selected' : '' }}>Processed</option>
+                <option value="Shipped" {{ request('status') === 'Shipped' ? 'selected' : '' }}>Shipped</option>
+                <option value="Out for Delivery" {{ request('status') === 'Out for Delivery' ? 'selected' : '' }}>Out for Delivery</option>
+                <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
+                <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+            </x-select2>
+        </div>
 
         <!-- Payment Status Filter -->
-        <select name="payment_status" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-100 cursor-pointer">
-            <option value="">All Payment Statuses</option>
-            <option value="Pending" {{ request('payment_status') === 'Pending' ? 'selected' : '' }}>Pending</option>
-            <option value="Paid" {{ request('payment_status') === 'Paid' ? 'selected' : '' }}>Paid</option>
-            <option value="Failed" {{ request('payment_status') === 'Failed' ? 'selected' : '' }}>Failed</option>
-        </select>
+        <div class="min-w-[185px]">
+            <x-select2 
+                name="payment_status" 
+                id="payment_status_filter"
+                placeholder="All Payment Statuses"
+                :selected="request('payment_status')"
+                :compact="true"
+                :allowClear="false"
+                :searchable="false"
+            >
+                <option value="Pending" {{ request('payment_status') === 'Pending' ? 'selected' : '' }}>Pending</option>
+                <option value="Paid" {{ request('payment_status') === 'Paid' ? 'selected' : '' }}>Paid</option>
+                <option value="Failed" {{ request('payment_status') === 'Failed' ? 'selected' : '' }}>Failed</option>
+            </x-select2>
+        </div>
     </x-slot>
 
     @forelse($orders as $order)
