@@ -164,7 +164,7 @@
         </header>
 
         <!-- ============ Content ============ -->
-        <main class="pt-24 px-4 lg:px-6 pb-10 w-full">
+        <main class="pt-20 px-4 lg:px-6 pb-10 w-full">
             @yield('content')
         </main>
     </div>

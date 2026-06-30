@@ -133,21 +133,41 @@
 >
     <x-slot name="filters">
         <!-- Order Status Filter -->
-        <select name="status" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-100 cursor-pointer">
-            <option value="">All Order Statuses</option>
-            <option value="Processing" {{ request('status') === 'Processing' ? 'selected' : '' }}>Processing</option>
-            <option value="Shipped" {{ request('status') === 'Shipped' ? 'selected' : '' }}>Shipped</option>
-            <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
-            <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-        </select>
+        <div class="min-w-[170px]">
+            <x-select2 
+                name="status" 
+                id="order_status_filter"
+                placeholder="All Order Statuses"
+                :selected="request('status')"
+                :compact="true"
+                :allowClear="false"
+                :searchable="false"
+            >
+                <option value="New Order" {{ request('status') === 'New Order' ? 'selected' : '' }}>New Order</option>
+                <option value="Processed" {{ request('status') === 'Processed' ? 'selected' : '' }}>Processed</option>
+                <option value="Shipped" {{ request('status') === 'Shipped' ? 'selected' : '' }}>Shipped</option>
+                <option value="Out for Delivery" {{ request('status') === 'Out for Delivery' ? 'selected' : '' }}>Out for Delivery</option>
+                <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
+                <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+            </x-select2>
+        </div>
 
         <!-- Payment Status Filter -->
-        <select name="payment_status" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-100 cursor-pointer">
-            <option value="">All Payment Statuses</option>
-            <option value="Pending" {{ request('payment_status') === 'Pending' ? 'selected' : '' }}>Pending</option>
-            <option value="Paid" {{ request('payment_status') === 'Paid' ? 'selected' : '' }}>Paid</option>
-            <option value="Failed" {{ request('payment_status') === 'Failed' ? 'selected' : '' }}>Failed</option>
-        </select>
+        <div class="min-w-[185px]">
+            <x-select2 
+                name="payment_status" 
+                id="payment_status_filter"
+                placeholder="All Payment Statuses"
+                :selected="request('payment_status')"
+                :compact="true"
+                :allowClear="false"
+                :searchable="false"
+            >
+                <option value="Pending" {{ request('payment_status') === 'Pending' ? 'selected' : '' }}>Pending</option>
+                <option value="Paid" {{ request('payment_status') === 'Paid' ? 'selected' : '' }}>Paid</option>
+                <option value="Failed" {{ request('payment_status') === 'Failed' ? 'selected' : '' }}>Failed</option>
+            </x-select2>
+        </div>
     </x-slot>
 
     @forelse($orders as $order)
@@ -177,16 +197,22 @@
             <td class="px-5 py-3.5 whitespace-nowrap">
                 @php
                     $statusColors = [
-                        'Processing' => 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200/20',
-                        'Shipped' => 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200/20',
+                        'New Order' => 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200/20',
+                        'Processed' => 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200/20',
+                        'Shipped' => 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-200/20',
+                        'Out for Delivery' => 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-200/20',
                         'Delivered' => 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200/20',
                         'Cancelled' => 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200/20',
+                        'Processing' => 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200/20',
                     ];
                     $statusIcons = [
-                        'Processing' => 'fa-solid fa-spinner animate-spin mr-1',
+                        'New Order' => 'fa-solid fa-spinner animate-spin mr-1',
+                        'Processed' => 'fa-solid fa-box mr-1',
                         'Shipped' => 'fa-solid fa-truck-fast mr-1',
+                        'Out for Delivery' => 'fa-solid fa-truck-ramp-box mr-1',
                         'Delivered' => 'fa-solid fa-circle-check mr-1',
                         'Cancelled' => 'fa-solid fa-ban mr-1',
+                        'Processing' => 'fa-solid fa-spinner animate-spin mr-1',
                     ];
                     $colorClass = $statusColors[$order->status->value] ?? $statusColors[$order->status] ?? 'bg-slate-50 text-slate-700 border-slate-200';
                     $iconClass = $statusIcons[$order->status->value] ?? $statusIcons[$order->status] ?? 'fa-solid fa-circle-info mr-1';
