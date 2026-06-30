@@ -20,5 +20,5 @@
 @if(!$appliedCoupon)
     <p class="text-[11px] text-slate-400 mt-2 mb-4"><i class="fa-solid fa-circle-info text-[10px] mr-0.5"></i> Try entering promo codes like <strong>SGCART20</strong> or custom coupon codes.</p>
 @else
-    <p class="text-[11px] text-emerald-600 mt-2 mb-4"><i class="fa-solid fa-circle-check text-[10px] mr-0.5"></i> Coupon <strong>{{ $appliedCoupon }}</strong> applied! (Saved ${{ number_format($discountAmount, 2) }})</p>
+    <p class="text-[11px] text-emerald-600 mt-2 mb-4"><i class="fa-solid fa-circle-check text-[10px] mr-0.5"></i> Coupon <strong>{{ $appliedCoupon }}</strong> applied! (Saved ₹{{ number_format($discountAmount, 2) }})</p>
 @endif

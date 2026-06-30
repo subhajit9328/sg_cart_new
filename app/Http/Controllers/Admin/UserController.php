@@ -32,7 +32,17 @@ class UserController extends Controller
             $query->role($request->input('role'));
         }
 
-        $users = $query->latest()->paginate(10)->withQueryString();
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order') ?? $request->input('sort_dir') ?? 'desc';
+        $allowedSortFields = ['name', 'email', 'created_at'];
+
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->latest();
+        }
+
+        $users = $query->paginate(10)->withQueryString();
         $roles = Role::all();
 
         return view('admin.users.index', compact('users', 'roles'));

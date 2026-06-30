@@ -110,26 +110,40 @@ class StoreController extends Controller
      */
     public function shop(Request $request)
     {
-        $products = collect(self::getProducts());
+        $baseProducts = collect(self::getProducts());
 
-        // Category filter
-        if ($request->filled('category')) {
-            $categories = (array) $request->input('category');
-            $products = $products->filter(fn ($p) => in_array($p['cat'], $categories));
-        }
-
-        // Price filter
-        if ($request->filled('price_max')) {
-            $maxPrice = (float) $request->input('price_max');
-            $products = $products->filter(fn ($p) => $p['price'] <= $maxPrice);
-        }
-
-        // Search filter
+        // Apply Search filter first (since it is global)
         if ($request->filled('search')) {
             $search = strtolower($request->input('search'));
-            $products = $products->filter(fn ($p) => str_contains(strtolower($p['name']), $search) ||
+            $baseProducts = $baseProducts->filter(fn($p) => 
+                str_contains(strtolower($p['name']), $search) || 
                 str_contains(strtolower($p['desc']), $search)
             );
+        }
+
+        // Apply Price filter next
+        if ($request->filled('price_max')) {
+            $maxPrice = (float) $request->input('price_max');
+            $baseProducts = $baseProducts->filter(fn($p) => $p['price'] <= $maxPrice);
+        }
+
+        // Get all category names from all products
+        $allCategories = collect(self::getProducts())->pluck('cat')->unique()->values()->toArray();
+        if (empty($allCategories)) {
+            $allCategories = ["Women's Clothing", "Men's Clothing", "Kids' Clothing", 'Accessories', 'Footwear', 'Sportswear', 'Winter Wear'];
+        }
+
+        // Calculate counts based on search and price filters (before category filter is applied)
+        $categoryCounts = [];
+        foreach ($allCategories as $cat) {
+            $categoryCounts[$cat] = $baseProducts->where('cat', $cat)->count();
+        }
+
+        // Now apply Category filter for actual product listing
+        $products = $baseProducts;
+        if ($request->filled('category')) {
+            $categories = (array) $request->input('category');
+            $products = $products->filter(fn($p) => in_array($p['cat'], $categories));
         }
 
         // Sorting
@@ -138,11 +152,6 @@ class StoreController extends Controller
             $products = $products->sortBy('price');
         } elseif ($sort === 'price_desc') {
             $products = $products->sortByDesc('price');
-        }
-
-        $allCategories = collect(self::getProducts())->pluck('cat')->unique()->values()->toArray();
-        if (empty($allCategories)) {
-            $allCategories = ["Women's Clothing", "Men's Clothing", "Kids' Clothing", 'Accessories', 'Footwear', 'Sportswear', 'Winter Wear'];
         }
 
         // Pagination: 12 products per page
@@ -163,6 +172,7 @@ class StoreController extends Controller
         return view('store.shop', [
             'products' => $paginatedProducts,
             'allCategories' => $allCategories,
+            'categoryCounts' => $categoryCounts,
             'selectedCategories' => (array) $request->input('category', []),
             'selectedPriceMax' => $request->input('price_max', 10000),
             'selectedSort' => $sort,

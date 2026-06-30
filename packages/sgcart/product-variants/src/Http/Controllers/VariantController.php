@@ -111,6 +111,7 @@ class VariantController extends Controller
             'variants.*.price' => 'nullable|numeric|gt:0',
             'variants.*.sale_price' => 'nullable|numeric|min:0',
             'variants.*.stock' => 'nullable|integer|min:0',
+            'variants.*.min_stock' => 'nullable|integer|min:0',
         ];
 
         if (config('product-variants.features.color', true)) {
@@ -164,9 +165,13 @@ class VariantController extends Controller
                     'sku'        => $varData['sku'] ?: null,
                     'price'      => $varData['price'] ?: null,
                     'sale_price' => $varData['sale_price'] ?: null,
-                    'stock'      => (int) ($varData['stock'] ?? 0),
+                    'min_stock'  => isset($varData['min_stock']) ? (int)$varData['min_stock'] : 5,
                     'is_active'  => isset($varData['is_active']) ? (bool)$varData['is_active'] : false,
                 ];
+
+                if (!class_exists(\SGCart\Inventory\Models\InventoryLog::class)) {
+                    $data['stock'] = (int) ($varData['stock'] ?? 0);
+                }
 
                 if ($colorEnabled) {
                     $data['color_id'] = $varData['color_id'] ?: null;

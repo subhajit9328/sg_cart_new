@@ -11,9 +11,12 @@
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
         "sgcart/coupons": "@dev",
+        "sgcart/image-search": "@dev",
+        "sgcart/inventory": "@dev",
         "sgcart/payment-razorpay": "@dev",
         "sgcart/product-variants": "@dev",
         "sgcart/shipping": "@dev",
+        "sgcart/tax": "@dev",
         "spatie/laravel-permission": "^8.0"
     },
     "require-dev": {
@@ -26,6 +29,13 @@
         "phpunit/phpunit": "^12.5.12"
     },
     "repositories": [
+        {
+            "type": "path",
+            "url": "packages/sgcart/inventory",
+            "options": {
+                "symlink": true
+            }
+        },
         {
             "type": "path",
             "url": "packages/sgcart/product-variants",

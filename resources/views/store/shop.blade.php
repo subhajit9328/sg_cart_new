@@ -45,7 +45,7 @@
                                 <span class="cb-box"><i class="fa-solid fa-check text-[9px] text-white opacity-0 transition-opacity"></i></span>
                             </div>
                             <span class="cb-text">{{ $cat }}</span>
-                            <span class="cb-count">{{ collect(App\Http\Controllers\StoreController::getProducts())->where('cat', $cat)->count() }}</span>
+                            <span class="cb-count">{{ $categoryCounts[$cat] ?? 0 }}</span>
                         </label>
                     @endforeach
                 </div>
@@ -141,7 +141,7 @@
                         </div>
                     </div>
                 @empty
-                    <div style="grid-column: span 3; padding: 80px 20px;" class="text-center text-slate-400">
+                    <div style="grid-column: 1 / -1; padding: 80px 20px;" class="text-center text-slate-400">
                         <i class="fa-solid fa-store-slash text-5xl mb-3 opacity-25"></i>
                         <p class="text-sm">No products found matching your search or filters.</p>
                         <a href="{{ route('store.shop') }}" class="btn btn-primary btn-sm mt-4">Clear All Filters</a>
@@ -150,32 +150,7 @@
             </div>
 
             <!-- PAGINATION -->
-            @if($products->hasPages())
-                <div class="flex items-center justify-center gap-2 mt-12 mb-6">
-                    {{-- Previous Page Link --}}
-                    @if($products->onFirstPage())
-                        <span class="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-xs font-semibold text-stone bg-white opacity-40 cursor-not-allowed select-none dark:bg-[#171614] dark:border-[#2b2a27] dark:text-[#9ca3af] dark:opacity-25"><i class="fa-solid fa-chevron-left"></i></span>
-                    @else
-                        <a href="{{ $products->previousPageUrl() }}" class="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-xs font-semibold text-stone hover:text-ink hover:border-stone hover:bg-silk bg-white transition-all no-underline select-none dark:bg-[#171614] dark:border-[#2b2a27] dark:text-[#9ca3af] dark:hover:border-[#6b7280] dark:hover:bg-[#2b2925] dark:hover:text-[#f3f4f6]" rel="prev"><i class="fa-solid fa-chevron-left"></i></a>
-                    @endif
-
-                    {{-- Pagination Elements --}}
-                    @foreach($products->getUrlRange(1, $products->lastPage()) as $page => $url)
-                        @if($page == $products->currentPage())
-                            <span class="w-10 h-10 rounded-xl border border-accent bg-[#fbfaf8] flex items-center justify-center text-xs font-bold text-accent select-none dark:border-accent dark:bg-[#c8a97e]/15 dark:text-accent">{{ $page }}</span>
-                        @else
-                            <a href="{{ $url }}" class="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-xs font-semibold text-stone hover:text-ink hover:border-stone hover:bg-silk bg-white transition-all no-underline select-none dark:bg-[#171614] dark:border-[#2b2a27] dark:text-[#9ca3af] dark:hover:border-[#6b7280] dark:hover:bg-[#2b2925] dark:hover:text-[#f3f4f6]">{{ $page }}</a>
-                        @endif
-                    @endforeach
-
-                    {{-- Next Page Link --}}
-                    @if($products->hasMorePages())
-                        <a href="{{ $products->nextPageUrl() }}" class="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-xs font-semibold text-stone hover:text-ink hover:border-stone hover:bg-silk bg-white transition-all no-underline select-none dark:bg-[#171614] dark:border-[#2b2a27] dark:text-[#9ca3af] dark:hover:border-[#6b7280] dark:hover:bg-[#2b2925] dark:hover:text-[#f3f4f6]" rel="next"><i class="fa-solid fa-chevron-right"></i></a>
-                    @else
-                        <span class="w-10 h-10 rounded-xl border border-border flex items-center justify-center text-xs font-semibold text-stone bg-white opacity-40 cursor-not-allowed select-none dark:bg-[#171614] dark:border-[#2b2a27] dark:text-[#9ca3af] dark:opacity-25"><i class="fa-solid fa-chevron-right"></i></span>
-                    @endif
-                </div>
-            @endif
+            <x-custom_pagination :paginator="$products" size="md" class="mt-12 mb-6" />
         </div>
 
     </div>

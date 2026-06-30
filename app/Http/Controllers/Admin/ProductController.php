@@ -15,12 +15,16 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order') ?? $request->input('sort_dir') ?? 'desc';
+        $allowedSortFields = ['name', 'sku', 'price', 'stock', 'status', 'created_at'];
+
         $products = Product::with(['category', 'manufacturer'])
-            ->when($request->search, fn ($q) => $q->where('name', 'like', "%{$request->search}%")
-                                                   ->orWhere('sku', 'like', "%{$request->search}%"))
+            ->when($request->search, fn ($q) => $q->where(fn($sq) => $sq->where('name', 'like', "%{$request->search}%")
+                                                                         ->orWhere('sku', 'like', "%{$request->search}%")))
             ->when($request->category_id, fn ($q) => $q->where('category_id', $request->category_id))
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
-            ->latest()
+            ->when(in_array($sortBy, $allowedSortFields), fn ($q) => $q->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc'), fn ($q) => $q->latest())
             ->paginate(10)
             ->withQueryString();
 
@@ -48,6 +52,7 @@ class ProductController extends Controller
             'price'             => 'required|numeric|gt:0',
             'sale_price'        => 'nullable|numeric|min:0|lte:price',
             'stock'             => 'required|integer|min:0',
+            'min_stock'         => 'nullable|integer|min:0',
             'status'            => 'required|in:draft,active,inactive',
             'weight'            => 'nullable|string',
             'dimensions'        => 'nullable|string',
@@ -113,6 +118,7 @@ class ProductController extends Controller
             'price'             => 'required|numeric|gt:0',
             'sale_price'        => 'nullable|numeric|min:0|lte:price',
             'stock'             => 'required|integer|min:0',
+            'min_stock'         => 'nullable|integer|min:0',
             'status'            => 'required|in:draft,active,inactive',
             'weight'            => 'nullable|string',
             'dimensions'        => 'nullable|string',

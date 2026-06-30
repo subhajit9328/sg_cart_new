@@ -10,64 +10,81 @@
     <!-- Account Wrap -->
     <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
         
-        <!-- Tab Selectors (Left Sidebar Card) -->
-        <div class="bg-white border border-[#e8e4df] rounded-2xl p-5 md:p-6">
+        <!-- Tab Selectors (Left Sidebar / Top Navigation Card) -->
+        <div class="bg-white dark:bg-[#151411] border border-[#e8e4df] dark:border-[#2e2c28] rounded-2xl p-4 lg:p-6">
             <!-- User Info Summary Header -->
-            <div class="flex items-center gap-4 mb-6 pb-6 border-b border-[#e8e4df]">
-                <div class="relative group w-14 h-14 shrink-0">
-                    <div id="profile-picture-container" class="w-14 h-14 bg-slate-950 rounded-full flex items-center justify-center font-display text-xl font-extrabold text-white shadow-md overflow-hidden relative">
-                        @if(auth('customer')->user()?->profile_picture)
-                            <img id="profile-picture-img" src="{{ Storage::url(auth('customer')->user()->profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover">
-                        @else
-                            <span id="profile-picture-initials">{{ strtoupper(substr(auth('customer')->user()?->name ?? 'John Doe', 0, 2)) }}</span>
-                        @endif
-                        <!-- Loading spinner overlay -->
-                        <div id="profile-picture-loader" class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200">
-                            <i class="fa-solid fa-spinner fa-spin text-white text-lg"></i>
+            <div class="flex items-center justify-between gap-4 mb-4 pb-4 lg:mb-6 lg:pb-6 border-b border-[#e8e4df] dark:border-[#2e2c28]">
+                <div class="flex items-center gap-3 lg:gap-4 min-w-0">
+                    <div class="relative w-10 h-10 lg:w-14 lg:h-14 shrink-0">
+                        <div id="profile-picture-container" class="w-10 h-10 lg:w-14 lg:h-14 bg-slate-950 dark:bg-accent/20 rounded-full flex items-center justify-center font-display text-base lg:text-xl font-extrabold text-white dark:text-accent shadow-md border dark:border-accent/30 overflow-hidden relative">
+                            @if(auth('customer')->user()?->profile_picture)
+                                <img id="profile-picture-img" src="{{ Storage::url(auth('customer')->user()->profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover">
+                            @else
+                                <span id="profile-picture-initials">{{ strtoupper(substr(auth('customer')->user()?->name ?? 'John Doe', 0, 2)) }}</span>
+                            @endif
+                            <!-- Loading spinner overlay -->
+                            <div id="profile-picture-loader" class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200">
+                                <i class="fa-solid fa-spinner fa-spin text-white text-base lg:text-lg"></i>
+                            </div>
+                        </div>
+                        <input type="file" id="profile-picture-input" class="hidden" accept="image/*">
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="font-display font-extrabold text-xs lg:text-sm text-slate-800 dark:text-slate-200 truncate">{{ auth('customer')->user()?->name ?? 'John Doe' }}</h3>
+                        <p class="text-[10px] lg:text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5 mb-1.5" title="{{ auth('customer')->user()?->email }}">{{ auth('customer')->user()?->email ?? auth('customer')->user()?->phone_no }}</p>
+                        <div class="flex items-center gap-2">
+                            <label for="profile-picture-input" class="text-[10px] font-bold text-accent hover:opacity-80 cursor-pointer transition-opacity" title="Change Photo">Change Photo</label>
+                            <span id="profile-picture-divider" class="text-slate-300 dark:text-slate-700 text-[10px] {{ auth('customer')->user()?->profile_picture ? '' : 'hidden' }}">|</span>
+                            <button type="button" id="profile-picture-delete-btn" class="text-[10px] font-bold text-rose-500 hover:opacity-80 transition-opacity bg-transparent border-none p-0 cursor-pointer {{ auth('customer')->user()?->profile_picture ? '' : 'hidden' }}" title="Remove Photo">Remove Photo</button>
                         </div>
                     </div>
-                    <!-- Pencil Icon -->
-                    <label for="profile-picture-input" class="absolute -bottom-1 -right-1 w-6 h-6 bg-white border border-[#e8e4df] rounded-full flex items-center justify-center cursor-pointer shadow-sm hover:bg-slate-50 hover:border-slate-400 transition-all select-none" title="Upload Profile Picture">
-                        <i class="fa-solid fa-pencil text-slate-500 text-[10px]"></i>
-                    </label>
-                    <input type="file" id="profile-picture-input" class="hidden" accept="image/*">
                 </div>
-                <div class="min-w-0">
-                    <h3 class="font-display font-extrabold text-sm text-slate-800 truncate">{{ auth('customer')->user()?->name ?? 'John Doe' }}</h3>
-                    <p class="text-xs text-slate-400 truncate mt-0.5">{{ auth('customer')->user()?->email ?? auth('customer')->user()?->phone_no }}</p>
+
+                <!-- Mobile Logout Button -->
+                <div class="lg:hidden">
+                    <form action="{{ route('store.logout') }}" method="POST" id="storeLogoutFormMobile" class="contents">
+                        @csrf
+                        <button type="button" onclick="showConfirm('Are you sure you want to log out?', () => document.getElementById('storeLogoutFormMobile').submit());" class="px-3 py-2 rounded-lg text-xs font-semibold text-rose-500 hover:bg-rose-50/50 hover:text-rose-600 transition-all border-none bg-transparent flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-right-from-bracket text-sm"></i> Logout
+                        </button>
+                    </form>
                 </div>
             </div>
 
-            <nav class="flex flex-col gap-1.5">
-                <a href="{{ route('store.account', 'orders') }}" class="acc-nav-item px-4 py-3 rounded-lg text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all w-full text-left flex items-center gap-3 {{ $activeTab === 'orders' ? 'active' : '' }}" style="text-decoration:none" id="btn-orders">
-                    <i class="fa-solid fa-box-open text-center w-4 text-sm"></i> My Orders
+            <!-- Tab Links Navigation -->
+            <nav class="flex flex-row overflow-x-auto whitespace-nowrap gap-2 pb-1 scrollbar-none w-full lg:flex-col lg:gap-1.5 lg:overflow-x-visible lg:pb-0">
+                <a href="{{ route('store.account', 'orders') }}" class="acc-nav-item px-3.5 py-2 lg:px-4 lg:py-3 rounded-lg text-xs lg:text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all flex items-center gap-2 lg:gap-3 shrink-0 {{ $activeTab === 'orders' ? 'active' : '' }}" style="text-decoration:none" id="btn-orders">
+                    <i class="fa-solid fa-box-open text-center w-4 text-xs lg:text-sm"></i> My Orders
                 </a>
-                <a href="{{ route('store.account', 'profile') }}" class="acc-nav-item px-4 py-3 rounded-lg text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all w-full text-left flex items-center gap-3 {{ $activeTab === 'profile' ? 'active' : '' }}" style="text-decoration:none" id="btn-profile">
-                    <i class="fa-regular fa-user text-center w-4 text-sm"></i> Profile Details
+                <a href="{{ route('store.account', 'profile') }}" class="acc-nav-item px-3.5 py-2 lg:px-4 lg:py-3 rounded-lg text-xs lg:text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all flex items-center gap-2 lg:gap-3 shrink-0 {{ $activeTab === 'profile' ? 'active' : '' }}" style="text-decoration:none" id="btn-profile">
+                    <i class="fa-regular fa-user text-center w-4 text-xs lg:text-sm"></i> Profile Details
                 </a>
-                <a href="{{ route('store.account', 'address') }}" class="acc-nav-item px-4 py-3 rounded-lg text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all w-full text-left flex items-center gap-3 {{ $activeTab === 'address' ? 'active' : '' }}" style="text-decoration:none" id="btn-address">
-                    <i class="fa-solid fa-map-location-dot text-center w-4 text-sm"></i> Addresses
+                <a href="{{ route('store.account', 'address') }}" class="acc-nav-item px-3.5 py-2 lg:px-4 lg:py-3 rounded-lg text-xs lg:text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all flex items-center gap-2 lg:gap-3 shrink-0 {{ $activeTab === 'address' ? 'active' : '' }}" style="text-decoration:none" id="btn-address">
+                    <i class="fa-solid fa-map-location-dot text-center w-4 text-xs lg:text-sm"></i> Addresses
                 </a>
-                <a href="{{ route('store.account', 'wishlist') }}" class="acc-nav-item px-4 py-3 rounded-lg text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all w-full text-left flex items-center gap-3 {{ $activeTab === 'wishlist' ? 'active' : '' }}" style="text-decoration:none" id="btn-wishlist">
-                    <i class="fa-regular fa-heart text-center w-4 text-sm"></i> Wishlist
+                <a href="{{ route('store.account', 'wishlist') }}" class="acc-nav-item px-3.5 py-2 lg:px-4 lg:py-3 rounded-lg text-xs lg:text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all flex items-center gap-2 lg:gap-3 shrink-0 {{ $activeTab === 'wishlist' ? 'active' : '' }}" style="text-decoration:none" id="btn-wishlist">
+                    <i class="fa-regular fa-heart text-center w-4 text-xs lg:text-sm"></i> Wishlist
                 </a>
-                <form action="{{ route('store.logout') }}" method="POST" id="storeLogoutForm" class="contents">
-                    @csrf
-                    <button type="button" onclick="showConfirm('Are you sure you want to log out?', () => document.getElementById('storeLogoutForm').submit());" class="px-4 py-3 rounded-lg text-sm font-semibold text-rose-500 hover:bg-rose-50/50 hover:text-rose-600 transition-all w-full text-left border-none bg-transparent flex items-center gap-3 cursor-pointer">
-                        <i class="fa-solid fa-right-from-bracket text-center w-4 text-sm"></i> Logout
-                    </button>
-                </form>
+                <!-- Desktop Logout Button -->
+                <div class="hidden lg:block">
+                    <form action="{{ route('store.logout') }}" method="POST" id="storeLogoutForm" class="contents">
+                        @csrf
+                        <button type="button" onclick="showConfirm('Are you sure you want to log out?', () => document.getElementById('storeLogoutForm').submit());" class="px-4 py-3 rounded-lg text-sm font-semibold text-rose-500 hover:bg-rose-50/50 hover:text-rose-600 transition-all w-full text-left border-none bg-transparent flex items-center gap-3 cursor-pointer">
+                            <i class="fa-solid fa-right-from-bracket text-center w-4 text-sm"></i> Logout
+                        </button>
+                    </form>
+                </div>
             </nav>
         </div>
 
         <!-- Tab Content Box (Right Card) -->
-        <div class="bg-white border border-[#e8e4df] rounded-2xl p-5 md:p-6">
+        <div class="bg-white dark:bg-[#151411] border border-[#e8e4df] dark:border-[#2e2c28] rounded-2xl p-4 sm:p-5 md:p-6">
             
             <!-- Orders List Tab -->
             <div id="tab-orders" class="acc-content {{ $activeTab === 'orders' ? 'active' : '' }}">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-100">
                     <h2 class="font-display font-bold text-base text-slate-900 flex items-center gap-2.5 mb-0" style="margin-bottom:0">
-                        <i class="fa-solid fa-clock-rotate-left text-accent text-sm"></i> Order History
+                        <i class="fa-solid fa-clock-rotate-left text-accent text-sm"></i> Order History <span class="bg-slate-100 dark:bg-[#1a1916] text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full font-sans font-bold border border-slate-200 dark:border-slate-800 text-[11px]">{{ $orders->total() }}</span>
                     </h2>
                     
                     <!-- Search Bar Form -->
@@ -88,34 +105,45 @@
                 
                 <div class="flex flex-col gap-4">
                     @forelse($orders as $order)
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border border-[#e8e4df] rounded-xl p-5 bg-white transition-all hover:shadow-[0_4px_15px_rgba(0,0,0,0.03)] gap-4">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border border-[#e8e4df] dark:border-[#2e2c28] rounded-xl p-5 bg-white dark:bg-[#151411] transition-all hover:shadow-[0_4px_15px_rgba(0,0,0,0.03)] gap-4">
                             <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 bg-[#f8f7f5] rounded-xl flex items-center justify-center shrink-0 border border-[#e8e4df]">
+                                <div class="w-12 h-12 bg-[#f8f7f5] dark:bg-[#1d1b18] rounded-xl flex items-center justify-center shrink-0 border border-[#e8e4df] dark:border-[#2e2c28]">
                                     @if($order['status'] === 'Delivered')
                                         <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                                    @elseif($order['status'] === 'Cancelled')
+                                        <i class="fa-solid fa-circle-xmark text-rose-600 text-lg"></i>
+                                    @elseif($order['status'] === 'Processing')
+                                        <i class="fa-solid fa-spinner fa-spin text-blue-600 text-lg"></i>
                                     @else
                                         <i class="fa-solid fa-truck-fast text-amber-600 text-lg"></i>
                                     @endif
                                 </div>
                                 <div>
-                                    <p class="text-sm font-bold text-slate-800">{{ $order['id'] }}</p>
-                                    <p class="text-xs text-slate-400 mt-1">{{ $order['items_count'] }} items · Purchased on {{ $order['date'] }}</p>
+                                    <p class="text-sm font-bold text-slate-800 dark:text-slate-200">{{ $order['id'] }}</p>
+                                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">{{ $order['items_count'] }} items · Purchased on {{ $order['date'] }}</p>
+                                    @if($order['status'] === 'Cancelled')
+                                        <p class="text-[10px] text-rose-600 dark:text-rose-400 font-medium mt-0.5">Order Cancelled</p>
+                                    @endif
                                 </div>
                             </div>
                             <div class="flex items-center gap-5 w-full sm:w-auto justify-between sm:justify-end">
                                 <div class="text-left sm:text-right">
-                                    <p class="text-sm font-extrabold text-slate-900">₹{{ number_format($order['amount'], 2) }}</p>
+                                    <p class="text-sm font-extrabold text-slate-900 dark:text-slate-100">₹{{ number_format($order['amount'], 2) }}</p>
                                     @if($order['status'] === 'Delivered')
-                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 mt-1">Delivered</span>
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 mt-1">Delivered</span>
+                                    @elseif($order['status'] === 'Cancelled')
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50 mt-1">Cancelled</span>
+                                    @elseif($order['status'] === 'Processing')
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 mt-1">Processing</span>
                                     @else
-                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 mt-1">In Transit</span>
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 mt-1">In Transit</span>
                                     @endif
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <a href="{{ route('store.account.order.view', $order['ulid']) }}" class="w-9 h-9 rounded-lg border border-slate-200 hover:bg-slate-50 flex items-center justify-center transition-colors text-slate-400 hover:text-slate-800" title="View Order Details">
+                                    <a href="{{ route('store.account.order.view', $order['ulid']) }}" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-[#1d1b18] flex items-center justify-center transition-colors text-slate-400 hover:text-slate-800 dark:hover:text-slate-200" title="View Order Details">
                                         <i class="fa-solid fa-eye text-sm"></i>
                                     </a>
-                                    <a href="{{ route('store.account.order.invoice', $order['ulid']) }}" class="w-9 h-9 rounded-lg border border-slate-200 hover:bg-slate-50 flex items-center justify-center transition-colors text-slate-400 hover:text-slate-800" title="Download Invoice">
+                                    <a href="{{ route('store.account.order.invoice', $order['ulid']) }}" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-[#1d1b18] flex items-center justify-center transition-colors text-slate-400 hover:text-slate-800 dark:hover:text-slate-200" title="Download Invoice">
                                         <i class="fa-solid fa-download text-sm"></i>
                                     </a>
                                 </div>
@@ -129,46 +157,42 @@
                     @endforelse
                 </div>
 
-                @if($orders->hasPages())
-                    <div class="mt-8 pt-4 border-t border-slate-100 flex justify-center">
-                        {{ $orders->links() }}
-                    </div>
-                @endif
+                <x-custom_pagination :paginator="$orders" :show-info="true" label="orders" size="sm" class="mt-8 pt-4 border-t border-border" />
             </div>
 
             <!-- Profile Details Tab -->
             <div id="tab-profile" class="acc-content {{ $activeTab === 'profile' ? 'active' : '' }}">
-                <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-regular fa-user text-accent text-sm"></i> Profile Details</h2>
+                <h2 class="font-display font-bold text-base text-slate-900 dark:text-slate-100 mb-4 border-b border-slate-100 dark:border-slate-800 pb-2 flex items-center gap-2.5"><i class="fa-regular fa-user text-accent text-sm"></i> Profile Details</h2>
                 
                 <form action="{{ route('store.account.profile.update') }}" method="POST" class="w-full flex flex-col gap-4">
                     @csrf
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1">
-                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">First Name <span class="text-rose-600">*</span></label>
-                            <input name="first_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" value="{{ auth('customer')->user() ? explode(' ', auth('customer')->user()->name)[0] : 'John' }}"/>
+                            <label class="font-sans text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">First Name <span class="text-rose-600">*</span></label>
+                            <input name="first_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:dark:border-accent focus:ring-3 focus:ring-slate-900/5 focus:dark:ring-accent/10" value="{{ auth('customer')->user() ? explode(' ', auth('customer')->user()->name)[0] : 'John' }}"/>
                         </div>
                         <div class="flex flex-col gap-1">
-                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Last Name <span class="text-rose-600">*</span></label>
-                            <input name="last_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" value="{{ auth('customer')->user() ? (explode(' ', auth('customer')->user()->name)[1] ?? '') : 'Doe' }}"/>
+                            <label class="font-sans text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Last Name <span class="text-rose-600">*</span></label>
+                            <input name="last_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:dark:border-accent focus:ring-3 focus:ring-slate-900/5 focus:dark:ring-accent/10" value="{{ auth('customer')->user() ? (explode(' ', auth('customer')->user()->name)[1] ?? '') : 'Doe' }}"/>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1">
-                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Email Address</label>
+                            <label class="font-sans text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email Address</label>
                             @if(auth('customer')->user()?->email)
-                                <input class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5 disabled:bg-[#f8f7f5] disabled:text-slate-400 disabled:cursor-not-allowed" value="{{ auth('customer')->user()->email }}" readonly disabled/>
+                                <input class="w-full px-3.5 py-2.5 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-sm text-slate-900 dark:text-slate-100 outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:dark:border-accent focus:ring-3 focus:ring-slate-900/5 focus:dark:ring-accent/10 disabled:bg-[#f8f7f5] disabled:dark:bg-[#151411]/50 disabled:text-slate-400 disabled:dark:text-slate-500 disabled:cursor-not-allowed" value="{{ auth('customer')->user()->email }}" readonly disabled/>
                             @else
-                                <input name="email" id="email" type="email" class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" placeholder="Add email address" value="{{ old('email') }}"/>
+                                <input name="email" id="email" type="email" class="w-full px-3.5 py-2.5 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:dark:border-accent focus:ring-3 focus:ring-slate-900/5 focus:dark:ring-accent/10" placeholder="Add email address" value="{{ old('email') }}"/>
                                 <p class="error-email text-rose-500 text-xs mt-1 hidden"></p>
                                 @error('email') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                             @endif
                         </div>
                         <div class="flex flex-col gap-1">
-                            <label class="font-sans text-[11px] font-bold text-slate-500 uppercase tracking-wider">Registered Phone Number</label>
+                            <label class="font-sans text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Registered Phone Number</label>
                             @if(auth('customer')->user()?->phone_no)
-                                <input class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5 disabled:bg-[#f8f7f5] disabled:text-slate-400 disabled:cursor-not-allowed" value="{{ auth('customer')->user()->phone_no }}" readonly disabled/>
+                                <input class="w-full px-3.5 py-2.5 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-sm text-slate-900 dark:text-slate-100 outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:dark:border-accent focus:ring-3 focus:ring-slate-900/5 focus:dark:ring-accent/10 disabled:bg-[#f8f7f5] disabled:dark:bg-[#151411]/50 disabled:text-slate-400 disabled:dark:text-slate-500 disabled:cursor-not-allowed" value="{{ auth('customer')->user()->phone_no }}" readonly disabled/>
                             @else
-                                <input name="phone_no" id="phone_no" type="text" class="w-full px-3.5 py-2.5 border border-[#e8e4df] rounded-lg text-sm text-slate-900 bg-white outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:ring-3 focus:ring-slate-900/5" placeholder="Add phone number (e.g. +1234567890)" value="{{ old('phone_no') }}"/>
+                                <input name="phone_no" id="phone_no" type="text" class="w-full px-3.5 py-2.5 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:dark:border-accent focus:ring-3 focus:ring-slate-900/5 focus:dark:ring-accent/10" placeholder="Add phone number (e.g. +1234567890)" value="{{ old('phone_no') }}"/>
                                 <p class="error-phone text-rose-500 text-xs mt-1 hidden"></p>
                                 @error('phone_no') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                             @endif
@@ -183,28 +207,28 @@
 
             <!-- Addresses Tab -->
             <div id="tab-address" class="acc-content {{ $activeTab === 'address' ? 'active' : '' }}">
-                <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-solid fa-map-location-dot text-accent text-sm"></i> Manage Addresses</h2>
+                <h2 class="font-display font-bold text-base text-slate-900 dark:text-slate-100 mb-4 border-b border-slate-100 dark:border-slate-800 pb-2 flex items-center gap-2.5"><i class="fa-solid fa-map-location-dot text-accent text-sm"></i> Manage Addresses</h2>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                     @foreach($addresses as $addr)
-                        <div class="border border-[#e8e4df] rounded-xl p-5 relative transition-all hover:border-slate-400 {{ $addr->is_default ? 'border-slate-900 bg-slate-50/10' : '' }}">
+                        <div class="border border-[#e8e4df] dark:border-[#2e2c28] rounded-xl p-5 relative transition-all hover:border-slate-400 dark:hover:border-slate-600 {{ $addr->is_default ? 'border-slate-900 dark:border-accent bg-slate-50/10 dark:bg-[#c8a97e]/5' : '' }}">
                             @if($addr->is_default)
-                                <span class="absolute -top-px right-4 bg-slate-950 text-white text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-b-lg">Default Shipping</span>
+                                <span class="absolute -top-px right-4 bg-slate-950 dark:bg-accent text-white dark:text-slate-950 text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-b-lg">Default Shipping</span>
                             @endif
-                            <div class="text-sm font-bold mb-1.5 flex items-center gap-1.5"><i class="fa-regular fa-address-book text-slate-400"></i> {{ $addr->first_name }} {{ $addr->last_name }}</div>
-                            <div class="text-xs text-slate-500 leading-relaxed">{{ $addr->address }}<br/>{{ $addr->city }}, {{ $addr->state }} {{ $addr->zip }}<br/>{{ $addr->country }}</div>
+                            <div class="text-sm font-bold mb-1.5 flex items-center gap-1.5"><i class="fa-regular fa-address-book text-slate-400 dark:text-slate-500"></i> {{ $addr->first_name }} {{ $addr->last_name }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{{ $addr->address }}<br/>{{ $addr->city }}, {{ $addr->state }} {{ $addr->zip }}<br/>{{ $addr->country }}</div>
                             <div class="flex gap-2.5 mt-3 items-center justify-end">
-                                <span class="text-[10px] font-bold text-accent cursor-pointer hover:text-slate-900 transition-colors select-none" onclick="openEditAddressModal({{ json_encode($addr) }})"><i class="fa-regular fa-pen-to-square mr-1"></i>Edit</span>
-                                <span class="text-slate-200 select-none">•</span>
+                                <span class="text-[10px] font-bold text-accent cursor-pointer hover:text-slate-900 dark:hover:text-slate-100 transition-colors select-none" onclick="openEditAddressModal({{ json_encode($addr) }})"><i class="fa-regular fa-pen-to-square mr-1"></i>Edit</span>
+                                <span class="text-slate-200 dark:text-slate-800 select-none">•</span>
                                 <a href="{{ route('store.account.address.delete', $addr->id) }}" class="text-[10px] font-bold text-rose-500 hover:text-rose-700" style="text-decoration:none" onclick="return confirm('Are you sure you want to delete this address?')"><i class="fa-regular fa-trash-can mr-1"></i>Delete</a>
                             </div>
                         </div>
                     @endforeach
                     
                     <!-- Add Address Button Card -->
-                    <div class="border-2 border-dashed border-[#e8e4df] hover:border-slate-400 hover:bg-slate-50/50 rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer gap-2 min-h-[150px] transition-all {{ $addresses->isEmpty() ? 'col-span-3' : '' }}" onclick="openAddressModal()">
-                        <i class="fa-solid fa-plus text-2xl text-slate-300"></i>
-                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Add New Address</span>
+                    <div class="border-2 border-dashed border-[#e8e4df] dark:border-[#2e2c28] hover:border-slate-400 dark:hover:border-slate-600 hover:bg-slate-50/50 dark:hover:bg-[#1a1916]/50 rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer gap-2 min-h-[150px] transition-all {{ $addresses->isEmpty() ? 'col-span-3' : '' }}" onclick="openAddressModal()">
+                        <i class="fa-solid fa-plus text-2xl text-slate-300 dark:text-slate-700"></i>
+                        <span class="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Add New Address</span>
                     </div>
                 </div>
 
@@ -220,7 +244,7 @@
 
             <!-- Wishlist Tab -->
             <div id="tab-wishlist" class="acc-content {{ $activeTab === 'wishlist' ? 'active' : '' }}">
-                <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-regular fa-heart text-accent text-sm"></i> My Wishlist</h2>
+                <h2 class="font-display font-bold text-base text-slate-900 dark:text-slate-100 mb-4 border-b border-slate-100 dark:border-slate-800 pb-2 flex items-center gap-2.5"><i class="fa-regular fa-heart text-accent text-sm"></i> My Wishlist</h2>
                 
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     @forelse($wishlist as $wl)
@@ -472,6 +496,26 @@
                             container.insertBefore(img, loader);
                         }
                         img.src = data.url;
+
+                        // Show the delete button and divider
+                        const deleteBtn = document.getElementById('profile-picture-delete-btn');
+                        const divider = document.getElementById('profile-picture-divider');
+                        if (deleteBtn) deleteBtn.classList.remove('hidden');
+                        if (divider) divider.classList.remove('hidden');
+
+                        // Update desktop header avatar
+                        const btn = document.getElementById('header-account-btn');
+                        if (btn) btn.classList.add('has-avatar');
+                        const headerAvatarContainer = document.getElementById('header-account-avatar-container');
+                        if (headerAvatarContainer) {
+                            headerAvatarContainer.innerHTML = `<img src="${data.url}" alt="Profile Picture">`;
+                        }
+                        
+                        // Update mobile navigation avatar
+                        const mobileAvatarContainer = document.getElementById('mobile-nav-avatar-container');
+                        if (mobileAvatarContainer) {
+                            mobileAvatarContainer.innerHTML = `<img src="${data.url}" class="w-10 h-10 rounded-full object-cover border border-accent/20" alt="Profile Picture">`;
+                        }
                     } else {
                         showToast(data.message || 'Profile picture upload failed.', 'error');
                     }
@@ -483,6 +527,84 @@
                     loader.classList.remove('opacity-100');
                     loader.classList.add('opacity-0', 'pointer-events-none');
                     profilePicInput.value = ''; // Reset input
+                });
+            });
+        }
+
+        // Profile Picture Delete AJAX
+        const profilePicDeleteBtn = document.getElementById('profile-picture-delete-btn');
+        if (profilePicDeleteBtn) {
+            profilePicDeleteBtn.addEventListener('click', function() {
+                showConfirm('Are you sure you want to delete your profile picture?', function() {
+                    const loader = document.getElementById('profile-picture-loader');
+                    if (loader) {
+                        loader.classList.remove('opacity-0', 'pointer-events-none');
+                        loader.classList.add('opacity-100');
+                    }
+
+                    fetch("{{ route('store.account.profile-picture.destroy') }}", {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(res => {
+                        if (!res.ok) {
+                            return res.json().then(errData => {
+                                throw new Error(errData.message || 'Server error occurred.');
+                            });
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message, 'success');
+                            
+                            // 1. Update main profile page picture container
+                            const img = document.getElementById('profile-picture-img');
+                            if (img) img.remove();
+                            
+                            const container = document.getElementById('profile-picture-container');
+                            let initials = document.getElementById('profile-picture-initials');
+                            if (!initials && container) {
+                                initials = document.createElement('span');
+                                initials.id = 'profile-picture-initials';
+                                const name = "{{ auth('customer')->user()?->name ?? 'John Doe' }}";
+                                initials.textContent = name.substring(0, 2).toUpperCase();
+                                container.insertBefore(initials, loader);
+                            }
+
+                            // 2. Hide delete button and divider
+                            profilePicDeleteBtn.classList.add('hidden');
+                            const divider = document.getElementById('profile-picture-divider');
+                            if (divider) divider.classList.add('hidden');
+
+                            // 3. Update desktop header avatar to default icon
+                            const btn = document.getElementById('header-account-btn');
+                            if (btn) btn.classList.remove('has-avatar');
+                            const headerAvatarContainer = document.getElementById('header-account-avatar-container');
+                            if (headerAvatarContainer) {
+                                headerAvatarContainer.innerHTML = `<i class="fa-regular fa-circle-user header-account-icon"></i>`;
+                            }
+
+                            // 4. Update mobile navigation avatar to default icon
+                            const mobileAvatarContainer = document.getElementById('mobile-nav-avatar-container');
+                            if (mobileAvatarContainer) {
+                                mobileAvatarContainer.innerHTML = `<div class="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent text-lg"><i class="fa-regular fa-user"></i></div>`;
+                            }
+                        } else {
+                            showToast(data.message || 'Failed to delete profile picture.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        showToast(err.message || 'Something went wrong.', 'error');
+                    })
+                    .finally(() => {
+                        if (loader) {
+                            loader.classList.remove('opacity-100');
+                            loader.classList.add('opacity-0', 'pointer-events-none');
+                        }
+                    });
                 });
             });
         }
