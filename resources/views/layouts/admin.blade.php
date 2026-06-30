@@ -189,7 +189,7 @@
     // Theme toggle
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const themeIcon = document.getElementById('themeIcon');
-    
+
     function updateThemeIcon() {
         if (document.documentElement.classList.contains('dark')) {
             themeIcon.className = 'fa-solid fa-sun';
@@ -197,7 +197,7 @@
             themeIcon.className = 'fa-solid fa-moon';
         }
     }
-    
+
     updateThemeIcon();
 
     themeToggleBtn.addEventListener('click', () => {
@@ -232,8 +232,8 @@
     const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
     const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
 
-    function isDesktop() { 
-        return window.matchMedia('(min-width: 1024px)').matches; 
+    function isDesktop() {
+        return window.matchMedia('(min-width: 1024px)').matches;
     }
 
     sidebarToggleBtn.addEventListener('click', () => {
@@ -269,7 +269,7 @@
         if (!wrap) return;
         const t = document.createElement('div');
         t.className = `toast ${type}`;
-        
+
         let icon = 'fa-circle-check';
         if (type === 'error') {
             icon = 'fa-circle-xmark';
@@ -278,7 +278,7 @@
         } else if (type === 'info') {
             icon = 'fa-circle-info';
         }
-        
+
         t.innerHTML = `
             <i class="fa-solid ${icon} toast-icon flex-shrink-0"></i>
             <span class="grow pr-2">${text}</span>
@@ -286,7 +286,7 @@
                 <i class="fa-solid fa-xmark"></i>
             </button>
         `;
-        
+
         wrap.appendChild(t);
 
         let autoDismiss = setTimeout(() => {
@@ -324,7 +324,7 @@
             </div>
         `;
         document.body.appendChild(modal);
-        
+
         // Trigger scale-in transition
         setTimeout(() => {
             const content = modal.querySelector('.popup-content');
@@ -333,7 +333,7 @@
                 content.classList.add('scale-100', 'opacity-100');
             }
         }, 10);
-        
+
         function closeModal() {
             const content = modal.querySelector('.popup-content');
             if (content) {
@@ -344,7 +344,7 @@
             modal.classList.add('animate-fadeOut');
             setTimeout(() => modal.remove(), 200);
         }
-        
+
         modal.querySelector('.modal-close').addEventListener('click', closeModal);
         modal.querySelector('.modal-ok').addEventListener('click', closeModal);
     }
@@ -355,9 +355,9 @@
         const isDelete = titleLower.includes('delete');
         const isRemove = titleLower.includes('remove');
         const isDangerous = isDelete || isRemove;
-        
-        const confirmBtnClass = isDangerous 
-            ? 'bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white shadow-lg shadow-rose-600/10 border-none' 
+
+        const confirmBtnClass = isDangerous
+            ? 'bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white shadow-lg shadow-rose-600/10 border-none'
             : 'btn btn-primary';
         const confirmText = isDelete ? 'Delete' : 'Confirm';
 
@@ -379,7 +379,7 @@
             </div>
         `;
         document.body.appendChild(modal);
-        
+
         // Trigger scale-in transition
         setTimeout(() => {
             const content = modal.querySelector('.popup-content');
@@ -388,7 +388,7 @@
                 content.classList.add('scale-100', 'opacity-100');
             }
         }, 10);
-        
+
         function closeModal(confirmed = false) {
             const content = modal.querySelector('.popup-content');
             if (content) {
@@ -404,10 +404,10 @@
                 }
             }, 200);
         }
-        
+
         modal.querySelector('.modal-close').addEventListener('click', () => closeModal(false));
         modal.querySelector('.modal-cancel').addEventListener('click', () => closeModal(false));
-        
+
         const confirmBtn = modal.querySelector('.modal-confirm');
         confirmBtn.addEventListener('click', () => {
             // Check if spinner is already added
@@ -419,7 +419,7 @@
             confirmBtn.disabled = true;
             confirmBtn.style.pointerEvents = 'none';
             confirmBtn.style.opacity = '0.8';
-            
+
             closeModal(true);
         });
     }
@@ -446,7 +446,7 @@
     // Global Form Submit Loader
     document.addEventListener('submit', (e) => {
         if (e.defaultPrevented) return;
-        
+
         const form = e.target;
         // Skip logout form
         if (form.id === 'logoutForm') return;
@@ -459,7 +459,7 @@
                 spinner.className = 'fa-solid fa-spinner fa-spin mr-2';
                 btn.insertBefore(spinner, btn.firstChild);
             }
-            
+
             btn.disabled = true;
             btn.style.pointerEvents = 'none';
             btn.style.opacity = '0.8';
@@ -470,7 +470,7 @@
     $(document).ready(function() {
         // Target all POST forms (including those with method spoofing)
         const $forms = $('form').filter(function() {
-            return this.id !== 'logoutForm' && 
+            return this.id !== 'logoutForm' &&
                    (($(this).attr('method') || '').toUpperCase() === 'POST' || $(this).find('input[name="_token"]').length > 0);
         });
 
@@ -481,7 +481,7 @@
         function getFieldName($input) {
             const id = $input.attr('id');
             let labelText = '';
-            
+
             // Try to find label by 'for' attribute
             if (id) {
                 labelText = $(`label[for="${id}"]`).text().trim();
@@ -494,7 +494,7 @@
             if (!labelText) {
                 labelText = $input.attr('placeholder') || $input.attr('name') || 'Field';
             }
-            
+
             // Clean up common label patterns
             labelText = labelText.replace(/[:*]/g, '').trim();
             if (labelText.toLowerCase().startsWith('new ')) {
@@ -507,12 +507,12 @@
         function getErrorElement($input) {
             let name = $input.attr('name') || $input.attr('id') || 'field';
             name = name.replace(/\[\]/g, '').replace(/[^a-zA-Z0-9_-]/g, '_');
-            
+
             // Locate existing or create new error sibling
             let $err = $input.siblings(`.js-error-${name}`);
             if ($err.length === 0) {
                 $err = $(`<p class="js-error-${name} text-rose-500 text-xs mt-1.5 font-medium hidden"></p>`);
-                
+
                 // If input has a relative wrapper (e.g. password toggle), insert after the wrapper
                 let $target = $input;
                 if ($input.parent().hasClass('relative')) {
@@ -529,7 +529,7 @@
             $err.text(message).removeClass('hidden');
             $input.addClass('border-rose-500 focus:border-rose-500 focus:ring-rose-500');
             $input.removeClass('border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500');
-            
+
             // Hide Laravel server-side error if present
             $input.siblings('p.text-rose-500').not($err).addClass('hidden');
             if ($input.parent().hasClass('relative')) {
@@ -543,7 +543,7 @@
             $err.text('').addClass('hidden');
             $input.removeClass('border-rose-500 focus:border-rose-500 focus:ring-rose-500');
             $input.addClass('border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500');
-            
+
             // Clear Laravel server-side error if present
             $input.siblings('p.text-rose-500').not($err).addClass('hidden');
             if ($input.parent().hasClass('relative')) {
@@ -554,9 +554,9 @@
         // Main validation routine for a single field
         function validateField(inputElement) {
             const $input = $(inputElement);
-            
+
             // Skip hidden, disabled, buttons, or CSRF/method token fields
-            if ($input.is(':hidden') || $input.is(':disabled') || 
+            if ($input.is(':hidden') || $input.is(':disabled') ||
                 $input.attr('type') === 'submit' || $input.attr('type') === 'button' ||
                 ['/token', '_token', '_method'].includes($input.attr('name'))) {
                 return true;
@@ -661,7 +661,7 @@
             if (!isFormValid) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
-                
+
                 if ($firstInvalid) {
                     $('html, body').animate({
                         scrollTop: $firstInvalid.offset().top - 120
@@ -684,16 +684,16 @@
         } else {
             parent.classList.add('flex', 'items-center');
         }
-        
+
         input.classList.add('pr-12');
-        
+
         const toggleBtn = document.createElement('button');
         toggleBtn.type = 'button';
         toggleBtn.className = 'absolute right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer border-none bg-transparent outline-none focus:outline-none flex items-center justify-center p-1 text-sm z-10';
         toggleBtn.innerHTML = '<i class="fa-regular fa-eye"></i>';
-        
+
         parent.appendChild(toggleBtn);
-        
+
         toggleBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -725,13 +725,13 @@
 
             const position = $(this).attr('data-tooltip-position') || ($(this).hasClass('nav-link') ? 'right' : 'top');
             const rect = this.getBoundingClientRect();
-            
+
             // Set text and re-append arrow
             $tooltip.text(text).append($arrow);
-            
+
             // Clean up arrow classes
             $arrow.attr('class', 'absolute border-[5px] border-transparent');
-            
+
             let top = 0;
             let left = 0;
             let startTransform = '';
@@ -794,7 +794,7 @@
             if ($(this).hasClass('nav-link') && !$('#sidebar').hasClass('icon-only')) {
                 return;
             }
-            
+
             const position = $(this).attr('data-tooltip-position') || ($(this).hasClass('nav-link') ? 'right' : 'top');
             let endTransform = '';
             if (position === 'right') {
@@ -807,7 +807,7 @@
                 opacity: 0,
                 transform: endTransform
             });
-            
+
             $tooltip.off('transitionend').on('transitionend', function() {
                 if ($tooltip.css('opacity') == '0') {
                     $tooltip.addClass('hidden');

@@ -82,7 +82,7 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        $order->load(['items', 'customer', 'payments']);
+        $order->load(['items', 'customer', 'payments', 'activities.causer']);
 
         $couriers = [];
         if (class_exists(\SGCart\LogisticTracking\Models\ShippingCourier::class)) {

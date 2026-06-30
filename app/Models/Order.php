@@ -2,9 +2,15 @@
 
 namespace App\Models;
 
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
+use App\Observers\OrderObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
+use SGCart\LogisticTracking\Models\OrderTracking;
 
+#[ObservedBy([OrderObserver::class])]
 class Order extends Model
 {
     use HasUlids;
@@ -48,7 +54,7 @@ class Order extends Model
      */
     public function getPaymentStatusAttribute()
     {
-        return $this->payments()->latest()->first()?->status ?? \App\Enums\PaymentStatus::PENDING;
+        return $this->payments()->latest()->first()?->status ?? PaymentStatus::PENDING;
     }
 
     /**
@@ -129,9 +135,10 @@ class Order extends Model
      */
     public function getTrackingNumberAttribute()
     {
-        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
+        if (class_exists(OrderTracking::class)) {
             return $this->tracking?->tracking_number;
         }
+
         return null;
     }
 
@@ -140,9 +147,10 @@ class Order extends Model
      */
     public function getShippingCarrierAttribute()
     {
-        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
+        if (class_exists(OrderTracking::class)) {
             return $this->tracking?->shipping_carrier;
         }
+
         return null;
     }
 
@@ -151,9 +159,10 @@ class Order extends Model
      */
     public function getShippingCourierIdAttribute()
     {
-        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
+        if (class_exists(OrderTracking::class)) {
             return $this->tracking?->shipping_courier_id;
         }
+
         return null;
     }
 
@@ -162,9 +171,10 @@ class Order extends Model
      */
     public function getTrackingUrlAttribute()
     {
-        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
+        if (class_exists(OrderTracking::class)) {
             return $this->tracking?->tracking_url;
         }
+
         return null;
     }
 
@@ -173,9 +183,10 @@ class Order extends Model
      */
     public function getEstimatedDeliveryAtAttribute()
     {
-        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
+        if (class_exists(OrderTracking::class)) {
             return $this->tracking?->estimated_delivery_at;
         }
+
         return null;
     }
 
@@ -185,8 +196,95 @@ class Order extends Model
     protected function casts(): array
     {
         return [
-            'status' => \App\Enums\OrderStatus::class,
+            'status' => OrderStatus::class,
             'estimated_delivery_at' => 'datetime',
+        ];
+    }
+
+    /**
+     * Get the activity logs for the order.
+     */
+    public function activities()
+    {
+        return $this->morphMany(ActivityLog::class, 'subject')->latest();
+    }
+
+    /**
+     * Format activity log for order events.
+     */
+    public static function formatActivityLog(ActivityLog $activity): string
+    {
+        if ($activity->event === 'order.created') {
+            return 'Order was created';
+        }
+
+        if ($activity->event === 'order.status_updated') {
+            $old = $activity->attribute_changes['old']['status'] ?? 'unknown';
+            $new = $activity->attribute_changes['new']['status'] ?? 'unknown';
+
+            return "Status changed from <span class='font-semibold text-slate-850 dark:text-slate-100'>{$old}</span> to <span class='font-semibold text-slate-850 dark:text-slate-100'>{$new}</span>";
+        }
+
+        return $activity->description;
+    }
+
+    /**
+     * Get timeline-specific data for order events.
+     */
+    public static function getTimelineData(\App\Models\ActivityLog $activity): array
+    {
+        if ($activity->event === 'order.created') {
+            return [
+                'title' => 'Order record created',
+                'description' => 'Assigned Order Reference: ' . ($activity->subject->order_number ?? ''),
+                'icon' => 'fa-pen-nib',
+                'icon_color' => 'bg-slate-50 text-slate-500 border border-slate-200/50 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800/60',
+            ];
+        }
+
+        if ($activity->event === 'order.status_updated') {
+            $newStatus = $activity->attribute_changes['new']['status'] ?? 'Processing';
+            
+            $statusData = [
+                'Processing' => [
+                    'title' => 'Processed & Packed',
+                    'description' => 'Your items have been carefully packaged and are ready for handover to our courier partner.',
+                    'icon' => 'fa-box-open',
+                    'icon_color' => 'bg-slate-900 text-white border border-transparent dark:bg-slate-850 dark:text-slate-200',
+                ],
+                'Shipped' => [
+                    'title' => 'Order Shipped (Transit Started)',
+                    'description' => 'Order has been dispatched.',
+                    'icon' => 'fa-truck',
+                    'icon_color' => 'bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30',
+                ],
+                'Delivered' => [
+                    'title' => 'Order Delivered',
+                    'description' => 'Package successfully delivered to the recipient.',
+                    'icon' => 'fa-circle-check',
+                    'icon_color' => 'bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30',
+                ],
+                'Cancelled' => [
+                    'title' => 'Order Cancelled',
+                    'description' => 'This order has been marked as Cancelled.',
+                    'icon' => 'fa-ban',
+                    'icon_color' => 'bg-rose-50 text-rose-600 border border-rose-100 dark:bg-rose-955/20 dark:text-rose-455 dark:border-rose-900/30',
+                ],
+            ];
+
+            return $statusData[$newStatus] ?? [
+                'title' => "Order status updated to {$newStatus}",
+                'description' => $activity->description,
+                'icon' => 'fa-circle-info',
+                'icon_color' => 'bg-slate-50 text-slate-600 border border-slate-200/50 dark:bg-slate-900/50 dark:text-slate-300 dark:border-slate-800/60',
+            ];
+        }
+
+        return [
+            'title' => 'Order Activity',
+            'description' => $activity->description,
+            'icon' => 'fa-circle-info',
+            'icon_color' => 'bg-slate-50 text-slate-600 border border-slate-200/50 dark:bg-slate-900/50 dark:text-slate-300 dark:border-slate-800/60',
         ];
     }
 }

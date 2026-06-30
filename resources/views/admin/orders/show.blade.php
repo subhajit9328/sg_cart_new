@@ -323,121 +323,73 @@
 
         <!-- Order Log History Timeline -->
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden no-print">
-            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
                 <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Order Activity Log</h2>
+                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    {{ $order->activities->count() }} {{ Str::plural('Event', $order->activities->count()) }}
+                </span>
             </div>
-            <div class="p-5">
-                <ol class="relative border-l border-slate-200 dark:border-slate-800 space-y-5 ml-2.5">
-                    @foreach($order->payments as $payment)
+            <div class="p-6">
+                <div class="relative pl-6 border-l border-slate-100 dark:border-slate-800 space-y-6 ml-3">
+                    @forelse($order->activities as $activity)
                         @php
-                            $pStatus = $payment->status->value ?? $payment->status;
+                            $timeline = $activity->timeline;
                         @endphp
-                        <li class="mb-4 ml-6">
-                            @if($pStatus === 'Paid')
-                                <span class="absolute flex items-center justify-center w-5 h-5 bg-emerald-100 dark:bg-emerald-950/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-emerald-600">
-                                    <i class="fa-solid fa-circle-check text-[8px]"></i>
+                        <div class="relative">
+                            <!-- Timeline Dot & Icon -->
+                            <span class="absolute -left-[38px] top-0.5 flex items-center justify-center w-7 h-7 rounded-full ring-4 ring-white dark:ring-slate-900 {{ $timeline['icon_color'] }} shadow-xs">
+                                <i class="fa-solid {{ $timeline['icon'] }} text-[10px]"></i>
+                            </span>
+
+                            <!-- Timeline Content Header & Timestamp -->
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex-1">
+                                    <h4 class="text-sm font-semibold text-slate-900 dark:text-white leading-snug flex items-center gap-2">
+                                        {{ $timeline['title'] }}
+                                    </h4>
+                                    
+                                    @if($timeline['description'])
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                                            {!! $timeline['description'] !!}
+                                            @if($timeline['extra_details'])
+                                                <button type="button" 
+                                                        onclick="const el = document.getElementById('details-{{ $activity->id }}'); el.classList.toggle('hidden'); this.querySelector('.toggle-text').textContent = el.classList.contains('hidden') ? 'View More' : 'View Less';" 
+                                                        class="ml-1.5 inline font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-350 cursor-pointer focus:outline-none whitespace-nowrap">
+                                                    <span class="toggle-text">View More</span>
+                                                </button>
+                                            @endif
+                                        </p>
+                                    @else
+                                        @if($timeline['extra_details'])
+                                            <div class="mt-1">
+                                                <button type="button" 
+                                                        onclick="const el = document.getElementById('details-{{ $activity->id }}'); el.classList.toggle('hidden'); this.querySelector('.toggle-text').textContent = el.classList.contains('hidden') ? 'View More' : 'View Less';" 
+                                                        class="inline font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-350 cursor-pointer focus:outline-none whitespace-nowrap">
+                                                    <span class="toggle-text">View More</span>
+                                                </button>
+                                            </div>
+                                        @endif
+                                    @endif
+
+                                    @if($timeline['extra_details'])
+                                        <div id="details-{{ $activity->id }}" class="hidden mt-2 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-relaxed space-y-1">
+                                            {!! $timeline['extra_details'] !!}
+                                        </div>
+                                    @endif
+                                </div>
+                                
+                                <span class="text-[11px] font-bold text-slate-400 dark:text-slate-500 whitespace-nowrap pt-0.5">
+                                    {{ $activity->created_at->format('M d, Y H:i') }}
                                 </span>
-                            @elseif($pStatus === 'Pending')
-                                <span class="absolute flex items-center justify-center w-5 h-5 bg-amber-100 dark:bg-amber-900/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-amber-600 animate-pulse">
-                                    <i class="fa-solid fa-clock text-[8px]"></i>
-                                </span>
-                            @else
-                                <span class="absolute flex items-center justify-center w-5 h-5 bg-rose-100 dark:bg-rose-950/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-rose-600">
-                                    <i class="fa-solid fa-circle-xmark text-[8px]"></i>
-                                </span>
-                            @endif
-                            <div class="flex items-center justify-between gap-4">
-                                <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                                    Payment {{ $pStatus }}: {{ $payment->payment_method }}
-                                </h4>
-                                <time class="text-[9px] font-semibold text-slate-400">{{ $payment->created_at->format('M d, Y H:i') }}</time>
                             </div>
-                            <p class="text-xs text-slate-400 mt-0.5">
-                                @if($pStatus === 'Paid')
-                                    Payment of ₹{{ number_format($payment->amount, 2) }} was successfully processed.
-                                    @if($payment->card_number_masked) (Card: {{ $payment->card_number_masked }}) @endif
-                                @elseif($pStatus === 'Pending')
-                                    Payment of ₹{{ number_format($payment->amount, 2) }} is pending customer action or manual clearance.
-                                @else
-                                    Payment attempt of ₹{{ number_format($payment->amount, 2) }} failed.
-                                @endif
-                                @if($payment->transaction_id)
-                                    <span class="block text-[10px] text-slate-450 mt-0.5 font-mono">Txn ID: {{ $payment->transaction_id }}</span>
-                                @endif
-                            </p>
-                        </li>
-                    @endforeach
-
-                    @if($statusVal === 'Delivered')
-                    <li class="mb-4 ml-6">
-                        <span class="absolute flex items-center justify-center w-5 h-5 bg-emerald-100 dark:bg-emerald-900/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-emerald-600">
-                            <i class="fa-solid fa-circle-check text-[8px]"></i>
-                        </span>
-                        <div class="flex items-center justify-between gap-4">
-                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Order Delivered</h4>
-                            <time class="text-[9px] font-semibold text-slate-400">{{ $order->updated_at->format('M d, Y H:i') }}</time>
                         </div>
-                        <p class="text-xs text-slate-400 mt-0.5">Package successfully delivered to the recipient.</p>
-                    </li>
-                    @endif
-
-                    @if($statusVal === 'Shipped' || $statusVal === 'Delivered')
-                    <li class="mb-4 ml-6">
-                        <span class="absolute flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-900/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-blue-600">
-                            <i class="fa-solid fa-truck text-[8px]"></i>
-                        </span>
-                        <div class="flex items-center justify-between gap-4">
-                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Order Shipped (Transit Started)</h4>
-                            <time class="text-[9px] font-semibold text-slate-400">
-                                @if($statusVal === 'Delivered')
-                                    {{ $order->created_at->addDay()->format('M d, Y H:i') }}
-                                @else
-                                    {{ $order->updated_at->format('M d, Y H:i') }}
-                                @endif
-                            </time>
+                    @empty
+                        <div class="text-center text-slate-400 dark:text-slate-500 py-6 -ml-6">
+                            <i class="fa-solid fa-clock-rotate-left text-2xl mb-2 opacity-20 block"></i>
+                            No activity recorded for this order yet.
                         </div>
-                        @if($order->tracking_number)
-                        <p class="text-xs text-slate-400 mt-0.5">Dispatched via {{ $order->shipping_carrier ?? 'Delhivery Express' }} with Tracking ID: <span class="font-mono font-semibold">{{ $order->tracking_number }}</span>.</p>
-                        @else
-                        <p class="text-xs text-slate-400 mt-0.5">Order has been dispatched.</p>
-                        @endif
-                    </li>
-                    @endif
-
-                    @if($statusVal === 'Cancelled')
-                    <li class="mb-4 ml-6">
-                        <span class="absolute flex items-center justify-center w-5 h-5 bg-rose-100 dark:bg-rose-900/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-rose-600">
-                            <i class="fa-solid fa-ban text-[8px]"></i>
-                        </span>
-                        <div class="flex items-center justify-between gap-4">
-                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Order Cancelled</h4>
-                            <time class="text-[9px] font-semibold text-slate-400">{{ $order->updated_at->format('M d, Y H:i') }}</time>
-                        </div>
-                        <p class="text-xs text-slate-400 mt-0.5">This order has been marked as Cancelled.</p>
-                    </li>
-                    @endif
-
-                    <li class="mb-4 ml-6">
-                        <span class="absolute flex items-center justify-center w-5 h-5 bg-slate-100 dark:bg-slate-800 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-slate-500">
-                            <i class="fa-solid fa-circle-check text-[8px]"></i>
-                        </span>
-                        <div class="flex items-center justify-between gap-4">
-                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Order Completed & Payment Authorized</h4>
-                            <time class="text-[9px] font-semibold text-slate-400">{{ $order->created_at->format('M d, Y H:i') }}</time>
-                        </div>
-                        <p class="text-xs text-slate-400 mt-0.5">Order placed and payment charged via Card (masked reference: {{ $order->card_number_masked }}).</p>
-                    </li>
-                    <li class="ml-6">
-                        <span class="absolute flex items-center justify-center w-5 h-5 bg-slate-100 dark:bg-slate-800 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-slate-450">
-                            <i class="fa-solid fa-pen-nib text-[8px]"></i>
-                        </span>
-                        <div class="flex items-center justify-between gap-4">
-                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Order record created</h4>
-                            <time class="text-[9px] font-semibold text-slate-400">{{ $order->created_at->format('M d, Y H:i') }}</time>
-                        </div>
-                        <p class="text-xs text-slate-400 mt-0.5">Assigned Order Reference: {{ $order->order_number }}</p>
-                    </li>
-                </ol>
+                    @endforelse
+                </div>
             </div>
         </div>
     </div>
