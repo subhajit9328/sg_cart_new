@@ -12,9 +12,24 @@ class TaxRateController extends Controller
     /**
      * Display a listing of tax rates (Admin).
      */
-    public function index()
+    public function index(Request $request)
     {
-        $rates = TaxRate::orderBy('id', 'desc')->paginate(10);
+        $query = TaxRate::query();
+        if ($search = $request->input('search')) {
+            $query->where('name', 'like', '%' . $search . '%');
+        }
+
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order') ?? $request->input('sort_dir') ?? 'desc';
+        $allowedSortFields = ['name', 'type', 'rate', 'country', 'state', 'zip', 'is_active', 'created_at'];
+
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->orderBy('id', 'desc');
+        }
+
+        $rates = $query->paginate(10);
         $calculationMode = TaxSetting::getVal('tax_calculation_mode', 'single_standard');
         return view('tax::index', compact('rates', 'calculationMode'));
     }

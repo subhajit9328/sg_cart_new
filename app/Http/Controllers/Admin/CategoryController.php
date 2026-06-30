@@ -22,7 +22,17 @@ class CategoryController extends Controller
             });
         }
 
-        $categories = $query->orderBy('sort_order')->paginate(10)->withQueryString();
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order') ?? $request->input('sort_dir') ?? 'asc';
+        $allowedSortFields = ['name', 'is_active', 'sort_order'];
+
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->orderBy('sort_order');
+        }
+
+        $categories = $query->paginate(10)->withQueryString();
         return view('admin.categories.index', compact('categories'));
     }
 

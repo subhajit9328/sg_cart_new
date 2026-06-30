@@ -12,106 +12,95 @@
     <a href="{{ route('admin.tax.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium shadow-lg shadow-blue-600/10">
         <i class="fa-solid fa-plus"></i> Add Tax Rate
     </a>
-</div>
+</div>@php
+    $headers = [
+        ['label' => 'Name', 'key' => 'name', 'sortable' => true],
+        ['label' => 'Type', 'key' => 'type', 'sortable' => true],
+        ['label' => 'Rate', 'key' => 'rate', 'sortable' => true],
+        ['label' => 'Region', 'key' => 'region', 'sortable' => false],
+        ['label' => 'Status', 'key' => 'is_active', 'sortable' => true],
+        ['label' => 'Actions', 'key' => 'actions', 'sortable' => false, 'align' => 'right'],
+    ];
+@endphp
 
 <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start mb-6">
     <!-- Tax Rates Table -->
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
-        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-wrap items-center justify-between gap-3">
-            <h2 class="font-semibold text-sm">Tax Rates</h2>
-            <div class="relative w-full sm:w-64">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                <input type="text" id="searchRatesInput" placeholder="Search rates by name..." class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 pl-8 pr-3 text-xs placeholder:text-slate-400 outline-none focus:border-blue-500 transition-all text-slate-800 dark:text-slate-100">
-            </div>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Name</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Type</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Rate</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Region</th>
-                        <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Status</th>
-                        <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-slate-800/60 whitespace-nowrap">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @forelse($rates as $rate)
-                    <tr>
-                        <td class="px-5 py-4 font-semibold whitespace-nowrap text-slate-800 dark:text-slate-100">
-                            {{ $rate->name }}
-                        </td>
-                        <td class="px-5 py-4 text-slate-600 dark:text-slate-300 whitespace-nowrap capitalize">
-                            @if($rate->type === 'percent')
-                                <span class="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
-                                    <i class="fa-solid fa-percent text-xs"></i> Percentage
-                                </span>
-                            @else
-                                <span class="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
-                                    <i class="fa-solid fa-indian-rupee-sign text-xs"></i> Flat Rate
-                                </span>
-                            @endif
-                        </td>
-                        <td class="px-5 py-4 text-slate-800 dark:text-slate-200 font-medium whitespace-nowrap">
-                            @if($rate->type === 'percent')
-                                {{ number_format($rate->rate, 1) }}%
-                            @else
-                                ₹{{ number_format($rate->rate, 2) }}
-                            @endif
-                        </td>
-                        <td class="px-5 py-4 text-slate-600 dark:text-slate-300 whitespace-nowrap text-xs">
-                            @if($rate->country || $rate->state || $rate->zip)
-                                <span class="inline-flex items-center gap-1 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/80 px-2 py-0.5 rounded text-slate-500">
-                                    <i class="fa-solid fa-earth-americas text-[10px]"></i>
-                                    {{ $rate->state ?? '*' }}, {{ $rate->country ?? '*' }} {{ $rate->zip ? "($rate->zip)" : '' }}
-                                </span>
-                            @else
-                                <span class="text-slate-400 italic">Global / Default</span>
-                            @endif
-                        </td>
-                        <td class="px-5 py-4 whitespace-nowrap">
-                            @if($rate->is_active)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-                                    Active
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400">
-                                    Disabled
-                                </span>
-                            @endif
-                        </td>
-                        <td class="px-5 py-4 text-right whitespace-nowrap">
-                            <div class="inline-flex gap-1.5">
-                                <a href="{{ route('admin.tax.edit', $rate->id) }}" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors" title="Edit Tax Rate">
-                                    <i class="fa-solid fa-pen text-slate-500 dark:text-slate-400 text-xs"></i>
-                                </a>
-                                
-                                <button onclick="openDeleteModal('{{ $rate->id }}', '{{ $rate->name }}')" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center transition-colors" title="Delete Tax Rate">
-                                    <i class="fa-solid fa-trash text-rose-500 text-xs"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="px-5 py-12 text-center text-slate-400">
-                            <i class="fa-solid fa-percent text-4xl mb-3 opacity-20 block"></i>
-                            No tax rates registered yet. Click "Add Tax Rate" to create one.
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination Footer -->
-        @if($rates->hasPages())
-            <div class="px-5 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                {{ $rates->links() }}
-            </div>
-        @endif
-    </div>
+    <x-data-table
+        title="Tax Rates"
+        :totalCount="$rates->total()"
+        searchPlaceholder="Search rates by name..."
+        action="{{ route('admin.tax.index') }}"
+        tableId="taxRatesTableWrapper"
+        searchInputId="searchRatesInput"
+        totalCountId="taxRatesTotalCount"
+        :items="$rates"
+        :headers="$headers"
+    >
+        @forelse($rates as $rate)
+            <tr>
+                <td class="px-5 py-4 font-semibold whitespace-nowrap text-slate-800 dark:text-slate-100">
+                    {{ $rate->name }}
+                </td>
+                <td class="px-5 py-4 text-slate-600 dark:text-slate-300 whitespace-nowrap capitalize">
+                    @if($rate->type === 'percent')
+                        <span class="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+                            <i class="fa-solid fa-percent text-xs"></i> Percentage
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                            <i class="fa-solid fa-indian-rupee-sign text-xs"></i> Flat Rate
+                        </span>
+                    @endif
+                </td>
+                <td class="px-5 py-4 text-slate-800 dark:text-slate-200 font-medium whitespace-nowrap">
+                    @if($rate->type === 'percent')
+                        {{ number_format($rate->rate, 1) }}%
+                    @else
+                        ₹{{ number_format($rate->rate, 2) }}
+                    @endif
+                </td>
+                <td class="px-5 py-4 text-slate-600 dark:text-slate-300 whitespace-nowrap text-xs">
+                    @if($rate->country || $rate->state || $rate->zip)
+                        <span class="inline-flex items-center gap-1 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/80 px-2 py-0.5 rounded text-slate-500">
+                            <i class="fa-solid fa-earth-americas text-[10px]"></i>
+                            {{ $rate->state ?? '*' }}, {{ $rate->country ?? '*' }} {{ $rate->zip ? "($rate->zip)" : '' }}
+                        </span>
+                    @else
+                        <span class="text-slate-400 italic">Global / Default</span>
+                    @endif
+                </td>
+                <td class="px-5 py-4 whitespace-nowrap">
+                    @if($rate->is_active)
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                            Active
+                        </span>
+                    @else
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400">
+                            Disabled
+                        </span>
+                    @endif
+                </td>
+                <td class="px-5 py-4 text-right whitespace-nowrap">
+                    <div class="inline-flex gap-1.5">
+                        <a href="{{ route('admin.tax.edit', $rate->id) }}" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors" title="Edit Tax Rate">
+                            <i class="fa-solid fa-pen text-slate-500 dark:text-slate-400 text-xs"></i>
+                        </a>
+                        
+                        <button onclick="openDeleteModal('{{ $rate->id }}', '{{ $rate->name }}')" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center transition-colors" title="Delete Tax Rate">
+                            <i class="fa-solid fa-trash text-rose-500 text-xs"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="6" class="px-5 py-12 text-center text-slate-400">
+                    <i class="fa-solid fa-percent text-4xl mb-3 opacity-20 block"></i>
+                    No tax rates registered yet. Click "Add Tax Rate" to create one.
+                </td>
+            </tr>
+        @endforelse
+    </x-data-table>
 
     <!-- Global Tax Settings Panel -->
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
@@ -178,48 +167,6 @@
         const radio = element.querySelector('input[type="radio"]');
         if (radio) radio.checked = true;
     }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('searchRatesInput');
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                const query = this.value.toLowerCase().trim();
-                const rows = document.querySelectorAll('tbody tr');
-                let visibleCount = 0;
-
-                rows.forEach(row => {
-                    if (row.querySelector('td[colspan]')) return; // Skip empty row
-
-                    const name = row.querySelector('td:first-child').textContent.toLowerCase();
-                    if (name.includes(query)) {
-                        row.style.display = '';
-                        visibleCount++;
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-
-                let emptyRow = document.getElementById('noMatchingRatesRow');
-                if (visibleCount === 0 && rows.length > 0 && !rows[0].querySelector('td[colspan]')) {
-                    if (!emptyRow) {
-                        emptyRow = document.createElement('tr');
-                        emptyRow.id = 'noMatchingRatesRow';
-                        emptyRow.innerHTML = `
-                            <td colspan="6" class="px-5 py-12 text-center text-slate-400">
-                                <i class="fa-solid fa-magnifying-glass text-4xl mb-3 opacity-20 block"></i>
-                                No tax rates match your search query.
-                            </td>
-                        `;
-                        document.querySelector('tbody').appendChild(emptyRow);
-                    } else {
-                        emptyRow.style.display = '';
-                    }
-                } else if (emptyRow) {
-                    emptyRow.style.display = 'none';
-                }
-            });
-        }
-    });
 
     function openDeleteModal(rateId, name) {
         showConfirm(

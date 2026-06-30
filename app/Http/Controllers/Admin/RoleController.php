@@ -30,7 +30,17 @@ class RoleController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $roles = $query->latest()->paginate(10)->withQueryString();
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order') ?? $request->input('sort_dir') ?? 'desc';
+        $allowedSortFields = ['name', 'guard_name'];
+
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->latest();
+        }
+
+        $roles = $query->paginate(10)->withQueryString();
         return view('admin.roles.index', compact('roles'));
     }
 

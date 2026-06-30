@@ -22,15 +22,25 @@ class InventoryController extends Controller
         $query = Product::query();
 
         if ($search) {
-            $query->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+            $query->where(fn($sq) => $sq->where('name', 'like', "%{$search}%")
+                                          ->orWhere('sku', 'like', "%{$search}%"));
         }
 
         if ($hasVariants) {
             $query->with(['variants.color', 'variants.size']);
         }
 
-        $products = $query->latest()->paginate(10)->withQueryString();
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order') ?? $request->input('sort_dir') ?? 'desc';
+        $allowedSortFields = ['name', 'sku', 'price', 'stock', 'status'];
+
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->latest();
+        }
+
+        $products = $query->paginate(10)->withQueryString();
 
         // Calculate Overview Summary Stats (Base products without active variants + Active variant items)
         $baseQuery = Product::query();
@@ -95,7 +105,17 @@ class InventoryController extends Controller
             });
         }
 
-        $logs = $query->latest('id')->paginate(10)->withQueryString();
+        $sortBy = $request->input('sort_by');
+        $sortOrder = $request->input('sort_order') ?? $request->input('sort_dir') ?? 'desc';
+        $allowedSortFields = ['created_at', 'quantity', 'before_stock', 'after_stock', 'action'];
+
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->latest('id');
+        }
+
+        $logs = $query->paginate(10)->withQueryString();
 
         $hasVariants = class_exists(\SGCart\ProductVariants\Models\ProductVariant::class);
         if ($hasVariants && $logs->count() > 0) {
