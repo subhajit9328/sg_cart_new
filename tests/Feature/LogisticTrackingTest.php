@@ -185,11 +185,11 @@ class LogisticTrackingTest extends TestCase
     }
 
     /**
-     * Test that admin can view create shipping courier page.
+     * Test that admin can view create shipping courier modal text on index page.
      */
-    public function test_admin_can_view_create_shipping_courier_page(): void
+    public function test_admin_can_view_create_shipping_courier_modal_text_on_index_page(): void
     {
-        $response = $this->actingAs($this->admin)->get(route('admin.couriers.create'));
+        $response = $this->actingAs($this->admin)->get(route('admin.couriers.index'));
         $response->assertStatus(200);
         $response->assertSee('Add Shipping Courier');
     }
@@ -233,20 +233,13 @@ class LogisticTrackingTest extends TestCase
     }
 
     /**
-     * Test that admin can view edit shipping courier page.
+     * Test that admin can view edit shipping courier modal text on index page.
      */
-    public function test_admin_can_view_edit_shipping_courier_page(): void
+    public function test_admin_can_view_edit_shipping_courier_modal_text_on_index_page(): void
     {
-        $courier = \SGCart\LogisticTracking\Models\ShippingCourier::create([
-            'name' => 'FedEx',
-            'url' => 'https://fedex.com',
-            'support_email' => 'support@fedex.com',
-        ]);
-
-        $response = $this->actingAs($this->admin)->get(route('admin.couriers.edit', $courier->id));
+        $response = $this->actingAs($this->admin)->get(route('admin.couriers.index'));
         $response->assertStatus(200);
         $response->assertSee('Edit Shipping Courier');
-        $response->assertSee($courier->name);
     }
 
     /**

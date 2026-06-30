@@ -18,14 +18,6 @@ class ShippingCourierController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('logistic-tracking::shipping-couriers.create');
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -42,13 +34,7 @@ class ShippingCourierController extends Controller
             ->with('success', 'Shipping courier added successfully.');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ShippingCourier $courier)
-    {
-        return view('logistic-tracking::shipping-couriers.edit', compact('courier'));
-    }
+
 
     /**
      * Update the specified resource in storage.
