@@ -178,7 +178,7 @@
                                 </div>
                             @endif
 
-                            <!-- Event: Processed & Packed (Shown only if Shipped or Delivered) -->
+                            <!-- Event: Processed & Packed -->
                             @if($status === 'Shipped' || $status === 'Delivered')
                                 <div class="relative">
                                     <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-slate-900 text-white rounded-full ring-4 ring-white">
@@ -200,6 +200,17 @@
                                             @endphp
                                             {{ $packedTime->format('M d, Y h:i A') }}
                                         </span>
+                                    </div>
+                                </div>
+                            @elseif($status === 'Processing')
+                                <div class="relative">
+                                    <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-slate-100 text-slate-400 rounded-full ring-4 ring-white border border-slate-200">
+                                        <i class="fa-solid fa-box text-[9px]"></i>
+                                    </span>
+                                    <div class="text-xs">
+                                        <span class="font-bold text-slate-400 block">Processed & Packed</span>
+                                        <p class="text-slate-400/80 mt-0.5">Your items will be carefully packaged and prepared for courier handover.</p>
+                                        <span class="text-[10px] text-slate-400 mt-1 block font-medium">Pending</span>
                                     </div>
                                 </div>
                             @endif

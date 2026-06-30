@@ -400,6 +400,60 @@
                     </li>
                     @endif
 
+                    @if($statusVal === 'Shipped' || $statusVal === 'Delivered')
+                    <li class="mb-4 ml-6">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-slate-900 dark:bg-slate-800 text-white rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900">
+                            <i class="fa-solid fa-box text-[8px]"></i>
+                        </span>
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Processed & Packed</h4>
+                            <time class="text-[9px] font-semibold text-slate-400">
+                                @php
+                                    $created = $order->created_at;
+                                    $updated = $order->updated_at;
+                                    $diff = $created->diffInMinutes($updated);
+                                    if ($diff > 10) {
+                                        $packedTime = $created->copy()->addMinutes(min(120, intval($diff / 2)));
+                                    } else {
+                                        $packedTime = $created->copy()->addMinutes(5);
+                                    }
+                                @endphp
+                                {{ $packedTime->format('M d, Y H:i') }}
+                            </time>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Your items have been carefully packaged and are ready for handover to our courier partner.</p>
+                    </li>
+                    @elseif($statusVal === 'Processing')
+                    <li class="mb-4 ml-6">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 border border-slate-200 dark:border-slate-700">
+                            <i class="fa-solid fa-box text-[8px]"></i>
+                        </span>
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="text-xs font-semibold text-slate-400 dark:text-slate-500">Processed & Packed</h4>
+                            <span class="text-[9px] font-semibold text-slate-400">Pending</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Your items will be carefully packaged and prepared for courier handover.</p>
+                    </li>
+                    @endif
+
+                    @if($statusVal === 'Processing')
+                    <li class="mb-4 ml-6">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-blue-50 dark:bg-blue-950/20 text-blue-600 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 border border-blue-200 dark:border-blue-800/30 animate-pulse">
+                            <i class="fa-solid fa-spinner animate-spin text-[8px]"></i>
+                        </span>
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                Processing & Preparing
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/20">
+                                    In Progress
+                                </span>
+                            </h4>
+                            <time class="text-[9px] font-semibold text-slate-400">{{ $order->created_at->format('M d, Y H:i') }}</time>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Our warehouse team is currently selecting items, conducting quality checks, and carefully packing them.</p>
+                    </li>
+                    @endif
+
                     @if($statusVal === 'Cancelled')
                     <li class="mb-4 ml-6">
                         <span class="absolute flex items-center justify-center w-5 h-5 bg-rose-100 dark:bg-rose-900/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-rose-600">
