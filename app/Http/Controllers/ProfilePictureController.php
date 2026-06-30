@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\LogActivity;
 use App\Actions\UpdateProfilePicture;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -54,6 +55,51 @@ class ProfilePictureController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to upload profile picture: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function destroy(LogActivity $logActivity)
+    {
+        $customer = auth('customer')->user();
+        if (! $customer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated customer.',
+            ], 401);
+        }
+
+        if (! $customer->profile_picture) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No profile picture to delete.',
+            ], 400);
+        }
+
+        try {
+            $oldPicture = $customer->profile_picture;
+            $customer->update([
+                'profile_picture' => null,
+            ]);
+
+            Storage::disk('public')->delete($oldPicture);
+
+            // Log security activity
+            $logActivity->capture(
+                description: 'Customer deleted profile picture',
+                event: 'customer.profile_picture_deleted',
+                subject: $customer,
+                causer: $customer
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile picture deleted successfully.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete profile picture: '.$e->getMessage(),
             ], 500);
         }
     }

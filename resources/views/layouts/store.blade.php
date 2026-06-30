@@ -55,8 +55,14 @@
             <!-- User Status Card -->
             @auth('customer')
                 <div class="mobile-nav-user-card">
-                    <div class="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent text-lg">
-                        <i class="fa-regular fa-user"></i>
+                    <div id="mobile-nav-avatar-container" class="shrink-0">
+                        @if(Auth::guard('customer')->user()->profile_picture)
+                            <img src="{{ Storage::url(Auth::guard('customer')->user()->profile_picture) }}" class="w-10 h-10 rounded-full object-cover border border-accent/20" alt="Profile Picture">
+                        @else
+                            <div class="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent text-lg">
+                                <i class="fa-regular fa-user"></i>
+                            </div>
+                        @endif
                     </div>
                     <div class="mobile-nav-user-info leading-tight">
                         <p class="text-[10px] text-stone uppercase tracking-wider font-semibold">Logged in as</p>
@@ -216,8 +222,14 @@
 
                 <!-- Account -->
                 @auth('customer')
-                <a href="{{ route('store.account') }}" class="header-account-btn" title="My Account">
-                    <i class="fa-regular fa-circle-user header-account-icon"></i>
+                <a href="{{ route('store.account') }}" class="header-account-btn {{ Auth::guard('customer')->user()->profile_picture ? 'has-avatar' : '' }}" id="header-account-btn" title="My Account">
+                    <div id="header-account-avatar-container" class="flex items-center justify-center shrink-0">
+                        @if(Auth::guard('customer')->user()->profile_picture)
+                            <img src="{{ Storage::url(Auth::guard('customer')->user()->profile_picture) }}" alt="Profile Picture">
+                        @else
+                            <i class="fa-regular fa-circle-user header-account-icon"></i>
+                        @endif
+                    </div>
                     <span class="header-account-name">{{ explode(' ', Auth::guard('customer')->user()->name)[0] }}</span>
                 </a>
                 @else

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0ab8876bc8afb19d52e81e35f94dae09",
+    "content-hash": "c18f53c7d4b364ba1cca2eea0eef8d4e",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -3976,7 +3976,7 @@
         },
         {
             "name": "sgcart/coupons",
-            "version": "dev-new_update_29_06",
+            "version": "dev-optimize_refactor_packages",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/coupons",
@@ -4015,7 +4015,7 @@
         },
         {
             "name": "sgcart/image-search",
-            "version": "dev-new_update_29_06",
+            "version": "dev-optimize_refactor_packages",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/image-search",
@@ -4050,8 +4050,47 @@
             }
         },
         {
+            "name": "sgcart/inventory",
+            "version": "dev-optimize_refactor_packages",
+            "dist": {
+                "type": "path",
+                "url": "packages/sgcart/inventory",
+                "reference": "5da1febcbb5349d000f65876373f37b8654e3638"
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "SGCart\\Inventory\\Providers\\InventoryServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SGCart\\Inventory\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "SGCart Team",
+                    "email": "support@sgcart.com"
+                }
+            ],
+            "description": "Simple entry-level Inventory Management System for SGCart",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "sgcart/payment-razorpay",
-            "version": "dev-new_update_29_06",
+            "version": "dev-optimize_refactor_packages",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/payment-razorpay",
@@ -4090,7 +4129,7 @@
         },
         {
             "name": "sgcart/product-variants",
-            "version": "dev-new_update_29_06",
+            "version": "dev-optimize_refactor_packages",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/product-variants",
@@ -4130,7 +4169,7 @@
         },
         {
             "name": "sgcart/shipping",
-            "version": "dev-new_update_29_06",
+            "version": "dev-optimize_refactor_packages",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/shipping",
@@ -4169,7 +4208,7 @@
         },
         {
             "name": "sgcart/tax",
-            "version": "dev-new_update_29_06",
+            "version": "dev-optimize_refactor_packages",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/tax",
@@ -9660,6 +9699,7 @@
     "stability-flags": {
         "sgcart/coupons": 20,
         "sgcart/image-search": 20,
+        "sgcart/inventory": 20,
         "sgcart/payment-razorpay": 20,
         "sgcart/product-variants": 20,
         "sgcart/shipping": 20,

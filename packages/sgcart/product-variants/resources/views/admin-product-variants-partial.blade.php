@@ -25,6 +25,11 @@
 
     <!-- Variants Spreadsheet Grid -->
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden mb-6">
+        @if(class_exists(\SGCart\Inventory\Models\InventoryLog::class))
+            <div class="px-4 py-2.5 bg-blue-50/50 dark:bg-blue-950/20 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 text-xs text-blue-650 dark:text-blue-400 font-bold">
+                <i class="fa-solid fa-circle-info text-blue-500"></i> Variant stock levels are read-only. They are managed via the <a href="{{ route('admin.inventory.index') }}" class="underline hover:text-blue-700">Inventory Management System</a>.
+            </div>
+        @endif
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
@@ -45,6 +50,7 @@
                             <i class="fa-solid fa-circle-question text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 ml-1 cursor-help" data-tooltip="Set a custom sale price for this variant. If left empty, it will fallback to the base product's sale price."></i>
                         </th>
                         <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-32">Stock Qty</th>
+                        <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-24">Min Stock</th>
                         <th class="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-24">Active</th>
                         <th class="px-4 py-3 text-center text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-36">Gallery</th>
                         <th class="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap w-16"></th>
@@ -92,7 +98,16 @@
                         </td>
 
                         <td class="px-4 py-3.5">
-                            <input type="number" min="0" name="variants[{{ $index }}][stock]" value="{{ $v->stock ?? 0 }}" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 font-mono">
+                            @if(class_exists(\SGCart\Inventory\Models\InventoryLog::class))
+                                <input type="number" name="variants[{{ $index }}][stock]" value="{{ $v->stock ?? 0 }}" readonly
+                                    class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm text-slate-500 cursor-not-allowed font-mono" style="pointer-events: none;">
+                            @else
+                                <input type="number" min="0" name="variants[{{ $index }}][stock]" value="{{ $v->stock ?? 0 }}" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 font-mono">
+                            @endif
+                        </td>
+
+                        <td class="px-4 py-3.5">
+                            <input type="number" min="0" name="variants[{{ $index }}][min_stock]" value="{{ $v->min_stock ?? 5 }}" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 font-mono">
                         </td>
 
                         <td class="px-4 py-3.5 text-center">
@@ -272,7 +287,16 @@
         </td>
 
         <td class="px-4 py-3.5">
-            <input type="number" min="0" name="variants[__INDEX__][stock]" value="0" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 font-mono">
+            @if(class_exists(\SGCart\Inventory\Models\InventoryLog::class))
+                <input type="number" name="variants[__INDEX__][stock]" value="0" readonly
+                    class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm text-slate-500 cursor-not-allowed font-mono" style="pointer-events: none;">
+            @else
+                <input type="number" min="0" name="variants[__INDEX__][stock]" value="0" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 font-mono">
+            @endif
+        </td>
+
+        <td class="px-4 py-3.5">
+            <input type="number" min="0" name="variants[__INDEX__][min_stock]" value="5" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 font-mono">
         </td>
 
         <td class="px-4 py-3.5 text-center">

@@ -148,4 +148,49 @@ class ProfilePictureUploadTest extends TestCase
         $this->assertEquals($customer->id, $log->causer_id);
         $this->assertStringContainsString(basename($customer->profile_picture), $log->description);
     }
+
+    public function test_profile_picture_can_be_deleted_by_authenticated_customer()
+    {
+        $customer = $this->createCustomer([
+            'profile_picture' => 'profile_pictures/avatar.jpg'
+        ]);
+        Storage::disk('public')->put('profile_pictures/avatar.jpg', 'content');
+
+        $response = $this->actingAs($customer, 'customer')
+            ->deleteJson(route('store.account.profile-picture.destroy'));
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'message' => 'Profile picture deleted successfully.',
+        ]);
+
+        $customer->refresh();
+        $this->assertNull($customer->profile_picture);
+        $this->assertFalse(Storage::disk('public')->exists('profile_pictures/avatar.jpg'));
+    }
+
+    public function test_profile_picture_deletion_requires_authentication()
+    {
+        $response = $this->deleteJson(route('store.account.profile-picture.destroy'));
+        $response->assertRedirect(route('store.login'));
+    }
+
+    public function test_profile_picture_deletion_creates_activity_log()
+    {
+        $customer = $this->createCustomer([
+            'profile_picture' => 'profile_pictures/avatar.jpg'
+        ]);
+        Storage::disk('public')->put('profile_pictures/avatar.jpg', 'content');
+
+        $this->actingAs($customer, 'customer')
+            ->deleteJson(route('store.account.profile-picture.destroy'));
+
+        $log = ActivityLog::where('event', 'customer.profile_picture_deleted')->first();
+        $this->assertNotNull($log);
+        $this->assertEquals(Customer::class, $log->subject_type);
+        $this->assertEquals($customer->id, $log->subject_id);
+        $this->assertEquals(Customer::class, $log->causer_type);
+        $this->assertEquals($customer->id, $log->causer_id);
+    }
 }

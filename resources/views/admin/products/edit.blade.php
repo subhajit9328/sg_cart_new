@@ -132,7 +132,7 @@
         <div class="space-y-4">
             <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">Pricing & Inventory</h3>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <label for="price" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Price (₹) <span class="text-rose-600">*</span></label>
                     <input type="number" step="0.01" min="0.01" name="price" id="price" value="{{ old('price', $product->price) }}" required
@@ -147,9 +147,26 @@
                 </div>
                 <div>
                     <label for="stock" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Stock Inventory <span class="text-rose-600">*</span></label>
-                    <input type="number" name="stock" id="stock" value="{{ old('stock', $product->stock) }}" required min="0"
-                        class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('stock') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror">
+                    @if(class_exists(\SGCart\Inventory\Models\InventoryLog::class))
+                        <input type="number" name="stock" id="stock" value="{{ old('stock', $product->stock) }}" readonly
+                            class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm outline-none text-slate-500 cursor-not-allowed font-mono" style="pointer-events: none;">
+                        <p class="text-xs text-blue-600 dark:text-blue-400 mt-1.5 font-medium">
+                            <i class="fa-solid fa-circle-info"></i> Stock is managed via the <a href="{{ route('admin.inventory.index') }}" class="underline hover:text-blue-700">Inventory System</a>.
+                        </p>
+                    @else
+                        <input type="number" name="stock" id="stock" value="{{ old('stock', $product->stock) }}" required min="0"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('stock') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror">
+                    @endif
                     @error('stock') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="min_stock" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Minimum Stock <span class="text-rose-600">*</span></label>
+                    <input type="number" name="min_stock" id="min_stock" value="{{ old('min_stock', $product->min_stock ?? 5) }}" required min="0"
+                        class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('min_stock') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror">
+                    <p class="text-[11px] text-slate-400 mt-1.5 font-medium">
+                        <i class="fa-solid fa-circle-info"></i> If not provided, the default minimum stock is 5.
+                    </p>
+                    @error('min_stock') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
                 </div>
             </div>
 
