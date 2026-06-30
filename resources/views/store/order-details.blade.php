@@ -159,21 +159,54 @@
                                 </div>
                             @endif
 
-                            <!-- Event: Processed & Packed -->
-                            <div class="relative">
-                                <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-slate-100 text-slate-500 rounded-full ring-4 ring-white">
-                                    <i class="fa-solid fa-box text-[9px]"></i>
-                                </span>
-                                <div class="text-xs">
-                                    <span class="font-bold text-slate-950 block">Processed & Packed</span>
-                                    <p class="text-slate-500 mt-0.5">Your items have been carefully packaged and are ready for handover to our courier partner.</p>
-                                    <span class="text-[10px] text-slate-400 mt-1 block">{{ $order->created_at->addHours(3)->format('M d, Y h:i A') }}</span>
+                            <!-- Event: Processing (Only shown if status is 'Processing') -->
+                            @if($status === 'Processing')
+                                <div class="relative">
+                                    <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-blue-50 text-blue-600 rounded-full ring-4 ring-white border border-blue-200 animate-pulse">
+                                        <i class="fa-solid fa-spinner animate-spin text-[9px]"></i>
+                                    </span>
+                                    <div class="text-xs">
+                                        <span class="font-bold text-slate-900 block flex items-center gap-1.5">
+                                            Processing & Preparing
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 border border-blue-200">
+                                                In Progress
+                                            </span>
+                                        </span>
+                                        <p class="text-slate-500 mt-1">Our warehouse team is currently selecting your items, conducting quality checks, and carefully packing them for courier pickup.</p>
+                                        <span class="text-[10px] text-slate-400 mt-1 block">Started on {{ $order->created_at->format('M d, Y h:i A') }}</span>
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
+
+                            <!-- Event: Processed & Packed (Shown only if Shipped or Delivered) -->
+                            @if($status === 'Shipped' || $status === 'Delivered')
+                                <div class="relative">
+                                    <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-slate-900 text-white rounded-full ring-4 ring-white">
+                                        <i class="fa-solid fa-box text-[9px]"></i>
+                                    </span>
+                                    <div class="text-xs">
+                                        <span class="font-bold text-slate-950 block">Processed & Packed</span>
+                                        <p class="text-slate-500 mt-0.5">Your items have been carefully packaged and are ready for handover to our courier partner.</p>
+                                        <span class="text-[10px] text-slate-400 mt-1 block">
+                                            @php
+                                                $created = $order->created_at;
+                                                $updated = $order->updated_at;
+                                                $diff = $created->diffInMinutes($updated);
+                                                if ($diff > 10) {
+                                                    $packedTime = $created->copy()->addMinutes(min(120, intval($diff / 2)));
+                                                } else {
+                                                    $packedTime = $created->copy()->addMinutes(5);
+                                                }
+                                            @endphp
+                                            {{ $packedTime->format('M d, Y h:i A') }}
+                                        </span>
+                                    </div>
+                                </div>
+                            @endif
 
                             <!-- Event: Placed & Confirmed -->
                             <div class="relative">
-                                <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-slate-100 text-slate-500 rounded-full ring-4 ring-white">
+                                <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-emerald-600 text-white rounded-full ring-4 ring-white">
                                     <i class="fa-solid fa-check text-[9px]"></i>
                                 </span>
                                 <div class="text-xs">
