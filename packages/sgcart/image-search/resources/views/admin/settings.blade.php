@@ -11,7 +11,7 @@
     </div>
 </div>
 
-<div class="max-w-7xl mx-auto flex flex-col gap-6">
+<div class="mx-auto flex flex-col gap-6">
     @if(session('success'))
         <div class="p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/30 rounded-xl text-xs font-semibold text-emerald-600 dark:text-emerald-400">
             {{ session('success') }}
