@@ -3,7 +3,7 @@
    ========================================================================== */
 
 .select2-container--default .select2-selection--single {
-    background-color: rgb(248, 250, 252) !important; /* bg-slate-50 */
+    background-color: #ffffff !important; /* bg-white */
     border: 1px solid rgb(226, 232, 240) !important; /* border-slate-200 */
     border-radius: 0.5rem !important; /* rounded-lg */
     height: 42px !important;
@@ -25,6 +25,14 @@
 .select2-container--default.select2-container--open.select2-container--above .select2-selection--single {
     border-top-left-radius: 0 !important;
     border-top-right-radius: 0 !important;
+}
+.select2-dropdown.select2-dropdown--below {
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+}
+.select2-dropdown.select2-dropdown--above {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
 }
 
 .select2-container--default .select2-selection--single .select2-selection__rendered {
@@ -148,11 +156,11 @@
     color: #ffffff !important;
 }
 .select2-container--default .select2-results__option {
-    padding: 8px 12px !important;
-    font-size: 0.875rem !important;
+    padding: 6px 10px !important;
+    font-size: 0.8125rem !important; /* ~13px */
     color: rgb(51, 65, 85) !important;
     border-radius: 0.375rem !important;
-    margin-bottom: 2px !important;
+    margin-bottom: 1px !important;
     transition: background-color 0.15s, color 0.15s;
 }
 .dark .select2-container--default .select2-results__option {
@@ -163,5 +171,102 @@
     color: rgb(29, 78, 216) !important;
 }
 .dark .select2-container--default .select2-results__option[aria-selected="true"] {
-    color: rgb(96, 165, 250) !important;
+    background-color: rgba(59, 130, 246, 0.25) !important;
+    color: rgb(147, 197, 253) !important;
+}
+
+/* Highly compacted select2 dropdown options list */
+.select2-compact-dropdown .select2-results__options {
+    padding: 2px !important;
+}
+.select2-compact-dropdown .select2-results__option {
+    padding: 4px 8px !important;
+    font-size: 0.75rem !important; /* text-xs */
+    margin-bottom: 1px !important;
+    border-radius: 0.25rem !important;
+}
+
+/* Custom modern scrollbar for sidebar nav */
+#sidebar nav {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+#sidebar nav::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+#sidebar nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#sidebar nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+#sidebar nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* Compact Select2 style for tables and headers */
+.select2-wrapper-compact .select2-container--default .select2-selection--single {
+    height: 32px !important;
+}
+
+.select2-wrapper-compact .select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-size: 0.75rem !important; /* text-xs */
+    line-height: 30px !important;
+    padding-left: 0.55rem !important;
+}
+
+.select2-wrapper-compact .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 30px !important;
+    right: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.select2-wrapper-compact .select2-container--default .select2-selection--single .select2-selection__clear {
+    right: 1.75rem !important;
+}
+
+/* Style native select elements before Select2 initializes to prevent layout shifting and FOUC */
+select.select2-select:not(.select2-hidden-accessible) {
+    background-color: #ffffff !important;
+    border: 1px solid rgb(226, 232, 240) !important;
+    border-radius: 0.5rem !important;
+    height: 42px !important;
+    padding: 0 2.5rem 0 0.875rem !important;
+    font-size: 0.875rem !important;
+    color: rgb(51, 65, 85) !important;
+    display: inline-block !important;
+    width: 100% !important;
+    outline: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px center !important;
+    background-size: 10px !important;
+    transition: all 0.2s !important;
+}
+
+.dark select.select2-select:not(.select2-hidden-accessible) {
+    background-color: rgb(30, 41, 59) !important;
+    border: 1px solid rgb(51, 65, 85) !important;
+    color: rgb(203, 213, 225) !important;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
+}
+
+/* Compact style for native select before Select2 initializes */
+.select2-wrapper-compact select.select2-select:not(.select2-hidden-accessible) {
+    height: 32px !important;
+    padding: 0 1.75rem 0 0.55rem !important;
+    font-size: 0.75rem !important;
+    background-position: right 8px center !important;
+    background-size: 8px !important;
 }
