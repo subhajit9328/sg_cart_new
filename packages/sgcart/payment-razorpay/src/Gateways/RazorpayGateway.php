@@ -76,6 +76,16 @@ class RazorpayGateway implements PaymentGatewayInterface
         $amountInPaise = (int) round($order->total * 100);
 
         try {
+            $customerPayload = [
+                'name' => trim($order->first_name . ' ' . $order->last_name),
+            ];
+            if (!empty($order->email)) {
+                $customerPayload['email'] = $order->email;
+            }
+            if (!empty($order->phone)) {
+                $customerPayload['contact'] = $order->phone;
+            }
+
             $response = Http::withBasicAuth($keyId, $keySecret)
                 ->post('https://api.razorpay.com/v1/payment_links', [
                     'amount' => $amountInPaise,
@@ -83,10 +93,7 @@ class RazorpayGateway implements PaymentGatewayInterface
                     'accept_partial' => false,
                     'reference_id' => $order->order_number,
                     'description' => 'Payment for Order #' . $order->order_number,
-                    'customer' => [
-                        'name' => trim($order->first_name . ' ' . $order->last_name),
-                        'email' => $order->email,
-                    ],
+                    'customer' => $customerPayload,
                     'notify' => [
                         'sms' => false,
                         'email' => false,

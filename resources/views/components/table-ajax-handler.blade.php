@@ -28,7 +28,7 @@
             // Add visual transition (dim and blur table)
             tableWrapper.style.transition = 'all 0.2s ease-in-out';
             tableWrapper.style.opacity = '0.4';
-            tableWrapper.style.filter = 'blur(1.5px)';
+            tableWrapper.style.filter = 'blur(0.2px)';
             tableWrapper.style.pointerEvents = 'none';
 
             // Spin the refresh button icon if present
