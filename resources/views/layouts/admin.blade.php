@@ -49,7 +49,7 @@
             </button>
         </div>
 
-        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+        <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1" style="scroll-padding-block: 40px;">
             <p class="px-3 pt-1 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Main</p>
             <a href="{{ route('admin.dashboard') }}" class="nav-link {{ Route::is('admin.dashboard') ? 'active' : '' }}" data-tooltip="Dashboard">
                 <i class="fa-solid fa-gauge-high"></i>
@@ -175,6 +175,17 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
+    // Scroll active sidebar option into view
+    window.addEventListener('DOMContentLoaded', () => {
+        const activeOption = document.querySelector('.nav-link.active');
+        if (activeOption) {
+            activeOption.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+            });
+        }
+    });
+
     // Theme toggle
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const themeIcon = document.getElementById('themeIcon');
