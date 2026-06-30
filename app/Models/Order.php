@@ -147,6 +147,17 @@ class Order extends Model
     }
 
     /**
+     * Get the shipping courier ID.
+     */
+    public function getShippingCourierIdAttribute()
+    {
+        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
+            return $this->tracking?->shipping_courier_id;
+        }
+        return null;
+    }
+
+    /**
      * Get the tracking URL.
      */
     public function getTrackingUrlAttribute()

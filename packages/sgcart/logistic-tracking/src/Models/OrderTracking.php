@@ -21,6 +21,7 @@ class OrderTracking extends Model
      */
     protected $fillable = [
         'order_id',
+        'shipping_courier_id',
         'tracking_number',
         'shipping_carrier',
         'tracking_url',
@@ -42,5 +43,13 @@ class OrderTracking extends Model
     public function order()
     {
         return $this->belongsTo(Order::class);
+    }
+
+    /**
+     * Get the shipping courier associated with this tracking.
+     */
+    public function shippingCourier()
+    {
+        return $this->belongsTo(ShippingCourier::class, 'shipping_courier_id');
     }
 }

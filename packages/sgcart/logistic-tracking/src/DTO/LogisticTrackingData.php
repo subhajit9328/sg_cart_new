@@ -13,6 +13,7 @@ class LogisticTrackingData
         public readonly ?string $shipping_carrier = null,
         public readonly ?string $tracking_url = null,
         public readonly mixed $estimated_delivery_at = null,
+        public readonly ?int $shipping_courier_id = null,
     ) {}
 
     /**
@@ -26,6 +27,7 @@ class LogisticTrackingData
             shipping_carrier: $data['shipping_carrier'] ?? null,
             tracking_url: $data['tracking_url'] ?? null,
             estimated_delivery_at: $data['estimated_delivery_at'] ?? null,
+            shipping_courier_id: $data['shipping_courier_id'] ?? null,
         );
     }
 }

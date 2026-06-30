@@ -43,6 +43,31 @@ class ShippingCourierController extends Controller
     }
 
     /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(ShippingCourier $courier)
+    {
+        return view('logistic-tracking::shipping-couriers.edit', compact('courier'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, ShippingCourier $courier)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'url' => 'nullable|url|max:255',
+            'support_email' => 'nullable|email|max:255',
+        ]);
+
+        $courier->update($data);
+
+        return redirect()->route('admin.couriers.index')
+            ->with('success', 'Shipping courier updated successfully.');
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(ShippingCourier $courier)

@@ -11,21 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('order_trackings', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('order_id')->constrained('orders')->onDelete('cascade');
-            $table->string('tracking_number')->nullable();
-            $table->string('shipping_carrier')->nullable();
-            $table->string('tracking_url')->nullable();
-            $table->timestamp('estimated_delivery_at')->nullable();
-            $table->timestamps();
-        });
-
         Schema::create('shipping_couriers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('url')->nullable();
             $table->string('support_email')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('order_trackings', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('order_id')->constrained('orders')->onDelete('cascade');
+            $table->foreignId('shipping_courier_id')->nullable()->constrained('shipping_couriers')->onDelete('set null');
+            $table->string('tracking_number')->nullable();
+            $table->string('shipping_carrier')->nullable();
+            $table->string('tracking_url')->nullable();
+            $table->timestamp('estimated_delivery_at')->nullable();
             $table->timestamps();
         });
     }

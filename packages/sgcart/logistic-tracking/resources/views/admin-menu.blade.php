@@ -4,6 +4,6 @@
 @endif
 <a href="{{ route('admin.couriers.index') }}" class="nav-link {{ Request::is('admin/couriers*') ? 'active' : '' }}" data-tooltip="Shipping Couriers">
     <i class="fa-solid fa-truck-fast"></i>
-    <span class="sidebar-text">Shipping Couriers</span>
+    <span class="sidebar-text">Shipping Carriers</span>
 </a>
 @endcan

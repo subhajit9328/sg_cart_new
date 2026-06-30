@@ -49,21 +49,29 @@ class LogisticTrackingTest extends TestCase
             'status' => 'Processing',
         ]);
 
+        $courier = \SGCart\LogisticTracking\Models\ShippingCourier::create([
+            'name' => 'DHL Express',
+            'url' => 'https://dhl.com/track/{tracking_number}',
+            'support_email' => 'support@dhl.com',
+        ]);
+
         $response = $this->actingAs($this->admin)->put(route('admin.orders.update', $order->ulid), [
             'status' => 'Shipped',
             'payment_status' => 'Paid',
             'tracking_number' => 'TEST-12345',
-            'shipping_carrier' => 'Test Carrier',
-            'tracking_url' => 'https://example.com/track/TEST-12345',
+            'shipping_courier_id' => $courier->id,
+            'tracking_url' => null,
             'estimated_delivery_at' => '2026-07-05',
         ]);
 
+        $response->assertSessionHasNoErrors();
         $response->assertRedirect();
         $this->assertDatabaseHas('order_trackings', [
             'order_id' => $order->id,
             'tracking_number' => 'TEST-12345',
-            'shipping_carrier' => 'Test Carrier',
-            'tracking_url' => 'https://example.com/track/TEST-12345',
+            'shipping_courier_id' => $courier->id,
+            'shipping_carrier' => 'DHL Express',
+            'tracking_url' => 'https://dhl.com/track/TEST-12345',
         ]);
 
         $this->assertDatabaseHas('activity_log', [
@@ -75,8 +83,9 @@ class LogisticTrackingTest extends TestCase
         // Verify that the order has the tracking relationship and accessors work
         $order->refresh();
         $this->assertEquals('TEST-12345', $order->tracking_number);
-        $this->assertEquals('Test Carrier', $order->shipping_carrier);
-        $this->assertEquals('https://example.com/track/TEST-12345', $order->tracking_url);
+        $this->assertEquals($courier->id, $order->shipping_courier_id);
+        $this->assertEquals('DHL Express', $order->shipping_carrier);
+        $this->assertEquals('https://dhl.com/track/TEST-12345', $order->tracking_url);
         $this->assertEquals('2026-07-05 00:00:00', $order->estimated_delivery_at->format('Y-m-d H:i:s'));
     }
 
@@ -220,6 +229,98 @@ class LogisticTrackingTest extends TestCase
         $response->assertRedirect(route('admin.couriers.index'));
         $this->assertDatabaseMissing('shipping_couriers', [
             'id' => $courier->id,
+        ]);
+    }
+
+    /**
+     * Test that admin can view edit shipping courier page.
+     */
+    public function test_admin_can_view_edit_shipping_courier_page(): void
+    {
+        $courier = \SGCart\LogisticTracking\Models\ShippingCourier::create([
+            'name' => 'FedEx',
+            'url' => 'https://fedex.com',
+            'support_email' => 'support@fedex.com',
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('admin.couriers.edit', $courier->id));
+        $response->assertStatus(200);
+        $response->assertSee('Edit Shipping Courier');
+        $response->assertSee($courier->name);
+    }
+
+    /**
+     * Test that admin can update shipping courier.
+     */
+    public function test_admin_can_update_shipping_courier(): void
+    {
+        $courier = \SGCart\LogisticTracking\Models\ShippingCourier::create([
+            'name' => 'FedEx',
+            'url' => 'https://fedex.com',
+            'support_email' => 'support@fedex.com',
+        ]);
+
+        $response = $this->actingAs($this->admin)->put(route('admin.couriers.update', $courier->id), [
+            'name' => 'FedEx Updated',
+            'url' => 'https://newfedex.com',
+            'support_email' => 'newsupport@fedex.com',
+        ]);
+
+        $response->assertRedirect(route('admin.couriers.index'));
+        $this->assertDatabaseHas('shipping_couriers', [
+            'id' => $courier->id,
+            'name' => 'FedEx Updated',
+            'url' => 'https://newfedex.com',
+            'support_email' => 'newsupport@fedex.com',
+        ]);
+    }
+
+    /**
+     * Test that if shipping_courier_id is null/deleted but shipping_carrier is set, the carrier name is preserved.
+     */
+    public function test_order_tracking_preserves_carrier_name_when_courier_is_deleted_or_null(): void
+    {
+        $order = Order::create([
+            'ulid' => (string) \Illuminate\Support\Str::ulid(),
+            'order_number' => 'ORD-' . rand(1000, 9999),
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'email' => 'john@example.com',
+            'address' => '123 Main St',
+            'city' => 'New York',
+            'zip' => '10001',
+            'subtotal' => 100.00,
+            'tax' => 10.00,
+            'total' => 110.00,
+            'status' => 'Processing',
+        ]);
+
+        // Manually create tracking with a carrier name but null courier id (e.g. deleted)
+        $order->tracking()->create([
+            'tracking_number' => 'TEST-12345',
+            'shipping_carrier' => 'Old Deleted Carrier',
+            'tracking_url' => 'https://example.com/track',
+            'estimated_delivery_at' => '2026-07-05',
+        ]);
+
+        // Submit update using the "__KEEP__" value
+        $response = $this->actingAs($this->admin)->put(route('admin.orders.update', $order->ulid), [
+            'status' => 'Shipped',
+            'payment_status' => 'Paid',
+            'tracking_number' => 'TEST-12345',
+            'shipping_courier_id' => '__KEEP__',
+            'tracking_url' => 'https://example.com/track',
+            'estimated_delivery_at' => '2026-07-05',
+        ]);
+
+        $response->assertRedirect();
+        
+        // Assert the carrier name is preserved and courier id remains null
+        $this->assertDatabaseHas('order_trackings', [
+            'order_id' => $order->id,
+            'tracking_number' => 'TEST-12345',
+            'shipping_courier_id' => null,
+            'shipping_carrier' => 'Old Deleted Carrier',
         ]);
     }
 }

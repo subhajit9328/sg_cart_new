@@ -485,7 +485,20 @@
 
                         <div>
                             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Shipping Carrier</label>
-                            <input type="text" name="shipping_carrier" value="{{ old('shipping_carrier', $order->shipping_carrier) }}" placeholder="e.g., Delhivery Express" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
+                            <select name="shipping_courier_id" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100 cursor-pointer">
+                                @if(empty($order->shipping_courier_id) && !empty($order->shipping_carrier))
+                                    <option value="__KEEP__" {{ old('shipping_courier_id', '__KEEP__') == '__KEEP__' ? 'selected' : '' }}>
+                                        {{ $order->shipping_carrier }} (Deleted)
+                                    </option>
+                                @else
+                                    <option value="">Select Carrier</option>
+                                @endif
+                                @foreach($couriers as $courier)
+                                    <option value="{{ $courier->id }}" {{ old('shipping_courier_id', $order->shipping_courier_id) == $courier->id ? 'selected' : '' }}>
+                                        {{ $courier->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <div>

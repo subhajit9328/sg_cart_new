@@ -1,16 +1,16 @@
 @extends('layouts.admin')
 
-@section('title', 'Shipping Couriers — SGCart Admin')
+@section('title', 'Shipping Carriers — SGCart Admin')
 
 @section('content')
 <!-- Page Header -->
 <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
     <div>
-        <h1 class="font-display text-2xl font-bold">Shipping Couriers</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Admin / Logistics / Shipping Couriers</p>
+        <h1 class="font-display text-2xl font-bold">Shipping Carriers</h1>
+        <p class="text-sm text-slate-400 mt-0.5">Admin / Logistics / Shipping Carriers</p>
     </div>
     <a href="{{ route('admin.couriers.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium shadow-lg shadow-blue-600/10 transition-all">
-        <i class="fa-solid fa-plus"></i> Add Courier
+        <i class="fa-solid fa-plus"></i> Add Carriers
     </a>
 </div>
 
@@ -54,13 +54,14 @@
                         @endif
                     </td>
                     <td class="px-5 py-4 text-right whitespace-nowrap">
-                        <form action="{{ route('admin.couriers.destroy', $courier->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this courier?');" class="inline-block">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center transition-colors" title="Delete Courier">
+                        <div class="flex items-center justify-end gap-2">
+                            <a href="{{ route('admin.couriers.edit', $courier->id) }}" class="edit-link w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors" title="Edit Courier">
+                                <i class="fa-solid fa-pen text-slate-500 dark:text-slate-400 text-xs"></i>
+                            </a>
+                            <button type="button" onclick="openDeleteModal({{ $courier->id }}, '{{ addslashes($courier->name) }}')" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center transition-colors" title="Delete Courier">
                                 <i class="fa-solid fa-trash text-rose-500 text-xs"></i>
                             </button>
-                        </form>
+                        </div>
                     </td>
                 </tr>
                 @empty
@@ -75,4 +76,34 @@
         </table>
     </div>
 </div>
+
+<form id="deleteForm" method="POST" class="hidden">
+    @csrf
+    @method('DELETE')
+</form>
+
+<script>
+    function openDeleteModal(courierId, name) {
+        showConfirm(
+            `Are you sure you want to delete shipping courier "${name}"? This action cannot be undone.`,
+            () => {
+                const form = document.getElementById('deleteForm');
+                form.action = `/admin/couriers/${courierId}`;
+                form.submit();
+            },
+            'Delete Shipping Courier?'
+        );
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.edit-link').forEach(link => {
+            link.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                if (icon) {
+                    icon.className = 'fa-solid fa-spinner fa-spin text-slate-500 dark:text-slate-400 text-xs';
+                }
+            });
+        });
+    });
+</script>
 @endsection
