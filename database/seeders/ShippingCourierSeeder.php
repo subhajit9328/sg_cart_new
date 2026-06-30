@@ -15,17 +15,17 @@ class ShippingCourierSeeder extends Seeder
             $couriers = [
                 [
                     'name' => 'DHL Express',
-                    'url' => 'https://www.dhl.com/track/{tracking_number}',
+                    'url' => 'https://www.dhl.com/us-en/home/tracking.html',
                     'support_email' => 'support@dhl.com',
                 ],
                 [
                     'name' => 'Delhivery Express',
-                    'url' => 'https://www.delhivery.com/track/package/{tracking_number}',
+                    'url' => 'https://www.delhivery.com/tracking',
                     'support_email' => 'support@delhivery.com',
                 ],
                 [
                     'name' => 'Blue Dart',
-                    'url' => 'https://www.bluedart.com/track/{tracking_number}',
+                    'url' => 'https://bluedart.com/tracking',
                     'support_email' => 'customerservice@bluedart.com',
                 ],
             ];

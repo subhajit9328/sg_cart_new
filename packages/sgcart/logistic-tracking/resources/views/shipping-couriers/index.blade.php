@@ -87,11 +87,11 @@
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
         </div>
-        
+
         <!-- Modal Body / Form -->
         <form action="{{ route('admin.couriers.store') }}" method="POST" class="p-6 space-y-5">
             @csrf
-            
+
             <!-- Name Field -->
             <div>
                 <label for="name" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Courier Name <span class="text-rose-500">*</span></label>
@@ -100,7 +100,6 @@
                     placeholder="e.g., DHL Express">
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Website/Tracking URL Field -->
                 <div>
                     <label for="url" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Website / Tracking URL</label>
@@ -116,7 +115,6 @@
                         class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100"
                         placeholder="support@courier.com">
                 </div>
-            </div>
 
             <!-- Modal Footer -->
             <div class="pt-2 flex gap-3 justify-end">
@@ -141,12 +139,12 @@
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
         </div>
-        
+
         <!-- Modal Body / Form -->
         <form id="editCourierForm" method="POST" class="p-6 space-y-5">
             @csrf
             @method('PUT')
-            
+
             <!-- Name Field -->
             <div>
                 <label for="edit_name" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Courier Name <span class="text-rose-500">*</span></label>
@@ -155,7 +153,6 @@
                     placeholder="e.g., DHL Express">
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Website/Tracking URL Field -->
                 <div>
                     <label for="edit_url" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Website / Tracking URL</label>
@@ -171,7 +168,6 @@
                         class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100"
                         placeholder="support@courier.com">
                 </div>
-            </div>
 
             <!-- Modal Footer -->
             <div class="pt-2 flex gap-3 justify-end">
@@ -229,11 +225,11 @@
         const modal = document.getElementById('editCourierModal');
         const container = document.getElementById('editModalContainer');
         const form = document.getElementById('editCourierForm');
-        
+
         document.getElementById('edit_name').value = name;
         document.getElementById('edit_url').value = url || '';
         document.getElementById('edit_support_email').value = supportEmail || '';
-        
+
         form.action = `/admin/couriers/${courierId}`;
 
         setTimeout(() => {
