@@ -45,14 +45,14 @@ Route::middleware('guest:customer')->group(function () {
     Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword'])->name('store.forgot-password.reset.submit');
 });
 
+// OTP Verification Routes (accessible by guests registering and authenticated but unverified customers)
+Route::get('/otp/verify', [AuthController::class, 'showOtpVerify'])->name('store.otp.verify');
+Route::post('/otp/verify', [AuthController::class, 'otpVerify'])->name('store.otp.verify.submit');
+Route::post('/otp/resend', [AuthController::class, 'otpResend'])->name('store.otp.resend');
+
 // Storefront Auth Routes for Authenticated Customers
 Route::middleware('auth:customer')->group(function () {
     Route::post('/logout', [AuthController::class, 'storefrontLogout'])->name('store.logout');
-
-    // OTP Verification Routes (accessible by authenticated but unverified customers)
-    Route::get('/otp/verify', [AuthController::class, 'showOtpVerify'])->name('store.otp.verify');
-    Route::post('/otp/verify', [AuthController::class, 'otpVerify'])->name('store.otp.verify.submit');
-    Route::post('/otp/resend', [AuthController::class, 'otpResend'])->name('store.otp.resend');
 
     // Verified Customer Routes
     Route::middleware('verified.customer')->group(function () {

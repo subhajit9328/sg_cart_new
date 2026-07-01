@@ -28,6 +28,28 @@ class SecurityLoggingTest extends TestCase
             'password_confirmation' => 'password123',
         ]);
 
+        $this->assertEquals(0, Customer::count());
+
+        // Assert OTP sent log was written (subject is null since customer not created yet)
+        $otpSentLog = ActivityLog::where('event', 'otp.sent')->first();
+        $this->assertNotNull($otpSentLog);
+        $this->assertEquals("OTP sent to email: jane@example.com", $otpSentLog->description);
+        $this->assertEquals(Customer::class, $otpSentLog->subject_type);
+        $this->assertNull($otpSentLog->subject_id);
+        $this->assertEquals('jane@example.com', $otpSentLog->properties['email']);
+        $this->assertArrayHasKey('otp_sent_time', $otpSentLog->properties);
+        $this->assertArrayHasKey('ip', $otpSentLog->properties);
+        $this->assertArrayHasKey('user_agent', $otpSentLog->properties);
+
+        // Get OTP from cache
+        $otp = Cache::get("customer_otp_jane@example.com");
+        $this->assertNotNull($otp);
+
+        // Submit the correct OTP to trigger account creation
+        $response2 = $this->post(route('store.otp.verify.submit'), [
+            'otp' => $otp,
+        ]);
+
         $customer = Customer::where('email', 'jane@example.com')->first();
         $this->assertNotNull($customer);
 
@@ -40,17 +62,6 @@ class SecurityLoggingTest extends TestCase
         $this->assertEquals(Customer::class, $registrationLog->causer_type);
         $this->assertEquals($customer->id, $registrationLog->causer_id);
         $this->assertEquals('jane@example.com', $registrationLog->properties['email_or_phone']);
-
-        // Assert OTP sent log was written
-        $otpSentLog = ActivityLog::where('event', 'otp.sent')->first();
-        $this->assertNotNull($otpSentLog);
-        $this->assertEquals("OTP sent to email: jane@example.com", $otpSentLog->description);
-        $this->assertEquals(Customer::class, $otpSentLog->subject_type);
-        $this->assertEquals($customer->id, $otpSentLog->subject_id);
-        $this->assertEquals('jane@example.com', $otpSentLog->properties['email']);
-        $this->assertArrayHasKey('otp_sent_time', $otpSentLog->properties);
-        $this->assertArrayHasKey('ip', $otpSentLog->properties);
-        $this->assertArrayHasKey('user_agent', $otpSentLog->properties);
     }
 
     public function test_customer_login_failure_increments_attempts_and_success_resets_them()
@@ -148,7 +159,7 @@ class SecurityLoggingTest extends TestCase
 
         $this->actingAs($customer, 'customer');
 
-        Cache::put("customer_otp_{$customer->id}", '123456', 300);
+        Cache::put("customer_otp_otp@example.com", '123456', 300);
 
         // Verification Failure
         $response = $this->post(route('store.otp.verify.submit'), [
