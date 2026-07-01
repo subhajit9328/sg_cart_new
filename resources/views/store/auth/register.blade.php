@@ -10,7 +10,7 @@
 
         <form action="{{ route('store.register.submit') }}" method="POST" class="flex flex-col gap-4" novalidate>
             @csrf
-            
+
             <div class="flex flex-col gap-1">
                 <label class="label">Full Name</label>
                 <input type="text" name="name" id="name" required class="inp" placeholder="John Doe" value="{{ old('name') }}"/>
@@ -20,9 +20,7 @@
 
             <div class="flex flex-col gap-1">
                 <label class="label">Email or Phone Number</label>
-                <input type="text" name="email_or_phone" id="email_or_phone" required class="inp" placeholder="email@example.com or +1234567890" value="{{ old('email_or_phone', request('email_or_phone')) }}"/>
-                <p class="error-email-phone text-rose-500 text-xs mt-1 hidden"></p>
-                @error('email_or_phone') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                <x-email-or-phone name="email_or_phone" id="email_or_phone" required="true" placeholder="email@example.com or phone number" value="{{ old('email_or_phone', request('email_or_phone')) }}"/>
             </div>
 
             <div class="flex flex-col gap-1">
@@ -59,7 +57,6 @@ $(document).ready(function() {
     const $passwordConf = $('#password_confirmation');
 
     const $errName = $('.error-name');
-    const $errEmailPhone = $('.error-email-phone');
     const $errPassword = $('.error-password');
     const $errPasswordConf = $('.error-password-conf');
 
@@ -74,36 +71,6 @@ $(document).ready(function() {
             $name.removeClass('border-rose-500');
             return true;
         }
-    }
-
-    function validateEmailOrPhone() {
-        const val = $emailOrPhone.val().trim();
-        if (!val) {
-            $errEmailPhone.text('Email or phone number is required.').removeClass('hidden');
-            $emailOrPhone.addClass('border-rose-500');
-            return false;
-        }
-
-        const isEmail = val.includes('@');
-        if (isEmail) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(val)) {
-                $errEmailPhone.text('Please enter a valid email address.').removeClass('hidden');
-                $emailOrPhone.addClass('border-rose-500');
-                return false;
-            }
-        } else {
-            const phoneRegex = /^\+\d{7,15}$/;
-            if (!phoneRegex.test(val)) {
-                $errEmailPhone.text('The phone number must include a country code starting with + followed by the number (e.g. +1234567890).').removeClass('hidden');
-                $emailOrPhone.addClass('border-rose-500');
-                return false;
-            }
-        }
-
-        $errEmailPhone.addClass('hidden').text('');
-        $emailOrPhone.removeClass('border-rose-500');
-        return true;
     }
 
     // Password must be at least 8 characters
@@ -144,16 +111,19 @@ $(document).ready(function() {
 
     // Inline triggers on input
     $name.on('input blur', validateName);
-    $emailOrPhone.on('input blur', validateEmailOrPhone);
     $password.on('input blur', validatePassword);
     $passwordConf.on('input blur', validatePasswordConf);
 
     // Form submit validation
     $form.on('submit', function(e) {
         const isNameValid = validateName();
-        const isEmailOrPhoneValid = validateEmailOrPhone();
         const isPasswordValid = validatePassword();
         const isPasswordConfValid = validatePasswordConf();
+        let isEmailOrPhoneValid = true;
+
+        if (typeof window.validateEmailPhoneComponent === 'function') {
+            isEmailOrPhoneValid = window.validateEmailPhoneComponent();
+        }
 
         if (!isNameValid || !isEmailOrPhoneValid || !isPasswordValid || !isPasswordConfValid) {
             e.preventDefault();

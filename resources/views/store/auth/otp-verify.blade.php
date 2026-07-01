@@ -10,8 +10,17 @@
         </h2>
         <p class="text-xs text-slate-400 text-center mb-8">
                 We've sent a 6-digit verification code to your <strong class="text-slate-600">{{$isEmail ? 'Email' : 'Phone No'}}</strong>.
-            The code will expire in 5 minutes.
         </p>
+        
+        @if(!$isEmail && config('app.test_mode'))
+        <div class="mb-6 p-4 bg-amber-50 dark:bg-amber-950/15 border border-amber-200/40 rounded-xl text-amber-800 dark:text-amber-300 text-xs flex gap-3 items-start leading-relaxed">
+            <i class="fa-solid fa-circle-info text-base mt-0.5 text-amber-500"></i>
+            <div>
+                <span class="font-bold block mb-0.5">Test Mode Active</span>
+                For phone verification in test mode, you can enter any arbitrary 6-digit number to bypass and verify the OTP.
+            </div>
+        </div>
+        @endif
 
         <form action="{{ route('store.otp.verify.submit') }}" method="POST" class="flex flex-col gap-4" novalidate>
             @csrf

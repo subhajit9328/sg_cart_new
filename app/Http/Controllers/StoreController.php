@@ -982,10 +982,30 @@ class StoreController extends Controller
             $rules['phone_no'] = [
                 'nullable',
                 'string',
-                'regex:/^\+\d{7,15}$/',
+                function ($attribute, $value, $fail) {
+                    if (is_null($value) || $value === '') {
+                        return;
+                    }
+                    if (!str_starts_with($value, '+')) {
+                        $fail('The phone number must include a country code starting with +.');
+                        return;
+                    }
+                    $digits = substr($value, 1);
+                    if (!ctype_digit($digits)) {
+                        $fail('The phone number must contain only digits after the + country code.');
+                        return;
+                    }
+                    if (strlen($digits) < 7 || strlen($digits) > 15) {
+                        if (strlen($digits) > 15) {
+                            $fail('The phone number must not be more than 15 digits.');
+                        } else {
+                            $fail('The phone number must be at least 7 digits.');
+                        }
+                        return;
+                    }
+                },
                 'unique:customers,phone_no',
             ];
-            $messages['phone_no.regex'] = 'The phone number must include a country code starting with + followed by the number (e.g. +1234567890).';
             $messages['phone_no.unique'] = 'The phone number has already been taken.';
         }
 

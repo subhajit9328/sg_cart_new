@@ -412,4 +412,46 @@ class OtpVerificationTest extends TestCase
 
         $response3->assertSessionHasErrors('email');
     }
+
+    /**
+     * Test that distinct validation messages are returned for phone number format issues.
+     */
+    public function test_registration_phone_number_separated_validation_errors()
+    {
+        // 1. Missing + country code
+        $response1 = $this->post(route('store.register.submit'), [
+            'name' => 'Test User',
+            'email_or_phone' => '1234567890',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+        $response1->assertSessionHasErrors(['email_or_phone' => 'The phone number must include a country code starting with +.']);
+
+        // 2. Non-digits after +
+        $response2 = $this->post(route('store.register.submit'), [
+            'name' => 'Test User',
+            'email_or_phone' => '+12345678#0',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+        $response2->assertSessionHasErrors(['email_or_phone' => 'The phone number must contain only digits after the + country code.']);
+
+        // 3. More than 15 digits
+        $response3 = $this->post(route('store.register.submit'), [
+            'name' => 'Test User',
+            'email_or_phone' => '+1234567890123456',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+        $response3->assertSessionHasErrors(['email_or_phone' => 'The phone number must not be more than 15 digits.']);
+
+        // 4. Less than 7 digits
+        $response4 = $this->post(route('store.register.submit'), [
+            'name' => 'Test User',
+            'email_or_phone' => '+123456',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+        $response4->assertSessionHasErrors(['email_or_phone' => 'The phone number must be at least 7 digits.']);
+    }
 }

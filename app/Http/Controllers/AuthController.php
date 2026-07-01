@@ -141,7 +141,7 @@ class AuthController extends Controller
         ]);
 
         $loginInput = $request->input('email_or_phone');
-        $isEmail = str_contains($loginInput ?? '', '@');
+        $isEmail = str_contains($loginInput ?? '', '@') || preg_match('/[a-zA-Z]/', $loginInput ?? '');
 
         $credentials = [
             $isEmail ? 'email' : 'phone_no' => $loginInput,
@@ -222,7 +222,7 @@ class AuthController extends Controller
     public function storefrontRegister(Request $request)
     {
         $emailOrPhone = $request->input('email_or_phone');
-        $isEmail = str_contains($emailOrPhone ?? '', '@');
+        $isEmail = str_contains($emailOrPhone ?? '', '@') || preg_match('/[a-zA-Z]/', $emailOrPhone ?? '');
 
         $rules = [
             'name' => ['required', 'string', 'max:255'],
@@ -239,10 +239,27 @@ class AuthController extends Controller
             $rules['email_or_phone'] = [
                 'required',
                 'string',
-                'regex:/^\+\d{7,15}$/',
+                function ($attribute, $value, $fail) {
+                    if (!str_starts_with($value, '+')) {
+                        $fail('The phone number must include a country code starting with +.');
+                        return;
+                    }
+                    $digits = substr($value, 1);
+                    if (!ctype_digit($digits)) {
+                        $fail('The phone number must contain only digits after the + country code.');
+                        return;
+                    }
+                    if (strlen($digits) < 7 || strlen($digits) > 15) {
+                        if (strlen($digits) > 15) {
+                            $fail('The phone number must not be more than 15 digits.');
+                        } else {
+                            $fail('The phone number must be at least 7 digits.');
+                        }
+                        return;
+                    }
+                },
                 'unique:customers,phone_no',
             ];
-            $messages['email_or_phone.regex'] = 'The phone number must include a country code starting with + followed by the number (e.g. +1234567890).';
             $messages['email_or_phone.unique'] = 'The phone number has already been taken.';
         }
 

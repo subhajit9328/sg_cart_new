@@ -39,7 +39,7 @@ class ForgotPasswordController extends Controller
         ]);
 
         $input = $request->input('email_or_phone');
-        $isEmail = str_contains($input, '@');
+        $isEmail = str_contains($input, '@') || preg_match('/[a-zA-Z]/', $input);
 
         // Check if customer exists
         $customer = Customer::where($isEmail ? 'email' : 'phone_no', $input)->first();
