@@ -231,7 +231,7 @@ class StoreController extends Controller
             $shippingRates = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
                 ->where('min_order_amount', '<=', $subtotal)
                 ->get();
-            
+
             $cheapestRate = $shippingRates->map(function ($rate) use ($subtotal) {
                 $rate->calculated_cost = $rate->calculateCost($subtotal);
                 return $rate;
@@ -670,7 +670,7 @@ class StoreController extends Controller
 
         $paymentMethodName = 'Card';
         $gateway = null;
-        
+
         if (app()->bound('payment.manager')) {
             $gateway = app('payment.manager')->getGateway($request->payment_method);
             if (!$gateway || !app('payment.manager')->isEnabled($request->payment_method)) {
@@ -840,7 +840,7 @@ class StoreController extends Controller
             // Create OrderItems in Database
             foreach ($cartModel->items as $cartItem) {
                 $product = \App\Models\Product::find($cartItem->product_id);
-                
+
                 \App\Models\OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $cartItem->product_id,

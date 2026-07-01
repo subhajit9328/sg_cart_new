@@ -101,8 +101,20 @@ class ImageSearchController extends Controller
                 if (empty($allCategories)) {
                     $allCategories = ['Women', 'Men', 'Accessories', 'Footwear', 'Beauty'];
                 }
+
+                $paginatedProducts = new \Illuminate\Pagination\LengthAwarePaginator(
+                    collect(),
+                    0,
+                    12,
+                    1,
+                    [
+                        'path' => \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPath(),
+                        'query' => $request->query()
+                    ]
+                );
+
                 return view('store.shop', [
-                    'products' => collect(),
+                    'products' => $paginatedProducts,
                     'allCategories' => $allCategories,
                     'selectedCategories' => (array) $request->input('category', []),
                     'selectedPriceMax' => $request->input('price_max', 10000),
@@ -250,9 +262,24 @@ class ImageSearchController extends Controller
                 $allCategories = ['Women', 'Men', 'Accessories', 'Footwear', 'Beauty'];
             }
 
+            // Pagination: 12 products per page
+            $page = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
+            $perPage = 12;
+            $currentPageResults = $products->slice(($page - 1) * $perPage, $perPage)->values();
+            $paginatedProducts = new \Illuminate\Pagination\LengthAwarePaginator(
+                $currentPageResults,
+                $products->count(),
+                $perPage,
+                $page,
+                [
+                    'path' => \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPath(),
+                    'query' => $request->query()
+                ]
+            );
+
             // Return storefront shop view. Set searchQuery to empty string so search input field remains empty.
             return view('store.shop', [
-                'products' => $products,
+                'products' => $paginatedProducts,
                 'allCategories' => $allCategories,
                 'selectedCategories' => (array) $request->input('category', []),
                 'selectedPriceMax' => $request->input('price_max', 10000),

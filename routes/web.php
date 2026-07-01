@@ -83,7 +83,11 @@ Route::prefix('admin')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
         // Admin Dashboard
-        Route::get('/dashboard', [DashboardController::class, 'index'])
+        $dashboardController = class_exists(\SGCart\DashboardAnalytics\Http\Controllers\AnalyticsController::class)
+            ? \SGCart\DashboardAnalytics\Http\Controllers\AnalyticsController::class
+            : DashboardController::class;
+
+        Route::get('/dashboard', [$dashboardController, 'index'])
             ->middleware('permission:view dashboard')
             ->name('admin.dashboard');
 

@@ -12,7 +12,7 @@
 </div>
 
 
-<div class="max-w-7xl mx-auto flex flex-col gap-6">
+<div class="mx-auto flex flex-col gap-6">
     <!-- 3-Column Grid of Premium Gateway Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse($gateways as $gateway)
@@ -21,7 +21,7 @@
                 $isEnabled = $dbMethod ? $dbMethod->is_enabled : false;
                 $configValues = $dbMethod ? ($dbMethod->config ?? []) : [];
             @endphp
-            
+
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-md">
                 <!-- Gateway Header -->
                 <div class="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-900/10 flex items-center justify-between gap-3">
@@ -72,7 +72,7 @@
                                 <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Display Name</label>
                                 <input type="text" name="settings[{{ $gateway->getId() }}][name]" value="{{ $dbMethod->name ?? $gateway->getName() }}" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 transition-all shadow-2xs" required>
                             </div>
-                            
+
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Description</label>
                                 <textarea name="settings[{{ $gateway->getId() }}][description]" rows="2" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 transition-all shadow-2xs resize-none" required>{{ $dbMethod->description ?? $gateway->getDescription() }}</textarea>
@@ -91,7 +91,7 @@
                                         <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 dark:text-slate-500 transition-transform duration-200 group-open:rotate-180"></i>
                                     </div>
                                 </summary>
-                                
+
                                 <div class="flex flex-col gap-3 pt-2">
                                     @foreach($gateway->getConfigSchema() as $key => $field)
                                         @php
@@ -193,7 +193,7 @@
         submitBtns.forEach(btn => {
             btn.disabled = false;
             btn.classList.remove('opacity-75', 'cursor-not-allowed');
-            
+
             const icon = btn.querySelector('i');
             if (icon) {
                 if (btn.dataset.originalIconClass) {

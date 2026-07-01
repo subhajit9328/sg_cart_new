@@ -130,15 +130,57 @@
                         </div>
                     </div>
 
-                <!-- Detailed Tracking Events Specific to this Order -->
-                <div class="mt-8 pt-6 border-t border-slate-100">
-                    <h5 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center gap-1.5">
-                        <i class="fa-solid fa-map-location-dot text-slate-400"></i> Shipment Log & Milestones
-                    </h5>
-                    
-                    <div class="relative pl-6 border-l border-slate-200 space-y-6 ml-2.5">
-                        <!-- Event: Delivered -->
-                        @if($status === 'Delivered')
+                    <!-- Detailed Tracking Events Specific to this Order -->
+                    <div class="mt-8 pt-6 border-t border-slate-100">
+                        <h5 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-map-location-dot text-slate-400"></i> Shipment Log & Milestones
+                        </h5>
+                        
+                        <div class="relative pl-6 border-l border-slate-200 space-y-6 ml-2.5">
+                            <!-- Event: Delivered -->
+                            @if($status === 'Delivered')
+                                <div class="relative">
+                                    <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-emerald-100 text-emerald-600 rounded-full ring-4 ring-white">
+                                        <i class="fa-solid fa-circle-check text-[10px]"></i>
+                                    </span>
+                                    <div class="text-xs">
+                                        <span class="font-bold text-slate-900 block">Package Delivered</span>
+                                        <p class="text-slate-500 mt-0.5">Package successfully delivered to the recipient address.</p>
+                                        <span class="text-[10px] text-slate-400 mt-1 block">{{ $order->updated_at->format('M d, Y h:i A') }}</span>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- Event: Shipped / In Transit -->
+                            @if($status === 'Shipped' || $status === 'Delivered')
+                                <div class="relative">
+                                    <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-blue-100 text-blue-600 rounded-full ring-4 ring-white">
+                                        <i class="fa-solid fa-truck text-[9px]"></i>
+                                    </span>
+                                    <div class="text-xs">
+                                        <span class="font-bold text-slate-900 block">Order Shipped (Transit Started)</span>
+                                        @if($order->tracking_number)
+                                            <p class="text-slate-500 mt-0.5">Dispatched via <strong class="text-slate-700">{{ $order->shipping_carrier ?? 'Delhivery Express' }}</strong> (Tracking ID: <span class="font-mono text-slate-850 font-semibold">{{ $order->tracking_number }}</span>).</p>
+                                        @else
+                                            <p class="text-slate-500 mt-0.5">Order has been dispatched.</p>
+                                        @endif
+                                        @if($order->tracking_url)
+                                            <a href="{{ $order->tracking_url }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-accent hover:text-slate-900 mt-1.5 transition-colors" style="text-decoration:none">
+                                                Track Shipment Live <i class="fa-solid fa-up-right-from-square text-[8px]"></i>
+                                            </a>
+                                        @endif
+                                        <span class="text-[10px] text-slate-400 mt-1 block">
+                                            @if($status === 'Delivered')
+                                                {{ $order->created_at->addDay()->format('M d, Y') }} 11:30 AM
+                                            @else
+                                                {{ $order->updated_at->format('M d, Y h:i A') }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- Event: Processed & Packed -->
                             <div class="relative">
                                 <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-emerald-100 text-emerald-600 rounded-full ring-4 ring-white">
                                     <i class="fa-solid fa-circle-check text-[10px]"></i>
@@ -371,28 +413,32 @@
             </div>
 
             <!-- Shipment Tracking Card -->
-            @if($order->tracking_number)
+            @if(class_exists(\SGCart\LogisticTracking\Actions\UpdateLogisticTrackingAction::class) && $order->tracking_number)
             <div class="bg-white border border-[#e8e4df] rounded-2xl p-6">
                 <h4 class="font-display font-extrabold text-xs text-slate-400 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
                     <span class="flex items-center gap-1.5"><i class="fa-solid fa-truck-fast"></i> Shipment Tracking</span>
                     <span class="inline-flex px-1.5 py-0.5 rounded bg-blue-50 text-[9px] font-bold text-blue-600 uppercase">{{ $order->status->value ?? $order->status }}</span>
                 </h4>
-                <div class="text-xs text-slate-500 leading-relaxed space-y-2">
+                <div class="text-xs text-slate-500 leading-relaxed space-y-3">
+                    @if($order->estimated_delivery_at)
+                    <div class="p-3 bg-slate-50 rounded-xl mb-3 border border-slate-100">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block mb-0.5">Estimated Delivery</span>
+                        <span class="text-sm font-bold text-slate-800">Arrive by {{ $order->estimated_delivery_at->format('l, M d, Y') }}</span>
+                    </div>
+                    @endif
                     <div class="flex justify-between">
                         <span class="font-bold text-slate-700">Courier Partner:</span>
                         <span class="text-slate-800 font-medium">{{ $order->shipping_carrier ?? 'N/A' }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="font-bold text-slate-700">Tracking Number:</span>
+                        <span class="font-bold text-slate-700">Tracking ID:</span>
                         <span class="font-mono text-slate-800 font-medium">{{ $order->tracking_number }}</span>
                     </div>
-                    @if($order->estimated_delivery_at)
-                    <div class="flex justify-between">
-                        <span class="font-bold text-slate-700">Est. Delivery:</span>
-                        <span class="text-slate-800 font-medium">{{ $order->estimated_delivery_at->format('M d, Y') }}</span>
-                    </div>
-                    @endif
                     @if($order->tracking_url)
+                    <div class="flex justify-between">
+                        <span class="font-bold text-slate-700">Redirect URL:</span>
+                        <a href="{{ $order->tracking_url }}" target="_blank" class="text-blue-600 hover:underline font-medium truncate max-w-[180px]">{{ $order->tracking_url }}</a>
+                    </div>
                     <div class="pt-2 border-t border-slate-100 mt-2">
                         <a href="{{ $order->tracking_url }}" target="_blank" class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all text-center no-underline cursor-pointer">
                             Track Package <i class="fa-solid fa-up-right-from-square text-[9px]"></i>

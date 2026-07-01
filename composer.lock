@@ -63,13 +63,17 @@
         {
             "name": "aws/aws-sdk-php",
             "version": "3.387.0",
+            "version": "3.387.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
                 "reference": "38422b3eaed583a6056cef6d40e5594cd90cc895"
+                "reference": "38422b3eaed583a6056cef6d40e5594cd90cc895"
             },
             "dist": {
                 "type": "zip",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/38422b3eaed583a6056cef6d40e5594cd90cc895",
+                "reference": "38422b3eaed583a6056cef6d40e5594cd90cc895",
                 "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/38422b3eaed583a6056cef6d40e5594cd90cc895",
                 "reference": "38422b3eaed583a6056cef6d40e5594cd90cc895",
                 "shasum": ""
@@ -154,7 +158,9 @@
                 "forum": "https://github.com/aws/aws-sdk-php/discussions",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
                 "source": "https://github.com/aws/aws-sdk-php/tree/3.387.0"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.387.0"
             },
+            "time": "2026-06-30T18:31:55+00:00"
             "time": "2026-06-30T18:31:55+00:00"
         },
         {
@@ -1517,13 +1523,17 @@
         {
             "name": "laravel/framework",
             "version": "v13.18.0",
+            "version": "v13.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
                 "reference": "138e5806ed7e4e21591948b661119d3810f052cf"
+                "reference": "138e5806ed7e4e21591948b661119d3810f052cf"
             },
             "dist": {
                 "type": "zip",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/138e5806ed7e4e21591948b661119d3810f052cf",
+                "reference": "138e5806ed7e4e21591948b661119d3810f052cf",
                 "url": "https://api.github.com/repos/laravel/framework/zipball/138e5806ed7e4e21591948b661119d3810f052cf",
                 "reference": "138e5806ed7e4e21591948b661119d3810f052cf",
                 "shasum": ""
@@ -1736,6 +1746,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
+            "time": "2026-06-30T12:54:13+00:00"
             "time": "2026-06-30T12:54:13+00:00"
         },
         {
@@ -9739,8 +9750,10 @@
     "stability-flags": {
         "sgcart/blog": 20,
         "sgcart/coupons": 20,
+        "sgcart/dashboard-analytics": 20,
         "sgcart/image-search": 20,
         "sgcart/inventory": 20,
+        "sgcart/logistic-tracking": 20,
         "sgcart/payment-razorpay": 20,
         "sgcart/product-variants": 20,
         "sgcart/shipping": 20,

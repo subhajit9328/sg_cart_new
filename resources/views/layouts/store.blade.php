@@ -185,7 +185,7 @@
                     <button type="button" class="header-search-voice-btn" id="voiceSearchBtn" title="Search by Voice">
                         <i class="fa-solid fa-microphone"></i>
                     </button>
-                    @if(class_exists(\SGCart\ImageSearch\ImageSearchServiceProvider::class))
+                    @if(class_exists(\SGCart\ImageSearch\ImageSearchServiceProvider::class) && config('image-search.is_active', true))
                     <button type="button" class="header-search-camera-btn" id="cameraSearchBtn" title="Search by Image">
                         <i class="fa-solid fa-camera"></i>
                     </button>
@@ -1070,7 +1070,7 @@
     @csrf
 </form>
 
-@if(class_exists(\SGCart\ImageSearch\ImageSearchServiceProvider::class))
+@if(class_exists(\SGCart\ImageSearch\ImageSearchServiceProvider::class) && config('image-search.is_active', true))
 <!-- Image Crop Modal -->
 <div id="imageCropModal" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm hidden" style="display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col" style="background: white; border-radius: 16px; width: 90%; max-width: 600px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); display: flex; flex-direction: column;">

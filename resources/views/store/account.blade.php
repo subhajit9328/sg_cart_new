@@ -6,13 +6,11 @@
 
 
 <div class="storefront-container">
-    
+
     <!-- Account Wrap -->
     <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
-        
-        <!-- Tab Selectors (Left Sidebar / Top Navigation Card) -->
-        <div class="bg-white dark:bg-[#151411] border border-[#e8e4df] dark:border-[#2e2c28] rounded-2xl p-4 lg:p-6">
-            <!-- User Info Summary Header -->
+
+        <div class="bg-white border border-[#e8e4df] rounded-2xl p-5 md:p-6">
             <div class="flex items-center justify-between gap-4 mb-4 pb-4 lg:mb-6 lg:pb-6 border-b border-[#e8e4df] dark:border-[#2e2c28]">
                 <div class="flex items-center gap-3 lg:gap-4 min-w-0">
                     <div class="relative w-10 h-10 lg:w-14 lg:h-14 shrink-0">
@@ -86,7 +84,7 @@
                     <h2 class="font-display font-bold text-base text-slate-900 flex items-center gap-2.5 mb-0" style="margin-bottom:0">
                         <i class="fa-solid fa-clock-rotate-left text-accent text-sm"></i> Order History <span class="bg-slate-100 dark:bg-[#1a1916] text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full font-sans font-bold border border-slate-200 dark:border-slate-800 text-[11px]">{{ $orders->total() }}</span>
                     </h2>
-                    
+
                     <!-- Search Bar Form -->
                     <form action="{{ route('store.account', 'orders') }}" method="GET" class="flex items-center gap-2 w-full sm:w-auto">
                         <div class="relative w-full sm:w-64">
@@ -102,7 +100,7 @@
                         </button>
                     </form>
                 </div>
-                
+
                 <div class="flex flex-col gap-4">
                     @forelse($orders as $order)
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border border-[#e8e4df] dark:border-[#2e2c28] rounded-xl p-5 bg-white dark:bg-[#151411] transition-all hover:shadow-[0_4px_15px_rgba(0,0,0,0.03)] gap-4">
@@ -206,7 +204,7 @@
                             @endif
                         </div>
                     </div>
-                    
+
                     <div class="pt-2">
                         <button type="submit" class="btn btn-primary btn-sm px-6">Save Changes</button>
                     </div>
@@ -232,7 +230,7 @@
                             </div>
                         </div>
                     @endforeach
-                    
+
                     <!-- Add Address Button Card -->
                     <div class="border-2 border-dashed border-[#e8e4df] dark:border-[#2e2c28] hover:border-slate-400 dark:hover:border-slate-600 hover:bg-slate-50/50 dark:hover:bg-[#1a1916]/50 rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer gap-2 min-h-[150px] transition-all {{ $addresses->isEmpty() ? 'col-span-3' : '' }}" onclick="openAddressModal()">
                         <i class="fa-solid fa-plus text-2xl text-slate-300 dark:text-slate-700"></i>
@@ -241,12 +239,12 @@
                 </div>
 
                 <!-- Add Address Modal Markup -->
-                <x-address-modal 
-                    id="addressModal" 
-                    formId="addressForm" 
-                    onClose="closeAddressModal()" 
-                    submitBtnId="saveAddressSubmitBtn" 
-                    action="{{ route('store.account.address.add') }}" 
+                <x-address-modal
+                    id="addressModal"
+                    formId="addressForm"
+                    onClose="closeAddressModal()"
+                    submitBtnId="saveAddressSubmitBtn"
+                    action="{{ route('store.account.address.add') }}"
                 />
             </div>
 
@@ -259,8 +257,8 @@
                         <div class="product-card" onclick="window.location.href='{{ route('store.product', $wl['slug']) }}'">
                             <div class="product-card-img">
                                 <img src="{{ $wl['img'] }}" alt="{{ $wl['name'] }}"/>
-                                <button type="button" class="wishlist-btn active" 
-                                    data-product-id="{{ $wl['id'] }}" 
+                                <button type="button" class="wishlist-btn active"
+                                    data-product-id="{{ $wl['id'] }}"
                                     onclick="event.stopPropagation(); toggleWishlist(this)"
                                     title="Remove from Wishlist">
                                     <i class="fa-solid fa-heart"></i>
@@ -309,10 +307,10 @@
 
         // Set Edit title
         title.innerHTML = '<i class="fa-solid fa-map-location-dot text-accent"></i> Edit Address';
-        
+
         // Update Form Action
         form.action = "{{ route('store.account.address.update', ':id') }}".replace(':id', address.id);
-        
+
         // Populate inputs
         form.querySelector('input[name="first_name"]').value = address.first_name || '';
         form.querySelector('input[name="last_name"]').value = address.last_name || '';
@@ -326,7 +324,7 @@
         form.querySelector('input[name="phone"]').value = address.phone || '';
         form.querySelector('input[name="alternate_phone"]').value = address.alternate_phone || '';
         form.querySelector('input[name="landmark"]').value = address.landmark || '';
-        
+
         // Address type radio selection
         const addrTypeRadio = form.querySelector(`input[name="address_type"][value="${address.address_type || 'work'}"]`);
         if (addrTypeRadio) addrTypeRadio.checked = true;
@@ -400,6 +398,10 @@
             openAddressModal();
         }
         @endif
+<<<<<<< HEAD
+=======
+
+>>>>>>> source/kushal_changes
         // Validate profile details form (missing fields)
         const profileForm = document.querySelector('#tab-profile form');
         if (profileForm) {
@@ -453,23 +455,23 @@
         if (profilePicInput) {
             profilePicInput.addEventListener('change', function(e) {
                 if (e.target.files.length === 0) return;
-                
+
                 const file = e.target.files[0];
-                
+
                 // Client-side quick size validation (2 MB)
                 if (file.size > 2 * 1024 * 1024) {
                     showToast('The profile picture size must not exceed 2 MB.', 'error');
                     profilePicInput.value = '';
                     return;
                 }
-                
+
                 const loader = document.getElementById('profile-picture-loader');
                 loader.classList.remove('opacity-0', 'pointer-events-none');
                 loader.classList.add('opacity-100');
-                
+
                 const formData = new FormData();
                 formData.append('profile_picture', file);
-                
+
                 fetch("{{ route('store.account.profile-picture.update') }}", {
                     method: 'POST',
                     headers: {
@@ -488,7 +490,7 @@
                 .then(data => {
                     if (data.success) {
                         showToast(data.message, 'success');
-                        
+
                         // Update container content: remove initials/old image and set new image
                         const container = document.getElementById('profile-picture-container');
                         let img = document.getElementById('profile-picture-img');
@@ -496,7 +498,7 @@
                             // Remove initials element
                             const initials = document.getElementById('profile-picture-initials');
                             if (initials) initials.remove();
-                            
+
                             img = document.createElement('img');
                             img.id = 'profile-picture-img';
                             img.alt = 'Profile Picture';
