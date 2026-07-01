@@ -10,7 +10,7 @@
 
         <form action="{{ route('store.forgot-password.reset.submit') }}" method="POST" class="flex flex-col gap-4" novalidate>
             @csrf
-            
+
             <div class="flex flex-col gap-1">
                 <label class="label">New Password</label>
                 <input type="password" name="password" id="password" required class="inp" placeholder="Minimum 8 characters" autofocus/>
@@ -31,7 +31,6 @@
 @endsection
 
 @section('scripts')
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
 $(document).ready(function() {
     const $form = $('form[action*="reset"]');

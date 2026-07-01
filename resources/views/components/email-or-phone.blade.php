@@ -6,11 +6,117 @@
     'placeholder' => 'email@example.com or phone number'
 ])
 
+@once
+    <style>
+        /* Styling for the custom Select2 dropdown selection box */
+        .email-or-phone-container .select2-container--default .select2-selection--single {
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 10px !important;
+            height: 46px !important;
+            background-color: #fff !important;
+            display: flex !important;
+            align-items: center !important;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+            box-shadow: none !important;
+        }
+        .email-or-phone-container .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #0f172a !important;
+            font-family: inherit !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            padding-left: 14px !important;
+            padding-right: 24px !important;
+        }
+        .email-or-phone-container .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 46px !important;
+            right: 8px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .email-or-phone-container .select2-container--default .select2-selection--single .select2-selection__arrow b {
+            border-color: #888 transparent transparent transparent !important;
+        }
+        .email-or-phone-container .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+            border-color: transparent transparent #888 transparent !important;
+        }
+        .email-or-phone-container .select2-container--default.select2-container--focus .select2-selection--single,
+        .email-or-phone-container .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: #0f172a !important;
+            outline: none !important;
+        }
+
+        /* Red border on error */
+        .email-or-phone-container .select2-container--default .select2-selection--single.border-rose-500 {
+            border-color: #f43f5e !important;
+        }
+
+        /* Dark Mode styling */
+        .dark .email-or-phone-container .select2-container--default .select2-selection--single {
+            border-color: #2b2a27 !important;
+            background-color: #1c1a17 !important;
+        }
+        .dark .email-or-phone-container .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #f3f4f6 !important;
+        }
+        .dark .email-or-phone-container .select2-container--default.select2-container--focus .select2-selection--single,
+        .dark .email-or-phone-container .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: var(--color-accent, #c8a97e) !important;
+        }
+
+        /* Dropdown container */
+        .select2-dropdown {
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            background-color: #fff !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+            z-index: 99999 !important;
+        }
+        .dark .select2-dropdown {
+            border-color: #2b2a27 !important;
+            background-color: #1c1a17 !important;
+        }
+        .select2-results__option {
+            font-family: inherit !important;
+            font-size: 13px !important;
+            padding: 8px 12px !important;
+            color: #4a4a4a !important;
+        }
+        .dark .select2-results__option {
+            color: #d1d5db !important;
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: var(--color-accent, #c8a97e) !important;
+            color: #fff !important;
+        }
+        .select2-container--default .select2-results__option[aria-selected="true"] {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+        .dark .select2-container--default .select2-results__option[aria-selected="true"] {
+            background-color: #2b2a27 !important;
+            color: #f3f4f6 !important;
+        }
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            padding: 6px 10px !important;
+            outline: none !important;
+            font-family: inherit !important;
+        }
+        .dark .select2-container--default .select2-search--dropdown .select2-search__field {
+            background-color: #171614 !important;
+            color: #fff !important;
+            border-color: #2b2a27 !important;
+        }
+    </style>
+@endonce
+
 <div class="flex flex-col gap-1 email-or-phone-container">
     <div class="flex gap-2 items-center w-full relative">
         <!-- Country Code Wrapper (hidden by default) -->
         <div id="country_code_wrapper" class="flex items-center gap-1 hidden select-none relative">
-            <select id="country_code_input" class="inp pr-2 pl-2 !w-30 text-xs">
+            <select id="country_code_input" style="width: 80px;">
                 <!-- Dynamically populated -->
             </select>
         </div>
@@ -172,14 +278,12 @@ document.addEventListener('DOMContentLoaded', function() {
     sortedCountryCodes.forEach(item => {
         const option = document.createElement('option');
         option.value = item.code;
-        const displayName = item.name.length > 6 ? item.key : item.name;
-        option.textContent = `${displayName} (+${item.code})`;
+        option.setAttribute('data-code', item.code);
+        option.setAttribute('data-name', item.name);
+        option.textContent = `+${item.code} ${item.name}`;
         option.setAttribute('title', item.name);
         ccInput.appendChild(option);
     });
-
-    // Default to India (91) if list contains it
-    ccInput.value = '91';
 
     // Helper to determine if a string looks like an email
     function isEmailLike(val) {
@@ -204,6 +308,17 @@ document.addEventListener('DOMContentLoaded', function() {
         return { cc: digits.substring(0, 3), num: digits.substring(3) };
     }
 
+    // Helper to toggle error style for Country Code
+    function toggleCcError(isError) {
+        if (isError) {
+            ccInput.classList.add('border-rose-500');
+            $(ccInput).next('.select2').find('.select2-selection').addClass('border-rose-500');
+        } else {
+            ccInput.classList.remove('border-rose-500');
+            $(ccInput).next('.select2').find('.select2-selection').removeClass('border-rose-500');
+        }
+    }
+
     // Helper to select / add option to dropdown dynamically
     function selectCountryCode(code) {
         let exists = false;
@@ -216,10 +331,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!exists) {
             const option = document.createElement('option');
             option.value = code;
-            option.textContent = `Custom (+${code})`;
+            option.setAttribute('data-code', code);
+            option.setAttribute('data-name', 'Custom');
+            option.textContent = `+${code} Custom`;
             ccInput.appendChild(option);
         }
         ccInput.value = code;
+        $(ccInput).val(code).trigger('change');
     }
 
     // Helper to update the hidden input value
@@ -288,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
             errorMsg.classList.add('hidden');
             errorMsg.textContent = '';
             mainInput.classList.remove('border-rose-500');
-            ccInput.classList.remove('border-rose-500');
+            toggleCcError(false);
             return true;
         }
 
@@ -298,13 +416,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 errorMsg.textContent = 'Please enter a valid email address.';
                 errorMsg.classList.remove('hidden');
                 mainInput.classList.add('border-rose-500');
-                ccInput.classList.remove('border-rose-500');
+                toggleCcError(false);
                 return false;
             } else {
                 errorMsg.classList.add('hidden');
                 errorMsg.textContent = '';
                 mainInput.classList.remove('border-rose-500');
-                ccInput.classList.remove('border-rose-500');
+                toggleCcError(false);
                 return true;
             }
         }
@@ -314,10 +432,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (cleanCc.length < 1 || cleanCc.length > 3) {
             errorMessages += 'Country code must be between 1 and 3 digits. \n';
-            ccInput.classList.add('border-rose-500');
+            toggleCcError(true);
             hasError = true;
         } else {
-            ccInput.classList.remove('border-rose-500');
+            toggleCcError(false);
         }
 
         if (cleanMain.length < 7 || cleanMain.length > 12) {
@@ -354,6 +472,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function init() {
         const initialVal = hiddenVal.value.trim();
         if (initialVal === '') {
+            // Default to India (91)
+            $(ccInput).val('91').trigger('change');
             return;
         }
 
@@ -388,16 +508,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     const hiddenClasses = hiddenVal.className || '';
                     if (hiddenClasses.includes('border-rose-500')) {
                         mainInput.classList.add('border-rose-500');
-                        ccInput.classList.add('border-rose-500');
+                        toggleCcError(true);
                     } else {
-                        mainInput.removeClass('border-rose-500');
-                        ccInput.removeClass('border-rose-500');
+                        mainInput.classList.remove('border-rose-500');
+                        toggleCcError(false);
                     }
                 }
             });
         });
         observer.observe(hiddenVal, { attributes: true });
     }
+
+    // Initialize Select2 on country code dropdown
+    $(ccInput).select2({
+        templateSelection: function(state) {
+            if (!state.id) return state.text;
+            const element = state.element;
+            if (element) {
+                const code = $(element).attr('data-code') || state.id;
+                return `+${code}`;
+            }
+            return `+${state.id}`;
+        },
+        templateResult: function(state) {
+            return state.text;
+        },
+        dropdownAutoWidth: true,
+        width: '80px',
+        minimumResultsForSearch: 0
+    });
 
     init();
 });
