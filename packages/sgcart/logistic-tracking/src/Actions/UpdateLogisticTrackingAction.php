@@ -29,12 +29,6 @@ class UpdateLogisticTrackingAction
 
         $oldValues = $this->getOldTrackingValues($order->tracking);
 
-        // Auto-generate details if order is Shipped and tracking number is empty
-        $this->autoGenerateShippedDetails($data->order_status, $trackingNumber, $shippingCarrier, $estimatedDeliveryAt);
-
-        // Generate tracking URL if empty but courier / carrier is known
-        $trackingUrl = $this->generateTrackingUrl($trackingUrl, $trackingNumber, $courier, $shippingCarrier);
-
         // Update or create the tracking record
         $order->tracking()->updateOrCreate(
             ['order_id' => $order->id],
@@ -89,41 +83,6 @@ class UpdateLogisticTrackingAction
         ];
     }
 
-    /**
-     * Auto-generate tracking details if order is Shipped and tracking number is empty.
-     */
-    private function autoGenerateShippedDetails(string $orderStatus, ?string &$trackingNumber, ?string &$shippingCarrier, &$estimatedDeliveryAt): void
-    {
-        if ($orderStatus === 'Shipped' && empty($trackingNumber)) {
-            $trackingNumber = 'SG-TRK-'.rand(10000000, 99999999);
-            $shippingCarrier = $shippingCarrier ?? 'Delhivery Express';
-            $estimatedDeliveryAt = $estimatedDeliveryAt ?? now()->addDays(5)->format('Y-m-d H:i:s');
-        }
-    }
-
-    /**
-     * Generate the tracking URL based on carrier/courier template if empty.
-     */
-    private function generateTrackingUrl(?string $trackingUrl, ?string $trackingNumber, $courier, ?string $shippingCarrier): ?string
-    {
-        if (! empty($trackingUrl) || empty($trackingNumber)) {
-            return $trackingUrl;
-        }
-
-        if ($courier && $courier->url) {
-            if (str_contains($courier->url, '{tracking_number}')) {
-                return str_replace('{tracking_number}', $trackingNumber, $courier->url);
-            }
-
-            return rtrim($courier->url, '/').'/'.$trackingNumber;
-        }
-
-        if ($shippingCarrier === 'Delhivery Express') {
-            return 'https://www.delhivery.com/track/package/'.$trackingNumber;
-        }
-
-        return null;
-    }
 
     /**
      * Check if there are differences between old and new tracking values.

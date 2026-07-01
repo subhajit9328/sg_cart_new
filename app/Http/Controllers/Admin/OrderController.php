@@ -105,15 +105,21 @@ class OrderController extends Controller
         $packageInstalled = class_exists(\SGCart\LogisticTracking\Actions\UpdateLogisticTrackingAction::class);
 
         if ($packageInstalled) {
+            $isShipped = $request->input('status') === 'Shipped';
             $validationRules = array_merge($validationRules, [
-                'tracking_number' => 'nullable|string|max:100',
-                'shipping_courier_id' => 'nullable',
-                'tracking_url' => 'nullable|url|max:255',
-                'estimated_delivery_at' => 'nullable|date',
+                'tracking_number' => $isShipped ? 'required|string|max:100' : 'nullable|string|max:100',
+                'shipping_courier_id' => $isShipped ? 'required' : 'nullable',
+                'tracking_url' => $isShipped ? 'required|url|max:255' : 'nullable|url|max:255',
+                'estimated_delivery_at' => $isShipped ? 'required|date' : 'nullable|date',
             ]);
         }
 
-        $data = $request->validate($validationRules);
+        $data = $request->validate($validationRules, [], [
+            'tracking_number' => 'tracking number',
+            'shipping_courier_id' => 'shipping carrier',
+            'tracking_url' => 'tracking URL',
+            'estimated_delivery_at' => 'estimated delivery date',
+        ]);
 
         $order->update(['status' => $data['status']]);
 
