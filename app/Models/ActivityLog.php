@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Support\Str;
 
 class ActivityLog extends Model
 {
@@ -59,12 +58,34 @@ class ActivityLog extends Model
     }
 
     /**
-     * Get a human-readable description of what changed or what occurred.
+     * Get the causer label.
+     */
+    public function getCauserLabelAttribute(): string
+    {
+        $causer = $this->causer;
+        if (!$causer) {
+            return 'System';
+        }
+
+        $type = class_basename($this->causer_type);
+        if ($type === 'User') {
+            return "Admin: {$causer->name}";
+        }
+
+        if ($type === 'Customer') {
+            return "Customer: {$causer->name}";
+        }
+
+        return "{$type}: {$causer->name}";
+    }
+
+    /**
+     * Get the formatted action.
      */
     public function getFormattedActionAttribute(): string
     {
         // 1. Delegate payment events to Payment model
-        if (Str::startsWith($this->event, 'order.payment_')) {
+        if (\Illuminate\Support\Str::startsWith($this->event, 'order.payment_')) {
             if (class_exists(\App\Models\Payment::class) && method_exists(\App\Models\Payment::class, 'formatActivityLog')) {
                 return \App\Models\Payment::formatActivityLog($this);
             }
@@ -78,41 +99,14 @@ class ActivityLog extends Model
             }
         }
 
-        // 3. Delegate order events (or fallback) to Order model
-        if (Str::startsWith($this->event, 'order.')) {
+        // 3. Delegate order events to Order model
+        if (\Illuminate\Support\Str::startsWith($this->event, 'order.')) {
             if (class_exists(\App\Models\Order::class) && method_exists(\App\Models\Order::class, 'formatActivityLog')) {
                 return \App\Models\Order::formatActivityLog($this);
             }
         }
 
         return $this->description;
-    }
-
-    /**
-     * Get the human-readable name of who performed the action.
-     */
-    public function getCauserLabelAttribute(): string
-    {
-        if (!$this->causer_type) {
-            return 'System';
-        }
-
-        $causer = $this->causer;
-        if (!$causer) {
-            $type = class_basename($this->causer_type);
-            return "{$type} (ID: {$this->causer_id})";
-        }
-
-        $type = class_basename($this->causer_type);
-        if ($type === 'User') {
-            return "Admin: {$causer->name}";
-        }
-
-        if ($type === 'Customer') {
-            return "Customer: {$causer->name}";
-        }
-
-        return "{$type}: {$causer->name}";
     }
 
     /**
@@ -137,7 +131,7 @@ class ActivityLog extends Model
         ];
 
         // 1. Delegate payment events to Payment model
-        if (Str::startsWith($this->event, 'order.payment_')) {
+        if (\Illuminate\Support\Str::startsWith($this->event, 'order.payment_')) {
             if (class_exists(\App\Models\Payment::class) && method_exists(\App\Models\Payment::class, 'getTimelineData')) {
                 return array_merge($data, \App\Models\Payment::getTimelineData($this));
             }
@@ -152,7 +146,7 @@ class ActivityLog extends Model
         }
 
         // 3. Delegate order events to Order model
-        if (Str::startsWith($this->event, 'order.')) {
+        if (\Illuminate\Support\Str::startsWith($this->event, 'order.')) {
             if (class_exists(\App\Models\Order::class) && method_exists(\App\Models\Order::class, 'getTimelineData')) {
                 return array_merge($data, \App\Models\Order::getTimelineData($this));
             }
@@ -161,4 +155,3 @@ class ActivityLog extends Model
         return $data;
     }
 }
-

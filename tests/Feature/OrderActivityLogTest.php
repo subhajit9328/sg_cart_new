@@ -198,4 +198,5 @@ class OrderActivityLogTest extends TestCase
         $this->assertStringContainsString('Pending', $log->formatted_action);
         $this->assertStringContainsString('Paid', $log->formatted_action);
     }
+
 }

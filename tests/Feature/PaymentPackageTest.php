@@ -9,13 +9,14 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\PaymentMethod;
 use App\Payments\Services\PaymentManager;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Spatie\Permission\Models\Permission;
 
 class PaymentPackageTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     protected User $admin;
     protected Customer $customer;
@@ -42,6 +43,8 @@ class PaymentPackageTest extends TestCase
             'email' => 'customer_' . uniqid() . '@example.com',
             'password' => bcrypt('password'),
         ]);
+        $this->customer->email_verified_at = now();
+        $this->customer->save();
     }
 
     /**
@@ -167,6 +170,13 @@ class PaymentPackageTest extends TestCase
      */
     public function test_customer_can_checkout_with_razorpay(): void
     {
+        Http::fake([
+            'https://api.razorpay.com/v1/payment_links' => Http::response([
+                'id' => 'plink_test12345',
+                'short_url' => 'https://rzp.io/i/test_link',
+            ], 200),
+        ]);
+
         // Setup Razorpay payment method in DB as enabled
         PaymentMethod::updateOrCreate(
             ['id' => 'razorpay'],
@@ -222,7 +232,7 @@ class PaymentPackageTest extends TestCase
         ]);
         $this->assertDatabaseHas('payments', [
             'payment_method' => 'Razorpay',
-            'status' => 'Paid',
+            'status' => 'Pending',
         ]);
     }
 

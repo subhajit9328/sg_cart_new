@@ -3,12 +3,10 @@
 namespace App\Models;
 
 use App\Enums\OrderStatus;
-use App\Enums\PaymentStatus;
-use App\Observers\OrderObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
-use SGCart\LogisticTracking\Models\OrderTracking;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use App\Observers\OrderObserver;
 
 #[ObservedBy([OrderObserver::class])]
 class Order extends Model
@@ -135,10 +133,9 @@ class Order extends Model
      */
     public function getTrackingNumberAttribute()
     {
-        if (class_exists(OrderTracking::class)) {
+        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
             return $this->tracking?->tracking_number;
         }
-
         return null;
     }
 
@@ -147,10 +144,9 @@ class Order extends Model
      */
     public function getShippingCarrierAttribute()
     {
-        if (class_exists(OrderTracking::class)) {
+        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
             return $this->tracking?->shipping_carrier;
         }
-
         return null;
     }
 
@@ -159,10 +155,9 @@ class Order extends Model
      */
     public function getShippingCourierIdAttribute()
     {
-        if (class_exists(OrderTracking::class)) {
+        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
             return $this->tracking?->shipping_courier_id;
         }
-
         return null;
     }
 
@@ -171,10 +166,9 @@ class Order extends Model
      */
     public function getTrackingUrlAttribute()
     {
-        if (class_exists(OrderTracking::class)) {
+        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
             return $this->tracking?->tracking_url;
         }
-
         return null;
     }
 
@@ -183,10 +177,9 @@ class Order extends Model
      */
     public function getEstimatedDeliveryAtAttribute()
     {
-        if (class_exists(OrderTracking::class)) {
+        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
             return $this->tracking?->estimated_delivery_at;
         }
-
         return null;
     }
 
@@ -209,6 +202,7 @@ class Order extends Model
         return $this->morphMany(ActivityLog::class, 'subject')->latest();
     }
 
+
     /**
      * Format activity log for order events.
      */
@@ -221,7 +215,6 @@ class Order extends Model
         if ($activity->event === 'order.status_updated') {
             $old = $activity->attribute_changes['old']['status'] ?? 'unknown';
             $new = $activity->attribute_changes['new']['status'] ?? 'unknown';
-
             return "Status changed from <span class='font-semibold text-slate-850 dark:text-slate-100'>{$old}</span> to <span class='font-semibold text-slate-850 dark:text-slate-100'>{$new}</span>";
         }
 
@@ -231,7 +224,7 @@ class Order extends Model
     /**
      * Get timeline-specific data for order events.
      */
-    public static function getTimelineData(\App\Models\ActivityLog $activity): array
+    public static function getTimelineData(ActivityLog $activity): array
     {
         if ($activity->event === 'order.created') {
             return [
@@ -244,7 +237,7 @@ class Order extends Model
 
         if ($activity->event === 'order.status_updated') {
             $newStatus = $activity->attribute_changes['new']['status'] ?? 'Processing';
-            
+
             $statusData = [
                 'Processing' => [
                     'title' => 'Processed & Packed',

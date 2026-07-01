@@ -40,8 +40,6 @@ class Payment extends Model
         return $this->belongsTo(Order::class);
     }
 
-
-
     /**
      * Format activity log for payment events.
      */
@@ -78,7 +76,7 @@ class Payment extends Model
                     'title' => 'Order Completed & Payment Authorized',
                     'description' => "Order placed and payment charged via {$method}.",
                     'icon' => 'fa-circle-check',
-                    'icon_color' => 'bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30',
+                    'icon_color' => 'bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-955/20 dark:text-blue-400 dark:border-blue-900/30',
                 ];
             }
 
@@ -107,11 +105,20 @@ class Payment extends Model
             $old = $activity->attribute_changes['old']['status'] ?? 'unknown';
             $new = $activity->attribute_changes['new']['status'] ?? 'unknown';
 
+            if ($new === 'Paid') {
+                return [
+                    'title' => 'Order Completed & Payment Authorized',
+                    'description' => "Payment status updated from {$old} to Paid. Payment authorized successfully.",
+                    'icon' => 'fa-circle-check',
+                    'icon_color' => 'bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-955/20 dark:text-blue-400 dark:border-blue-900/30',
+                ];
+            }
+
             return [
                 'title' => 'Payment Status Updated',
                 'description' => "Payment status changed from {$old} to {$new}.",
                 'icon' => 'fa-credit-card',
-                'icon_color' => 'bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-900/30',
+                'icon_color' => 'bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-955/20 dark:text-blue-400 dark:border-blue-900/30',
             ];
         }
 
@@ -123,5 +130,3 @@ class Payment extends Model
         ];
     }
 }
-
-
