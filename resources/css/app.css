@@ -12,6 +12,7 @@
 @source '../../packages/sgcart/product-variants/resources/views/**/*.blade.php';
 @source '../../packages/sgcart/shipping/resources/views/**/*.blade.php';
 @source '../../packages/sgcart/tax/resources/views/**/*.blade.php';
+@source '../../packages/sgcart/blog/resources/views/**/*.blade.php';
 
 @theme {
     --color-ink: #0a0a0a;

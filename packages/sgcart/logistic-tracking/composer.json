@@ -1,0 +1,25 @@
+{
+    "name": "sgcart/logistic-tracking",
+    "description": "Provides logistic tracking capability for orders",
+    "autoload": {
+        "psr-4": {
+            "SGCart\\LogisticTracking\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "SGCart Team",
+            "email": "support@sgcart.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2|^8.3"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SGCart\\LogisticTracking\\Providers\\LogisticTrackingServiceProvider"
+            ]
+        }
+    }
+}
