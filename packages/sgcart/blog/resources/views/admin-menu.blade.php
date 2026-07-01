@@ -1,0 +1,62 @@
+@can('manage blog')
+    @if(!Gate::allows('manage coupons'))
+        <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Marketing</p>
+    @endif
+
+    <div class="nav-item-dropdown {{ (Request::is('admin/blog-posts*') || Request::is('admin/blog-categories*')) ? 'open' : '' }}">
+        <button type="button" class="nav-link w-full text-left justify-between flex items-center dropdown-toggle" data-tooltip="Blog" style="background: transparent; border: none;">
+            <span class="flex items-center gap-3">
+                <i class="fa-solid fa-blog"></i>
+                <span class="sidebar-text">Blog</span>
+            </span>
+            <i class="fa-solid fa-chevron-down text-[10px] arrow-icon transition-transform duration-200 {{ (Request::is('admin/blog-posts*') || Request::is('admin/blog-categories*')) ? 'rotate-180' : '' }}"></i>
+        </button>
+        <div class="dropdown-menu-items pl-8 pr-1 py-1 space-y-1 {{ (Request::is('admin/blog-posts*') || Request::is('admin/blog-categories*')) ? '' : 'hidden' }}">
+            <a href="{{ route('admin.blog-posts.index') }}" class="nav-link py-2 text-[0.82rem] {{ Request::is('admin/blog-posts*') ? 'active' : '' }}" data-tooltip="Blog Posts">
+                <i class="fa-solid fa-file-lines text-[11px]"></i>
+                <span class="sidebar-text">Blog Posts</span>
+            </a>
+            <a href="{{ route('admin.blog-categories.index') }}" class="nav-link py-2 text-[0.82rem] {{ Request::is('admin/blog-categories*') ? 'active' : '' }}" data-tooltip="Blog Categories">
+                <i class="fa-solid fa-folder-open text-[11px]"></i>
+                <span class="sidebar-text">Blog Categories</span>
+            </a>
+        </div>
+    </div>
+@endcan
+
+@pushOnce('styles')
+<style>
+    .nav-item-dropdown .dropdown-toggle {
+        cursor: pointer;
+    }
+    .nav-item-dropdown .arrow-icon {
+        color: #94a3b8;
+    }
+    .nav-item-dropdown .dropdown-menu-items .nav-link {
+        color: #94a3b8;
+    }
+    .nav-item-dropdown .dropdown-menu-items .nav-link:hover {
+        color: #ffffff;
+    }
+    .nav-item-dropdown .dropdown-menu-items .nav-link.active {
+        background: rgba(59, 130, 246, 0.15);
+        color: #ffffff;
+    }
+</style>
+@endpushOnce
+
+@pushOnce('scripts')
+<script>
+    $(document).ready(function() {
+        $(document).on('click', '.dropdown-toggle', function(e) {
+            e.preventDefault();
+            const parent = $(this).closest('.nav-item-dropdown');
+            const menu = parent.find('.dropdown-menu-items');
+            const arrow = $(this).find('.arrow-icon');
+            
+            menu.toggleClass('hidden');
+            arrow.toggleClass('rotate-180');
+        });
+    });
+</script>
+@endpushOnce

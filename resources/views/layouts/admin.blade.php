@@ -91,6 +91,7 @@
 
             @includeIf('inventory::admin-menu')
             @includeIf('coupons::admin-menu')
+            @includeIf('blog::admin-menu')
             @includeIf('product-variants::admin-menu')
             @includeIf('shipping::admin-menu')
             @includeIf('tax::admin-menu')

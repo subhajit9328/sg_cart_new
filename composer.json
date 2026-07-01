@@ -10,6 +10,7 @@
         "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
+        "sgcart/blog": "@dev",
         "sgcart/coupons": "@dev",
         "sgcart/image-search": "@dev",
         "sgcart/inventory": "@dev",
@@ -67,6 +68,13 @@
         {
             "type": "path",
             "url": "packages/sgcart/payment-razorpay",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/blog",
             "options": {
                 "symlink": true
             }

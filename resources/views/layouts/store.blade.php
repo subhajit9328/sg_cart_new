@@ -299,6 +299,9 @@
         <div>
             <h4 class="footer-title">Help</h4>
             <ul class="footer-links">
+                @if(Route::has('blog.index'))
+                    <li><a href="{{ route('blog.index') }}">Blog</a></li>
+                @endif
                 <li><a href="#">FAQ & Support</a></li>
                 <li><a href="#">Shipping & Returns</a></li>
                 <li><a href="#">Size Guides</a></li>

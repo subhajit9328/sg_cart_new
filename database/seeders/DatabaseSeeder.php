@@ -95,5 +95,9 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             SearchTermSeeder::class,
         ]);
+
+        if (class_exists(\SGCart\Blog\Database\Seeders\BlogDatabaseSeeder::class)) {
+            $this->call(\SGCart\Blog\Database\Seeders\BlogDatabaseSeeder::class);
+        }
     }
 }

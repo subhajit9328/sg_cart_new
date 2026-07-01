@@ -1,0 +1,28 @@
+{
+    "name": "sgcart/blog",
+    "description": "standalone plug-and-play blog package for SGCart",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "SGCart Team",
+            "email": "support@sgcart.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "SGCart\\Blog\\": "src/",
+            "SGCart\\Blog\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SGCart\\Blog\\Providers\\BlogServiceProvider"
+            ]
+        }
+    }
+}
