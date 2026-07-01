@@ -2,6 +2,19 @@
 
 @section('title', $isEmail ? 'Verify Email — sgcart' : 'Verify Phone — sgcart')
 
+@php
+    function obfuscate_email($email){
+         $em   = explode("@",$email);
+         $name = implode('@', array_slice($em, 0, count($em)-1));
+         $len  = floor(strlen($name)/2);
+
+         return substr($name,0, $len) . str_repeat('*', $len) . "@" . end($em);
+    }
+     function obfuscate_mobile($number){
+            return substr($number, 0, 5) . str_repeat('*', strlen($number) - 7) . substr($number, -2);
+    }
+@endphp
+
 @section('content')
 <div class="max-w-[480px] mx-auto px-6 pt-8 pb-12 md:pt-12 md:pb-20">
     <div class="bg-white border border-border rounded-2xl p-6 md:p-8 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
@@ -9,9 +22,10 @@
             {{ $isEmail ? 'Verify Email' : 'Verify Phone Number' }}
         </h2>
         <p class="text-xs text-slate-400 text-center mb-8">
-                We've sent a 6-digit verification code to your <strong class="text-slate-600">{{$isEmail ? 'Email' : 'Phone No'}}</strong>.
+                We've sent a 6-digit verification code to <strong class="text-slate-600">{{$isEmail ? obfuscate_email($email) : obfuscate_mobile($email)}}</strong>.
+            <a class="block mt-3 text-accent font-bold" href="{{route('store.register', ['wrong_email_or_phone' => true])}}">Wrong {{$isEmail ? 'Email' : 'Phone No.'}} ?</a>
         </p>
-        
+
         @if(!$isEmail && config('app.test_mode'))
         <div class="mb-6 p-4 bg-amber-50 dark:bg-amber-950/15 border border-amber-200/40 rounded-xl text-amber-800 dark:text-amber-300 text-xs flex gap-3 items-start leading-relaxed">
             <i class="fa-solid fa-circle-info text-base mt-0.5 text-amber-500"></i>

@@ -207,12 +207,19 @@ class AuthController extends Controller
     /**
      * Show storefront registration form.
      */
-    public function showStorefrontRegister()
+    public function showStorefrontRegister(Request $request)
     {
         if (Auth::guard('customer')->check()) {
             return redirect()->route('store.account');
         }
-
+        if($request->has("wrong_email_or_phone")){
+            $registrationData = session(AuthController::REGISTRATION_SESSION_KEY);
+            session()->flashInput([
+                'email_or_phone' => $registrationData['email'] ?? $registrationData['phone_no'] ?? '',
+                'name' => $registrationData['name'] ?? '',
+            ]);
+            session()->flash('success', 'Update your email or phone number.');
+        }
         return view('store.auth.register');
     }
 
