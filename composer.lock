@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c18f53c7d4b364ba1cca2eea0eef8d4e",
+    "content-hash": "1566f35f51bf73e5767150a3d3f6300d",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -4008,6 +4008,45 @@
                 }
             ],
             "description": "Dynamic coupon code plugin for SGCart",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "sgcart/dashboard-analytics",
+            "version": "dev-new_update_29_06",
+            "dist": {
+                "type": "path",
+                "url": "packages/sgcart/dashboard-analytics",
+                "reference": "a3e5d4e9526194d94e64b4def52559d340bcf948"
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "SGCart\\DashboardAnalytics\\Providers\\DashboardAnalyticsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SGCart\\DashboardAnalytics\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "SGCart Team",
+                    "email": "support@sgcart.com"
+                }
+            ],
+            "description": "Dashboard analytics package with roles permission and graph charts for SGCart",
             "transport-options": {
                 "symlink": true,
                 "relative": true
@@ -9589,6 +9628,7 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "sgcart/coupons": 20,
+        "sgcart/dashboard-analytics": 20,
         "sgcart/image-search": 20,
         "sgcart/inventory": 20,
         "sgcart/payment-razorpay": 20,
