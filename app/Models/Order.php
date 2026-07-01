@@ -41,10 +41,6 @@ class Order extends Model
         'discount',
         'total',
         'status',
-        'tracking_number',
-        'shipping_carrier',
-        'tracking_url',
-        'estimated_delivery_at',
     ];
 
     /**
@@ -126,6 +122,61 @@ class Order extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Get the tracking number.
+     */
+    public function getTrackingNumberAttribute()
+    {
+        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
+            return $this->tracking?->tracking_number;
+        }
+        return null;
+    }
+
+    /**
+     * Get the shipping carrier.
+     */
+    public function getShippingCarrierAttribute()
+    {
+        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
+            return $this->tracking?->shipping_carrier;
+        }
+        return null;
+    }
+
+    /**
+     * Get the shipping courier ID.
+     */
+    public function getShippingCourierIdAttribute()
+    {
+        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
+            return $this->tracking?->shipping_courier_id;
+        }
+        return null;
+    }
+
+    /**
+     * Get the tracking URL.
+     */
+    public function getTrackingUrlAttribute()
+    {
+        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
+            return $this->tracking?->tracking_url;
+        }
+        return null;
+    }
+
+    /**
+     * Get the estimated delivery date.
+     */
+    public function getEstimatedDeliveryAtAttribute()
+    {
+        if (class_exists(\SGCart\LogisticTracking\Models\OrderTracking::class)) {
+            return $this->tracking?->estimated_delivery_at;
+        }
+        return null;
     }
 
     /**

@@ -94,6 +94,7 @@ class DatabaseSeeder extends Seeder
             ManufacturerSeeder::class,
             ProductSeeder::class,
             SearchTermSeeder::class,
+            ShippingCourierSeeder::class,
         ]);
     }
 }

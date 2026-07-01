@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1566f35f51bf73e5767150a3d3f6300d",
+    "content-hash": "7d20cebe52dd75f7b3171d5ec12fc04c",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -62,16 +62,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.386.2",
+            "version": "3.387.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "accda84af79689415782908dfa2b4a0fe434e0a1"
+                "reference": "38422b3eaed583a6056cef6d40e5594cd90cc895"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/accda84af79689415782908dfa2b4a0fe434e0a1",
-                "reference": "accda84af79689415782908dfa2b4a0fe434e0a1",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/38422b3eaed583a6056cef6d40e5594cd90cc895",
+                "reference": "38422b3eaed583a6056cef6d40e5594cd90cc895",
                 "shasum": ""
             },
             "require": {
@@ -153,9 +153,9 @@
             "support": {
                 "forum": "https://github.com/aws/aws-sdk-php/discussions",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.386.2"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.387.0"
             },
-            "time": "2026-06-29T18:07:20+00:00"
+            "time": "2026-06-30T18:31:55+00:00"
         },
         {
             "name": "barryvdh/laravel-dompdf",
@@ -1516,16 +1516,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v13.17.0",
+            "version": "v13.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "0802b7a81f3252d78200b8037ac183a686a529f0"
+                "reference": "138e5806ed7e4e21591948b661119d3810f052cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/0802b7a81f3252d78200b8037ac183a686a529f0",
-                "reference": "0802b7a81f3252d78200b8037ac183a686a529f0",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/138e5806ed7e4e21591948b661119d3810f052cf",
+                "reference": "138e5806ed7e4e21591948b661119d3810f052cf",
                 "shasum": ""
             },
             "require": {
@@ -1736,7 +1736,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2026-06-23T19:42:45+00:00"
+            "time": "2026-06-30T12:54:13+00:00"
         },
         {
             "name": "laravel/prompts",
@@ -4122,6 +4122,42 @@
                 }
             ],
             "description": "Simple entry-level Inventory Management System for SGCart",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "sgcart/logistic-tracking",
+            "version": "dev-new_update_29_06",
+            "dist": {
+                "type": "path",
+                "url": "packages/sgcart/logistic-tracking",
+                "reference": "0cb74f4c4d68f6af3aa9808f8fbb7a627fddc194"
+            },
+            "require": {
+                "php": "^8.2|^8.3"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "SGCart\\LogisticTracking\\Providers\\LogisticTrackingServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SGCart\\LogisticTracking\\": "src/"
+                }
+            },
+            "authors": [
+                {
+                    "name": "SGCart Team",
+                    "email": "support@sgcart.com"
+                }
+            ],
+            "description": "Provides logistic tracking capability for orders",
             "transport-options": {
                 "symlink": true,
                 "relative": true
@@ -9631,6 +9667,7 @@
         "sgcart/dashboard-analytics": 20,
         "sgcart/image-search": 20,
         "sgcart/inventory": 20,
+        "sgcart/logistic-tracking": 20,
         "sgcart/payment-razorpay": 20,
         "sgcart/product-variants": 20,
         "sgcart/shipping": 20,

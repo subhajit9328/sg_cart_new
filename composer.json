@@ -14,6 +14,7 @@
         "sgcart/dashboard-analytics": "@dev",
         "sgcart/image-search": "@dev",
         "sgcart/inventory": "@dev",
+         "sgcart/logistic-tracking": "@dev",
         "sgcart/payment-razorpay": "@dev",
         "sgcart/product-variants": "@dev",
         "sgcart/shipping": "@dev",
@@ -40,6 +41,13 @@
         {
             "type": "path",
             "url": "packages/sgcart/inventory",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/logistic-tracking",
             "options": {
                 "symlink": true
             }
@@ -82,6 +90,12 @@
         {
             "type": "path",
             "url": "packages/sgcart/payment-authorizenet",
+            "options": {
+                "symlink": true
+            }
+        }, 
+        {
+            "type": "path",
             "url": "packages/sgcart/image-search",
             "options": {
                 "symlink": true

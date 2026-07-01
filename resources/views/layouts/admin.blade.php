@@ -119,6 +119,19 @@
             </a>
             @endcan
             @endcanany
+
+            @includeIf('coupons::admin-menu')
+            @includeIf('product-variants::admin-menu')
+            @includeIf('shipping::admin-menu')
+            @includeIf('logistic-tracking::admin-menu')
+            @includeIf('tax::admin-menu')
+            @can('manage payments')
+            <a href="{{ route('admin.payments.settings') }}" class="nav-link {{ Request::is('admin/payments*') ? 'active' : '' }}" data-tooltip="Payment Gateways">
+                <i class="fa-solid fa-credit-card"></i>
+                <span class="sidebar-text">Payment Gateways</span>
+            </a>
+            @endcan
+            @includeIf('image-search::admin-menu')
         </nav>
 
 
