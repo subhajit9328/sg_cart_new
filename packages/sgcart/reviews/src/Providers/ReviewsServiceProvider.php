@@ -10,7 +10,7 @@ class ReviewsServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Merge configuration if any
+        $this->mergeConfigFrom(__DIR__.'/../../config/reviews.php', 'reviews');
     }
 
     /**
@@ -22,6 +22,12 @@ class ReviewsServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../../routes/web.php');
         $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../../resources/views', 'reviews');
+
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../../config/reviews.php' => config_path('reviews.php'),
+            ], 'reviews-config');
+        }
 
         // Automate Installation (Migrations & Permissions) inside boot phase
         $this->autoInstall();

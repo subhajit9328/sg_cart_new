@@ -55,25 +55,30 @@
             </div>
 
             <!-- Photo Attachment -->
-            <div class="space-y-2">
-                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Add Photos (Max 5)</label>
-                <div class="flex flex-wrap items-center gap-3">
-                    <!-- Custom Upload Button -->
-                    <label for="review-photo-upload" class="flex flex-col items-center justify-center border border-dashed border-slate-200 dark:border-slate-700 hover:border-accent dark:hover:border-accent rounded-xl p-3 cursor-pointer transition-colors bg-slate-50/50 dark:bg-slate-850/50 hover:bg-slate-50 dark:hover:bg-slate-800 w-20 h-20 shrink-0">
-                        <i class="fa-solid fa-camera text-slate-400 dark:text-slate-650 text-base mb-1"></i>
-                        <span class="text-[8px] font-bold text-slate-500 dark:text-slate-450 text-center">Upload Images</span>
-                        <input id="review-photo-upload" type="file" name="images[]" accept="image/*" class="hidden" multiple onchange="previewReviewImages(this)">
-                    </label>
+            @php
+                $maxImages = config('reviews.max_no_image', 5);
+            @endphp
+            @if($maxImages > 0)
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Add Photos (Max {{ $maxImages }})</label>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <!-- Custom Upload Button -->
+                        <label for="review-photo-upload" class="flex flex-col items-center justify-center border border-dashed border-slate-200 dark:border-slate-700 hover:border-accent dark:hover:border-accent rounded-xl p-3 cursor-pointer transition-colors bg-slate-50/50 dark:bg-slate-850/50 hover:bg-slate-50 dark:hover:bg-slate-800 w-20 h-20 shrink-0">
+                            <i class="fa-solid fa-camera text-slate-400 dark:text-slate-655 text-base mb-1"></i>
+                            <span class="text-[8px] font-bold text-slate-500 dark:text-slate-450 text-center">Upload Images</span>
+                            <input id="review-photo-upload" type="file" name="images[]" accept="image/*" class="hidden" multiple onchange="previewReviewImages(this)">
+                        </label>
 
-                    <!-- Previews Container -->
-                    <div id="review-images-preview-container" class="flex flex-wrap gap-2">
-                        <!-- Previews will be dynamically populated here -->
+                        <!-- Previews Container -->
+                        <div id="review-images-preview-container" class="flex flex-wrap gap-2">
+                            <!-- Previews will be dynamically populated here -->
+                        </div>
                     </div>
+                    <p id="review-image-error" class="text-rose-500 text-[10px] font-bold hidden uppercase tracking-wide mt-1">
+                        <i class="fa-solid fa-triangle-exclamation mr-0.5"></i> Max {{ $maxImages }} images allowed. Discarded excess files.
+                    </p>
                 </div>
-                <p id="review-image-error" class="text-rose-500 text-[10px] font-bold hidden uppercase tracking-wide mt-1">
-                    <i class="fa-solid fa-triangle-exclamation mr-0.5"></i> Max 5 images allowed. Discarded excess files.
-                </p>
-            </div>
+            @endif
 
             <!-- Submit and Actions -->
             <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5">
@@ -229,7 +234,7 @@
 
         let newFiles = Array.from(input.files);
         let totalSoFar = existingImagesList.length + selectedNewFiles.length;
-        let limitRemaining = 5 - totalSoFar;
+        let limitRemaining = {{ $maxImages }} - totalSoFar;
         let exceeded = false;
 
         if (newFiles.length > limitRemaining) {
@@ -241,7 +246,7 @@
         selectedNewFiles = selectedNewFiles.concat(newFiles);
 
         if (exceeded) {
-            showImageError("Maximum 5 images allowed. Discarded excess files.");
+            showImageError("Maximum {{ $maxImages }} images allowed. Discarded excess files.");
         } else {
             hideImageError();
         }

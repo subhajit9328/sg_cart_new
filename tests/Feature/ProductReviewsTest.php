@@ -939,4 +939,160 @@ class ProductReviewsTest extends TestCase
         $response->assertSee('Negative comment 2');
         $response->assertDontSee('Positive comment');
     }
+
+    /**
+     * Test reviews auto-approval configuration.
+     */
+    public function test_reviews_auto_approval_config(): void
+    {
+        Storage::fake('public');
+        config(['reviews.admin_approval' => false]);
+
+        $customer = Customer::create([
+            'name' => 'Auto Approve User',
+            'email' => 'auto@example.com',
+            'password' => bcrypt('password'),
+        ]);
+        $customer->email_verified_at = now();
+        $customer->save();
+
+        $product = Product::create([
+            'name' => 'Auto Product',
+            'sku' => 'SKU-AUTO-1',
+            'price' => 100.00,
+            'stock' => 10,
+        ]);
+
+        $order = Order::create([
+            'ulid' => (string) Str::ulid(),
+            'order_number' => 'ORD-AUTO-1',
+            'customer_id' => $customer->id,
+            'first_name' => 'Auto',
+            'last_name' => 'User',
+            'email' => 'auto@example.com',
+            'phone' => '1234567890',
+            'address' => '123 Test St',
+            'city' => 'Test City',
+            'state' => 'Test State',
+            'zip' => '12345',
+            'country' => 'India',
+            'subtotal' => 100.00,
+            'tax' => 0,
+            'shipping_charge' => 0,
+            'total' => 100.00,
+            'status' => 'Delivered',
+        ]);
+
+        OrderItem::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'price' => $product->price,
+            'quantity' => 1,
+        ]);
+
+        $this->actingAs($customer, 'customer');
+
+        $response = $this->post(route('store.reviews.store'), [
+            'product_id' => $product->id,
+            'rating' => 5,
+            'comment' => 'Approved immediately!',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertSessionHas('success', 'Your review has been submitted successfully.');
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('reviews', [
+            'customer_id' => $customer->id,
+            'product_id' => $product->id,
+            'rating' => 5,
+            'comment' => 'Approved immediately!',
+            'status_id' => 2, // Approved
+        ]);
+
+        $review = Review::first();
+        $this->assertNotNull($review->approved_at);
+    }
+
+    /**
+     * Test reviews max images configuration and validation.
+     */
+    public function test_reviews_max_images_validation_config(): void
+    {
+        Storage::fake('public');
+        config(['reviews.max_no_image' => 2]);
+
+        $customer = Customer::create([
+            'name' => 'Max Image User',
+            'email' => 'max_img@example.com',
+            'password' => bcrypt('password'),
+        ]);
+        $customer->email_verified_at = now();
+        $customer->save();
+
+        $product = Product::create([
+            'name' => 'Max Image Product',
+            'sku' => 'SKU-MAX-1',
+            'price' => 100.00,
+            'stock' => 10,
+        ]);
+
+        $order = Order::create([
+            'ulid' => (string) Str::ulid(),
+            'order_number' => 'ORD-MAX-1',
+            'customer_id' => $customer->id,
+            'first_name' => 'Max',
+            'last_name' => 'User',
+            'email' => 'max_img@example.com',
+            'phone' => '1234567890',
+            'address' => '123 Test St',
+            'city' => 'Test City',
+            'state' => 'Test State',
+            'zip' => '12345',
+            'country' => 'India',
+            'subtotal' => 100.00,
+            'tax' => 0,
+            'shipping_charge' => 0,
+            'total' => 100.00,
+            'status' => 'Delivered',
+        ]);
+
+        OrderItem::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'price' => $product->price,
+            'quantity' => 1,
+        ]);
+
+        $this->actingAs($customer, 'customer');
+
+        // 1. Post 3 images when max_no_image is 2 -> should fail validation
+        $response = $this->post(route('store.reviews.store'), [
+            'product_id' => $product->id,
+            'rating' => 4,
+            'comment' => 'Three images',
+            'images' => [
+                UploadedFile::fake()->image('img1.jpg'),
+                UploadedFile::fake()->image('img2.jpg'),
+                UploadedFile::fake()->image('img3.jpg'),
+            ]
+        ]);
+
+        $response->assertSessionHasErrors(['images']);
+
+        // 2. Post 2 images when max_no_image is 2 -> should pass validation
+        $response = $this->post(route('store.reviews.store'), [
+            'product_id' => $product->id,
+            'rating' => 4,
+            'comment' => 'Two images',
+            'images' => [
+                UploadedFile::fake()->image('img1.jpg'),
+                UploadedFile::fake()->image('img2.jpg'),
+            ]
+        ]);
+
+        $response->assertSessionHasNoErrors();
+    }
 }

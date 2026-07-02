@@ -25,15 +25,24 @@ class ReviewController extends Controller
 
         $isEdit = !is_null($review);
 
+        $isAdminApprovalRequired = config('reviews.admin_approval', true);
+        $defaultStatusName = $isAdminApprovalRequired 
+            ? \SGCart\Reviews\Enums\ReviewStatus::PENDING->value 
+            : \SGCart\Reviews\Enums\ReviewStatus::APPROVED->value;
+        $statusId = \SGCart\Reviews\Models\ReviewStatus::where('name', $defaultStatusName)->value('id') ?? ($isAdminApprovalRequired ? 1 : 2);
+        $approvedAt = !$isAdminApprovalRequired ? now() : null;
+
         if ($isEdit) {
             // Update existing review text details
             $review->update([
                 'rating' => $request->rating,
                 'comment' => $request->comment,
-                'status_id' => 1, // Pending
-                'approved_at' => null, // Reset approval timestamp
+                'status_id' => $statusId,
+                'approved_at' => $approvedAt,
             ]);
-            $message = 'Your review has been updated and is pending admin approval.';
+            $message = $isAdminApprovalRequired 
+                ? 'Your review has been updated and is pending admin approval.' 
+                : 'Your review has been updated successfully.';
         } else {
             // Create new review record
             $review = Review::create([
@@ -41,10 +50,12 @@ class ReviewController extends Controller
                 'product_id' => $productId,
                 'rating' => $request->rating,
                 'comment' => $request->comment,
-                'status_id' => 1, // Pending
-                'approved_at' => null,
+                'status_id' => $statusId,
+                'approved_at' => $approvedAt,
             ]);
-            $message = 'Your review has been submitted and is pending admin approval.';
+            $message = $isAdminApprovalRequired 
+                ? 'Your review has been submitted and is pending admin approval.' 
+                : 'Your review has been submitted successfully.';
         }
 
         // 2. Handle existing images reconciliation if editing
@@ -64,10 +75,11 @@ class ReviewController extends Controller
             }
         }
 
-        // 3. Save new images if provided (up to a max of 5 total images)
+        // 3. Save new images if provided (up to configured max of total images)
         if ($request->hasFile('images')) {
+            $maxImages = config('reviews.max_no_image', 5);
             $currentImagesCount = $isEdit ? $review->images()->count() : 0;
-            $allowedNewCount = max(0, 5 - $currentImagesCount);
+            $allowedNewCount = max(0, $maxImages - $currentImagesCount);
 
             $files = array_slice($request->file('images'), 0, $allowedNewCount);
 
