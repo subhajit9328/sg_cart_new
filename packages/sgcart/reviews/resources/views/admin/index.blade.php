@@ -101,6 +101,13 @@
                     <option value="{{ $st->id }}" {{ request('status_id') == $st->id ? 'selected' : '' }}>{{ $st->name }}</option>
                 @endforeach
             </select>
+
+            <!-- Select All Button -->
+            @if($reviews->isNotEmpty())
+                <button type="button" id="select-all-btn" onclick="toggleBulkSelect()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg text-xs font-semibold cursor-pointer border-none transition-colors">
+                    Select All
+                </button>
+            @endif
             
             @if(request()->anyFilled(['search', 'status_id']))
                 <a href="{{ route('admin.reviews.index') }}" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 dark:bg-rose-950/20 dark:border-rose-900/30 dark:text-rose-400 text-xs font-semibold transition-colors text-center no-underline flex items-center justify-center">
@@ -110,12 +117,41 @@
         </form>
     </div>
 
-    <!-- Table -->
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-slate-50/50 dark:bg-slate-900/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
-                    <th class="py-3 px-5">Customer</th>
+    <!-- Bulk Actions Form -->
+    <form id="bulk-action-form" action="{{ route('admin.reviews.bulkAction') }}" method="POST">
+        @csrf
+        <input type="hidden" name="action" id="bulk-action-input" value="">
+        
+        <!-- Bulk Actions Bar -->
+        <div id="bulk-actions-bar" class="px-5 py-3 border-b border-slate-200 dark:border-slate-800 bg-blue-50/40 dark:bg-blue-955/10 flex flex-wrap items-center justify-between gap-4 hidden" style="display: none;">
+            <div class="flex items-center gap-2 text-xs font-semibold text-slate-650 dark:text-slate-350">
+                <span id="checked-count">0</span> items selected
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="submitBulkAction('approve')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer border-none flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-check"></i> Approve Selected
+                </button>
+                <button type="button" onclick="submitBulkAction('reject')" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer border-none flex items-center gap-1.5">
+                    <i class="fa-solid fa-ban"></i> Reject Selected
+                </button>
+                <button type="button" onclick="submitBulkAction('delete')" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer border-none flex items-center gap-1.5">
+                    <i class="fa-solid fa-trash-can"></i> Delete Selected
+                </button>
+                <button type="button" onclick="cancelBulkSelect()" class="px-3 py-1.5 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-750 dark:text-slate-300 rounded-lg text-xs font-bold transition-colors cursor-pointer bg-transparent">
+                    Cancel
+                </button>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 dark:bg-slate-900/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
+                        <th class="py-3 px-5 bulk-checkbox-col hidden w-10" style="display: none;">
+                            <input type="checkbox" id="bulk-toggle-all" onclick="toggleAllCheckboxes(this)" class="rounded border-slate-200 dark:border-slate-800 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer">
+                        </th>
+                        <th class="py-3 px-5">Customer</th>
                     <th class="py-3 px-5">Product</th>
                     <th class="py-3 px-5">Rating</th>
                     <th class="py-3 px-5">Comment & Image</th>
@@ -127,6 +163,10 @@
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
                 @forelse($reviews as $rv)
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors">
+                        <!-- Bulk Selection Checkbox -->
+                        <td class="py-4 px-5 bulk-checkbox-col hidden" style="display: none;">
+                            <input type="checkbox" name="bulk_ids[]" value="{{ $rv->id }}" class="bulk-row-checkbox rounded border-slate-200 dark:border-slate-800 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer" onchange="updateCheckedCount()">
+                        </td>
                         <!-- Customer -->
                         <td class="py-4 px-5">
                             <div class="font-bold text-slate-850 dark:text-white">{{ $rv->customer->name ?? 'Unknown Customer' }}</div>
@@ -221,7 +261,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="py-8 text-center text-slate-400 dark:text-slate-500">
+                        <td colspan="8" class="py-8 text-center text-slate-400 dark:text-slate-500">
                             <i class="fa-solid fa-comments text-2xl mb-2 block opacity-40"></i>
                             No reviews found.
                         </td>
@@ -230,6 +270,7 @@
             </tbody>
         </table>
     </div>
+    </form>
 
     <!-- Pagination -->
     @if($reviews->hasPages())
@@ -290,6 +331,114 @@
             });
         });
     }, true);
+
+    function toggleBulkSelect() {
+        const checkboxCols = document.querySelectorAll('.bulk-checkbox-col');
+        const bulkBar = document.getElementById('bulk-actions-bar');
+        const masterToggle = document.getElementById('bulk-toggle-all');
+        const rowCheckboxes = document.querySelectorAll('.bulk-row-checkbox');
+        
+        // Show checkbox columns
+        checkboxCols.forEach(col => {
+            col.classList.remove('hidden');
+            col.style.display = 'table-cell';
+        });
+
+        // Show bulk actions bar
+        if (bulkBar) {
+            bulkBar.classList.remove('hidden');
+            bulkBar.style.display = 'flex';
+        }
+
+        // Check everything
+        if (masterToggle) {
+            masterToggle.checked = true;
+        }
+        rowCheckboxes.forEach(cb => {
+            cb.checked = true;
+        });
+
+        updateCheckedCount();
+    }
+
+    function cancelBulkSelect() {
+        const checkboxCols = document.querySelectorAll('.bulk-checkbox-col');
+        const bulkBar = document.getElementById('bulk-actions-bar');
+        const masterToggle = document.getElementById('bulk-toggle-all');
+        const rowCheckboxes = document.querySelectorAll('.bulk-row-checkbox');
+
+        // Hide checkbox columns
+        checkboxCols.forEach(col => {
+            col.classList.add('hidden');
+            col.style.display = 'none';
+        });
+
+        // Hide bulk actions bar
+        if (bulkBar) {
+            bulkBar.classList.add('hidden');
+            bulkBar.style.display = 'none';
+        }
+
+        // Uncheck everything
+        if (masterToggle) {
+            masterToggle.checked = false;
+        }
+        rowCheckboxes.forEach(cb => {
+            cb.checked = false;
+        });
+
+        updateCheckedCount();
+    }
+
+    function toggleAllCheckboxes(master) {
+        const rowCheckboxes = document.querySelectorAll('.bulk-row-checkbox');
+        rowCheckboxes.forEach(cb => {
+            cb.checked = master.checked;
+        });
+        updateCheckedCount();
+    }
+
+    function updateCheckedCount() {
+        const rowCheckboxes = document.querySelectorAll('.bulk-row-checkbox');
+        const checkedCount = Array.from(rowCheckboxes).filter(cb => cb.checked).length;
+        const countSpan = document.getElementById('checked-count');
+        if (countSpan) {
+            countSpan.textContent = checkedCount;
+        }
+
+        const masterToggle = document.getElementById('bulk-toggle-all');
+        if (masterToggle) {
+            masterToggle.checked = rowCheckboxes.length > 0 && checkedCount === rowCheckboxes.length;
+        }
+    }
+
+    function submitBulkAction(actionType) {
+        const rowCheckboxes = document.querySelectorAll('.bulk-row-checkbox');
+        const checkedCount = Array.from(rowCheckboxes).filter(cb => cb.checked).length;
+
+        if (checkedCount === 0) {
+            alert('Please select at least one review to perform this action.');
+            return;
+        }
+
+        let confirmMsg = '';
+        if (actionType === 'approve') {
+            confirmMsg = `Are you sure you want to approve the ${checkedCount} selected reviews?`;
+        } else if (actionType === 'reject') {
+            confirmMsg = `Are you sure you want to reject the ${checkedCount} selected reviews?`;
+        } else if (actionType === 'delete') {
+            confirmMsg = `Are you sure you want to delete the ${checkedCount} selected reviews? This action cannot be undone.`;
+        }
+
+        showConfirm(confirmMsg, () => {
+            const form = document.getElementById('bulk-action-form');
+            const actionInput = document.getElementById('bulk-action-input');
+            if (form && actionInput) {
+                actionInput.value = actionType;
+                form.submit();
+            }
+        }, `${actionType.charAt(0).toUpperCase() + actionType.slice(1)} Reviews?`);
+    }
 </script>
 
 @endsection

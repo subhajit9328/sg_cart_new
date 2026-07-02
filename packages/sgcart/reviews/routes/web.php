@@ -13,6 +13,7 @@ Route::middleware(['web'])->group(function () {
 
     // Admin protected routes for review moderation
     Route::middleware(['auth', 'permission:manage reviews'])->prefix('admin')->name('admin.')->group(function () {
+        Route::post('/reviews/bulk-action', [AdminReviewController::class, 'bulkAction'])->name('reviews.bulkAction');
         Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
         Route::post('/reviews/{review}/approve', [AdminReviewController::class, 'approve'])->name('reviews.approve');
         Route::post('/reviews/{review}/reject', [AdminReviewController::class, 'reject'])->name('reviews.reject');
