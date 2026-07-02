@@ -72,5 +72,20 @@ class SearchTermSeeder extends Seeder
                 }
             }
         }
+
+        // Auto-generate search tags for all other existing products that don't have any
+        $allProducts = Product::all();
+        foreach ($allProducts as $product) {
+            if (method_exists($product, 'searchTerms') && $product->searchTerms()->count() === 0) {
+                if (class_exists(\App\Services\SearchTagGenerator::class)) {
+                    $tags = \App\Services\SearchTagGenerator::generate($product);
+                    foreach ($tags as $tag) {
+                        $product->searchTerms()->updateOrCreate([
+                            'term' => strtolower(trim($tag)),
+                        ]);
+                    }
+                }
+            }
+        }
     }
 }

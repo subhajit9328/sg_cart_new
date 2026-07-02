@@ -417,137 +417,205 @@
 <!-- LAYOUT -->
 <div class="pv-layout">
     <div class="pv-col">
-        <!-- Gallery Card -->
-        <div class="pv-card">
-            <div class="pv-card-header">
-                <div class="pv-card-hicon"><i class="fa-solid fa-images"></i></div>
-                <span class="pv-card-htitle">Product Gallery</span>
-                <span class="pv-pill slate" style="margin-left:auto;">{{ $product->images->count() }} Photo{{ $product->images->count() !== 1 ? 's' : '' }}</span>
-            </div>
-            <div style="padding:16px;">
-                @if($product->images->count())
-                    <div style="display:flex;gap:14px;align-items:flex-start;">
-                        <div class="pv-gmain">
-                            <img id="pvMainImg" src="{{ Storage::url($defaultImage->image_path) }}" alt="{{ $product->name }}">
-                        </div>
-                        <div class="pv-gthumbs">
-                            @foreach($product->images as $img)
-                            <button type="button" onclick="pvSwitch('{{ Storage::url($img->image_path) }}', this)" class="pv-gthumb {{ $img->is_default ? 'active' : '' }}">
-                                <img src="{{ Storage::url($img->image_path) }}" alt="thumb">
-                            </button>
-                            @endforeach
-                        </div>
-                    </div>
-                @else
-                    <div class="pv-empty">
-                        <div class="pv-eicon"><i class="fa-solid fa-image-slash"></i></div>
-                        <p style="font-size:14px;font-weight:600;margin:0 0 4px;">No images uploaded</p>
-                        <p style="font-size:12px;margin:0;">Upload photos from the edit page</p>
-                    </div>
-                @endif
+        <!-- Tab Navigation (Underline Style) -->
+        <div class="flex items-center border-b border-slate-200 dark:border-slate-800 mb-2 overflow-x-auto scrollbar-none">
+            <div class="flex gap-1 -mb-px min-w-max">
+                <button type="button" onclick="switchShowTab('details')" id="showTabBtn_details" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 outline-none select-none bg-transparent cursor-pointer flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-xs"></i>
+                    <span>Product Information</span>
+                </button>
+                <button type="button" onclick="switchShowTab('search-tags')" id="showTabBtn_search-tags" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 outline-none select-none bg-transparent cursor-pointer flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    <span>Search Tags</span>
+                </button>
             </div>
         </div>
-        <!-- Description Card -->
-        <div class="pv-card">
-            <div class="pv-card-header">
-                <div class="pv-card-hicon"><i class="fa-solid fa-align-left"></i></div>
-                <span class="pv-card-htitle">Product Description</span>
-            </div>
-            <div style="padding:20px;display:flex;flex-direction:column;gap:20px;">
-                <div>
-                    <div class="pv-slabel2">Short Description</div>
-                    <p style="font-size:13.5px;color:#475569;line-height:1.75;margin:0;">{!! nl2br(e($product->short_description ?: '— No short description provided.')) !!}</p>
+
+        <!-- Details Tab Content -->
+        <div id="showTabContent_details" class="flex flex-col gap-5">
+            <!-- Gallery Card -->
+            <div class="pv-card">
+                <div class="pv-card-header">
+                    <div class="pv-card-hicon"><i class="fa-solid fa-images"></i></div>
+                    <span class="pv-card-htitle">Product Gallery</span>
+                    <span class="pv-pill slate" style="margin-left:auto;">{{ $product->images->count() }} Photo{{ $product->images->count() !== 1 ? 's' : '' }}</span>
                 </div>
-                <div>
-                    <div class="pv-slabel2">Full Description</div>
-                    <div style="font-size:13.5px;color:#475569;line-height:1.75;">{!! nl2br(e($product->description ?: '— No full description provided.')) !!}</div>
+                <div style="padding:16px;">
+                    @if($product->images->count())
+                        <div style="display:flex;gap:14px;align-items:flex-start;">
+                            <div class="pv-gmain">
+                                <img id="pvMainImg" src="{{ Storage::url($defaultImage->image_path) }}" alt="{{ $product->name }}">
+                            </div>
+                            <div class="pv-gthumbs">
+                                @foreach($product->images as $img)
+                                <button type="button" onclick="pvSwitch('{{ Storage::url($img->image_path) }}', this)" class="pv-gthumb {{ $img->is_default ? 'active' : '' }}">
+                                    <img src="{{ Storage::url($img->image_path) }}" alt="thumb">
+                                </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    @else
+                        <div class="pv-empty">
+                            <div class="pv-eicon"><i class="fa-solid fa-image-slash"></i></div>
+                            <p style="font-size:14px;font-weight:600;margin:0 0 4px;">No images uploaded</p>
+                            <p style="font-size:12px;margin:0;">Upload photos from the edit page</p>
+                        </div>
+                    @endif
                 </div>
             </div>
-        </div>
-        @if(Route::has('admin.products.variants.grid'))
-        <!-- Variants Card -->
-        <div class="pv-card">
-            <div class="pv-card-header">
-                <div class="pv-card-hicon"><i class="fa-solid fa-swatchbook"></i></div>
-                <span class="pv-card-htitle">Product Variants</span>
-                <span class="pv-pill indigo" style="margin-left:auto;">{{ $totalVariants }} Total</span>
+            <!-- Description Card -->
+            <div class="pv-card">
+                <div class="pv-card-header">
+                    <div class="pv-card-hicon"><i class="fa-solid fa-align-left"></i></div>
+                    <span class="pv-card-htitle">Product Description</span>
+                </div>
+                <div style="padding:20px;display:flex;flex-direction:column;gap:20px;">
+                    <div>
+                        <div class="pv-slabel2">Short Description</div>
+                        <p style="font-size:13.5px;color:#475569;line-height:1.75;margin:0;">{!! nl2br(e($product->short_description ?: '— No short description provided.')) !!}</p>
+                    </div>
+                    <div>
+                        <div class="pv-slabel2">Full Description</div>
+                        <div style="font-size:13.5px;color:#475569;line-height:1.75;">{!! nl2br(e($product->description ?: '— No full description provided.')) !!}</div>
+                    </div>
+                </div>
             </div>
-            @if($product->variants->count())
-            <div style="overflow-x:auto;">
-                <table class="pv-vt">
-                    <thead>
-                        <tr>
-                            <th>Color</th><th>Size</th><th>SKU Override</th>
-                            <th>Price</th>
-                            <th>Sale Price</th>
-                            <th style="text-align:center;">Stock</th>
-                            <th style="text-align:center;">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    @foreach($product->variants as $variant)
-                    <tr style="{{ !$variant->is_active ? 'opacity:.45;' : '' }}">
-                        <td>
-                            <div style="display:flex;align-items:center;gap:7px;">
-                                @if($variant->color)
-                                    @if($variant->color->hex_code ?? false)
-                                        <span class="pv-cswatch" style="background:{{ $variant->color->hex_code }};"></span>
+            @if(Route::has('admin.products.variants.grid'))
+            <!-- Variants Card -->
+            <div class="pv-card">
+                <div class="pv-card-header">
+                    <div class="pv-card-hicon"><i class="fa-solid fa-swatchbook"></i></div>
+                    <span class="pv-card-htitle">Product Variants</span>
+                    <span class="pv-pill indigo" style="margin-left:auto;">{{ $totalVariants }} Total</span>
+                </div>
+                @if($product->variants->count())
+                <div style="overflow-x:auto;">
+                    <table class="pv-vt">
+                        <thead>
+                            <tr>
+                                <th>Color</th><th>Size</th><th>SKU Override</th>
+                                <th>Price</th>
+                                <th>Sale Price</th>
+                                <th style="text-align:center;">Stock</th>
+                                <th style="text-align:center;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($product->variants as $variant)
+                        <tr style="{{ !$variant->is_active ? 'opacity:.45;' : '' }}">
+                            <td>
+                                <div style="display:flex;align-items:center;gap:7px;">
+                                    @if($variant->color)
+                                        @if($variant->color->hex_code ?? false)
+                                            <span class="pv-cswatch" style="background:{{ $variant->color->hex_code }};"></span>
+                                        @endif
+                                        <span style="font-weight:600;color:#1e293b;">{{ $variant->color->name }}</span>
+                                    @else
+                                        <span style="color:#94a3b8;">—</span>
                                     @endif
-                                    <span style="font-weight:600;color:#1e293b;">{{ $variant->color->name }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                @if($variant->size)
+                                    <div style="display:flex;align-items:center;gap:6px;">
+                                        <span style="font-weight:600;color:#1e293b;">{{ $variant->size->name }}</span>
+                                        @if($variant->size->code)
+                                            <span class="pv-pill slate" style="font-size:10px;">{{ $variant->size->code }}</span>
+                                        @endif
+                                    </div>
                                 @else
                                     <span style="color:#94a3b8;">—</span>
                                 @endif
-                            </div>
-                        </td>
-                        <td>
-                            @if($variant->size)
-                                <div style="display:flex;align-items:center;gap:6px;">
-                                    <span style="font-weight:600;color:#1e293b;">{{ $variant->size->name }}</span>
-                                    @if($variant->size->code)
-                                        <span class="pv-pill slate" style="font-size:10px;">{{ $variant->size->code }}</span>
-                                    @endif
-                                </div>
-                            @else
-                                <span style="color:#94a3b8;">—</span>
-                            @endif
-                        </td>
-                        <td style="font-family:monospace;font-size:12px;color:#64748b;">{{ $variant->sku ?: '—' }}</td>
-                        <td>
-                            @if($variant->price)
-                                <span style="font-weight:700;font-size:13px;color:#1e293b;">&#x20B9;{{ number_format($variant->price, 2) }}</span>
-                            @else
-                                <span style="font-size:12px;color:#94a3b8;font-style:italic;">Inherit <span style="font-style:normal;font-weight:600;color:#64748b;">&#x20B9;{{ number_format($product->price, 2) }}</span></span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($variant->sale_price)
-                                <span style="font-weight:700;font-size:13px;color:#1e293b;">&#x20B9;{{ number_format($variant->sale_price, 2) }}</span>
-                            @elseif($product->sale_price)
-                                <span style="font-size:12px;color:#94a3b8;font-style:italic;">Inherit <span style="font-style:normal;font-weight:600;color:#64748b;">&#x20B9;{{ number_format($product->sale_price, 2) }}</span></span>
-                            @else
-                                <span style="color:#94a3b8;font-size:12px;font-style:italic;">—</span>
-                            @endif
-                        </td>
-                        <td style="text-align:center;">
-                            <span class="pv-pill {{ $variant->stock > 0 ? 'emerald' : 'rose' }}">{{ $variant->stock }} qty</span>
-                        </td>
-                        <td style="text-align:center;">
-                            <span class="pv-pill {{ $variant->is_active ? 'emerald' : 'slate' }}">{{ $variant->is_active ? 'Active' : 'Off' }}</span>
-                        </td>
-                    </tr>
-                    @endforeach
-                    </tbody>
-                </table>
-            </div>
-            @else
-            <div class="pv-empty">
-                <div class="pv-eicon"><i class="fa-solid fa-tags"></i></div>
-                <p style="font-size:14px;font-weight:600;margin:0 0 4px;">No variants configured</p>
-                <p style="font-size:12px;margin:0;">Add color &amp; size combos from the edit page</p>
+                            </td>
+                            <td style="font-family:monospace;font-size:12px;color:#64748b;">{{ $variant->sku ?: '—' }}</td>
+                            <td>
+                                @if($variant->price)
+                                    <span style="font-weight:700;font-size:13px;color:#1e293b;">&#x20B9;{{ number_format($variant->price, 2) }}</span>
+                                @else
+                                    <span style="font-size:12px;color:#94a3b8;font-style:italic;">Inherit <span style="font-style:normal;font-weight:600;color:#64748b;">&#x20B9;{{ number_format($product->price, 2) }}</span></span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($variant->sale_price)
+                                    <span style="font-weight:700;font-size:13px;color:#1e293b;">&#x20B9;{{ number_format($variant->sale_price, 2) }}</span>
+                                @elseif($product->sale_price)
+                                    <span style="font-size:12px;color:#94a3b8;font-style:italic;">Inherit <span style="font-style:normal;font-weight:600;color:#64748b;">&#x20B9;{{ number_format($product->sale_price, 2) }}</span></span>
+                                @else
+                                    <span style="color:#94a3b8;font-size:12px;font-style:italic;">—</span>
+                                @endif
+                            </td>
+                            <td style="text-align:center;">
+                                <span class="pv-pill {{ $variant->stock > 0 ? 'emerald' : 'rose' }}">{{ $variant->stock }} qty</span>
+                            </td>
+                            <td style="text-align:center;">
+                                <span class="pv-pill {{ $variant->is_active ? 'emerald' : 'slate' }}">{{ $variant->is_active ? 'Active' : 'Off' }}</span>
+                            </td>
+                        </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <div class="pv-empty">
+                    <div class="pv-eicon"><i class="fa-solid fa-tags"></i></div>
+                    <p style="font-size:14px;font-weight:600;margin:0 0 4px;">No variants configured</p>
+                    <p style="font-size:12px;margin:0;">Add color &amp; size combos from the edit page</p>
+                </div>
+                @endif
             </div>
             @endif
         </div>
-        @endif
+
+        <!-- Search Tags Tab Content -->
+        <div id="showTabContent_search-tags" style="display: none;">
+            <div class="pv-card">
+                <div class="pv-card-header">
+                    <div class="pv-card-hicon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                    <span class="pv-card-htitle">Search Tags Management</span>
+                </div>
+                <div style="padding:20px;display:flex;flex-direction:column;gap:20px;">
+                    <div>
+                        <p style="font-size:13.5px;color:#64748b;line-height:1.6;margin:0 0 4px;" class="dark:text-slate-400">
+                            Search tags are used to match this product on the storefront. The search order checks: 
+                            <strong style="color:#1e293b;" class="dark:text-slate-200">Product Name &rarr; SKU &rarr; Category &rarr; Search Tags</strong>.
+                        </p>
+                    </div>
+
+                    <div style="border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;padding:16px;" class="dark:bg-slate-900/30 dark:border-slate-800">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+                            <div>
+                                <h4 style="font-size:14px;font-weight:700;margin:0 0 4px;" class="text-slate-800 dark:text-slate-200">Auto-Generate Tags</h4>
+                                <p style="font-size:12px;color:#64748b;margin:0;">Automatically extract keywords from name, description, and categories.</p>
+                            </div>
+                            <button type="button" id="generateTagsBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-sm transition-all shadow-sm shadow-blue-500/20 cursor-pointer border-none">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Search Tags
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 style="font-size:14px;font-weight:700;margin:0 0 -8px;" class="text-slate-800 dark:text-slate-200">Add Tag Manually</h4>
+                        <form id="addTagForm" style="display:flex;gap:10px;margin-top:16px;">
+                            <input type="text" id="newTagInput" placeholder="e.g. navy blue shirt" required 
+                                style="flex:1;min-width:0;height:40px;border-radius:8px;border:1px solid #cbd5e1;padding:0 12px;font-size:13.5px;" 
+                                class="dark:bg-slate-850 dark:border-slate-700 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"/>
+                            <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-slate-750 dark:hover:bg-slate-700 text-white rounded-lg font-bold text-sm transition-all cursor-pointer border-none">
+                                <i class="fa-solid fa-plus mr-1"></i> Add Tag
+                            </button>
+                        </form>
+                    </div>
+
+                    <div>
+                        <h4 style="font-size:14px;font-weight:700;margin:0 0 12px;" class="text-slate-800 dark:text-slate-200">Active Search Tags</h4>
+                        <div id="tagsListContainer" style="min-height: 100px;">
+                            <div style="display:flex;justify-content:center;padding:30px;">
+                                <i class="fa-solid fa-circle-notch fa-spin text-slate-400" style="font-size:24px;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <!-- SIDEBAR -->
     <div class="pv-side">
@@ -668,6 +736,173 @@ function pvSwitch(src, btn) {
     setTimeout(function() { img.src = src; img.classList.remove('fading'); }, 180);
     document.querySelectorAll('.pv-gthumb').forEach(function(t) { t.classList.remove('active'); });
     btn.classList.add('active');
+}
+
+function switchShowTab(tab) {
+    document.getElementById('showTabContent_details').style.display = tab === 'details' ? 'flex' : 'none';
+    document.getElementById('showTabContent_search-tags').style.display = tab === 'search-tags' ? 'block' : 'none';
+
+    const activeClass = ['border-blue-600', 'text-blue-600', 'dark:border-blue-500', 'dark:text-blue-400'];
+    const inactiveClass = ['border-transparent', 'text-slate-500', 'dark:text-slate-400', 'hover:text-slate-700', 'dark:hover:text-slate-300'];
+
+    const btnDetails = document.getElementById('showTabBtn_details');
+    const btnTags = document.getElementById('showTabBtn_search-tags');
+
+    if (tab === 'details') {
+        btnDetails.classList.add(...activeClass);
+        btnDetails.classList.remove(...inactiveClass);
+        btnTags.classList.remove(...activeClass);
+        btnTags.classList.add(...inactiveClass);
+    } else {
+        btnTags.classList.add(...activeClass);
+        btnTags.classList.remove(...inactiveClass);
+        btnDetails.classList.remove(...activeClass);
+        btnDetails.classList.add(...inactiveClass);
+        loadTags();
+    }
+}
+
+$(document).ready(function() {
+    // Add tag manually
+    $('#addTagForm').on('submit', function(e) {
+        e.preventDefault();
+        const term = $('#newTagInput').val().trim();
+        if (!term) return;
+
+        $.ajax({
+            url: "{{ route('admin.products.search-tags.add', $product->ulid) }}",
+            type: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                term: term
+            },
+            success: function(response) {
+                if (response.success) {
+                    showToast(response.message, 'success');
+                    $('#newTagInput').val('');
+                    loadTags();
+                }
+            },
+            error: function(xhr) {
+                const errors = xhr.responseJSON ? xhr.responseJSON.errors : null;
+                const msg = errors && errors.term ? errors.term[0] : 'Failed to add search tag.';
+                showToast(msg, 'error');
+            }
+        });
+    });
+
+    // Delete tag
+    $(document).on('click', '.delete-tag-btn', function() {
+        const tagId = $(this).data('id');
+        const pill = $(this).closest('.tag-pill');
+
+        $.ajax({
+            url: `/admin/products/{{ $product->ulid }}/search-tags/${tagId}`,
+            type: "DELETE",
+            data: {
+                _token: "{{ csrf_token() }}"
+            },
+            success: function(response) {
+                if (response.success) {
+                    showToast(response.message, 'success');
+                    pill.remove();
+                    if ($('.tag-pill').length === 0) {
+                        showEmptyState();
+                    }
+                }
+            },
+            error: function() {
+                showToast('Failed to delete search tag.', 'error');
+            }
+        });
+    });
+
+    // Generate tags
+    $('#generateTagsBtn').on('click', function() {
+        const btn = $(this);
+        btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i> Generating...');
+
+        $.ajax({
+            url: "{{ route('admin.products.search-tags.generate', $product->ulid) }}",
+            type: "POST",
+            data: {
+                _token: "{{ csrf_token() }}"
+            },
+            success: function(response) {
+                if (response.success) {
+                    showToast(response.message, 'success');
+                    loadTags();
+                }
+            },
+            error: function() {
+                showToast('Failed to generate search tags.', 'error');
+            },
+            complete: function() {
+                btn.prop('disabled', false).html('<i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generate Search Tags');
+            }
+        });
+    });
+});
+
+function loadTags() {
+    $('#tagsListContainer').html(`
+        <div style="display:flex;justify-content:center;padding:30px;">
+            <i class="fa-solid fa-circle-notch fa-spin text-slate-400" style="font-size:24px;"></i>
+        </div>
+    `);
+
+    $.ajax({
+        url: "{{ route('admin.products.search-tags.json', $product->ulid) }}",
+        type: "GET",
+        success: function(response) {
+            if (response.tags && response.tags.length > 0) {
+                let html = '<div class="flex flex-wrap gap-2">';
+                response.tags.forEach(tag => {
+                    html += `
+                        <span class="tag-pill inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 transition-all hover:bg-slate-200 dark:hover:bg-slate-700">
+                            <span>${escapeHtml(tag.term)}</span>
+                            <button type="button" class="delete-tag-btn text-rose-500 hover:text-rose-700 font-bold focus:outline-none ml-1 cursor-pointer border-none bg-transparent" data-id="${tag.id}" title="Remove Tag">
+                                <i class="fa-solid fa-xmark text-[10px]"></i>
+                            </button>
+                        </span>
+                    `;
+                });
+                html += '</div>';
+                $('#tagsListContainer').html(html);
+            } else {
+                showEmptyState();
+            }
+        },
+        error: function() {
+            $('#tagsListContainer').html('<p class="text-rose-500 text-sm">Failed to load search tags.</p>');
+        }
+    });
+}
+
+function showEmptyState() {
+    $('#tagsListContainer').html(`
+        <div class="pv-empty">
+            <div class="pv-eicon"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <p style="font-size:14px;font-weight:600;margin:0 0 4px;">No search tags found</p>
+            <p style="font-size:12px;margin:0 0 16px;">Generate automatically or add manually above.</p>
+            <button type="button" id="generateTagsBtnEmpty" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 transition-colors cursor-pointer border-none">
+                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generate Search Tags
+            </button>
+        </div>
+    `);
+    
+    $('#generateTagsBtnEmpty').on('click', function() {
+        $('#generateTagsBtn').click();
+    });
+}
+
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 </script>
 @endpush

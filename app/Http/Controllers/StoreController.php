@@ -27,7 +27,7 @@ class StoreController extends Controller
      */
     public static function getProducts()
     {
-        $relations = ['category.parent', 'images'];
+        $relations = ['category.parent', 'images', 'searchTerms'];
         if (class_exists(ProductVariant::class)) {
             $relations[] = 'variants.color';
             $relations[] = 'variants.size';
@@ -83,6 +83,7 @@ class StoreController extends Controller
                 'meta_title' => $p->meta_title,
                 'meta_description' => $p->meta_description,
                 'meta_keywords' => $p->meta_keywords,
+                'search_tags' => $p->searchTerms ? $p->searchTerms->pluck('term')->toArray() : [],
             ];
         })->toArray();
     }
@@ -117,11 +118,8 @@ class StoreController extends Controller
 
         // Apply Search filter first (since it is global)
         if ($request->filled('search')) {
-            $search = strtolower($request->input('search'));
-            $baseProducts = $baseProducts->filter(fn($p) => 
-                str_contains(strtolower($p['name']), $search) || 
-                str_contains(strtolower($p['desc']), $search)
-            );
+            $search = $request->input('search');
+            $baseProducts = self::prioritizeSearch($baseProducts, $search);
         }
 
         // Apply Price filter next
@@ -1133,6 +1131,119 @@ class StoreController extends Controller
     }
 
     /**
+     * Prioritize and filter products based on name, sku, category and search tags.
+     */
+    public static function prioritizeSearch($products, $query)
+    {
+        $query = strtolower(trim($query));
+        if (empty($query)) {
+            return collect();
+        }
+
+        $queryWords = preg_split('/\s+/', $query, -1, PREG_SPLIT_NO_EMPTY);
+
+        return $products->map(function ($p) use ($query, $queryWords) {
+            $score = 0;
+            $name = strtolower($p['name'] ?? '');
+            $sku = strtolower($p['sku'] ?? '');
+            $cat = strtolower($p['cat'] ?? '');
+            $tags = array_map('strtolower', $p['search_tags'] ?? []);
+
+            // Helper to check if all query words are present
+            $allWordsInName = true;
+            foreach ($queryWords as $qw) {
+                if (!str_contains($name, $qw)) {
+                    $allWordsInName = false;
+                    break;
+                }
+            }
+
+            $allWordsInSku = true;
+            foreach ($queryWords as $qw) {
+                if (!str_contains($sku, $qw)) {
+                    $allWordsInSku = false;
+                    break;
+                }
+            }
+
+            $allWordsInCat = true;
+            foreach ($queryWords as $qw) {
+                if (!str_contains($cat, $qw)) {
+                    $allWordsInCat = false;
+                    break;
+                }
+            }
+
+            // A tag matches if the full query matches it or is inside it
+            $tagMatch = false;
+            foreach ($tags as $tag) {
+                if ($tag === $query || str_contains($tag, $query)) {
+                    $tagMatch = true;
+                    break;
+                }
+            }
+
+            // Or if all query words are matched across one or more tags
+            $allWordsInTags = false;
+            if (!$tagMatch) {
+                $matchedWords = 0;
+                foreach ($queryWords as $qw) {
+                    foreach ($tags as $tag) {
+                        if (str_contains($tag, $qw)) {
+                            $matchedWords++;
+                            break;
+                        }
+                    }
+                }
+                if ($matchedWords === count($queryWords)) {
+                    $allWordsInTags = true;
+                }
+            }
+
+            // 1. Check Product Name
+            if (str_contains($name, $query)) {
+                if ($name === $query) {
+                    $score = 100;
+                } elseif (str_starts_with($name, $query)) {
+                    $score = 90;
+                } else {
+                    $score = 80;
+                }
+            } elseif ($allWordsInName) {
+                $score = 75;
+            }
+            // 2. Check SKU
+            elseif (str_contains($sku, $query) || $allWordsInSku) {
+                if ($sku === $query) {
+                    $score = 60;
+                } else {
+                    $score = 50;
+                }
+            }
+            // 3. Check Category
+            elseif (str_contains($cat, $query) || $allWordsInCat) {
+                if ($cat === $query) {
+                    $score = 40;
+                } else {
+                    $score = 30;
+                }
+            }
+            // 4. Check Search Terms / Tags
+            elseif ($tagMatch) {
+                $score = 20;
+            } elseif ($allWordsInTags) {
+                $score = 10;
+            }
+
+            $p['_search_score'] = $score;
+            return $p;
+        })
+        ->filter(fn($p) => $p['_search_score'] > 0)
+        ->sortByDesc('_search_score')
+        ->values();
+    }
+
+    /**
      * Live search API.
      */
     public function searchLive(Request $request)
@@ -1143,17 +1254,15 @@ class StoreController extends Controller
         }
 
         $products = collect(self::getProducts());
-        $results = $products->filter(fn ($p) => str_contains(strtolower($p['name']), $query) ||
-            str_contains(strtolower($p['desc']), $query) ||
-            str_contains(strtolower($p['cat']), $query)
-        )->map(fn ($p) => [
-            'id' => $p['id'],
-            'name' => $p['name'],
-            'price' => (float) $p['price'],
-            'cat' => $p['cat'],
-            'img' => $p['img'],
-            'url' => route('store.product', $p['slug']),
-        ])->values()->take(5);
+        $results = self::prioritizeSearch($products, $query)
+            ->map(fn ($p) => [
+                'id' => $p['id'],
+                'name' => $p['name'],
+                'price' => (float) $p['price'],
+                'cat' => $p['cat'],
+                'img' => $p['img'],
+                'url' => route('store.product', $p['slug']),
+            ])->values()->take(5);
 
         return response()->json($results);
     }
