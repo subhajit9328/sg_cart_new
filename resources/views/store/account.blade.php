@@ -395,19 +395,6 @@
             });
         }
 
-<<<<<<< HEAD
-
-=======
-        @if ($errors->any())
-        if (typeof openAddressModal === 'function') {
-            openAddressModal();
-        }
-        @endif
-<<<<<<< HEAD
-=======
-
->>>>>>> source/kushal_changes
->>>>>>> 78b4336f73fb808a84b3e87cdd9e117fb4f59a52
         // Validate profile details form (missing fields)
         const profileForm = document.querySelector('#tab-profile form');
         if (profileForm) {
@@ -551,11 +538,7 @@
         if (typeof openAddressModal === 'function') {
             openAddressModal();
         }
-<<<<<<< HEAD
         @endif
-
-=======
->>>>>>> 78b4336f73fb808a84b3e87cdd9e117fb4f59a52
     });
 </script>
 @endsection
