@@ -85,11 +85,11 @@
             </span>
         </div>
 
-        <form action="{{ route('admin.reviews.index') }}" method="GET" class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+        <form id="review-search-form" action="{{ route('admin.reviews.index') }}" method="GET" class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
             <!-- Search Box -->
             <div class="relative flex items-center w-full sm:w-64">
                 <i class="fa-solid fa-magnifying-glass absolute left-3 text-slate-400 text-xs"></i>
-                <input type="text" name="search" value="{{ request('search') }}"
+                <input type="text" name="search" id="review-search-input" value="{{ request('search') }}"
                     class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 pl-8 pr-3 text-xs placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100"
                     placeholder="Search by customer, product, comment…">
             </div>
@@ -104,8 +104,8 @@
 
             <!-- Select All Button -->
             @if($reviews->isNotEmpty())
-                <button type="button" id="select-all-btn" onclick="toggleBulkSelect()" class="px-3 py-1.5 bg-white  text-slate-600 border border-slate-200 hover:text-slate-800 active:border-blue-400 rounded-lg text-xs font-semibold cursor-pointer transition-colors">
-                    Bulk Action
+                <button type="button" onclick="toggleBulkSelect()" class="px-3 py-1.5 bg-white text-slate-650 border border-slate-200 hover:text-slate-900 rounded-lg text-xs font-bold cursor-pointer transition-colors flex items-center gap-1">
+                    <i class="fa-solid fa-list-check text-xs"></i> Bulk Action
                 </button>
             @endif
 
@@ -451,6 +451,31 @@
             }
         }, `${actionType.charAt(0).toUpperCase() + actionType.slice(1)} Reviews?`);
     }
+
+    // Search Debounce and Focus Integration
+    document.addEventListener('DOMContentLoaded', function() {
+        let searchTimeout = null;
+        const searchInput = document.getElementById('review-search-input');
+        const searchForm = document.getElementById('review-search-form');
+
+        if (searchInput && searchForm) {
+            // Automatically submit form 250ms after user stops typing
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchForm.submit();
+                }, 250);
+            });
+
+            // Focus and position cursor at the end of text when search results load
+            if (searchInput.value.length > 0) {
+                searchInput.focus();
+                const tempVal = searchInput.value;
+                searchInput.value = '';
+                searchInput.value = tempVal;
+            }
+        }
+    });
 </script>
 
 @endsection
