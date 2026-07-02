@@ -236,21 +236,15 @@
                         <td class="py-4 px-5 text-right">
                             <div class="flex items-center justify-end gap-1.5">
                                 @if($statusEnum !== \SGCart\Reviews\Enums\ReviewStatus::APPROVED)
-                                    <form action="{{ route('admin.reviews.approve', $rv->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        <button type="submit" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-850 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-450 transition-colors cursor-pointer" title="Approve Review">
-                                            <i class="fa-solid fa-check text-xs"></i>
-                                        </button>
-                                    </form>
+                                    <button type="submit" form="approve-review-form-{{ $rv->id }}" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-850 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-450 transition-colors cursor-pointer" title="Approve Review">
+                                        <i class="fa-solid fa-check text-xs"></i>
+                                    </button>
                                 @endif
 
                                 @if($statusEnum !== \SGCart\Reviews\Enums\ReviewStatus::REJECTED)
-                                    <form action="{{ route('admin.reviews.reject', $rv->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        <button type="submit" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-850 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center text-rose-500 hover:text-rose-600 dark:text-rose-400 transition-colors cursor-pointer" title="Reject Review">
-                                            <i class="fa-solid fa-ban text-xs"></i>
-                                        </button>
-                                    </form>
+                                    <button type="submit" form="reject-review-form-{{ $rv->id }}" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-850 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center text-rose-500 hover:text-rose-600 dark:text-rose-400 transition-colors cursor-pointer" title="Reject Review">
+                                        <i class="fa-solid fa-ban text-xs"></i>
+                                    </button>
                                 @endif
 
                                 <button type="button" onclick="confirmDeleteReview('{{ $rv->id }}')" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-850 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center justify-center text-red-600 dark:text-red-400 transition-colors cursor-pointer" title="Delete Review">
@@ -285,6 +279,23 @@
     @csrf
     @method('DELETE')
 </form>
+
+<!-- Hidden Individual Action Forms -->
+@foreach($reviews as $rv)
+    @php
+        $statusEnum = $rv->status ? \SGCart\Reviews\Enums\ReviewStatus::fromDb($rv->status->name) : null;
+    @endphp
+    @if($statusEnum !== \SGCart\Reviews\Enums\ReviewStatus::APPROVED)
+        <form id="approve-review-form-{{ $rv->id }}" action="{{ route('admin.reviews.approve', $rv->id) }}" method="POST" class="hidden">
+            @csrf
+        </form>
+    @endif
+    @if($statusEnum !== \SGCart\Reviews\Enums\ReviewStatus::REJECTED)
+        <form id="reject-review-form-{{ $rv->id }}" action="{{ route('admin.reviews.reject', $rv->id) }}" method="POST" class="hidden">
+            @csrf
+        </form>
+    @endif
+@endforeach
 
 <!-- Photo Lightbox Modal -->
 <div id="lightbox-modal" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/85 hidden" onclick="closeLightbox()">
@@ -324,7 +335,8 @@
     document.addEventListener('submit', function(e) {
         if (e.defaultPrevented) return;
         const form = e.target;
-        const submitBtns = form.querySelectorAll('button[type="submit"]');
+        const submitBtns = Array.from(document.querySelectorAll('button[type="submit"]'))
+            .filter(btn => btn.form === form || form.contains(btn));
         submitBtns.forEach(btn => {
             btn.querySelectorAll('i:not(.fa-spinner)').forEach(icon => {
                 icon.style.display = 'none';
