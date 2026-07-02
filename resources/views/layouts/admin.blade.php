@@ -91,6 +91,8 @@
 
             @includeIf('inventory::admin-menu')
             @includeIf('coupons::admin-menu')
+            @includeIf('blog::admin-menu')
+            @includeIf('dashboard-analytics::admin-menu')
             @includeIf('product-variants::admin-menu')
             @includeIf('shipping::admin-menu')
             @includeIf('tax::admin-menu')
@@ -177,7 +179,7 @@
         </header>
 
         <!-- ============ Content ============ -->
-        <main class="pt-24 px-4 lg:px-6 pb-10 w-full">
+        <main class="pt-20 px-4 lg:px-6 pb-10 w-full">
             @yield('content')
         </main>
     </div>

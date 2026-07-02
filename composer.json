@@ -10,7 +10,9 @@
         "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
+        "sgcart/blog": "@dev",
         "sgcart/coupons": "@dev",
+        "sgcart/dashboard-analytics": "@dev",
         "sgcart/image-search": "@dev",
         "sgcart/inventory": "@dev",
         "sgcart/logistic-tracking": "@dev",
@@ -88,7 +90,21 @@
         },
         {
             "type": "path",
+            "url": "packages/sgcart/blog",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
             "url": "packages/sgcart/payment-authorizenet",
+            "options": {
+                "symlink": true
+            }
+        }, 
+        {
+            "type": "path",
+            "url": "packages/sgcart/image-search",
             "options": {
                 "symlink": true
             }

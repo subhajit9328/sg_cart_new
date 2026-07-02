@@ -41,10 +41,10 @@ class OrderController extends Controller
 
         // Calculate KPI Metrics (overall database state)
         $totalOrders = Order::count();
-        $processingOrdersCount = Order::where('status', 'Processing')->count();
+        $processingOrdersCount = Order::whereIn('status', ['New Order', 'Processed', 'Shipped', 'Out for Delivery', 'Processing'])->count();
         $deliveredOrdersCount = Order::where('status', 'Delivered')->count();
         $deliveredValue = Order::where('status', 'Delivered')->sum('total');
-        $cancelledOrders = Order::where('status', 'Cancelled')->count();
+        $cancelledOrders = Order::whereIn('status', ['Cancelled', 'Cancel'])->count();
 
         // Sorting logic
         $sortBy = $request->input('sort_by', 'created_at');
@@ -97,10 +97,10 @@ class OrderController extends Controller
      */
     public function update(Request $request, Order $order)
     {
-        $validationRules = [
-            'status' => 'required|in:Processing,Shipped,Delivered,Cancelled',
+        $data = $request->validate([
+            'status' => 'required|in:New Order,Processed,Shipped,Out for Delivery,Delivered,Cancelled',
             'payment_status' => 'required|in:Pending,Paid,Failed',
-        ];
+        ]);
 
         $packageInstalled = class_exists(\SGCart\LogisticTracking\Actions\UpdateLogisticTrackingAction::class);
 

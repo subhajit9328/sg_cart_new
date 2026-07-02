@@ -112,10 +112,14 @@
                                         <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
                                     @elseif($order['status'] === 'Cancelled')
                                         <i class="fa-solid fa-circle-xmark text-rose-600 text-lg"></i>
-                                    @elseif($order['status'] === 'Processing')
-                                        <i class="fa-solid fa-spinner fa-spin text-blue-600 text-lg"></i>
+                                    @elseif($order['status'] === 'New Order' || $order['status'] === 'Processing')
+                                        <i class="fa-solid fa-spinner fa-spin text-amber-600 text-lg"></i>
+                                    @elseif($order['status'] === 'Processed')
+                                        <i class="fa-solid fa-box text-blue-600 text-lg"></i>
+                                    @elseif($order['status'] === 'Out for Delivery')
+                                        <i class="fa-solid fa-truck-ramp-box text-purple-650 text-lg"></i>
                                     @else
-                                        <i class="fa-solid fa-truck-fast text-amber-600 text-lg"></i>
+                                        <i class="fa-solid fa-truck-fast text-indigo-650 text-lg"></i>
                                     @endif
                                 </div>
                                 <div>
@@ -133,10 +137,14 @@
                                         <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 mt-1">Delivered</span>
                                     @elseif($order['status'] === 'Cancelled')
                                         <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50 mt-1">Cancelled</span>
-                                    @elseif($order['status'] === 'Processing')
-                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 mt-1">Processing</span>
+                                    @elseif($order['status'] === 'New Order' || $order['status'] === 'Processing')
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 mt-1">New Order</span>
+                                    @elseif($order['status'] === 'Processed')
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 mt-1">Processed</span>
+                                    @elseif($order['status'] === 'Out for Delivery')
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-purple-50 dark:bg-purple-950/20 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/50 mt-1">Out for Delivery</span>
                                     @else
-                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 mt-1">In Transit</span>
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 mt-1">Shipped</span>
                                     @endif
                                 </div>
                                 <div class="flex items-center gap-2">
@@ -387,7 +395,19 @@
             });
         }
 
+<<<<<<< HEAD
 
+=======
+        @if ($errors->any())
+        if (typeof openAddressModal === 'function') {
+            openAddressModal();
+        }
+        @endif
+<<<<<<< HEAD
+=======
+
+>>>>>>> source/kushal_changes
+>>>>>>> 78b4336f73fb808a84b3e87cdd9e117fb4f59a52
         // Validate profile details form (missing fields)
         const profileForm = document.querySelector('#tab-profile form');
         if (profileForm) {
@@ -531,8 +551,11 @@
         if (typeof openAddressModal === 'function') {
             openAddressModal();
         }
+<<<<<<< HEAD
         @endif
 
+=======
+>>>>>>> 78b4336f73fb808a84b3e87cdd9e117fb4f59a52
     });
 </script>
 @endsection

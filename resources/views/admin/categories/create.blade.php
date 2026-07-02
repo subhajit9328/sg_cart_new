@@ -38,16 +38,16 @@
 
         <!-- Parent Category -->
         <div>
-            <label for="parent_id" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Parent Category</label>
-            <select name="parent_id" id="parent_id"
-                class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3 text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-blue-500 transition-all">
-                <option value="">— None (Top-level) —</option>
-                @foreach($parents as $parent)
-                    <option value="{{ $parent->id }}" {{ old('parent_id') == $parent->id ? 'selected' : '' }}>
-                        {{ $parent->name }}
-                    </option>
-                @endforeach
-            </select>
+            <x-select2 
+                name="parent_id" 
+                id="parent_id" 
+                label="Parent Category"
+                placeholder="— None (Top-level) —"
+                :options="$parents"
+                optionValue="id"
+                optionLabel="name"
+                :selected="old('parent_id')"
+            />
         </div>
 
         <!-- Description -->
@@ -99,15 +99,3 @@
     </form>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    $(document).ready(function() {
-        $('#parent_id').select2({
-            placeholder: "— Select Parent Category —",
-            allowClear: true,
-            width: '100%'
-        });
-    });
-</script>
-@endpush

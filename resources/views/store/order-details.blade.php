@@ -70,46 +70,63 @@
                         </div>
                     </div>
                 @else
+                    @php
+                        $steps = ['New Order', 'Processed', 'Shipped', 'Out for Delivery', 'Delivered'];
+                        $currentStepIndex = array_search($status, $steps);
+                        if ($currentStepIndex === false) {
+                            if ($status === 'Processing') {
+                                $status = 'New Order';
+                                $currentStepIndex = 0;
+                            } else {
+                                $currentStepIndex = -1;
+                            }
+                        }
+                    @endphp
                     <div class="relative mt-8 mb-4">
                         <!-- Progress Track Wrapper -->
                         <div class="absolute top-5 left-0 right-0 mx-5 h-1 bg-slate-200 -translate-y-1/2 z-0 rounded-full">
                             <!-- Active Line -->
-                            <div class="h-full bg-slate-900 rounded-full transition-all duration-500" 
-                                 style="width: @if($status === 'Processing') 0% @elseif($status === 'Shipped') 50% @elseif($status === 'Delivered') 100% @else 0% @endif;">
-                            </div>
+                            @php
+                                $lineWidth = '0%';
+                                if ($currentStepIndex >= 0) {
+                                    $lineWidth = ($currentStepIndex / (count($steps) - 1) * 100) . '%';
+                                }
+                            @endphp
+                            <div class="h-full bg-slate-900 rounded-full transition-all duration-500" style="width: {{ $lineWidth }};"></div>
                         </div>
                         
                         <div class="relative z-10 flex justify-between">
-                            <!-- Step 1: Processing -->
-                            <div class="flex flex-col items-center">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2 
-                                    @if($status === 'Processing') bg-slate-900 text-white border-slate-900 
-                                    @else bg-emerald-600 text-white border-emerald-600 @endif">
-                                    @if($status === 'Processing') <i class="fa-solid fa-spinner animate-spin"></i> @else <i class="fa-solid fa-check"></i> @endif
+                            @foreach($steps as $index => $stepName)
+                                <div class="flex flex-col items-center">
+                                    @php
+                                        $isCompleted = $currentStepIndex > $index;
+                                        $isActive = $currentStepIndex === $index;
+                                    @endphp
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2
+                                        @if($isCompleted)
+                                            bg-emerald-600 text-white border-emerald-600
+                                        @elseif($isActive)
+                                            bg-slate-900 text-white border-slate-900
+                                        @else
+                                            bg-white text-slate-400 border-slate-200
+                                        @endif">
+                                        @if($isCompleted)
+                                            <i class="fa-solid fa-check text-xs"></i>
+                                        @elseif($stepName === 'New Order')
+                                            <i class="fa-solid fa-spinner animate-spin text-xs"></i>
+                                        @elseif($stepName === 'Processed')
+                                            <i class="fa-solid fa-box text-xs"></i>
+                                        @elseif($stepName === 'Shipped')
+                                            <i class="fa-solid fa-truck-fast text-xs"></i>
+                                        @elseif($stepName === 'Out for Delivery')
+                                            <i class="fa-solid fa-truck-ramp-box text-xs"></i>
+                                        @elseif($stepName === 'Delivered')
+                                            <i class="fa-solid fa-circle-check text-xs"></i>
+                                        @endif
+                                    </div>
+                                    <span class="text-[10px] sm:text-[11px] font-bold mt-2 @if($isActive || $isCompleted) text-slate-900 @else text-slate-500 @endif">{{ $stepName }}</span>
                                 </div>
-                                <span class="text-[11px] font-bold mt-2 @if($status === 'Processing') text-slate-900 @else text-slate-500 @endif">Processing</span>
-                            </div>
-                            
-                            <!-- Step 2: Shipped -->
-                            <div class="flex flex-col items-center">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2
-                                    @if($status === 'Processing') bg-white text-slate-400 border-slate-200
-                                    @elseif($status === 'Shipped') bg-slate-900 text-white border-slate-900
-                                    @else bg-emerald-600 text-white border-emerald-600 @endif">
-                                    @if($status === 'Delivered') <i class="fa-solid fa-check"></i> @else <i class="fa-solid fa-truck-fast"></i> @endif
-                                </div>
-                                <span class="text-[11px] font-bold mt-2 @if($status === 'Shipped') text-slate-900 @else text-slate-500 @endif">Shipped</span>
-                            </div>
-                            
-                            <!-- Step 3: Delivered -->
-                            <div class="flex flex-col items-center">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2
-                                    @if($status === 'Delivered') bg-emerald-600 text-white border-emerald-600
-                                    @else bg-white text-slate-400 border-slate-200 @endif">
-                                    @if($status === 'Delivered') <i class="fa-solid fa-check"></i> @else <i class="fa-solid fa-circle-check"></i> @endif
-                                </div>
-                                <span class="text-[11px] font-bold mt-2 @if($status === 'Delivered') text-slate-900 @else text-slate-500 @endif">Delivered</span>
-                            </div>
+                            @endforeach
                         </div>
                     </div>
 
@@ -165,30 +182,132 @@
 
                             <!-- Event: Processed & Packed -->
                             <div class="relative">
-                                <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-slate-100 text-slate-500 rounded-full ring-4 ring-white">
+                                <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-emerald-100 text-emerald-600 rounded-full ring-4 ring-white">
+                                    <i class="fa-solid fa-circle-check text-[10px]"></i>
+                                </span>
+                                <div class="text-xs">
+                                    <span class="font-bold text-slate-900 block">Package Delivered</span>
+                                    <p class="text-slate-500 mt-0.5">Package successfully delivered to the recipient address.</p>
+                                    <span class="text-[10px] text-slate-400 mt-1 block">{{ $order->updated_at->format('M d, Y h:i A') }}</span>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Event: Out for Delivery -->
+                        @if($status === 'Out for Delivery' || $status === 'Delivered')
+                            <div class="relative">
+                                <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-purple-100 text-purple-650 rounded-full ring-4 ring-white">
+                                    <i class="fa-solid fa-truck-ramp-box text-[9px]"></i>
+                                </span>
+                                <div class="text-xs">
+                                    <span class="font-bold text-slate-900 block">Out for Delivery</span>
+                                    <p class="text-slate-500 mt-0.5">The package is out for delivery with the local courier partner.</p>
+                                    <span class="text-[10px] text-slate-400 mt-1 block">
+                                        @if($status === 'Delivered')
+                                            {{ $order->updated_at->subMinutes(120)->format('M d, Y h:i A') }}
+                                        @else
+                                            {{ $order->updated_at->format('M d, Y h:i A') }}
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Event: Shipped / In Transit -->
+                        @if($status === 'Shipped' || $status === 'Out for Delivery' || $status === 'Delivered')
+                            <div class="relative">
+                                <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-blue-100 text-blue-600 rounded-full ring-4 ring-white">
+                                    <i class="fa-solid fa-truck text-[9px]"></i>
+                                </span>
+                                <div class="text-xs">
+                                    <span class="font-bold text-slate-900 block">Order Shipped (Transit Started)</span>
+                                    <p class="text-slate-500 mt-0.5">Dispatched via <strong class="text-slate-700">{{ $order->shipping_carrier ?? 'Delhivery Express' }}</strong> (Tracking ID: <span class="font-mono text-slate-850 font-semibold">{{ $order->tracking_number }}</span>).</p>
+                                    @if($order->tracking_url)
+                                        <a href="{{ $order->tracking_url }}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-bold text-accent hover:text-slate-900 mt-1.5 transition-colors" style="text-decoration:none">
+                                            Track Shipment Live <i class="fa-solid fa-up-right-from-square text-[8px]"></i>
+                                        </a>
+                                    @endif
+                                    <span class="text-[10px] text-slate-400 mt-1 block">
+                                        @if($status === 'Delivered' || $status === 'Out for Delivery')
+                                            {{ $order->created_at->addDay()->format('M d, Y') }} 11:30 AM
+                                        @else
+                                            {{ $order->updated_at->format('M d, Y h:i A') }}
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Event: Processed & Packed -->
+                        @if($status === 'Processed' || $status === 'Shipped' || $status === 'Out for Delivery' || $status === 'Delivered')
+                            <div class="relative">
+                                <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-slate-900 text-white rounded-full ring-4 ring-white">
                                     <i class="fa-solid fa-box text-[9px]"></i>
                                 </span>
                                 <div class="text-xs">
                                     <span class="font-bold text-slate-950 block">Processed & Packed</span>
                                     <p class="text-slate-500 mt-0.5">Your items have been carefully packaged and are ready for handover to our courier partner.</p>
-                                    <span class="text-[10px] text-slate-400 mt-1 block">{{ $order->created_at->addHours(3)->format('M d, Y h:i A') }}</span>
+                                    <span class="text-[10px] text-slate-400 mt-1 block">
+                                        @php
+                                            $created = $order->created_at;
+                                            $updated = $order->updated_at;
+                                            $diff = $created->diffInMinutes($updated);
+                                            if ($diff > 10) {
+                                                $packedTime = $created->copy()->addMinutes(min(120, intval($diff / 2)));
+                                            } else {
+                                                $packedTime = $created->copy()->addMinutes(5);
+                                            }
+                                        @endphp
+                                        {{ $packedTime->format('M d, Y h:i A') }}
+                                    </span>
                                 </div>
                             </div>
-
-                            <!-- Event: Placed & Confirmed -->
+                        @elseif($status === 'New Order' || $status === 'Processing')
                             <div class="relative">
-                                <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-slate-100 text-slate-500 rounded-full ring-4 ring-white">
-                                    <i class="fa-solid fa-check text-[9px]"></i>
+                                <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-slate-100 text-slate-400 rounded-full ring-4 ring-white border border-slate-200">
+                                    <i class="fa-solid fa-box text-[9px]"></i>
                                 </span>
                                 <div class="text-xs">
-                                    <span class="font-bold text-slate-950 block">Order Placed & Confirmed</span>
-                                    <p class="text-slate-500 mt-0.5">Order record created with reference number <span class="font-mono text-slate-800 font-semibold">{{ $order->order_number }}</span>. Payment authorized successfully.</p>
-                                    <span class="text-[10px] text-slate-400 mt-1 block">{{ $order->created_at->format('M d, Y h:i A') }}</span>
+                                    <span class="font-bold text-slate-400 block">Processed & Packed</span>
+                                    <p class="text-slate-400/80 mt-0.5">Your items will be carefully packaged and prepared for courier handover.</p>
+                                    <span class="text-[10px] text-slate-400 mt-1 block font-medium">Pending</span>
                                 </div>
+                            </div>
+                        @endif
+
+                        <!-- Event: New Order (Processing & Preparing) -->
+                        @if($status === 'New Order' || $status === 'Processing')
+                            <div class="relative">
+                                <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-amber-50 text-amber-600 rounded-full ring-4 ring-white border border-amber-200 animate-pulse">
+                                    <i class="fa-solid fa-spinner animate-spin text-[9px]"></i>
+                                </span>
+                                <div class="text-xs">
+                                    <span class="font-bold text-slate-900 block flex items-center gap-1.5">
+                                        Processing & Preparing
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200">
+                                            In Progress
+                                        </span>
+                                    </span>
+                                    <p class="text-slate-500 mt-1">Our warehouse team is currently selecting your items, conducting quality checks, and carefully packing them for courier pickup.</p>
+                                    <span class="text-[10px] text-slate-400 mt-1 block">Started on {{ $order->created_at->format('M d, Y h:i A') }}</span>
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Event: Placed & Confirmed -->
+                        <div class="relative">
+                            <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-emerald-600 text-white rounded-full ring-4 ring-white">
+                                <i class="fa-solid fa-check text-[9px]"></i>
+                            </span>
+                            <div class="text-xs">
+                                <span class="font-bold text-slate-950 block">Order Placed & Confirmed</span>
+                                <p class="text-slate-500 mt-0.5">Order record created with reference number <span class="font-mono text-slate-800 font-semibold">{{ $order->order_number }}</span>. Payment authorized successfully.</p>
+                                <span class="text-[10px] text-slate-400 mt-1 block">{{ $order->created_at->format('M d, Y h:i A') }}</span>
                             </div>
                         </div>
                     </div>
-                @endif
+                </div>
+            @endif
             </div>
 
             <!-- Items Card -->

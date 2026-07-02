@@ -49,10 +49,15 @@
 <!-- Order Status Timeline Progress Stepper -->
 @php
     $statusVal = $order->status->value ?? $order->status;
-    $steps = ['Processing', 'Shipped', 'Delivered'];
+    $steps = ['New Order', 'Processed', 'Shipped', 'Out for Delivery', 'Delivered'];
     $currentStepIndex = array_search($statusVal, $steps);
     if ($currentStepIndex === false) {
-        $currentStepIndex = -1; // If Cancelled
+        if ($statusVal === 'Processing') {
+            $statusVal = 'New Order';
+            $currentStepIndex = 0;
+        } else {
+            $currentStepIndex = -1; // If Cancelled
+        }
     }
 @endphp
 
@@ -64,10 +69,13 @@
                 <h3 class="text-lg font-bold text-slate-950 dark:text-white">Current Status:</h3>
                 @php
                     $statusColors = [
-                        'Processing' => 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200/20',
-                        'Shipped' => 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200/20',
+                        'New Order' => 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200/20',
+                        'Processed' => 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200/20',
+                        'Shipped' => 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-200/20',
+                        'Out for Delivery' => 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-200/20',
                         'Delivered' => 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200/20',
                         'Cancelled' => 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200/20',
+                        'Processing' => 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200/20',
                     ];
                     $colorClass = $statusColors[$statusVal] ?? 'bg-slate-50 text-slate-700 border-slate-200';
                 @endphp
@@ -79,24 +87,42 @@
 
         @if($statusVal !== 'Cancelled')
         <!-- Stepper Indicators -->
-        <div class="flex items-center w-full md:w-auto md:max-w-md flex-1 px-4 relative mt-2 md:mt-0">
+        <div class="flex items-center w-full md:w-auto md:max-w-xl flex-1 px-4 relative mt-2 md:mt-0">
             <!-- Progress Line Background & Active Progress Line -->
             <div class="absolute top-4 left-0 right-0 mx-8 h-1 bg-slate-100 dark:bg-slate-800 -translate-y-1/2 z-0 rounded-full">
                 @php
                     $lineWidth = '0%';
-                    if ($currentStepIndex === 0) $lineWidth = '33.33%';
-                    if ($currentStepIndex === 1) $lineWidth = '66.67%';
-                    if ($currentStepIndex === 2) $lineWidth = '100%';
+                    if ($currentStepIndex >= 0) {
+                        $lineWidth = ($currentStepIndex / (count($steps) - 1) * 100) . '%';
+                    }
                 @endphp
                 <div class="h-full bg-blue-600 dark:bg-blue-500 rounded-full transition-all duration-500" style="width: {{ $lineWidth }};"></div>
             </div>
 
             <!-- Steps Dots -->
             <div class="flex items-center justify-between w-full z-10">
-                <!-- Placed -->
-                <div class="flex flex-col items-center gap-1.5 bg-white dark:bg-slate-900 px-2">
-                    <div class="w-8 h-8 rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center text-xs font-bold shadow-md shadow-blue-500/20">
-                        <i class="fa-solid fa-check text-[10px]"></i>
+                @foreach($steps as $index => $stepName)
+                    <div class="flex flex-col items-center gap-1.5 bg-white dark:bg-slate-900 px-2">
+                        @php
+                            $isCompleted = $currentStepIndex > $index;
+                            $isActive = $currentStepIndex === $index;
+                            $isUpcoming = $currentStepIndex < $index;
+                        @endphp
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all border 
+                            @if($isCompleted)
+                                bg-emerald-600 dark:bg-emerald-500 text-white border-transparent shadow-md
+                            @elseif($isActive)
+                                bg-blue-600 dark:bg-blue-500 text-white border-transparent shadow-md shadow-blue-500/20
+                            @else
+                                bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700
+                            @endif">
+                            @if($isCompleted)
+                                <i class="fa-solid fa-check text-[10px]"></i>
+                            @else
+                                {{ $index + 1 }}
+                            @endif
+                        </div>
+                        <span class="text-[10px] font-bold @if($isActive || $isCompleted) text-slate-800 dark:text-slate-200 @else text-slate-400 @endif">{{ $stepName }}</span>
                     </div>
                     <span class="text-[10px] font-bold text-slate-800 dark:text-slate-200">Placed</span>
                 </div>
@@ -390,6 +416,161 @@
                         </div>
                     @endforelse
                 </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Package successfully delivered to the recipient.</p>
+                    </li>
+                    @endif
+
+                    <!-- Event: Delivered -->
+                    @if($statusVal === 'Delivered')
+                    <li class="mb-4 ml-6">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-emerald-100 dark:bg-emerald-900/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-emerald-600">
+                            <i class="fa-solid fa-circle-check text-[8px]"></i>
+                        </span>
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Order Delivered</h4>
+                            <time class="text-[9px] font-semibold text-slate-400">{{ $order->updated_at->format('M d, Y H:i') }}</time>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Package successfully delivered to the recipient.</p>
+                    </li>
+                    @endif
+
+                    <!-- Event: Out for Delivery -->
+                    @if($statusVal === 'Out for Delivery' || $statusVal === 'Delivered')
+                    <li class="mb-4 ml-6">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-purple-100 dark:bg-purple-900/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-purple-600">
+                            <i class="fa-solid fa-truck-ramp-box text-[8px]"></i>
+                        </span>
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Out for Delivery</h4>
+                            <time class="text-[9px] font-semibold text-slate-400">
+                                @if($statusVal === 'Delivered')
+                                    {{ $order->updated_at->subMinutes(120)->format('M d, Y H:i') }}
+                                @else
+                                    {{ $order->updated_at->format('M d, Y H:i') }}
+                                @endif
+                            </time>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">The package is out for delivery with the local courier partner.</p>
+                    </li>
+                    @endif
+
+                    <!-- Event: Shipped -->
+                    @if($statusVal === 'Shipped' || $statusVal === 'Out for Delivery' || $statusVal === 'Delivered')
+                    <li class="mb-4 ml-6">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-blue-100 dark:bg-blue-900/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-blue-600">
+                            <i class="fa-solid fa-truck text-[8px]"></i>
+                        </span>
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Order Shipped (Transit Started)</h4>
+                            <time class="text-[9px] font-semibold text-slate-400">
+                                @if($statusVal === 'Delivered')
+                                    {{ $order->created_at->addDay()->format('M d, Y H:i') }}
+                                @elseif($statusVal === 'Out for Delivery')
+                                    {{ $order->created_at->addDay()->format('M d, Y H:i') }}
+                                @else
+                                    {{ $order->updated_at->format('M d, Y H:i') }}
+                                @endif
+                            </time>
+                        </div>
+                        @if($order->tracking_number)
+                        <p class="text-xs text-slate-400 mt-0.5">Dispatched via {{ $order->shipping_carrier ?? 'Delhivery Express' }} with Tracking ID: <span class="font-mono font-semibold">{{ $order->tracking_number }}</span>.</p>
+                        @else
+                        <p class="text-xs text-slate-400 mt-0.5">Order has been dispatched.</p>
+                        @endif
+                    </li>
+                    @endif
+
+                    <!-- Event: Processed & Packed -->
+                    @if($statusVal === 'Processed' || $statusVal === 'Shipped' || $statusVal === 'Out for Delivery' || $statusVal === 'Delivered')
+                    <li class="mb-4 ml-6">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-slate-900 dark:bg-slate-800 text-white rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900">
+                            <i class="fa-solid fa-box text-[8px]"></i>
+                        </span>
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Processed & Packed</h4>
+                            <time class="text-[9px] font-semibold text-slate-400">
+                                @php
+                                    $created = $order->created_at;
+                                    $updated = $order->updated_at;
+                                    $diff = $created->diffInMinutes($updated);
+                                    if ($diff > 10) {
+                                        $packedTime = $created->copy()->addMinutes(min(120, intval($diff / 2)));
+                                    } else {
+                                        $packedTime = $created->copy()->addMinutes(5);
+                                    }
+                                @endphp
+                                {{ $packedTime->format('M d, Y H:i') }}
+                            </time>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Your items have been carefully packaged and are ready for handover to our courier partner.</p>
+                    </li>
+                    @elseif($statusVal === 'New Order' || $statusVal === 'Processing')
+                    <li class="mb-4 ml-6">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 border border-slate-200 dark:border-slate-700">
+                            <i class="fa-solid fa-box text-[8px]"></i>
+                        </span>
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="text-xs font-semibold text-slate-400 dark:text-slate-500">Processed & Packed</h4>
+                            <span class="text-[9px] font-semibold text-slate-400">Pending</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Your items will be carefully packaged and prepared for courier handover.</p>
+                    </li>
+                    @endif
+
+                    <!-- Event: New Order (Processing & Preparing) -->
+                    @if($statusVal === 'New Order' || $statusVal === 'Processing')
+                    <li class="mb-4 ml-6">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-amber-50 dark:bg-amber-950/20 text-amber-600 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 border border-amber-200 dark:border-amber-800/30 animate-pulse">
+                            <i class="fa-solid fa-spinner animate-spin text-[8px]"></i>
+                        </span>
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                Processing & Preparing
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-amber-100 dark:bg-amber-900/30 text-amber-750 dark:text-amber-450 border border-amber-200 dark:border-amber-800/20">
+                                    In Progress
+                                </span>
+                            </h4>
+                            <time class="text-[9px] font-semibold text-slate-400">{{ $order->created_at->format('M d, Y H:i') }}</time>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Our warehouse team is currently selecting items, conducting quality checks, and carefully packing them.</p>
+                    </li>
+                    @endif
+
+                    <!-- Event: Cancelled -->
+                    @if($statusVal === 'Cancelled')
+                    <li class="mb-4 ml-6">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-rose-100 dark:bg-rose-900/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-rose-600">
+                            <i class="fa-solid fa-ban text-[8px]"></i>
+                        </span>
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Order Cancelled</h4>
+                            <time class="text-[9px] font-semibold text-slate-400">{{ $order->updated_at->format('M d, Y H:i') }}</time>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">This order has been marked as Cancelled.</p>
+                    </li>
+                    @endif
+
+                    <li class="mb-4 ml-6">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-slate-100 dark:bg-slate-800 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-slate-500">
+                            <i class="fa-solid fa-circle-check text-[8px]"></i>
+                        </span>
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Order Completed & Payment Authorized</h4>
+                            <time class="text-[9px] font-semibold text-slate-400">{{ $order->created_at->format('M d, Y H:i') }}</time>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Order placed and payment charged via Card (masked reference: {{ $order->card_number_masked }}).</p>
+                    </li>
+                    <li class="ml-6">
+                        <span class="absolute flex items-center justify-center w-5 h-5 bg-slate-100 dark:bg-slate-800 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-slate-450">
+                            <i class="fa-solid fa-pen-nib text-[8px]"></i>
+                        </span>
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="text-xs font-semibold text-slate-800 dark:text-slate-200">Order record created</h4>
+                            <time class="text-[9px] font-semibold text-slate-400">{{ $order->created_at->format('M d, Y H:i') }}</time>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-0.5">Assigned Order Reference: {{ $order->order_number }}</p>
+                    </li>
+                </ol>
             </div>
         </div>
     </div>
@@ -409,21 +590,38 @@
 
                     <div>
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Order Status</label>
-                        <select name="status" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-100 cursor-pointer">
-                            <option value="Processing" {{ $statusVal === 'Processing' ? 'selected' : '' }}>Processing</option>
+                        <x-select2 
+                            name="status" 
+                            id="order_status_update"
+                            placeholder=""
+                            :selected="$statusVal"
+                            :allowClear="false"
+                            :searchable="false"
+                        >   
+                        
+                            <option value="New Order" {{ $statusVal === 'New Order' ? 'selected' : '' }}>New Order</option>
+                            <option value="Processed" {{ $statusVal === 'Processed' ? 'selected' : '' }}>Processed</option>
                             <option value="Shipped" {{ $statusVal === 'Shipped' ? 'selected' : '' }}>Shipped</option>
+                            <option value="Out for Delivery" {{ $statusVal === 'Out for Delivery' ? 'selected' : '' }}>Out for Delivery</option>
                             <option value="Delivered" {{ $statusVal === 'Delivered' ? 'selected' : '' }}>Delivered</option>
                             <option value="Cancelled" {{ $statusVal === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-                        </select>
+                        </x-select2>
                     </div>
 
                     <div>
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Payment Status</label>
-                        <select name="payment_status" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2 px-3 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-100 cursor-pointer">
+                        <x-select2 
+                            name="payment_status" 
+                            id="order_payment_status_update"
+                            placeholder=""
+                            :selected="$order->payment_status->value ?? $order->payment_status"
+                            :allowClear="false"
+                            :searchable="false"
+                        >
                             <option value="Pending" {{ ($order->payment_status->value ?? $order->payment_status) === 'Pending' ? 'selected' : '' }}>Pending</option>
                             <option value="Paid" {{ ($order->payment_status->value ?? $order->payment_status) === 'Paid' ? 'selected' : '' }}>Paid</option>
                             <option value="Failed" {{ ($order->payment_status->value ?? $order->payment_status) === 'Failed' ? 'selected' : '' }}>Failed</option>
-                        </select>
+                        </x-select2>
                     </div>
 
                     @if(class_exists(\SGCart\LogisticTracking\Actions\UpdateLogisticTrackingAction::class))

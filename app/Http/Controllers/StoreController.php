@@ -792,7 +792,7 @@ class StoreController extends Controller
                 'shipping_method' => $shippingMethodName,
                 'discount' => $discount,
                 'total' => $total,
-                'status' => \App\Enums\OrderStatus::PROCESSING,
+                'status' => \App\Enums\OrderStatus::NEW_ORDER,
             ]);
         }
 

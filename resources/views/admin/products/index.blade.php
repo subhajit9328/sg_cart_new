@@ -14,10 +14,10 @@
         ]" />
     </div>
     <div class="flex gap-3">
-        <button onclick="showToast('Coming soon', 'warning')"
+        {{-- <button onclick="showToast('Coming soon', 'warning')"
             class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-medium shadow-lg shadow-emerald-600/10 transition-colors cursor-pointer border-none">
             <i class="fa-solid fa-file-import"></i> Bulk Upload
-        </button>
+        </button> --}}
         <a href="{{ route('admin.products.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium shadow-lg shadow-blue-600/10 no-underline">
             <i class="fa-solid fa-plus"></i> Add Product
         </a>
@@ -53,29 +53,37 @@
 >
     <x-slot name="filters">
         <!-- Category Filter Dropdown -->
-        <div class="min-w-[140px]">
-            <select name="category_id"
-                class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-2.5 text-xs text-slate-700 dark:text-slate-400 outline-none focus:border-blue-500 transition-all cursor-pointer">
-                <option value="">All Categories</option>
-                @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
-                        {{ $cat->name }}
-                    </option>
-                @endforeach
-            </select>
+        <div class="min-w-[180px]">
+            <x-select2 
+                name="category_id" 
+                id="category_id_filter"
+                placeholder="All Categories"
+                :options="$categories"
+                optionValue="id"
+                optionLabel="name"
+                :selected="request('category_id')"
+                :compact="true"
+                :allowClear="false"
+            />
         </div>
 
         <!-- Status Filter Dropdown -->
-        <div class="min-w-[110px]">
-            <select name="status"
-                class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-2.5 text-xs text-slate-700 dark:text-slate-400 outline-none focus:border-blue-500 transition-all cursor-pointer">
-                <option value="">All Status</option>
+        <div class="min-w-[130px]">
+            <x-select2 
+                name="status" 
+                id="status_filter"
+                placeholder="All Status"
+                :selected="request('status')"
+                :compact="true"
+                :allowClear="false"
+                :searchable="false"
+            >
                 @foreach(['draft','active','inactive'] as $s)
                     <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>
                         {{ ucfirst($s) }}
                     </option>
                 @endforeach
-            </select>
+            </x-select2>
         </div>
     </x-slot>
 
@@ -90,8 +98,8 @@
                     </div>
                 @endif
             </td>
-            <td class="px-5 py-3.5 font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap text-sm">
-                {{ $product->name }}
+            <td class="px-5 py-3.5 font-semibold text-slate-800 dark:text-slate-100 text-sm" title="{{ $product->name }}">
+                {{ \Illuminate\Support\Str::limit($product->name, 30) }}
             </td>
             <td class="px-5 py-3.5 text-slate-500 dark:text-slate-400 font-mono text-xs whitespace-nowrap">
                 {{ $product->sku }}
@@ -130,6 +138,15 @@
             </td>
             <td class="px-5 py-3.5 text-right whitespace-nowrap">
                 <div class="inline-flex gap-1.5 justify-end">
+                    @if($product->status === 'active')
+                        <a href="{{ route('store.product', $product->slug) }}" target="_blank" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors" title="Preview Product">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-slate-500 dark:text-slate-400 text-xs"></i>
+                        </a>
+                    @else
+                        <span class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex items-center justify-center transition-colors cursor-not-allowed" title="Product must be active to preview">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-slate-300 dark:text-slate-650 text-xs"></i>
+                        </span>
+                    @endif
                     <a href="{{ route('admin.products.show', $product->ulid) }}" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors" title="View Product details">
                         <i class="fa-solid fa-eye text-slate-500 dark:text-slate-400 text-xs"></i>
                     </a>
