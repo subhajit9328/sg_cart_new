@@ -52,6 +52,10 @@
             <span>Product Variants</span>
         </button>
         @endif
+        <button type="button" onclick="switchTab('search-tags')" id="tabBtn_search-tags" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 outline-none select-none bg-transparent cursor-pointer flex items-center gap-2">
+            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+            <span>Search Tags</span>
+        </button>
     </div>
 </div>
 
@@ -401,6 +405,53 @@
         <div id="variantsGridContainer"></div>
     </div>
     @endif
+
+    <!-- Search Tags Tab Content -->
+    <div id="search-tagsTabContent" class="tab-content hidden p-4 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">
+        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-6">
+            <h2 class="font-semibold text-sm font-display text-slate-800 dark:text-slate-200">Search Tags Management</h2>
+        </div>
+        <div class="space-y-6">
+            <div>
+                <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Search tags are used to match this product on the storefront. The search order checks: 
+                    <strong class="text-slate-800 dark:text-slate-200">Product Name &rarr; SKU &rarr; Category &rarr; Search Tags</strong>.
+                </p>
+            </div>
+
+            <div class="p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-lg">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-700 dark:text-slate-350">Auto-Generate Tags</h4>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Automatically extract keywords from name, description, and categories.</p>
+                    </div>
+                    <button type="button" id="generateTagsBtn" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-all shadow-md shadow-blue-500/10 cursor-pointer border-none">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Search Tags
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <h4 class="text-sm font-bold text-slate-700 dark:text-slate-350">Add Tag Manually</h4>
+                <form id="addTagForm" class="flex gap-2">
+                    <input type="text" id="newTagInput" placeholder="e.g. navy blue shirt" required 
+                        class="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 rounded-lg py-2 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100"/>
+                    <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-slate-750 dark:hover:bg-slate-700 text-white rounded-lg font-semibold text-sm transition-all cursor-pointer border-none">
+                        <i class="fa-solid fa-plus"></i> Add Tag
+                    </button>
+                </form>
+            </div>
+
+            <div class="space-y-3">
+                <h4 class="text-sm font-bold text-slate-700 dark:text-slate-350">Active Search Tags</h4>
+                <div id="tagsListContainer" class="min-h-[100px] border border-slate-100 dark:border-slate-800 rounded-lg p-4 bg-slate-50/50 dark:bg-slate-900/30">
+                    <div class="flex justify-center py-6">
+                        <i class="fa-solid fa-circle-notch fa-spin text-slate-400 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @if($product->images && $product->images->count() > 0)
@@ -482,7 +533,7 @@ function removeNewImage(id) {
 <script>
     // Tab toggler logic
     window.switchTab = function(tab) {
-        const tabs = ['details', 'seo'];
+        const tabs = ['details', 'seo', 'search-tags'];
         @if(Route::has('admin.products.variants.grid'))
         tabs.push('variants');
         @endif
@@ -491,7 +542,7 @@ function removeNewImage(id) {
         const mainCard = document.getElementById('mainProductCard');
 
         if (mainCard) {
-            if (tab === 'variants') {
+            if (tab === 'variants' || tab === 'search-tags') {
                 mainCard.classList.add('hidden');
             } else {
                 mainCard.classList.remove('hidden');
@@ -502,11 +553,11 @@ function removeNewImage(id) {
             const btn = document.getElementById('tabBtn_' + t);
             const content = document.getElementById(t + 'TabContent');
             if (t === tab) {
-                btn.className = "px-4 py-2.5 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 outline-none select-none bg-transparent cursor-pointer flex items-center gap-2";
-                content.classList.remove('hidden');
+                if (btn) btn.className = "px-4 py-2.5 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 outline-none select-none bg-transparent cursor-pointer flex items-center gap-2";
+                if (content) content.classList.remove('hidden');
             } else {
-                btn.className = "px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 outline-none select-none bg-transparent cursor-pointer flex items-center gap-2";
-                content.classList.add('hidden');
+                if (btn) btn.className = "px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 outline-none select-none bg-transparent cursor-pointer flex items-center gap-2";
+                if (content) content.classList.add('hidden');
             }
         });
 
@@ -524,11 +575,13 @@ function removeNewImage(id) {
                 }
             } else if (tab === 'variants') {
                 cardTitle.textContent = "Manage Product Variants & Inventory";
+            } else if (tab === 'search-tags') {
+                cardTitle.textContent = "Search Tags Management";
             }
         }
 
         if (formActions) {
-            if (tab === 'variants') {
+            if (tab === 'variants' || tab === 'search-tags') {
                 formActions.classList.add('hidden');
             } else {
                 formActions.classList.remove('hidden');
@@ -545,6 +598,8 @@ function removeNewImage(id) {
             @if(Route::has('admin.products.variants.grid'))
             loadVariantsGrid();
             @endif
+        } else if (tab === 'search-tags') {
+            loadSearchTags();
         }
     };
 
@@ -650,10 +705,88 @@ function removeNewImage(id) {
         // Initialize SEO Preview
         updateSeoPreview();
 
+        // Search tags AJAX logic
+        $('#addTagForm').on('submit', function(e) {
+            e.preventDefault();
+            const term = $('#newTagInput').val().trim();
+            if (!term) return;
+
+            $.ajax({
+                url: "{{ route('admin.products.search-tags.add', $product->ulid) }}",
+                type: "POST",
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    term: term
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showToast(response.message, 'success');
+                        $('#newTagInput').val('');
+                        loadSearchTags();
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON ? xhr.responseJSON.errors : null;
+                    const msg = errors && errors.term ? errors.term[0] : 'Failed to add search tag.';
+                    showToast(msg, 'error');
+                }
+            });
+        });
+
+        $(document).on('click', '.delete-tag-btn', function() {
+            const tagId = $(this).data('id');
+            const pill = $(this).closest('.tag-pill');
+
+            $.ajax({
+                url: `/admin/products/{{ $product->ulid }}/search-tags/${tagId}`,
+                type: "DELETE",
+                data: {
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showToast(response.message, 'success');
+                        pill.remove();
+                        if ($('.tag-pill').length === 0) {
+                            showSearchTagsEmptyState();
+                        }
+                    }
+                },
+                error: function() {
+                    showToast('Failed to delete search tag.', 'error');
+                }
+            });
+        });
+
+        $(document).on('click', '#generateTagsBtn', function() {
+            const btn = $(this);
+            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin mr-1"></i> Generating...');
+
+            $.ajax({
+                url: "{{ route('admin.products.search-tags.generate', $product->ulid) }}",
+                type: "POST",
+                data: {
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showToast(response.message, 'success');
+                        loadSearchTags();
+                    }
+                },
+                error: function() {
+                    showToast('Failed to generate search tags.', 'error');
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html('<i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generate Search Tags');
+                }
+            });
+        });
+
         // Check for active tab query parameter
         const urlParams = new URLSearchParams(window.location.search);
         const activeTab = urlParams.get('tab') || 'details';
-        const allowedTabs = ['details', 'seo'];
+        const allowedTabs = ['details', 'seo', 'search-tags'];
         @if(Route::has('admin.products.variants.grid'))
         allowedTabs.push('variants');
         @endif
@@ -663,6 +796,69 @@ function removeNewImage(id) {
             switchTab('details');
         }
     });
+
+    window.loadSearchTags = function() {
+        $('#tagsListContainer').html(`
+            <div class="flex justify-center py-6">
+                <i class="fa-solid fa-circle-notch fa-spin text-slate-400 text-xl"></i>
+            </div>
+        `);
+
+        $.ajax({
+            url: "{{ route('admin.products.search-tags.json', $product->ulid) }}",
+            type: "GET",
+            success: function(response) {
+                if (response.tags && response.tags.length > 0) {
+                    let html = '<div class="flex flex-wrap gap-2">';
+                    response.tags.forEach(tag => {
+                        html += `
+                            <span class="tag-pill inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 transition-all hover:bg-slate-200 dark:hover:bg-slate-700">
+                                <span>${escapeHtml(tag.term)}</span>
+                                <button type="button" class="delete-tag-btn text-rose-500 hover:text-rose-700 font-bold focus:outline-none ml-1 cursor-pointer border-none bg-transparent" data-id="${tag.id}" title="Remove Tag">
+                                    <i class="fa-solid fa-xmark text-[10px]"></i>
+                                </button>
+                            </span>
+                        `;
+                    });
+                    html += '</div>';
+                    $('#tagsListContainer').html(html);
+                } else {
+                    showSearchTagsEmptyState();
+                }
+            },
+            error: function() {
+                $('#tagsListContainer').html('<p class="text-rose-500 text-sm">Failed to load search tags.</p>');
+            }
+        });
+    }
+
+    window.showSearchTagsEmptyState = function() {
+        $('#tagsListContainer').html(`
+            <div class="flex flex-col items-center justify-center text-center p-6 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-850 rounded-lg">
+                <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-3">
+                    <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                </div>
+                <h5 class="text-sm font-semibold text-slate-700 dark:text-slate-350 mb-1">No search tags found</h5>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Generate automatically or add manually above.</p>
+                <button type="button" id="generateTagsBtnEmpty" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-all shadow-md shadow-blue-500/10 cursor-pointer border-none">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Search Tags
+                </button>
+            </div>
+        `);
+        
+        $('#generateTagsBtnEmpty').on('click', function() {
+            $('#generateTagsBtn').click();
+        });
+    }
+
+    function escapeHtml(text) {
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 </script>
 @endpush
 @endsection
