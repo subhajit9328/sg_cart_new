@@ -41,6 +41,21 @@ class Product extends Model
                 $product->slug = $slug;
             }
         });
+
+        static::created(function ($product) {
+            try {
+                if (class_exists(\App\Services\SearchTagGenerator::class)) {
+                    $tags = \App\Services\SearchTagGenerator::generate($product);
+                    foreach ($tags as $tag) {
+                        $product->searchTerms()->updateOrCreate([
+                            'term' => strtolower(trim($tag))
+                        ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error("Failed to auto-generate search tags for product ID {$product->id}: " . $e->getMessage());
+            }
+        });
     }
 
     /**

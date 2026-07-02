@@ -135,6 +135,12 @@ Route::prefix('admin')->group(function () {
             Route::prefix('products')->name('products.')->middleware('permission:manage products')->group(function () {
                 Route::post('bulk-upload', [ProductController::class, 'bulkUpload'])->name('bulk-upload');
                 Route::delete('image/{productImage}', [ProductController::class, 'deleteImage'])->name('delete-image');
+                
+                // Search tags management
+                Route::post('{product}/search-tags', [ProductController::class, 'addSearchTag'])->name('search-tags.add');
+                Route::delete('{product}/search-tags/{tag}', [ProductController::class, 'deleteSearchTag'])->name('search-tags.delete');
+                Route::post('{product}/search-tags/generate', [ProductController::class, 'generateSearchTags'])->name('search-tags.generate');
+                Route::get('{product}/search-tags-json', [ProductController::class, 'getSearchTagsJson'])->name('search-tags.json');
             });
         });
     });

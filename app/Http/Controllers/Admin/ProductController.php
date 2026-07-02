@@ -308,4 +308,80 @@ class ProductController extends Controller
 
         return redirect()->back()->with('success', 'Product image is deleted successfully.');
     }
+
+    /**
+     * Add a search tag manually.
+     */
+    public function addSearchTag(Request $request, Product $product)
+    {
+        $request->validate([
+            'term' => 'required|string|max:100',
+        ]);
+
+        $term = strtolower(trim($request->input('term')));
+
+        // Check if it already exists for this product
+        $exists = $product->searchTerms()->where('term', $term)->exists();
+        if (!$exists) {
+            $product->searchTerms()->create(['term' => $term]);
+        }
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Search tag added successfully.']);
+        }
+
+        return back()->with('success', 'Search tag added successfully.');
+    }
+
+    /**
+     * Delete a search tag.
+     */
+    public function deleteSearchTag(Product $product, $tagId)
+    {
+        $tag = $product->searchTerms()->findOrFail($tagId);
+        $tag->delete();
+
+        if (request()->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Search tag deleted successfully.']);
+        }
+
+        return back()->with('success', 'Search tag deleted successfully.');
+    }
+
+    /**
+     * Generate search tags automatically from name, description, and category.
+     */
+    public function generateSearchTags(Product $product)
+    {
+        $tags = \App\Services\SearchTagGenerator::generate($product);
+
+        $addedCount = 0;
+        foreach ($tags as $tag) {
+            $exists = $product->searchTerms()->where('term', $tag)->exists();
+            if (!$exists) {
+                $product->searchTerms()->create(['term' => $tag]);
+                $addedCount++;
+            }
+        }
+
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Generated search tags. Added {$addedCount} new tags.",
+                'tags' => $product->searchTerms()->get(['id', 'term'])
+            ]);
+        }
+
+        return back()->with('success', "Generated search tags. Added {$addedCount} new tags.");
+    }
+
+    /**
+     * Fetch search tags in JSON format.
+     */
+    public function getSearchTagsJson(Product $product)
+    {
+        return response()->json([
+            'tags' => $product->searchTerms()->get(['id', 'term'])
+        ]);
+    }
 }
