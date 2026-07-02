@@ -88,7 +88,7 @@
                 <span class="sidebar-text">Orders</span>
             </a>
             @endcan
-
+            @includeIf('reviews::admin-menu')
             @canany(['manage users', 'manage roles'])
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Access Control</p>
 

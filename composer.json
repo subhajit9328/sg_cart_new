@@ -15,6 +15,7 @@
         "sgcart/logistic-tracking": "@dev",
         "sgcart/payment-razorpay": "@dev",
         "sgcart/product-variants": "@dev",
+        "sgcart/reviews": "@dev",
         "sgcart/shipping": "@dev",
         "sgcart/tax": "@dev",
         "spatie/laravel-permission": "^8.0"
@@ -29,6 +30,13 @@
         "phpunit/phpunit": "^12.5.12"
     },
     "repositories": [
+        {
+            "type": "path",
+            "url": "packages/sgcart/reviews",
+            "options": {
+                "symlink": true
+            }
+        },
         {
             "type": "path",
             "url": "packages/sgcart/logistic-tracking",

@@ -3,6 +3,20 @@
 @section('title', $product['name'] . ' — sgcart')
 
 @section('content')
+@php
+    $approvedReviews = collect();
+    $avgProductRating = 0;
+    if (class_exists(\SGCart\Reviews\Models\Review::class)) {
+        $approvedReviews = \SGCart\Reviews\Models\Review::with(['customer', 'images'])
+            ->where('product_id', $product['id'])
+            ->where('status_id', 2)
+            ->latest()
+            ->get();
+        if ($approvedReviews->isNotEmpty()) {
+            $avgProductRating = $approvedReviews->avg('rating');
+        }
+    }
+@endphp
 
 <style>
     .pd-main-img {
@@ -74,6 +88,22 @@
                         <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart text-base"></i>
                     </button>
                 </div>
+                
+                @if($approvedReviews->isNotEmpty())
+                    <div class="flex items-center gap-1.5 mb-4">
+                        <div class="flex items-center gap-0.5 text-amber-400 text-xs">
+                            @for($i = 1; $i <= 5; $i++)
+                                @if($i <= round($avgProductRating))
+                                    <i class="fa-solid fa-star"></i>
+                                @else
+                                    <i class="fa-regular fa-star text-slate-200 dark:text-slate-700"></i>
+                                @endif
+                            @endfor
+                        </div>
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ number_format($avgProductRating, 1) }}</span>
+                        <span class="text-[10px] text-slate-400 font-medium">({{ $approvedReviews->count() }} {{ \Illuminate\Support\Str::plural('review', $approvedReviews->count()) }})</span>
+                    </div>
+                @endif
                 
 
 
@@ -173,6 +203,7 @@
                             <button type="button" class="tab-btn" onclick="setSpecTab('specs')">Specifications</button>
                         @endif
                         <button type="button" class="tab-btn" onclick="setSpecTab('shipping')">Shipping</button>
+                        <button type="button" class="tab-btn" onclick="setSpecTab('reviews')">Reviews ({{ $approvedReviews->count() }})</button>
                     </div>
                     <div id="spec-description" class="spec-content">
                         <p class="text-xs text-slate-500 leading-relaxed">{!! nl2br(e($product['description'])) !!}</p>
@@ -211,6 +242,42 @@
                     @endif
                     <div id="spec-shipping" class="spec-content" style="display:none">
                         <p class="text-xs text-slate-500 leading-relaxed">Standard shipping takes between 3 to 7 business days depending on location. Tracking information is sent automatically via email once shipped.</p>
+                    </div>
+                    <div id="spec-reviews" class="spec-content" style="display:none">
+                        <div class="space-y-4">
+                            @forelse($approvedReviews as $rv)
+                                <div class="border-b border-slate-100 dark:border-slate-800/60 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+                                    <div class="flex items-center justify-between gap-4">
+                                        <div class="font-bold text-xs text-slate-800 dark:text-slate-200">{{ $rv->customer->name ?? 'Anonymous' }}</div>
+                                        <div class="text-[10px] text-slate-400 font-mono">{{ $rv->created_at->format('M d, Y') }}</div>
+                                    </div>
+                                    <div class="flex items-center gap-0.5 text-amber-400 text-[10px] mt-1 mb-1.5">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            @if($i <= $rv->rating)
+                                                <i class="fa-solid fa-star"></i>
+                                            @else
+                                                <i class="fa-regular fa-star text-slate-200 dark:text-slate-700"></i>
+                                            @endif
+                                        @endfor
+                                    </div>
+                                    <p class="text-xs text-slate-550 dark:text-slate-400 leading-relaxed">{{ $rv->comment ?? 'No comment provided.' }}</p>
+                                    @if($rv->images->isNotEmpty())
+                                         <div class="mt-2.5 flex flex-wrap gap-2">
+                                             @foreach($rv->images as $img)
+                                                 <div class="inline-block cursor-zoom-in">
+                                                     <img src="{{ \Illuminate\Support\Facades\Storage::url($img->image_path) }}" 
+                                                          alt="User Review Attachment" 
+                                                          class="w-16 h-16 object-cover rounded-lg border border-slate-200 dark:border-slate-800 shadow-xs hover:opacity-90 transition-opacity"
+                                                          onclick="openLightbox('{{ \Illuminate\Support\Facades\Storage::url($img->image_path) }}')">
+                                                 </div>
+                                             @endforeach
+                                         </div>
+                                     @endif
+                                </div>
+                            @empty
+                                <p class="text-xs text-slate-400 dark:text-slate-500 italic">No reviews have been published for this product yet.</p>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
             </div>
@@ -353,5 +420,28 @@
         }
     });
 </script>
+
+<!-- Photo Lightbox Modal -->
+<div id="lightbox-modal" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/85 hidden" onclick="closeLightbox()">
+    <button class="absolute top-4 right-4 text-white hover:text-slate-350 bg-transparent border-none cursor-pointer outline-none">
+        <i class="fa-solid fa-xmark text-2xl"></i>
+    </button>
+    <img id="lightbox-image" src="" alt="Zoomed Review Image" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" onclick="event.stopPropagation()">
+</div>
+
+<script>
+    function openLightbox(src) {
+        const modal = document.getElementById('lightbox-modal');
+        const img = document.getElementById('lightbox-image');
+        img.src = src;
+        modal.classList.remove('hidden');
+    }
+
+    function closeLightbox() {
+        const modal = document.getElementById('lightbox-modal');
+        modal.classList.add('hidden');
+    }
+</script>
+
 @includeIf('product-variants::storefront-variant-script')
 @endsection

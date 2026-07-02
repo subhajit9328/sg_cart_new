@@ -53,6 +53,16 @@ class StoreController extends Controller
                 }
             }
 
+            $rating = 4.5;
+            if (class_exists(\SGCart\Reviews\Models\Review::class)) {
+                $avgRating = \SGCart\Reviews\Models\Review::where('product_id', $p->id)
+                    ->where('status_id', 2)
+                    ->avg('rating');
+                if (!is_null($avgRating)) {
+                    $rating = (float) $avgRating;
+                }
+            }
+
             return [
                 'id' => $p->id,
                 'slug' => $p->slug,
@@ -60,7 +70,7 @@ class StoreController extends Controller
                 'cat' => $catName,
                 'price' => $p->sale_price ?? $p->price,
                 'old' => $p->sale_price ? $p->price : null,
-                'rating' => 4.5,
+                'rating' => $rating,
                 'badge' => $p->sale_price ? 'Sale' : '',
                 'sizes' => $sizes,
                 'colors' => $colors,

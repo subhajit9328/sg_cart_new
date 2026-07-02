@@ -25,22 +25,22 @@
                 </a>
             </p>
         </div>
-        
+
         <div class="flex flex-wrap gap-2 sm:self-center">
             @php
                 $status = $order->status->value ?? $order->status;
                 $paymentStatus = $order->payment_status->value ?? $order->payment_status;
             @endphp
-            
-            <span class="inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider 
+
+            <span class="inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
                 @if($status === 'Processing') bg-blue-50 text-blue-700 border border-blue-200
                 @elseif($status === 'Shipped') bg-amber-50 text-amber-700 border border-amber-200
                 @elseif($status === 'Delivered') bg-emerald-50 text-emerald-700 border border-emerald-200
                 @else bg-rose-50 text-rose-700 border border-rose-200 @endif">
                 Status: {{ $status }}
             </span>
-            
-            <span class="inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider 
+
+            <span class="inline-flex px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
                 @if($paymentStatus === 'Paid') bg-emerald-50 text-emerald-700 border border-emerald-200
                 @elseif($paymentStatus === 'Pending') bg-amber-50 text-amber-700 border border-amber-200
                 @else bg-rose-50 text-rose-700 border border-rose-200 @endif">
@@ -51,16 +51,16 @@
 
     <!-- Content Split Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         <!-- Left: Items Details (col-span-2) -->
         <div class="lg:col-span-2 flex flex-col gap-6">
-            
+
             <!-- Stepper Progress Tracker -->
             <div class="bg-white border border-[#e8e4df] rounded-2xl p-6">
                 <h4 class="font-display font-extrabold text-xs text-slate-400 uppercase tracking-wider mb-5 pb-2 border-b border-slate-100 flex items-center gap-1.5">
                     <i class="fa-solid fa-truck-fast"></i> Order Progress
                 </h4>
-                
+
                 @if($status === 'Cancelled')
                     <div class="flex items-center gap-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-4">
                         <i class="fa-solid fa-circle-xmark text-xl text-rose-600"></i>
@@ -74,22 +74,22 @@
                         <!-- Progress Track Wrapper -->
                         <div class="absolute top-5 left-0 right-0 mx-5 h-1 bg-slate-200 -translate-y-1/2 z-0 rounded-full">
                             <!-- Active Line -->
-                            <div class="h-full bg-slate-900 rounded-full transition-all duration-500" 
+                            <div class="h-full bg-slate-900 rounded-full transition-all duration-500"
                                  style="width: @if($status === 'Processing') 0% @elseif($status === 'Shipped') 50% @elseif($status === 'Delivered') 100% @else 0% @endif;">
                             </div>
                         </div>
-                        
+
                         <div class="relative z-10 flex justify-between">
                             <!-- Step 1: Processing -->
                             <div class="flex flex-col items-center">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2 
-                                    @if($status === 'Processing') bg-slate-900 text-white border-slate-900 
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2
+                                    @if($status === 'Processing') bg-slate-900 text-white border-slate-900
                                     @else bg-emerald-600 text-white border-emerald-600 @endif">
                                     @if($status === 'Processing') <i class="fa-solid fa-spinner animate-spin"></i> @else <i class="fa-solid fa-check"></i> @endif
                                 </div>
                                 <span class="text-[11px] font-bold mt-2 @if($status === 'Processing') text-slate-900 @else text-slate-500 @endif">Processing</span>
                             </div>
-                            
+
                             <!-- Step 2: Shipped -->
                             <div class="flex flex-col items-center">
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2
@@ -100,7 +100,7 @@
                                 </div>
                                 <span class="text-[11px] font-bold mt-2 @if($status === 'Shipped') text-slate-900 @else text-slate-500 @endif">Shipped</span>
                             </div>
-                            
+
                             <!-- Step 3: Delivered -->
                             <div class="flex flex-col items-center">
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2
@@ -118,7 +118,7 @@
                         <h5 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-5 flex items-center gap-1.5">
                             <i class="fa-solid fa-map-location-dot text-slate-400"></i> Shipment Log & Milestones
                         </h5>
-                        
+
                         <div class="relative pl-6 border-l border-slate-200 space-y-6 ml-2.5">
                             <!-- Event: Delivered -->
                             @if($status === 'Delivered')
@@ -196,42 +196,115 @@
                 <h4 class="font-display font-extrabold text-xs text-slate-400 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
                     <i class="fa-solid fa-list-ul"></i> Items Ordered
                 </h4>
-                
+
                 <div class="flex flex-col gap-4">
                     @foreach($order->items as $item)
                         @php
-                            $imgUrl = $item->product && $item->product->image 
-                                ? \Illuminate\Support\Facades\Storage::url($item->product->image) 
+                            $imgUrl = $item->product && $item->product->image
+                                ? \Illuminate\Support\Facades\Storage::url($item->product->image)
                                 : asset('images/no-image.svg');
                         @endphp
-                        <div class="flex items-center gap-4 border border-[#e8e4df] rounded-xl p-4 bg-white hover:bg-slate-50/20 transition-colors">
-                            <img src="{{ $imgUrl }}" alt="{{ $item->product_name }}" class="w-16 h-16 object-cover rounded-lg border border-[#e8e4df] shrink-0" />
-                            <div class="min-w-0 flex-1">
-                                <h5 class="text-sm font-bold text-slate-800 truncate">{{ $item->product_name }}</h5>
-                                <div class="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-                                    <span class="text-xs text-slate-400">SKU: <span class="text-slate-600 font-medium">{{ $item->product_sku ?? 'N/A' }}</span></span>
-                                    @if($item->size)
-                                        <span class="text-xs text-slate-400">Size: <span class="text-slate-600 font-medium">{{ $item->size }}</span></span>
-                                    @endif
-                                    @if($item->color)
-                                        <span class="text-xs text-slate-400">Color: <span class="text-slate-600 font-medium">{{ $item->color }}</span></span>
-                                    @endif
+                        <div class="flex flex-col md:flex-row p-4 gap-4 border border-[#e8e4df] rounded-xl bg-white hover:bg-slate-50/20 transition-colors">
+                            <div>
+                                @if($item->product)
+                                    <a href="{{ route('store.product', $item->product->slug) }}" class="shrink-0">
+                                        <img src="{{ $imgUrl }}" alt="{{ $item->product_name }}" class="w-18 h-18 object-cover rounded-lg border border-[#e8e4df] hover:opacity-90 transition-opacity" />
+                                    </a>
+                                @else
+                                    <img src="{{ $imgUrl }}" alt="{{ $item->product_name }}" class="w-18 h-18 object-cover rounded-lg border border-[#e8e4df] shrink-0" />
+                                @endif
+                            </div>
+                            <div class="flex flex-col flex-1">
+                            <div class="flex justify-between items-center gap-4">
+                                <div class="min-w-0 flex-1">
+                                    <h5 class="text-sm font-bold text-slate-800 truncate">
+                                        @if($item->product)
+                                            <a href="{{ route('store.product', $item->product->slug) }}" class="hover:text-accent hover:underline transition-colors">
+                                                {{ $item->product_name }}
+                                            </a>
+                                        @else
+                                            {{ $item->product_name }}
+                                        @endif
+                                    </h5>
+                                    <div class="flex flex-wrap gap-x-3 gap-y-1 mt-1">
+                                        <span class="text-xs text-slate-400">SKU: <span class="text-slate-600 font-medium">{{ $item->product_sku ?? 'N/A' }}</span></span>
+                                        @if($item->size)
+                                            <span class="text-xs text-slate-400">Size: <span class="text-slate-600 font-medium">{{ $item->size }}</span></span>
+                                        @endif
+                                        @if($item->color)
+                                            <span class="text-xs text-slate-400">Color: <span class="text-slate-600 font-medium">{{ $item->color }}</span></span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <p class="text-xs text-slate-400">{{ $item->quantity }} × ₹{{ number_format($item->price, 2) }}</p>
+                                    <p class="text-sm font-extrabold text-slate-900 mt-0.5">₹{{ number_format($item->price * $item->quantity, 2) }}</p>
                                 </div>
                             </div>
-                            <div class="text-right shrink-0">
-                                <p class="text-xs text-slate-400">{{ $item->quantity }} × ₹{{ number_format($item->price, 2) }}</p>
-                                <p class="text-sm font-extrabold text-slate-900 mt-0.5">₹{{ number_format($item->price * $item->quantity, 2) }}</p>
+                                @if($status === 'Delivered')
+                                    @php
+                                        $existingReview = null;
+                                        $reviewImagesJson = '[]';
+                                        if (class_exists(\SGCart\Reviews\Models\Review::class)) {
+                                            $existingReview = \SGCart\Reviews\Models\Review::with(['status:id,name', 'images'])
+                                                ->where('customer_id', auth('customer')->id())
+                                                ->where('product_id', $item->product_id)
+                                                ->first();
+                                            if ($existingReview && $existingReview->images->isNotEmpty()) {
+                                                $reviewImagesJson = json_encode($existingReview->images->map(function($img) {
+                                                    return [
+                                                        'path' => $img->image_path,
+                                                        'url' => \Illuminate\Support\Facades\Storage::url($img->image_path)
+                                                    ];
+                                                })->toArray());
+                                            }
+                                        }
+                                    @endphp
+                                    <div class="mt-2.5 flex flex-row-reverse flex-wrap justify-between items-center gap-2">
+                                        @if($existingReview)
+                                            <button type="button"
+                                                    onclick="openReviewModal('{{ $item->product_id }}', '{{ addslashes($item->product_name) }}', '{{ $imgUrl }}', '{{ $existingReview->rating }}', '{{ addslashes($existingReview->comment) }}', JSON.parse(this.dataset.images))"
+                                                    data-images="{{ $reviewImagesJson }}"
+                                                    class="text-slate-400 hover:text-slate-800 text-[10px] font-bold tracking-wide uppercase transition-all flex items-center gap-1 cursor-pointer">
+                                                <i class="fa-solid fa-pen-to-square"></i> Edit Review
+                                            </button>
+                                            @php
+                                                $statusEnum = $existingReview->status ? \SGCart\Reviews\Enums\ReviewStatus::fromDb($existingReview->status->name) : null;
+                                            @endphp
+                                            @if($statusEnum === \SGCart\Reviews\Enums\ReviewStatus::PENDING)
+                                                <span class="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-[10px] font-bold text-amber-700 uppercase">
+                                                    <i class="fa-solid fa-clock-rotate-left text-[8px]"></i> Review Pending
+                                                </span>
+                                            @elseif($statusEnum === \SGCart\Reviews\Enums\ReviewStatus::APPROVED)
+                                                <span class="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700 uppercase">
+                                                    <i class="fa-solid fa-circle-check text-[8px]"></i> Review Approved
+                                                </span>
+                                            @elseif($statusEnum === \SGCart\Reviews\Enums\ReviewStatus::REJECTED)
+                                                <span class="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-[10px] font-bold text-rose-700 uppercase">
+                                                    <i class="fa-solid fa-circle-xmark text-[8px]"></i> Review Rejected
+                                                </span>
+                                            @endif
+                                        @else
+                                            <button type="button"
+                                                    onclick="openReviewModal('{{ $item->product_id }}', '{{ addslashes($item->product_name) }}', '{{ $imgUrl }}')"
+                                                    class="text-slate-400 hover:text-slate-800 text-[10px] font-bold tracking-wide uppercase transition-all flex items-center gap-1 cursor-pointer">
+                                                <i class="fa-solid fa-pen-to-square"></i> Write a Review
+                                            </button>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
                         </div>
+
                     @endforeach
                 </div>
             </div>
-            
+
         </div>
 
         <!-- Right Side: Shipping & Cost details -->
         <div class="flex flex-col gap-6">
-            
+
             <!-- Shipping Details Card -->
             <div class="bg-white border border-[#e8e4df] rounded-2xl p-6">
                 <h4 class="font-display font-extrabold text-xs text-slate-400 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
@@ -335,11 +408,11 @@
                 <h4 class="font-display font-extrabold text-xs text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-100 flex items-center gap-1.5">
                     <i class="fa-solid fa-credit-card"></i> Payment & Summary
                 </h4>
-                
+
                 <div class="text-xs text-slate-500 leading-relaxed">
                     <span class="font-bold text-slate-700">Payment Details:</span>
                     <div class="mt-0.5 font-medium text-slate-800">
-                        {{ $order->payment_method ?? 'N/A' }} 
+                        {{ $order->payment_method ?? 'N/A' }}
                         @if($order->card_number_masked) ({{ $order->card_number_masked }}) @endif
                     </div>
                 </div>
@@ -389,9 +462,10 @@
                     </div>
                 </div>
             </div>
-            
+
         </div>
-        
+
     </div>
 </div>
+@includeIf('reviews::modal')
 @endsection
