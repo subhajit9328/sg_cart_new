@@ -1095,4 +1095,67 @@ class ProductReviewsTest extends TestCase
 
         $response->assertSessionHasNoErrors();
     }
+
+    /**
+     * Test reviews uninstall command.
+     */
+    public function test_reviews_uninstall_command(): void
+    {
+        // Explicitly register the command in the test to ensure it is resolved by the console kernel
+        $this->app->make(\Illuminate\Contracts\Console\Kernel::class)->registerCommand(
+            app(\SGCart\Reviews\Console\Commands\UninstallCommand::class)
+        );
+
+        // 1. Assert that migration entries exist in database table
+        $migrationNames = [
+            '2026_07_02_000001_create_review_statuses_table',
+            '2026_07_02_000002_create_reviews_table',
+            '2026_07_02_000003_create_review_images_table',
+        ];
+        
+        // Ensure migration records are in table
+        foreach ($migrationNames as $m) {
+            \Illuminate\Support\Facades\DB::table('migrations')->insertOrIgnore([
+                'migration' => $m,
+                'batch' => 1
+            ]);
+        }
+
+        // Mock a published migration file in database_path('migrations')
+        $testMigrationFile = database_path('migrations/2026_07_02_000002_create_reviews_table.php');
+        \Illuminate\Support\Facades\File::ensureDirectoryExists(database_path('migrations'));
+        
+        $validMigrationCode = "<?php
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration {
+    public function up(): void {}
+    public function down(): void {}
+};";
+        
+        \Illuminate\Support\Facades\File::put($testMigrationFile, $validMigrationCode);
+
+        $this->assertTrue(\Illuminate\Support\Facades\File::exists($testMigrationFile));
+
+        try {
+            // 2. Call the uninstall artisan command
+            $this->artisan('sgcart:reviews-uninstall')
+                ->expectsOutput('Starting SGCart Reviews uninstallation...')
+                ->assertExitCode(0);
+
+            // 3. Assert database migration records were deleted
+            foreach ($migrationNames as $m) {
+                $this->assertDatabaseMissing('migrations', ['migration' => $m]);
+            }
+
+            // 4. Assert that the published migration file was removed
+            $this->assertFalse(\Illuminate\Support\Facades\File::exists($testMigrationFile));
+        } finally {
+            if (\Illuminate\Support\Facades\File::exists($testMigrationFile)) {
+                \Illuminate\Support\Facades\File::delete($testMigrationFile);
+            }
+        }
+    }
 }

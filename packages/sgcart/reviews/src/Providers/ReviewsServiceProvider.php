@@ -27,6 +27,10 @@ class ReviewsServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../../config/reviews.php' => config_path('reviews.php'),
             ], 'reviews-config');
+
+            $this->commands([
+                \SGCart\Reviews\Console\Commands\UninstallCommand::class,
+            ]);
         }
 
         // Automate Installation (Migrations & Permissions) inside boot phase
