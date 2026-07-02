@@ -536,4 +536,53 @@ class ProductReviewsTest extends TestCase
         $this->assertEquals(3, $review->status_id); // Rejected
         $this->assertNull($review->approved_at);
     }
+
+    /**
+     * Test admin can delete reviews and their attachments.
+     */
+    public function test_admin_can_delete_reviews(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->create();
+        $admin->givePermissionTo('manage reviews');
+
+        $customer = Customer::create([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'password' => bcrypt('password'),
+        ]);
+        $customer->email_verified_at = now();
+        $customer->phone_verified_at = now();
+        $customer->save();
+
+        $product = Product::create([
+            'name' => 'Test Product',
+            'sku' => 'SKU-REV-7',
+            'price' => 100.00,
+            'stock' => 10,
+        ]);
+
+        $review = Review::create([
+            'customer_id' => $customer->id,
+            'product_id' => $product->id,
+            'rating' => 5,
+            'comment' => 'Test comment',
+            'status_id' => 1, // Pending
+            'approved_at' => null,
+        ]);
+
+        $img = $review->images()->create(['image_path' => 'reviews/todelete.jpg']);
+        Storage::disk('public')->put('reviews/todelete.jpg', 'fake image content');
+
+        $this->actingAs($admin);
+
+        $response = $this->delete(route('admin.reviews.destroy', $review->id));
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseMissing('reviews', ['id' => $review->id]);
+        $this->assertDatabaseMissing('review_images', ['id' => $img->id]);
+        Storage::disk('public')->assertMissing('reviews/todelete.jpg');
+    }
 }

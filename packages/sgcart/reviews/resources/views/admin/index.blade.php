@@ -212,6 +212,10 @@
                                         </button>
                                     </form>
                                 @endif
+
+                                <button type="button" onclick="confirmDeleteReview('{{ $rv->id }}')" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-850 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center justify-center text-red-600 dark:text-red-400 transition-colors cursor-pointer" title="Delete Review">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -235,6 +239,12 @@
     @endif
 </div>
 
+<!-- Hidden Delete Review Form -->
+<form id="delete-review-form" method="POST" class="hidden">
+    @csrf
+    @method('DELETE')
+</form>
+
 <!-- Photo Lightbox Modal -->
 <div id="lightbox-modal" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/85 hidden" onclick="closeLightbox()">
     <button class="absolute top-4 right-4 text-white hover:text-slate-350 bg-transparent border-none cursor-pointer outline-none">
@@ -255,6 +265,31 @@
         const modal = document.getElementById('lightbox-modal');
         modal.classList.add('hidden');
     }
+
+    // Trigger global confirmation modal for deleting a review
+    function confirmDeleteReview(reviewId) {
+        showConfirm(
+            'Are you sure you want to delete this review? This action cannot be undone.',
+            () => {
+                const form = document.getElementById('delete-review-form');
+                form.action = `/admin/reviews/${reviewId}`;
+                form.submit();
+            },
+            'Delete Review?'
+        );
+    }
+
+    // Local handler to hide review action button icons when the loading spinner is shown
+    document.addEventListener('submit', function(e) {
+        if (e.defaultPrevented) return;
+        const form = e.target;
+        const submitBtns = form.querySelectorAll('button[type="submit"]');
+        submitBtns.forEach(btn => {
+            btn.querySelectorAll('i:not(.fa-spinner)').forEach(icon => {
+                icon.style.display = 'none';
+            });
+        });
+    }, true);
 </script>
 
 @endsection

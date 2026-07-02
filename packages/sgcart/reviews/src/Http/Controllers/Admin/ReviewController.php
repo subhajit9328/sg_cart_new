@@ -82,4 +82,23 @@ class ReviewController extends Controller
 
         return redirect()->back()->with('success', 'Review has been rejected.');
     }
+
+    /**
+     * Delete a review.
+     */
+    public function destroy(Review $review)
+    {
+        // Delete all attached images from disk
+        foreach ($review->images as $img) {
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($img->image_path)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($img->image_path);
+            }
+            $img->delete();
+        }
+
+        // Delete the review
+        $review->delete();
+
+        return redirect()->back()->with('success', 'Review has been deleted successfully.');
+    }
 }
