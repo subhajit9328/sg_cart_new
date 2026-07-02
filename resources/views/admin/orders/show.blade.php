@@ -124,56 +124,7 @@
                         </div>
                         <span class="text-[10px] font-bold @if($isActive || $isCompleted) text-slate-800 dark:text-slate-200 @else text-slate-400 @endif">{{ $stepName }}</span>
                     </div>
-                    <span class="text-[10px] font-bold text-slate-800 dark:text-slate-200">Placed</span>
-                </div>
-
-                <!-- Processing -->
-                <div class="flex flex-col items-center gap-1.5 bg-white dark:bg-slate-900 px-2">
-                    @php
-                        $processingActive = $currentStepIndex >= 0;
-                    @endphp
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all border
-                        {{ $processingActive ? 'bg-blue-600 dark:bg-blue-500 text-white border-transparent shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700' }}">
-                        @if($currentStepIndex > 0)
-                            <i class="fa-solid fa-check text-[10px]"></i>
-                        @else
-                            2
-                        @endif
-                    </div>
-                    <span class="text-[10px] font-bold {{ $processingActive ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400' }}">Processing</span>
-                </div>
-
-                <!-- Shipped -->
-                <div class="flex flex-col items-center gap-1.5 bg-white dark:bg-slate-900 px-2">
-                    @php
-                        $shippedActive = $currentStepIndex >= 1;
-                    @endphp
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all border
-                        {{ $shippedActive ? 'bg-blue-600 dark:bg-blue-500 text-white border-transparent shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700' }}">
-                        @if($currentStepIndex > 1)
-                            <i class="fa-solid fa-check text-[10px]"></i>
-                        @else
-                            3
-                        @endif
-                    </div>
-                    <span class="text-[10px] font-bold {{ $shippedActive ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400' }}">Shipped</span>
-                </div>
-
-                <!-- Delivered -->
-                <div class="flex flex-col items-center gap-1.5 bg-white dark:bg-slate-900 px-2">
-                    @php
-                        $deliveredActive = $currentStepIndex >= 2;
-                    @endphp
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all border
-                        {{ $deliveredActive ? 'bg-blue-600 dark:bg-blue-500 text-white border-transparent shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700' }}">
-                        @if($currentStepIndex >= 2)
-                            <i class="fa-solid fa-check text-[10px]"></i>
-                        @else
-                            4
-                        @endif
-                    </div>
-                    <span class="text-[10px] font-bold {{ $deliveredActive ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400' }}">Delivered</span>
-                </div>
+                @endforeach
             </div>
         </div>
         @else
@@ -416,11 +367,8 @@
                         </div>
                     @endforelse
                 </div>
-                        <p class="text-xs text-slate-400 mt-0.5">Package successfully delivered to the recipient.</p>
-                    </li>
-                    @endif
 
-                    <!-- Event: Delivered -->
+                <!-- Event: Delivered -->
                     @if($statusVal === 'Delivered')
                     <li class="mb-4 ml-6">
                         <span class="absolute flex items-center justify-center w-5 h-5 bg-emerald-100 dark:bg-emerald-900/30 rounded-full -left-2.5 ring-4 ring-white dark:ring-slate-900 text-emerald-600">
