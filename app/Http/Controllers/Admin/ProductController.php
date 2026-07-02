@@ -58,6 +58,9 @@ class ProductController extends Controller
             'dimensions'        => 'nullable|string',
             'product_images'    => 'nullable|array',
             'product_images.*'  => 'image|max:4096',
+            'meta_title'        => 'nullable|string|max:255',
+            'meta_description'  => 'nullable|string|max:1000',
+            'meta_keywords'     => 'nullable|string|max:1000',
         ], [
             'sale_price.lte'    => 'Invalid Pricing: The sale price must be equal to or lower than the regular price.',
         ]);
@@ -124,6 +127,9 @@ class ProductController extends Controller
             'dimensions'        => 'nullable|string',
             'product_images'    => 'nullable|array',
             'product_images.*'  => 'image|max:4096',
+            'meta_title'        => 'nullable|string|max:255',
+            'meta_description'  => 'nullable|string|max:1000',
+            'meta_keywords'     => 'nullable|string|max:1000',
         ], [
             'sale_price.lte'    => 'Invalid Pricing: The sale price must be equal to or lower than the regular price.',
         ]);

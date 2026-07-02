@@ -882,7 +882,7 @@ body.storefront {
 
 /* TOAST */
 .toast-wrap {
-    @apply fixed top-6 right-6 z-[9999] flex flex-col gap-2.5 pointer-events-none;
+    @apply fixed top-6 right-6 z-[100005] flex flex-col gap-2.5 pointer-events-none;
 }
 .toast {
     @apply text-white px-4.5 py-3.5 rounded-[10px] text-[13px] font-medium flex items-center gap-2.5 shadow-[0_8px_30px_rgba(0,0,0,0.2)] pointer-events-auto max-w-[320px];

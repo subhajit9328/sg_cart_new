@@ -17,6 +17,7 @@ class Product extends Model
         'name', 'slug', 'sku', 'category_id', 'manufacturer_id',
         'short_description', 'description', 'price', 'sale_price',
         'stock', 'min_stock', 'status', 'weight', 'dimensions',
+        'meta_title', 'meta_description', 'meta_keywords',
     ];
 
     protected static function boot()

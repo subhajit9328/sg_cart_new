@@ -534,6 +534,94 @@
             });
         }
 
+        // Profile Picture Delete AJAX
+        const deleteBtn = document.getElementById('profile-picture-delete-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function() {
+                showConfirm('Are you sure you want to remove your profile photo?', () => {
+                    const loader = document.getElementById('profile-picture-loader');
+                    loader.classList.remove('opacity-0', 'pointer-events-none');
+                    loader.classList.add('opacity-100');
+
+                    fetch("{{ route('store.account.profile-picture.destroy') }}", {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(res => {
+                        if (!res.ok) {
+                            return res.json().then(errData => {
+                                throw new Error(errData.message || 'Server error occurred.');
+                            });
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message, 'success');
+
+                            // Remove image element
+                            const img = document.getElementById('profile-picture-img');
+                            if (img) img.remove();
+
+                            // Add initials back
+                            const container = document.getElementById('profile-picture-container');
+                            let initials = document.getElementById('profile-picture-initials');
+                            if (!initials) {
+                                initials = document.createElement('span');
+                                initials.id = 'profile-picture-initials';
+                                
+                                // Fetch the user's name from the header h3 element
+                                const userNameEl = container.closest('.flex').querySelector('h3');
+                                const userName = userNameEl ? userNameEl.textContent.trim() : 'Test User';
+                                
+                                // Get initials helper matching PHP strtoupper(substr($name, 0, 2))
+                                const getInitials = (name) => {
+                                    if (!name) return 'TE';
+                                    return name.trim().substring(0, 2).toUpperCase();
+                                };
+                                initials.textContent = getInitials(userName);
+                                container.insertBefore(initials, loader);
+                            }
+
+                            // Hide delete button and divider
+                            deleteBtn.classList.add('hidden');
+                            const divider = document.getElementById('profile-picture-divider');
+                            if (divider) divider.classList.add('hidden');
+
+                            // Reset header and mobile navigation avatars
+                            const headerAvatarContainer = document.getElementById('header-account-avatar-container');
+                            if (headerAvatarContainer) {
+                                headerAvatarContainer.innerHTML = `<i class="fa-regular fa-circle-user header-account-icon"></i>`;
+                            }
+                            const btn = document.getElementById('header-account-btn');
+                            if (btn) btn.classList.remove('has-avatar');
+
+                            const mobileAvatarContainer = document.getElementById('mobile-nav-avatar-container');
+                            if (mobileAvatarContainer) {
+                                mobileAvatarContainer.innerHTML = `
+                                    <div class="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent text-lg">
+                                        <i class="fa-regular fa-user"></i>
+                                    </div>
+                                `;
+                            }
+                        } else {
+                            showToast(data.message || 'Failed to remove profile photo.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        showToast(err.message || 'Something went wrong.', 'error');
+                    })
+                    .finally(() => {
+                        loader.classList.remove('opacity-100');
+                        loader.classList.add('opacity-0', 'pointer-events-none');
+                    });
+                }, 'Remove Photo');
+            });
+        }
+
         @if ($errors->any())
         if (typeof openAddressModal === 'function') {
             openAddressModal();
