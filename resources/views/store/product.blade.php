@@ -1,6 +1,24 @@
 @extends('layouts.store')
 
-@section('title', $product['name'] . ' — sgcart')
+@section('title', !empty($product['meta_title']) ? $product['meta_title'] : $product['name'] . ' — sgcart')
+
+@section('meta')
+    <meta name="description" content="{{ !empty($product['meta_description']) ? $product['meta_description'] : Str::limit(strip_tags($product['desc']), 155) }}">
+    @if(!empty($product['meta_keywords']))
+        <meta name="keywords" content="{{ $product['meta_keywords'] }}">
+    @endif
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="product">
+    <meta property="og:title" content="{{ !empty($product['meta_title']) ? $product['meta_title'] : $product['name'] }}">
+    <meta property="og:description" content="{{ !empty($product['meta_description']) ? $product['meta_description'] : Str::limit(strip_tags($product['desc']), 155) }}">
+    <meta property="og:image" content="{{ $product['img'] }}">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ !empty($product['meta_title']) ? $product['meta_title'] : $product['name'] }}">
+    <meta name="twitter:description" content="{{ !empty($product['meta_description']) ? $product['meta_description'] : Str::limit(strip_tags($product['desc']), 155) }}">
+    <meta name="twitter:image" content="{{ $product['img'] }}">
+@endsection
 
 @section('content')
 

@@ -16,7 +16,7 @@
     <div class="grid grid-cols-1 md:grid-cols-[1fr_360px] gap-6 items-start">
         
         <!-- Address & Payment Entry Form (Left) -->
-        <form action="{{ route('store.checkout.order') }}" method="POST" class="contents">
+        <form action="{{ route('store.checkout.order') }}" method="POST" class="contents" id="checkoutForm">
             @csrf
             
             <div class="flex flex-col gap-4">
@@ -629,6 +629,24 @@
             modal.addEventListener('click', function(e) {
                 if (e.target === modal) {
                     closeCheckoutAddressModal();
+                }
+            });
+        }
+
+        // Validate shipping address selection before placing order
+        const checkoutForm = document.getElementById('checkoutForm');
+        if (checkoutForm) {
+            checkoutForm.addEventListener('submit', function(e) {
+                const selectedAddress = checkoutForm.querySelector('input[name="address_id"]:checked');
+                if (!selectedAddress) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    if (window.showToast) {
+                        showToast('Please add and select a shipping address to proceed.', 'error');
+                    } else {
+                        alert('Please add and select a shipping address to proceed.');
+                    }
                 }
             });
         }

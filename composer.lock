@@ -4,11 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-<<<<<<< HEAD
-    "content-hash": "c18f53c7d4b364ba1cca2eea0eef8d4e",
-=======
-    "content-hash": "34619ae78ccc3e1ec03d967b0ee7772e",
->>>>>>> 78b4336f73fb808a84b3e87cdd9e117fb4f59a52
+    "content-hash": "eba33f252c6aa6e90c222286d53c3077",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -66,16 +62,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.387.0",
+            "version": "3.387.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "38422b3eaed583a6056cef6d40e5594cd90cc895"
+                "reference": "2e1a16e9c87f2a069aa8a0a14a314dd148de21e1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/38422b3eaed583a6056cef6d40e5594cd90cc895",
-                "reference": "38422b3eaed583a6056cef6d40e5594cd90cc895",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/2e1a16e9c87f2a069aa8a0a14a314dd148de21e1",
+                "reference": "2e1a16e9c87f2a069aa8a0a14a314dd148de21e1",
                 "shasum": ""
             },
             "require": {
@@ -157,9 +153,9 @@
             "support": {
                 "forum": "https://github.com/aws/aws-sdk-php/discussions",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.387.0"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.387.1"
             },
-            "time": "2026-06-30T18:31:55+00:00"
+            "time": "2026-07-01T18:10:42+00:00"
         },
         {
             "name": "barryvdh/laravel-dompdf",
@@ -3980,7 +3976,7 @@
         },
         {
             "name": "sgcart/blog",
-            "version": "dev-implement_blog_package",
+            "version": "dev-fix_issues_and_bugs_debanjan",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/blog",
@@ -4020,11 +4016,7 @@
         },
         {
             "name": "sgcart/coupons",
-<<<<<<< HEAD
-            "version": "dev-optimize_refactor_packages",
-=======
-            "version": "dev-implement_blog_package",
->>>>>>> 78b4336f73fb808a84b3e87cdd9e117fb4f59a52
+            "version": "dev-fix_issues_and_bugs_debanjan",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/coupons",
@@ -4063,7 +4055,7 @@
         },
         {
             "name": "sgcart/dashboard-analytics",
-            "version": "dev-implement_blog_package",
+            "version": "dev-fix_issues_and_bugs_debanjan",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/dashboard-analytics",
@@ -4102,7 +4094,7 @@
         },
         {
             "name": "sgcart/image-search",
-            "version": "dev-implement_blog_package",
+            "version": "dev-fix_issues_and_bugs_debanjan",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/image-search",
@@ -4138,7 +4130,7 @@
         },
         {
             "name": "sgcart/inventory",
-            "version": "dev-implement_blog_package",
+            "version": "dev-fix_issues_and_bugs_debanjan",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/inventory",
@@ -4146,8 +4138,6 @@
             },
             "require": {
                 "php": "^8.2"
-<<<<<<< HEAD
-=======
             },
             "type": "library",
             "extra": {
@@ -4179,7 +4169,7 @@
         },
         {
             "name": "sgcart/logistic-tracking",
-            "version": "dev-implement_blog_package",
+            "version": "dev-fix_issues_and_bugs_debanjan",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/logistic-tracking",
@@ -4187,45 +4177,27 @@
             },
             "require": {
                 "php": "^8.2|^8.3"
->>>>>>> 78b4336f73fb808a84b3e87cdd9e117fb4f59a52
             },
             "type": "library",
             "extra": {
                 "laravel": {
                     "providers": [
-<<<<<<< HEAD
-                        "SGCart\\Inventory\\Providers\\InventoryServiceProvider"
-=======
                         "SGCart\\LogisticTracking\\Providers\\LogisticTrackingServiceProvider"
->>>>>>> 78b4336f73fb808a84b3e87cdd9e117fb4f59a52
                     ]
                 }
             },
             "autoload": {
                 "psr-4": {
-<<<<<<< HEAD
-                    "SGCart\\Inventory\\": "src/"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-=======
                     "SGCart\\LogisticTracking\\": "src/"
                 }
             },
->>>>>>> 78b4336f73fb808a84b3e87cdd9e117fb4f59a52
             "authors": [
                 {
                     "name": "SGCart Team",
                     "email": "support@sgcart.com"
                 }
             ],
-<<<<<<< HEAD
-            "description": "Simple entry-level Inventory Management System for SGCart",
-=======
             "description": "Provides logistic tracking capability for orders",
->>>>>>> 78b4336f73fb808a84b3e87cdd9e117fb4f59a52
             "transport-options": {
                 "symlink": true,
                 "relative": true
@@ -4233,11 +4205,7 @@
         },
         {
             "name": "sgcart/payment-razorpay",
-<<<<<<< HEAD
-            "version": "dev-optimize_refactor_packages",
-=======
-            "version": "dev-implement_blog_package",
->>>>>>> 78b4336f73fb808a84b3e87cdd9e117fb4f59a52
+            "version": "dev-fix_issues_and_bugs_debanjan",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/payment-razorpay",
@@ -4276,11 +4244,7 @@
         },
         {
             "name": "sgcart/product-variants",
-<<<<<<< HEAD
-            "version": "dev-optimize_refactor_packages",
-=======
-            "version": "dev-implement_blog_package",
->>>>>>> 78b4336f73fb808a84b3e87cdd9e117fb4f59a52
+            "version": "dev-fix_issues_and_bugs_debanjan",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/product-variants",
@@ -4320,11 +4284,7 @@
         },
         {
             "name": "sgcart/shipping",
-<<<<<<< HEAD
-            "version": "dev-optimize_refactor_packages",
-=======
-            "version": "dev-implement_blog_package",
->>>>>>> 78b4336f73fb808a84b3e87cdd9e117fb4f59a52
+            "version": "dev-fix_issues_and_bugs_debanjan",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/shipping",
@@ -4363,11 +4323,7 @@
         },
         {
             "name": "sgcart/tax",
-<<<<<<< HEAD
-            "version": "dev-optimize_refactor_packages",
-=======
-            "version": "dev-implement_blog_package",
->>>>>>> 78b4336f73fb808a84b3e87cdd9e117fb4f59a52
+            "version": "dev-fix_issues_and_bugs_debanjan",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/tax",
@@ -9861,10 +9817,7 @@
         "sgcart/dashboard-analytics": 20,
         "sgcart/image-search": 20,
         "sgcart/inventory": 20,
-<<<<<<< HEAD
-=======
         "sgcart/logistic-tracking": 20,
->>>>>>> 78b4336f73fb808a84b3e87cdd9e117fb4f59a52
         "sgcart/payment-razorpay": 20,
         "sgcart/product-variants": 20,
         "sgcart/shipping": 20,

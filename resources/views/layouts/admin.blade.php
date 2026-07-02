@@ -723,10 +723,48 @@
 
     // Global Custom Tooltips Handler (Appended to body to prevent overflow clipping)
     $(document).ready(function() {
-        const $tooltip = $('<div id="globalTooltip" class="fixed hidden bg-slate-900/95 dark:bg-slate-950/95 text-slate-100 dark:text-slate-200 text-[11px] font-medium leading-relaxed px-3 py-1.5 rounded-lg shadow-xl border border-white/10 dark:border-slate-800/80 z-[10000] pointer-events-none transition-all duration-150 transform opacity-0 w-max max-w-[240px] whitespace-normal backdrop-blur-xs"></div>');
+        const $tooltip = $('<div id="globalTooltip" class="fixed hidden text-[11px] font-medium leading-relaxed px-3 py-1.5 rounded-lg shadow-xl z-[10000] pointer-events-none transition-all duration-150 transform opacity-0 w-max whitespace-normal backdrop-blur-xs"></div>');
         const $arrow = $('<div class="absolute border-[5px] border-transparent"></div>');
         $tooltip.append($arrow);
         $('body').append($tooltip);
+
+        const themes = {
+            'dark': {
+                tooltip: 'bg-slate-900 dark:bg-slate-950 text-slate-100 border border-slate-800/80 shadow-lg shadow-slate-950/20',
+                arrowColor: {
+                    'right': 'border-r-slate-900 dark:border-r-slate-950',
+                    'top': 'border-t-slate-900 dark:border-t-slate-950'
+                }
+            },
+            'light': {
+                tooltip: 'bg-white text-slate-800 border border-slate-200 shadow-md',
+                arrowColor: {
+                    'right': 'border-r-white',
+                    'top': 'border-t-white'
+                }
+            },
+            'info': {
+                tooltip: 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white border border-blue-500/30 shadow-lg shadow-indigo-500/10',
+                arrowColor: {
+                    'right': 'border-r-indigo-700',
+                    'top': 'border-t-indigo-700'
+                }
+            },
+            'warning': {
+                tooltip: 'bg-gradient-to-br from-amber-500 to-orange-600 text-white border border-amber-500/30 shadow-lg shadow-amber-500/10',
+                arrowColor: {
+                    'right': 'border-r-orange-600',
+                    'top': 'border-t-orange-600'
+                }
+            },
+            'error': {
+                tooltip: 'bg-gradient-to-br from-rose-600 to-red-700 text-white border border-rose-500/30 shadow-lg shadow-rose-500/10',
+                arrowColor: {
+                    'right': 'border-r-red-700',
+                    'top': 'border-t-red-700'
+                }
+            }
+        };
 
         $(document).on('mouseenter', '[data-tooltip]', function() {
             // Sidebar item handling: only show when sidebar is in icon-only mode
@@ -738,6 +776,8 @@
             if (!text) return;
 
             const position = $(this).attr('data-tooltip-position') || ($(this).hasClass('nav-link') ? 'right' : 'top');
+            const theme = $(this).attr('data-tooltip-theme') || 'dark';
+            const customWidth = $(this).attr('data-tooltip-width');
             const rect = this.getBoundingClientRect();
 
             // Set text and re-append arrow
@@ -746,6 +786,25 @@
             // Clean up arrow classes
             $arrow.attr('class', 'absolute border-[5px] border-transparent');
 
+            // Apply theme styling
+            const themeConfig = themes[theme] || themes['dark'];
+            $tooltip.attr('class', 'fixed hidden text-[11px] font-medium leading-relaxed px-3 py-1.5 rounded-lg shadow-xl z-[10000] pointer-events-none transition-all duration-150 transform opacity-0 w-max whitespace-normal backdrop-blur-xs ' + themeConfig.tooltip);
+
+            // Apply custom width
+            if (customWidth) {
+                const widths = {
+                    'w-48': '192px',
+                    'w-56': '224px',
+                    'w-64': '256px',
+                    'w-72': '288px',
+                    'w-80': '320px',
+                    'w-96': '384px'
+                };
+                $tooltip.css('max-width', widths[customWidth] || '240px');
+            } else {
+                $tooltip.css('max-width', '240px');
+            }
+
             let top = 0;
             let left = 0;
             let startTransform = '';
@@ -753,13 +812,13 @@
 
             // Calculate position
             if (position === 'right') {
-                $arrow.addClass('right-full top-1/2 -translate-y-1/2 border-r-slate-900 dark:border-r-slate-950');
+                $arrow.addClass('right-full top-1/2 -translate-y-1/2 ' + themeConfig.arrowColor['right']);
                 top = rect.top + rect.height / 2;
                 left = rect.right + 10;
                 startTransform = 'translateY(-50%) translateX(-6px)';
                 endTransform = 'translateY(-50%) translateX(0)';
             } else { // default to 'top'
-                $arrow.addClass('top-full left-1/2 -translate-x-1/2 border-t-slate-900 dark:border-t-slate-950');
+                $arrow.addClass('top-full left-1/2 -translate-x-1/2 ' + themeConfig.arrowColor['top']);
                 top = rect.top - 10;
                 left = rect.left + rect.width / 2;
                 startTransform = 'translateY(6px) translateX(-50%)';
@@ -827,6 +886,13 @@
                     $tooltip.addClass('hidden');
                 }
             });
+        });
+
+        // Click outside dismiss handler for mobile touch screen support
+        $(document).on('click touchstart', function(e) {
+            if (!$(e.target).closest('[data-tooltip]').length) {
+                $tooltip.css({ opacity: 0 }).addClass('hidden');
+            }
         });
     });
 </script>

@@ -108,6 +108,13 @@
             "options": {
                 "symlink": true
             }
+        }, 
+        {
+            "type": "path",
+            "url": "packages/sgcart/dashboard-analytics",
+            "options": {
+                "symlink": true
+            }
         }
     ],
     "autoload": {

@@ -10,7 +10,7 @@
             <i class="fa-solid fa-arrow-left"></i>
         </a>
         <div>
-            <h1 class="font-display text-2xl font-bold">Edit Product</h1>
+            <h1 class="font-display text-xl sm:text-2xl font-bold">Edit Product</h1>
             <x-breadcrumbs :items="[
                 ['label' => 'Admin', 'url' => route('admin.dashboard')],
                 ['label' => 'Catalogue'],
@@ -20,14 +20,14 @@
             ]" />
         </div>
     </div>
-    <div>
+    <div class="w-full sm:w-auto">
         @if($product->status === 'active')
-            <a href="{{ route('store.product', $product->slug) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-semibold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm">
+            <a href="{{ route('store.product', $product->slug) }}" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-semibold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm">
                 <i class="fa-solid fa-eye text-slate-500 dark:text-slate-400"></i>
                 <span>Preview Product</span>
             </a>
         @else
-            <span class="inline-flex items-center gap-2 px-4 py-2 border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-slate-400 dark:text-slate-600 rounded-lg text-sm font-semibold cursor-not-allowed shadow-sm" title="Product must be active to view on storefront">
+            <span class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-slate-400 dark:text-slate-600 rounded-lg text-sm font-semibold cursor-not-allowed shadow-sm" title="Product must be active to view on storefront">
                 <i class="fa-solid fa-eye text-slate-400 dark:text-slate-600"></i>
                 <span>Preview Product</span>
             </span>
@@ -36,11 +36,15 @@
 </div>
 
 <!-- Tab Navigation (Underline Style outside the card) -->
-<div class="flex items-center border-b border-slate-200 dark:border-slate-800 mb-6">
-    <div class="flex gap-1 -mb-px">
+<div class="flex items-center border-b border-slate-200 dark:border-slate-800 mb-6 overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+    <div class="flex gap-1 -mb-px min-w-max">
         <button type="button" onclick="switchTab('details')" id="tabBtn_details" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-400 outline-none select-none bg-transparent cursor-pointer flex items-center gap-2">
             <i class="fa-solid fa-circle-info text-xs"></i>
             <span>Basic Details</span>
+        </button>
+        <button type="button" onclick="switchTab('seo')" id="tabBtn_seo" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 outline-none select-none bg-transparent cursor-pointer flex items-center gap-2">
+            <i class="fa-solid fa-search text-xs"></i>
+            <span>SEO Metadata</span>
         </button>
         @if(Route::has('admin.products.variants.grid'))
         <button type="button" onclick="switchTab('variants')" id="tabBtn_variants" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 outline-none select-none bg-transparent cursor-pointer flex items-center gap-2">
@@ -51,15 +55,16 @@
     </div>
 </div>
 
-<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm w-full overflow-hidden">
+<div id="mainProductCard" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm w-full overflow-hidden">
     <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
         <h2 class="font-semibold text-sm font-display" id="cardTitle">Update Product Information</h2>
     </div>
 
-    <div id="detailsTabContent" class="tab-content">
-        <form method="POST" action="{{ route('admin.products.update', $product->ulid) }}" enctype="multipart/form-data" class="p-6 space-y-8">
+    <form method="POST" action="{{ route('admin.products.update', $product->ulid) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
+
+        <div id="detailsTabContent" class="tab-content p-4 sm:p-6 space-y-6 sm:space-y-8">
 
         {{-- ── Basic Info Section ── --}}
         <div class="space-y-4">
@@ -80,7 +85,13 @@
                     @error('slug') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label for="sku" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">SKU <span class="text-rose-600">*</span></label>
+                    <label for="sku" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2 flex items-center gap-1.5">
+                        <span>SKU</span>
+                        <span class="text-rose-600">*</span>
+                        <x-tooltip content="Stock Keeping Unit: a unique identifier for this product variant." position="top" theme="info" width="w-56">
+                            <i class="fa-solid fa-circle-question text-slate-400 dark:text-slate-500 hover:text-blue-500 cursor-help text-xs"></i>
+                        </x-tooltip>
+                    </label>
                     <input type="text" name="sku" id="sku" value="{{ old('sku', $product->sku) }}" required
                         class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 font-mono @error('sku') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
                         placeholder="IPH15P-128GB">
@@ -172,7 +183,12 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label for="status" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Publish Status</label>
+                    <label for="status" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2 flex items-center gap-1.5">
+                        <span>Publish Status</span>
+                        <x-tooltip content="Draft: invisible to shoppers. Active: published in storefront. Inactive: hidden temporarily." position="top" theme="info" width="w-64">
+                            <i class="fa-solid fa-circle-question text-slate-400 dark:text-slate-500 hover:text-blue-500 cursor-help text-xs"></i>
+                        </x-tooltip>
+                    </label>
                     <select name="status" id="status"
                         class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3 text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-blue-500 transition-all">
                         @foreach(['draft','active','inactive'] as $s)
@@ -191,8 +207,7 @@
                         class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100">
                 </div>
             </div>
-
-
+        </div>
 
             {{-- ── Product Image Section ── --}}
         <div class="space-y-4">
@@ -236,24 +251,71 @@
             
             <div id="hiddenInputsContainer" class="hidden"></div>
         </div>
-        </div>
+        </div> {{-- Close detailsTabContent --}}
+
+        <div id="seoTabContent" class="tab-content hidden p-4 sm:p-6 space-y-6 sm:space-y-8">
+            {{-- ── SEO Metadata Section ── --}}
+            <div class="space-y-4">
+                <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">SEO Metadata</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="meta_title" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Meta Title</label>
+                        <input type="text" name="meta_title" id="meta_title" value="{{ old('meta_title', $product->meta_title) }}"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('meta_title') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
+                            placeholder="Leave empty to use Product Name">
+                        @error('meta_title') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label for="meta_keywords" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Meta Keywords</label>
+                        <input type="text" name="meta_keywords" id="meta_keywords" value="{{ old('meta_keywords', $product->meta_keywords) }}"
+                            class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('meta_keywords') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
+                            placeholder="keyword1, keyword2, keyword3">
+                        @error('meta_keywords') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+
+                <div>
+                    <label for="meta_description" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Meta Description</label>
+                    <textarea name="meta_description" id="meta_description" rows="3"
+                        class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('meta_description') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
+                        placeholder="Leave empty to fallback to Product Short Description/Description...">{{ old('meta_description', $product->meta_description) }}</textarea>
+                    @error('meta_description') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Live SEO Preview Card --}}
+                <div class="p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 rounded-xl space-y-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Google Search Snippet Preview</span>
+                    <div class="text-sm font-display space-y-1">
+                        <div id="seo-preview-url" class="text-xs text-emerald-600 dark:text-emerald-500 truncate font-mono">
+                            {{ url('/products') }}/<span id="seo-preview-slug-text"></span>
+                        </div>
+                        <div id="seo-preview-title" class="text-blue-700 dark:text-blue-400 font-medium text-lg leading-tight hover:underline cursor-pointer truncate">
+                            Product Name
+                        </div>
+                        <div id="seo-preview-description" class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+                            Enter meta description details to preview search snippet here.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> {{-- Close seoTabContent --}}
 
         <!-- Form Actions -->
-        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-            <a href="{{ route('admin.products.index') }}" class="px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium transition-colors text-slate-700 dark:text-slate-300 no-underline">
+        <div id="formActions" class="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 p-4 sm:p-6 border-t border-slate-100 dark:border-slate-800 w-full">
+            <a href="{{ route('admin.products.index') }}" class="w-full sm:w-auto text-center px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium transition-colors text-slate-700 dark:text-slate-300 no-underline">
                 Cancel
             </a>
-            <button type="submit" class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium transition-colors shadow-lg shadow-blue-600/10 border-none cursor-pointer">
+            <button type="submit" class="w-full sm:w-auto justify-center px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium transition-colors shadow-lg shadow-blue-600/10 border-none cursor-pointer flex items-center">
                 Update Product
             </button>
         </div>
-
     </form>
     </div>
 
     @if(Route::has('admin.products.variants.grid'))
     <!-- Variants Tab Content -->
-    <div id="variantsTabContent" class="tab-content hidden p-6">
+    <div id="variantsTabContent" class="tab-content hidden p-4 sm:p-6">
         <!-- Loader Skeleton -->
         <div id="variantsLoader" class="space-y-6 animate-pulse">
             <!-- Header Skeleton -->
@@ -420,11 +482,21 @@ function removeNewImage(id) {
 <script>
     // Tab toggler logic
     window.switchTab = function(tab) {
-        const tabs = ['details'];
+        const tabs = ['details', 'seo'];
         @if(Route::has('admin.products.variants.grid'))
         tabs.push('variants');
         @endif
         const cardTitle = document.getElementById('cardTitle');
+        const formActions = document.getElementById('formActions');
+        const mainCard = document.getElementById('mainProductCard');
+
+        if (mainCard) {
+            if (tab === 'variants') {
+                mainCard.classList.add('hidden');
+            } else {
+                mainCard.classList.remove('hidden');
+            }
+        }
 
         tabs.forEach(t => {
             const btn = document.getElementById('tabBtn_' + t);
@@ -441,8 +513,25 @@ function removeNewImage(id) {
         if (cardTitle) {
             if (tab === 'details') {
                 cardTitle.textContent = "Update Product Information";
+            } else if (tab === 'seo') {
+                let metaTitle = $('#meta_title').val();
+                let metaDescription = $('#meta_description').val();
+                let metaKeywords = $('#meta_keywords').val();
+                if (metaTitle || metaDescription || metaKeywords) {
+                    cardTitle.textContent = "Configure SEO Metadata & Preview";
+                } else {
+                    cardTitle.textContent = "Add SEO Metadata";
+                }
             } else if (tab === 'variants') {
                 cardTitle.textContent = "Manage Product Variants & Inventory";
+            }
+        }
+
+        if (formActions) {
+            if (tab === 'variants') {
+                formActions.classList.add('hidden');
+            } else {
+                formActions.classList.remove('hidden');
             }
         }
 
@@ -512,15 +601,66 @@ function removeNewImage(id) {
             $('#slug').val(slug);
         });
 
+        // SEO Real-time Snippet Preview Script
+        function updateSeoPreview() {
+            let name = $('#name').val() || 'Product Name';
+            let slug = $('#slug').val() || '';
+            let metaTitle = $('#meta_title').val();
+            let metaDescription = $('#meta_description').val();
+            let metaKeywords = $('#meta_keywords').val();
+            let shortDesc = $('#short_description').val();
+            let fullDesc = $('#description').val();
+
+            // Set Title Preview
+            $('#seo-preview-title').text(metaTitle ? metaTitle : name);
+            
+            // Set Slug/URL Preview
+            $('#seo-preview-slug-text').text(slug);
+
+            // Set Description Preview
+            let descPreview = 'Enter meta description details to preview search snippet here.';
+            if (metaDescription) {
+                descPreview = metaDescription;
+            } else if (shortDesc) {
+                descPreview = shortDesc;
+            } else if (fullDesc) {
+                descPreview = fullDesc;
+            }
+            $('#seo-preview-description').text(descPreview);
+
+            // Dynamically update card title if currently on SEO tab
+            const urlParams = new URLSearchParams(window.location.search);
+            const activeTab = urlParams.get('tab') || 'details';
+            if (activeTab === 'seo') {
+                const cardTitle = document.getElementById('cardTitle');
+                if (cardTitle) {
+                    if (metaTitle || metaDescription || metaKeywords) {
+                        cardTitle.textContent = "Configure SEO Metadata & Preview";
+                    } else {
+                        cardTitle.textContent = "Add SEO Metadata";
+                    }
+                }
+            }
+        }
+
+        $('#name, #slug, #meta_title, #meta_description, #short_description, #description').on('input change', function() {
+            updateSeoPreview();
+        });
+        
+        // Initialize SEO Preview
+        updateSeoPreview();
+
         // Check for active tab query parameter
         const urlParams = new URLSearchParams(window.location.search);
         const activeTab = urlParams.get('tab') || 'details';
-        if (activeTab !== 'details') {
-            @if(Route::has('admin.products.variants.grid'))
+        const allowedTabs = ['details', 'seo'];
+        @if(Route::has('admin.products.variants.grid'))
+        allowedTabs.push('variants');
+        @endif
+        if (allowedTabs.includes(activeTab)) {
             switchTab(activeTab);
-            @else
+        } else {
             switchTab('details');
-            @endif
         }
     });
 </script>

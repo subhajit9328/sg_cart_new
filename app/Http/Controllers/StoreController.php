@@ -80,6 +80,9 @@ class StoreController extends Controller
                 'images' => $p->images->isNotEmpty()
                     ? $p->images->sortByDesc('is_default')->map(fn ($img) => Storage::url($img->image_path))->values()->toArray()
                     : [asset('images/no-image.svg')],
+                'meta_title' => $p->meta_title,
+                'meta_description' => $p->meta_description,
+                'meta_keywords' => $p->meta_keywords,
             ];
         })->toArray();
     }

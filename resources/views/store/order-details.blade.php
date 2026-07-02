@@ -177,21 +177,7 @@
                                             @endif
                                         </span>
                                     </div>
-                                </div>
                             @endif
-
-                            <!-- Event: Processed & Packed -->
-                            <div class="relative">
-                                <span class="absolute -left-[33px] top-0.5 flex items-center justify-center w-5 h-5 bg-emerald-100 text-emerald-600 rounded-full ring-4 ring-white">
-                                    <i class="fa-solid fa-circle-check text-[10px]"></i>
-                                </span>
-                                <div class="text-xs">
-                                    <span class="font-bold text-slate-900 block">Package Delivered</span>
-                                    <p class="text-slate-500 mt-0.5">Package successfully delivered to the recipient address.</p>
-                                    <span class="text-[10px] text-slate-400 mt-1 block">{{ $order->updated_at->format('M d, Y h:i A') }}</span>
-                                </div>
-                            </div>
-                        @endif
 
                         <!-- Event: Out for Delivery -->
                         @if($status === 'Out for Delivery' || $status === 'Delivered')
