@@ -84,7 +84,7 @@
                 {{ $reviews->total() }}
             </span>
         </div>
-        
+
         <form action="{{ route('admin.reviews.index') }}" method="GET" class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
             <!-- Search Box -->
             <div class="relative flex items-center w-full sm:w-64">
@@ -104,11 +104,11 @@
 
             <!-- Select All Button -->
             @if($reviews->isNotEmpty())
-                <button type="button" id="select-all-btn" onclick="toggleBulkSelect()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg text-xs font-semibold cursor-pointer border-none transition-colors">
-                    Select All
+                <button type="button" id="select-all-btn" onclick="toggleBulkSelect()" class="px-3 py-1.5 bg-white  text-slate-600 border border-slate-200 hover:text-slate-800 active:border-blue-400 rounded-lg text-xs font-semibold cursor-pointer transition-colors">
+                    Bulk Action
                 </button>
             @endif
-            
+
             @if(request()->anyFilled(['search', 'status_id']))
                 <a href="{{ route('admin.reviews.index') }}" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 dark:bg-rose-950/20 dark:border-rose-900/30 dark:text-rose-400 text-xs font-semibold transition-colors text-center no-underline flex items-center justify-center">
                     Clear Filters
@@ -121,7 +121,7 @@
     <form id="bulk-action-form" action="{{ route('admin.reviews.bulkAction') }}" method="POST">
         @csrf
         <input type="hidden" name="action" id="bulk-action-input" value="">
-        
+
         <!-- Bulk Actions Bar -->
         <div id="bulk-actions-bar" class="px-5 py-3 border-b border-slate-200 dark:border-slate-800 bg-blue-50/40 dark:bg-blue-955/10 flex flex-wrap items-center justify-between gap-4 hidden" style="display: none;">
             <div class="flex items-center gap-2 text-xs font-semibold text-slate-650 dark:text-slate-350">
@@ -172,7 +172,7 @@
                             <div class="font-bold text-slate-850 dark:text-white">{{ $rv->customer->name ?? 'Unknown Customer' }}</div>
                             <div class="text-[10px] text-slate-400 mt-0.5">{{ $rv->customer->email ?? '' }}</div>
                         </td>
-                        
+
                         <!-- Product -->
                         <td class="py-4 px-5">
                             <div class="font-bold text-slate-850 dark:text-white">{{ $rv->product->name ?? 'Unknown Product' }}</div>
@@ -198,8 +198,8 @@
                             @if($rv->images->isNotEmpty())
                                 <div class="mt-2 flex flex-wrap gap-1.5">
                                     @foreach($rv->images as $img)
-                                        <img src="{{ \Illuminate\Support\Facades\Storage::url($img->image_path) }}" 
-                                             alt="Review Image" 
+                                        <img src="{{ \Illuminate\Support\Facades\Storage::url($img->image_path) }}"
+                                             alt="Review Image"
                                              class="w-12 h-12 object-cover rounded-lg border border-slate-200 dark:border-slate-800 cursor-zoom-in hover:brightness-90 transition-all shadow-sm"
                                              onclick="openLightbox('{{ \Illuminate\Support\Facades\Storage::url($img->image_path) }}')">
                                     @endforeach
@@ -243,7 +243,7 @@
                                         </button>
                                     </form>
                                 @endif
-                                
+
                                 @if($statusEnum !== \SGCart\Reviews\Enums\ReviewStatus::REJECTED)
                                     <form action="{{ route('admin.reviews.reject', $rv->id) }}" method="POST" class="inline">
                                         @csrf
@@ -337,7 +337,7 @@
         const bulkBar = document.getElementById('bulk-actions-bar');
         const masterToggle = document.getElementById('bulk-toggle-all');
         const rowCheckboxes = document.querySelectorAll('.bulk-row-checkbox');
-        
+
         // Show checkbox columns
         checkboxCols.forEach(col => {
             col.classList.remove('hidden');

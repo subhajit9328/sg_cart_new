@@ -585,4 +585,358 @@ class ProductReviewsTest extends TestCase
         $this->assertDatabaseMissing('review_images', ['id' => $img->id]);
         Storage::disk('public')->assertMissing('reviews/todelete.jpg');
     }
+
+    /**
+     * Test admin can bulk approve reviews.
+     */
+    public function test_admin_can_bulk_approve_reviews(): void
+    {
+        $admin = User::factory()->create();
+        $admin->givePermissionTo('manage reviews');
+
+        $customer = Customer::create([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'password' => bcrypt('password'),
+        ]);
+        $customer->email_verified_at = now();
+        $customer->phone_verified_at = now();
+        $customer->save();
+
+        $product1 = Product::create([
+            'name' => 'Product 1',
+            'sku' => 'SKU-REV-BULK1A',
+            'price' => 100.00,
+            'stock' => 10,
+        ]);
+
+        $product2 = Product::create([
+            'name' => 'Product 2',
+            'sku' => 'SKU-REV-BULK1B',
+            'price' => 100.00,
+            'stock' => 10,
+        ]);
+
+        $review1 = Review::create([
+            'customer_id' => $customer->id,
+            'product_id' => $product1->id,
+            'rating' => 5,
+            'comment' => 'Test comment 1',
+            'status_id' => 1, // Pending
+        ]);
+
+        $review2 = Review::create([
+            'customer_id' => $customer->id,
+            'product_id' => $product2->id,
+            'rating' => 4,
+            'comment' => 'Test comment 2',
+            'status_id' => 1, // Pending
+        ]);
+
+        $this->actingAs($admin);
+
+        $response = $this->post(route('admin.reviews.bulkAction'), [
+            'bulk_ids' => [$review1->id, $review2->id],
+            'action' => 'approve',
+        ]);
+
+        $response->assertRedirect();
+        
+        $this->assertDatabaseHas('reviews', [
+            'id' => $review1->id,
+            'status_id' => 2, // Approved
+        ]);
+        $this->assertDatabaseHas('reviews', [
+            'id' => $review2->id,
+            'status_id' => 2, // Approved
+        ]);
+    }
+
+    /**
+     * Test admin can bulk reject reviews.
+     */
+    public function test_admin_can_bulk_reject_reviews(): void
+    {
+        $admin = User::factory()->create();
+        $admin->givePermissionTo('manage reviews');
+
+        $customer = Customer::create([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'password' => bcrypt('password'),
+        ]);
+        $customer->email_verified_at = now();
+        $customer->phone_verified_at = now();
+        $customer->save();
+
+        $product1 = Product::create([
+            'name' => 'Product 1',
+            'sku' => 'SKU-REV-BULK2A',
+            'price' => 100.00,
+            'stock' => 10,
+        ]);
+
+        $product2 = Product::create([
+            'name' => 'Product 2',
+            'sku' => 'SKU-REV-BULK2B',
+            'price' => 100.00,
+            'stock' => 10,
+        ]);
+
+        $review1 = Review::create([
+            'customer_id' => $customer->id,
+            'product_id' => $product1->id,
+            'rating' => 5,
+            'comment' => 'Test comment 1',
+            'status_id' => 1, // Pending
+        ]);
+
+        $review2 = Review::create([
+            'customer_id' => $customer->id,
+            'product_id' => $product2->id,
+            'rating' => 4,
+            'comment' => 'Test comment 2',
+            'status_id' => 1, // Pending
+        ]);
+
+        $this->actingAs($admin);
+
+        $response = $this->post(route('admin.reviews.bulkAction'), [
+            'bulk_ids' => [$review1->id, $review2->id],
+            'action' => 'reject',
+        ]);
+
+        $response->assertRedirect();
+        
+        $this->assertDatabaseHas('reviews', [
+            'id' => $review1->id,
+            'status_id' => 3, // Rejected
+        ]);
+        $this->assertDatabaseHas('reviews', [
+            'id' => $review2->id,
+            'status_id' => 3, // Rejected
+        ]);
+    }
+
+    /**
+     * Test admin can bulk delete reviews.
+     */
+    public function test_admin_can_bulk_delete_reviews(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->create();
+        $admin->givePermissionTo('manage reviews');
+
+        $customer = Customer::create([
+            'name' => 'John Doe',
+            'email' => 'john@example.com',
+            'password' => bcrypt('password'),
+        ]);
+        $customer->email_verified_at = now();
+        $customer->phone_verified_at = now();
+        $customer->save();
+
+        $product1 = Product::create([
+            'name' => 'Product 1',
+            'sku' => 'SKU-REV-BULK3A',
+            'price' => 100.00,
+            'stock' => 10,
+        ]);
+
+        $product2 = Product::create([
+            'name' => 'Product 2',
+            'sku' => 'SKU-REV-BULK3B',
+            'price' => 100.00,
+            'stock' => 10,
+        ]);
+
+        $review1 = Review::create([
+            'customer_id' => $customer->id,
+            'product_id' => $product1->id,
+            'rating' => 5,
+            'comment' => 'Test comment 1',
+            'status_id' => 1, // Pending
+        ]);
+
+        $img1 = $review1->images()->create(['image_path' => 'reviews/bulkdelete1.jpg']);
+        Storage::disk('public')->put('reviews/bulkdelete1.jpg', 'fake image content 1');
+
+        $review2 = Review::create([
+            'customer_id' => $customer->id,
+            'product_id' => $product2->id,
+            'rating' => 4,
+            'comment' => 'Test comment 2',
+            'status_id' => 1, // Pending
+        ]);
+
+        $img2 = $review2->images()->create(['image_path' => 'reviews/bulkdelete2.jpg']);
+        Storage::disk('public')->put('reviews/bulkdelete2.jpg', 'fake image content 2');
+
+        $this->actingAs($admin);
+
+        $response = $this->post(route('admin.reviews.bulkAction'), [
+            'bulk_ids' => [$review1->id, $review2->id],
+            'action' => 'delete',
+        ]);
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseMissing('reviews', ['id' => $review1->id]);
+        $this->assertDatabaseMissing('reviews', ['id' => $review2->id]);
+        $this->assertDatabaseMissing('review_images', ['id' => $img1->id]);
+        $this->assertDatabaseMissing('review_images', ['id' => $img2->id]);
+        Storage::disk('public')->assertMissing('reviews/bulkdelete1.jpg');
+        Storage::disk('public')->assertMissing('reviews/bulkdelete2.jpg');
+    }
+
+    /**
+     * Test storefront product page loads successfully and displays reviews.
+     */
+    public function test_storefront_product_page_loads_and_displays_reviews(): void
+    {
+        $product = Product::create([
+            'name' => 'Storefront Product',
+            'sku' => 'SKU-STORE-1',
+            'price' => 120.00,
+            'stock' => 5,
+            'slug' => 'storefront-product',
+            'status' => 'active',
+        ]);
+
+        // Create approved reviews by different customers
+        $baseTime = now()->subMinutes(10);
+        for ($i = 1; $i <= 7; $i++) {
+            $customer = Customer::create([
+                'name' => "Jane Doe $i",
+                'email' => "jane_$i@example.com",
+                'password' => bcrypt('password'),
+            ]);
+
+            \Illuminate\Support\Carbon::setTestNow($baseTime->copy()->addSeconds($i));
+
+            Review::create([
+                'customer_id' => $customer->id,
+                'product_id' => $product->id,
+                'rating' => $i % 2 === 0 ? 5 : 2, // ratings: 2, 5, 2, 5, 2, 5, 2
+                'comment' => "Review comment $i",
+                'status_id' => 2, // Approved
+                'approved_at' => now(),
+            ]);
+        }
+        \Illuminate\Support\Carbon::setTestNow();
+
+        $response = $this->get(route('store.product', $product->slug));
+        $response->assertStatus(200);
+        $response->assertSee('Storefront Product');
+        
+        // Page size is 5, so we should see 5 review comments
+        $response->assertSee('Review comment 7');
+        $response->assertSee('Review comment 6');
+        $response->assertSee('Review comment 5');
+        $response->assertSee('Review comment 4');
+        $response->assertSee('Review comment 2'); // rating 5, created at +2, should be in top 5
+        $response->assertDontSee('Review comment 1'); // paginated out
+    }
+
+    /**
+     * Test storefront AJAX reviews pagination and filtering.
+     */
+    public function test_storefront_ajax_reviews_filtering_and_pagination(): void
+    {
+        $product = Product::create([
+            'name' => 'Ajax Product',
+            'sku' => 'SKU-AJAX-1',
+            'price' => 150.00,
+            'stock' => 8,
+            'slug' => 'ajax-product',
+            'status' => 'active',
+        ]);
+
+        $baseTime = now()->subMinutes(10);
+
+        // Create 7 reviews: 4 positive (5 stars), 3 negative (2 stars)
+        for ($i = 1; $i <= 4; $i++) {
+            $customer = Customer::create([
+                'name' => "Pos Customer $i",
+                'email' => "pos_cust_$i@example.com",
+                'password' => bcrypt('password'),
+            ]);
+
+            \Illuminate\Support\Carbon::setTestNow($baseTime->copy()->addSeconds($i));
+
+            Review::create([
+                'customer_id' => $customer->id,
+                'product_id' => $product->id,
+                'rating' => 5,
+                'comment' => "Positive comment $i",
+                'status_id' => 2,
+                'approved_at' => now(),
+            ]);
+        }
+
+        for ($i = 1; $i <= 3; $i++) {
+            $customer = Customer::create([
+                'name' => "Neg Customer $i",
+                'email' => "neg_cust_$i@example.com",
+                'password' => bcrypt('password'),
+            ]);
+
+            \Illuminate\Support\Carbon::setTestNow($baseTime->copy()->addSeconds($i + 5)); // Make them later than positive reviews
+
+            Review::create([
+                'customer_id' => $customer->id,
+                'product_id' => $product->id,
+                'rating' => 2,
+                'comment' => "Negative comment $i",
+                'status_id' => 2,
+                'approved_at' => now(),
+            ]);
+        }
+        \Illuminate\Support\Carbon::setTestNow();
+
+        // 1. Test Ajax call with negative filter
+        $response = $this->get(route('store.product', [
+            'slug' => $product->slug,
+            'review_filter' => 'negative',
+            'ajax' => 1
+        ]), ['X-Requested-With' => 'XMLHttpRequest']);
+
+        $response->assertStatus(200);
+        $response->assertSee('Negative comment 1');
+        $response->assertSee('Negative comment 2');
+        $response->assertSee('Negative comment 3');
+        $response->assertDontSee('Positive comment');
+
+        // 2. Test Ajax call with positive filter, page 1 (size 5, so all 4 positive reviews should show)
+        $response = $this->get(route('store.product', [
+            'slug' => $product->slug,
+            'review_filter' => 'positive',
+            'ajax' => 1
+        ]), ['X-Requested-With' => 'XMLHttpRequest']);
+
+        $response->assertStatus(200);
+        $response->assertSee('Positive comment 1');
+        $response->assertSee('Positive comment 2');
+        $response->assertSee('Positive comment 3');
+        $response->assertSee('Positive comment 4');
+        $response->assertDontSee('Negative comment');
+
+        // 3. Test Ajax call with all reviews, page 2 (total 7 reviews, page 1 shows 5, page 2 shows 2)
+        $response = $this->get(route('store.product', [
+            'slug' => $product->slug,
+            'review_filter' => 'helpful',
+            'review_page' => 2,
+            'ajax' => 1
+        ]), ['X-Requested-With' => 'XMLHttpRequest']);
+
+        $response->assertStatus(200);
+        // Default sort is rating desc, then date desc.
+        // rating 5 reviews (4 reviews) + rating 2 reviews (3 reviews)
+        // page 1 shows: the 4 positive reviews + 1 negative review (Negative comment 3)
+        // page 2 shows: remaining 2 negative reviews (Negative comment 2, Negative comment 1)
+        $response->assertSee('Negative comment 1');
+        $response->assertSee('Negative comment 2');
+        $response->assertDontSee('Positive comment');
+    }
 }
