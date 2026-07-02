@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -12,6 +13,9 @@ use App\Observers\OrderObserver;
 class Order extends Model
 {
     use HasUlids;
+
+    // Use the HasTickets trait stub
+    use \App\Traits\HasTickets;
 
     protected $fillable = [
         'order_number',

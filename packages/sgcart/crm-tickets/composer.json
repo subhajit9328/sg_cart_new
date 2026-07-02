@@ -1,0 +1,25 @@
+{
+    "name": "sgcart/crm-tickets",
+    "description": "Customer support ticket management with polymorphic linking, comments and image attachments",
+    "autoload": {
+        "psr-4": {
+            "SGCart\\CrmTickets\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "SGCart Team",
+            "email": "support@sgcart.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2|^8.3"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SGCart\\CrmTickets\\Providers\\CrmTicketsServiceProvider"
+            ]
+        }
+    }
+}

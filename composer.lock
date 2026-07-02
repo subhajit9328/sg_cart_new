@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cd6d72fa99cabf2bfb56daed0937cc43",
+    "content-hash": "009282ea1deadc4ead056671f287d675",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -3976,7 +3976,7 @@
         },
         {
             "name": "sgcart/coupons",
-            "version": "dev-kushal_changes",
+            "version": "dev-feature/117748-crm",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/coupons",
@@ -4014,8 +4014,44 @@
             }
         },
         {
+            "name": "sgcart/crm-tickets",
+            "version": "dev-feature/117748-crm",
+            "dist": {
+                "type": "path",
+                "url": "packages/sgcart/crm-tickets",
+                "reference": "32fcf20c11d53c9547724c3962f1e238eaedd640"
+            },
+            "require": {
+                "php": "^8.2|^8.3"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "SGCart\\CrmTickets\\Providers\\CrmTicketsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SGCart\\CrmTickets\\": "src/"
+                }
+            },
+            "authors": [
+                {
+                    "name": "SGCart Team",
+                    "email": "support@sgcart.com"
+                }
+            ],
+            "description": "Customer support ticket management with polymorphic linking, comments and image attachments",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "sgcart/image-search",
-            "version": "dev-kushal_changes",
+            "version": "dev-feature/117748-crm",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/image-search",
@@ -4051,7 +4087,7 @@
         },
         {
             "name": "sgcart/logistic-tracking",
-            "version": "dev-kushal_changes",
+            "version": "dev-feature/117748-crm",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/logistic-tracking",
@@ -4087,7 +4123,7 @@
         },
         {
             "name": "sgcart/payment-razorpay",
-            "version": "dev-kushal_changes",
+            "version": "dev-feature/117748-crm",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/payment-razorpay",
@@ -4126,7 +4162,7 @@
         },
         {
             "name": "sgcart/product-variants",
-            "version": "dev-kushal_changes",
+            "version": "dev-feature/117748-crm",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/product-variants",
@@ -4166,7 +4202,7 @@
         },
         {
             "name": "sgcart/reviews",
-            "version": "dev-kushal_changes",
+            "version": "dev-feature/117748-crm",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/reviews",
@@ -4202,7 +4238,7 @@
         },
         {
             "name": "sgcart/shipping",
-            "version": "dev-kushal_changes",
+            "version": "dev-feature/117748-crm",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/shipping",
@@ -4241,7 +4277,7 @@
         },
         {
             "name": "sgcart/tax",
-            "version": "dev-kushal_changes",
+            "version": "dev-feature/117748-crm",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/tax",
@@ -9622,6 +9658,7 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "sgcart/coupons": 20,
+        "sgcart/crm-tickets": 20,
         "sgcart/image-search": 20,
         "sgcart/logistic-tracking": 20,
         "sgcart/payment-razorpay": 20,

@@ -1483,8 +1483,13 @@ class StoreController extends Controller
             return redirect()->route('store.login')->with('error', 'Please log in to view order details.');
         }
 
+        $relations = ['items.product'];
+        if (class_exists(\SGCart\CrmTickets\Models\Ticket::class)) {
+            $relations[] = 'tickets.status';
+        }
+
         $order = auth('customer')->user()->orders()
-            ->with(['items.product'])
+            ->with($relations)
             ->where('ulid', $ulid)
             ->first();
 

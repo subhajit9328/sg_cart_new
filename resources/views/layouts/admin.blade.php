@@ -119,6 +119,7 @@
             </a>
             @endcan
             @includeIf('image-search::admin-menu')
+            @includeIf('crm-tickets::admin-menu')
         </nav>
 
 

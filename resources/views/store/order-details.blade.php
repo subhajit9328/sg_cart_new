@@ -472,9 +472,12 @@
                 </div>
             </div>
 
+            @includeIf('crm-tickets::store.support-card')
+
         </div>
 
     </div>
 </div>
 @includeIf('reviews::modal')
+@includeIf('crm-tickets::store.ticket-modal')
 @endsection
