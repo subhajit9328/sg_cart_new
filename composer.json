@@ -13,6 +13,7 @@
         "sgcart/coupons": "@dev",
         "sgcart/image-search": "@dev",
         "sgcart/inventory": "@dev",
+        "sgcart/logistic-tracking": "@dev",
         "sgcart/payment-razorpay": "@dev",
         "sgcart/product-variants": "@dev",
         "sgcart/shipping": "@dev",
@@ -38,6 +39,13 @@
         },
         {
             "type": "path",
+            "url": "packages/sgcart/logistic-tracking",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
             "url": "packages/sgcart/product-variants",
             "options": {
                 "symlink": true
@@ -46,6 +54,13 @@
         {
             "type": "path",
             "url": "packages/sgcart/coupons",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/image-search",
             "options": {
                 "symlink": true
             }
@@ -74,7 +89,6 @@
         {
             "type": "path",
             "url": "packages/sgcart/payment-authorizenet",
-            "url": "packages/sgcart/image-search",
             "options": {
                 "symlink": true
             }

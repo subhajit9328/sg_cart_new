@@ -27,23 +27,86 @@ class OtpVerificationTest extends TestCase
             'password_confirmation' => 'password123',
         ]);
 
-        $customer = Customer::where('email', 'john@example.com')->first();
-        $this->assertNotNull($customer);
-        $this->assertNull($customer->email_verified_at);
+        // Customer should NOT be in the database yet
+        $this->assertEquals(0, Customer::count());
 
         // Verify redirect
         $response->assertRedirect(route('store.otp.verify'));
 
-        // Verify OTP is in cache
-        $otpKey = "customer_otp_{$customer->id}";
-        $cooldownKey = "customer_otp_cooldown_{$customer->id}";
+        // Verify OTP is in cache under email identifier
+        $otpKey = "customer_otp_john@example.com";
+        $cooldownKey = "customer_otp_cooldown_john@example.com";
         $this->assertTrue(Cache::has($otpKey));
         $this->assertTrue(Cache::has($cooldownKey));
 
         // Verify mail sent
-        Mail::assertSent(CustomerOtpMail::class, function ($mail) use ($customer) {
-            return $mail->customer->id === $customer->id;
+        Mail::assertSent(CustomerOtpMail::class, function ($mail) {
+            return $mail->customer->email === 'john@example.com';
         });
+    }
+
+    public function test_successful_email_registration_after_otp_verification()
+    {
+        Mail::fake();
+
+        $response = $this->post(route('store.register.submit'), [
+            'name' => 'John Doe',
+            'email_or_phone' => 'john@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $this->assertEquals(0, Customer::count());
+
+        $otp = Cache::get("customer_otp_john@example.com");
+        $this->assertNotNull($otp);
+
+        // Submit the correct OTP
+        $response2 = $this->post(route('store.otp.verify.submit'), [
+            'otp' => $otp,
+        ]);
+
+        // Should create customer, verify email, and login
+        $customer = Customer::where('email', 'john@example.com')->first();
+        $this->assertNotNull($customer);
+        $this->assertNotNull($customer->email_verified_at);
+        $this->assertEquals('John Doe', $customer->name);
+        $this->assertTrue(Auth::guard('customer')->check());
+        $this->assertEquals($customer->id, Auth::guard('customer')->id());
+
+        $response2->assertRedirect(route('store.account'));
+
+        // Welcome mail sent
+        Mail::assertSent(RegistrationSuccessMail::class);
+    }
+
+    public function test_successful_phone_registration_after_otp_verification()
+    {
+        $response = $this->post(route('store.register.submit'), [
+            'name' => 'Jane Phone',
+            'email_or_phone' => '+919876543210',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $this->assertEquals(0, Customer::count());
+
+        $otp = Cache::get("customer_otp_+919876543210");
+        $this->assertNotNull($otp);
+
+        // Submit the correct OTP
+        $response2 = $this->post(route('store.otp.verify.submit'), [
+            'otp' => $otp,
+        ]);
+
+        // Should create customer, verify phone, and login
+        $customer = Customer::where('phone_no', '+919876543210')->first();
+        $this->assertNotNull($customer);
+        $this->assertNotNull($customer->phone_verified_at);
+        $this->assertNull($customer->email);
+        $this->assertTrue(Auth::guard('customer')->check());
+
+        $response2->assertRedirect(route('store.account'));
     }
 
     public function test_incorrect_otp_fails_verification()
@@ -56,8 +119,8 @@ class OtpVerificationTest extends TestCase
 
         $this->actingAs($customer, 'customer');
 
-        // Put a valid OTP in cache
-        Cache::put("customer_otp_{$customer->id}", '123456', 300);
+        // Put a valid OTP in cache using new key format
+        Cache::put("customer_otp_john@example.com", '123456', 300);
 
         $response = $this->post(route('store.otp.verify.submit'), [
             'otp' => '111111',
@@ -80,8 +143,8 @@ class OtpVerificationTest extends TestCase
 
         $this->actingAs($customer, 'customer');
 
-        Cache::put("customer_otp_{$customer->id}", '123456', 300);
-        Cache::put("customer_otp_cooldown_{$customer->id}", now()->addMinutes(5)->timestamp, 300);
+        Cache::put("customer_otp_john@example.com", '123456', 300);
+        Cache::put("customer_otp_cooldown_john@example.com", now()->addMinutes(5)->timestamp, 300);
 
         $response = $this->post(route('store.otp.verify.submit'), [
             'otp' => '123456',
@@ -92,8 +155,8 @@ class OtpVerificationTest extends TestCase
         $this->assertNotNull($customer->email_verified_at);
 
         // Verify cache is cleared
-        $this->assertFalse(Cache::has("customer_otp_{$customer->id}"));
-        $this->assertFalse(Cache::has("customer_otp_cooldown_{$customer->id}"));
+        $this->assertFalse(Cache::has("customer_otp_john@example.com"));
+        $this->assertFalse(Cache::has("customer_otp_cooldown_john@example.com"));
 
         // Verify welcome mail sent
         Mail::assertSent(RegistrationSuccessMail::class);
@@ -112,20 +175,20 @@ class OtpVerificationTest extends TestCase
         $this->actingAs($customer, 'customer');
 
         // Set cooldown in the future
-        Cache::put("customer_otp_cooldown_{$customer->id}", now()->addMinutes(5)->timestamp, 300);
+        Cache::put("customer_otp_cooldown_john@example.com", now()->addMinutes(5)->timestamp, 300);
 
         $response = $this->post(route('store.otp.resend'));
         $response->assertSessionHas('error');
         Mail::assertNotSent(CustomerOtpMail::class);
 
         // Remove cooldown to simulate time passing
-        Cache::forget("customer_otp_cooldown_{$customer->id}");
+        Cache::forget("customer_otp_cooldown_john@example.com");
 
         $response = $this->post(route('store.otp.resend'));
         $response->assertSessionHas('success');
         
-        $this->assertTrue(Cache::has("customer_otp_{$customer->id}"));
-        $this->assertTrue(Cache::has("customer_otp_cooldown_{$customer->id}"));
+        $this->assertTrue(Cache::has("customer_otp_john@example.com"));
+        $this->assertTrue(Cache::has("customer_otp_cooldown_john@example.com"));
         Mail::assertSent(CustomerOtpMail::class);
     }
 
@@ -142,12 +205,12 @@ class OtpVerificationTest extends TestCase
         $this->actingAs($customer, 'customer');
 
         // No OTP or cooldown in cache
-        $this->assertFalse(Cache::has("customer_otp_{$customer->id}"));
+        $this->assertFalse(Cache::has("customer_otp_john@example.com"));
 
         $response = $this->get(route('store.otp.verify'));
 
-        $this->assertTrue(Cache::has("customer_otp_{$customer->id}"));
-        $this->assertTrue(Cache::has("customer_otp_cooldown_{$customer->id}"));
+        $this->assertTrue(Cache::has("customer_otp_john@example.com"));
+        $this->assertTrue(Cache::has("customer_otp_cooldown_john@example.com"));
         Mail::assertSent(CustomerOtpMail::class);
     }
 
@@ -176,16 +239,14 @@ class OtpVerificationTest extends TestCase
             'password_confirmation' => 'password123',
         ]);
 
-        $customer = Customer::where('phone_no', '+919876543210')->first();
-        $this->assertNotNull($customer);
-        $this->assertNull($customer->email);
-        $this->assertNull($customer->email_verified_at);
+        // Customer should NOT be in database yet
+        $this->assertEquals(0, Customer::count());
 
         // Verify redirect is to OTP verify page
         $response->assertRedirect(route('store.otp.verify'));
 
         // Verify OTP is in cache and no mail sent
-        $otpKey = "customer_otp_{$customer->id}";
+        $otpKey = "customer_otp_+919876543210";
         $this->assertTrue(Cache::has($otpKey));
         Mail::assertNothingSent();
     }
@@ -306,7 +367,7 @@ class OtpVerificationTest extends TestCase
         $response->assertRedirect(route('store.otp.verify'));
 
         // Verify OTP is generated
-        $otpKey = "customer_otp_{$customer->id}";
+        $otpKey = "customer_otp_newemail@example.com";
         $this->assertTrue(Cache::has($otpKey));
 
         // Verify OTP mail sent
@@ -341,7 +402,7 @@ class OtpVerificationTest extends TestCase
         $response->assertRedirect(route('store.otp.verify'));
 
         // OTP generated but no mail sent
-        $otpKey = "customer_otp_{$customer->id}";
+        $otpKey = "customer_otp_+919999999999";
         $this->assertTrue(Cache::has($otpKey));
         Mail::assertNotSent(CustomerOtpMail::class);
     }
@@ -395,7 +456,6 @@ class OtpVerificationTest extends TestCase
         Auth::guard('customer')->logout();
 
         // 3. Cannot submit both.
-        // Wait, a user has to have at least one missing, but even if they try to pass both, it should fail.
         $customer3 = Customer::create([
             'name' => 'No Contact Info',
             'password' => Hash::make('password123'),
@@ -411,5 +471,44 @@ class OtpVerificationTest extends TestCase
         ]);
 
         $response3->assertSessionHasErrors('email');
+    }
+
+    public function test_registration_phone_number_separated_validation_errors()
+    {
+        // 1. Missing + country code
+        $response1 = $this->post(route('store.register.submit'), [
+            'name' => 'Test User',
+            'email_or_phone' => '1234567890',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+        $response1->assertSessionHasErrors(['email_or_phone' => 'The phone number must include a country code starting with +.']);
+
+        // 2. Non-digits after +
+        $response2 = $this->post(route('store.register.submit'), [
+            'name' => 'Test User',
+            'email_or_phone' => '+12345678#0',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+        $response2->assertSessionHasErrors(['email_or_phone' => 'The phone number must contain only digits after the + country code.']);
+
+        // 3. More than 15 digits
+        $response3 = $this->post(route('store.register.submit'), [
+            'name' => 'Test User',
+            'email_or_phone' => '+1234567890123456',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+        $response3->assertSessionHasErrors(['email_or_phone' => 'The phone number must not be more than 15 digits.']);
+
+        // 4. Less than 7 digits
+        $response4 = $this->post(route('store.register.submit'), [
+            'name' => 'Test User',
+            'email_or_phone' => '+123456',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+        $response4->assertSessionHasErrors(['email_or_phone' => 'The phone number must be at least 7 digits.']);
     }
 }

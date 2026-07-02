@@ -5,18 +5,22 @@ namespace App\Http\Controllers;
 use App\Actions\CustomerEmailVerifiedAction;
 use App\Actions\LogActivity;
 use App\Actions\ManageOtp;
+use App\Mail\RegistrationSuccessMail;
 use App\Models\Cart;
 use App\Models\Customer;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    private const string REGISTRATION_SESSION_KEY = 'registration_data';
     /**
      * Show the login form.
      */
@@ -141,7 +145,7 @@ class AuthController extends Controller
         ]);
 
         $loginInput = $request->input('email_or_phone');
-        $isEmail = str_contains($loginInput ?? '', '@');
+        $isEmail = str_contains($loginInput ?? '', '@') || preg_match('/[a-zA-Z]/', $loginInput ?? '');
 
         $credentials = [
             $isEmail ? 'email' : 'phone_no' => $loginInput,
@@ -207,12 +211,19 @@ class AuthController extends Controller
     /**
      * Show storefront registration form.
      */
-    public function showStorefrontRegister()
+    public function showStorefrontRegister(Request $request)
     {
         if (Auth::guard('customer')->check()) {
             return redirect()->route('store.account');
         }
-
+        if($request->has("wrong_email_or_phone")){
+            $registrationData = session(AuthController::REGISTRATION_SESSION_KEY);
+            session()->flashInput([
+                'email_or_phone' => $registrationData['email'] ?? $registrationData['phone_no'] ?? '',
+                'name' => $registrationData['name'] ?? '',
+            ]);
+            session()->flash('success', 'Update your email or phone number.');
+        }
         return view('store.auth.register');
     }
 
@@ -222,7 +233,7 @@ class AuthController extends Controller
     public function storefrontRegister(Request $request)
     {
         $emailOrPhone = $request->input('email_or_phone');
-        $isEmail = str_contains($emailOrPhone ?? '', '@');
+        $isEmail = str_contains($emailOrPhone ?? '', '@') || preg_match('/[a-zA-Z]/', $emailOrPhone ?? '');
 
         $rules = [
             'name' => ['required', 'string', 'max:255'],
@@ -239,51 +250,54 @@ class AuthController extends Controller
             $rules['email_or_phone'] = [
                 'required',
                 'string',
-                'regex:/^\+\d{7,15}$/',
+                function ($attribute, $value, $fail) {
+                    if (!str_starts_with($value, '+')) {
+                        $fail('The phone number must include a country code starting with +.');
+                        return;
+                    }
+                    $digits = substr($value, 1);
+                    if (!ctype_digit($digits)) {
+                        $fail('The phone number must contain only digits after the + country code.');
+                        return;
+                    }
+                    if (strlen($digits) < 7 || strlen($digits) > 15) {
+                        if (strlen($digits) > 15) {
+                            $fail('The phone number must not be more than 15 digits.');
+                        } else {
+                            $fail('The phone number must be at least 7 digits.');
+                        }
+                        return;
+                    }
+                },
                 'unique:customers,phone_no',
             ];
-            $messages['email_or_phone.regex'] = 'The phone number must include a country code starting with + followed by the number (e.g. +1234567890).';
             $messages['email_or_phone.unique'] = 'The phone number has already been taken.';
         }
 
         $request->validate($rules, $messages);
 
-        $guestSessionId = $request->session()->getId();
-
-        $customerData = [
+        $registrationData = [
             'name' => $request->name,
             'password' => Hash::make($request->password),
+            'email' => $isEmail ? $emailOrPhone : null,
+            'phone_no' => $isEmail ? null : $emailOrPhone,
         ];
 
-        if ($isEmail) {
-            $customerData['email'] = $emailOrPhone;
-            $customerData['phone_no'] = null;
-        } else {
-            $customerData['phone_no'] = $emailOrPhone;
-            $customerData['email'] = null;
-        }
+        // Store registration details in session
+        session([AuthController::REGISTRATION_SESSION_KEY => $registrationData]);
 
-        $customer = Customer::create($customerData);
+        // Generate OTP using temporary customer model
+        $tempCustomer = new Customer([
+            'name' => $request->name,
+            'email' => $isEmail ? $emailOrPhone : null,
+            'phone_no' => $isEmail ? null : $emailOrPhone,
+        ]);
 
-        app(LogActivity::class)->capture(
-            description: "Customer registered: {$emailOrPhone}",
-            event: 'registration',
-            subject: $customer,
-            properties: ['email_or_phone' => $emailOrPhone],
-            causer: $customer
-        );
-
-        app(ManageOtp::class)->generate($customer, ManageOtp::REASON_REGISTRATION);
-
-        Auth::guard('customer')->login($customer);
-        $request->session()->regenerate();
-
-        // Merge guest cart with customer cart
-        Cart::mergeGuestCart($customer->id, $guestSessionId);
+        app(ManageOtp::class)->generate($tempCustomer, ManageOtp::REASON_REGISTRATION);
 
         return redirect()->route('store.otp.verify')->with('success', $isEmail
-            ? 'Account created successfully! Please verify your email.'
-            : 'Account created successfully! Please verify your phone number.');
+            ? 'A verification code has been sent to your email.'
+            : 'A verification code has been generated for your phone number.');
     }
 
     /**
@@ -291,13 +305,26 @@ class AuthController extends Controller
      */
     public function showOtpVerify()
     {
-        $customer = Auth::guard('customer')->user();
+        $customer = null;
+        $isEmail = false;
+        $isPhone = false;
 
-        $isEmail = $customer->email && ! $customer->email_verified_at;
-        $isPhone = $customer->phone_no && ! $customer->phone_verified_at;
+        if (Auth::guard('customer')->check()) {
+            $customer = Auth::guard('customer')->user();
+            $isEmail = $customer->email && ! $customer->email_verified_at;
+            $isPhone = $customer->phone_no && ! $customer->phone_verified_at;
 
-        if (! $isEmail && ! $isPhone) {
-            return redirect()->route('store.account');
+            if (! $isEmail && ! $isPhone) {
+                return redirect()->route('store.account');
+            }
+        } elseif (session()->has('registration_data')) {
+            $regData = session('registration_data');
+            $customer = new Customer($regData);
+            $isEmail = !empty($regData['email']);
+        }
+
+        if (! $customer) {
+            return redirect()->route('store.register')->with('error', 'Please register first.');
         }
 
         $manageOtp = app(ManageOtp::class);
@@ -316,8 +343,8 @@ class AuthController extends Controller
         $remainingSeconds = $cooldownTimestamp ? max(0, $cooldownTimestamp - now()->timestamp) : 0;
 
         return view('store.auth.otp-verify', [
-            'email' => $customer->email ?? $customer->phone_no,
-            'isEmail' => $isEmail,
+            'email' => $isEmail && !$isPhone ? $customer->email : $customer->phone_no,
+            'isEmail' => $isEmail && ! $isPhone,
             'remainingSeconds' => $remainingSeconds,
         ]);
     }
@@ -331,13 +358,29 @@ class AuthController extends Controller
             'otp' => ['required', 'string', 'size:6'],
         ]);
 
-        $customer = Auth::guard('customer')->user();
+        $customer = null;
+        $isRegistering = false;
+        $isEmail = false;
+        $isPhone = false;
 
-        $isEmail = $customer->email && ! $customer->email_verified_at;
-        $isPhone = $customer->phone_no && ! $customer->phone_verified_at;
+        if (Auth::guard('customer')->check()) {
+            $customer = Auth::guard('customer')->user();
+            $isEmail = $customer->email && ! $customer->email_verified_at;
+            $isPhone = $customer->phone_no && ! $customer->phone_verified_at;
 
-        if (! $isEmail && ! $isPhone) {
-            return redirect()->route('store.account');
+            if (! $isEmail && ! $isPhone) {
+                return redirect()->route('store.account');
+            }
+        } elseif (session()->has('registration_data')) {
+            $regData = session('registration_data');
+            $customer = new Customer($regData);
+            $isRegistering = true;
+            $isEmail = !empty($regData['email']);
+            $isPhone = !empty($regData['phone_no']);
+        }
+
+        if (! $customer) {
+            return redirect()->route('store.register')->with('error', 'Please register first.');
         }
 
         if (! app(ManageOtp::class)->verify($customer, $request->otp)) {
@@ -346,19 +389,79 @@ class AuthController extends Controller
             ]);
         }
 
-        if ($isEmail) {
-            app(CustomerEmailVerifiedAction::class)->execute($customer);
-        } else {
-            $customer->phone_verified_at = now();
-            $customer->save();
+        if ($isRegistering) {
+            $regData = session('registration_data');
+
+            // Create the customer account
+            $newCustomer = new Customer([
+                'name' => $regData['name'],
+                'password' => $regData['password'],
+                'email' => $regData['email'],
+                'phone_no' => $regData['phone_no'],
+            ]);
+            $newCustomer->email_verified_at = $isEmail ? now() : null;
+            $newCustomer->phone_verified_at = $isPhone ? now() : null;
+            $newCustomer->save();
+
+            // Capture activity logs
+            $emailOrPhone = $newCustomer->email ?? $newCustomer->phone_no;
+            app(LogActivity::class)->capture(
+                description: "Customer registered: {$emailOrPhone}",
+                event: 'registration',
+                subject: $newCustomer,
+                properties: ['email_or_phone' => $emailOrPhone],
+                causer: $newCustomer
+            );
 
             app(LogActivity::class)->capture(
-                description: "Customer phone verified successfully: {$customer->phone_no}",
+                description: $isEmail
+                    ? "Customer email verified successfully: {$newCustomer->email}"
+                    : "Customer phone verified successfully: {$newCustomer->phone_no}",
                 event: 'otp.verified',
-                subject: $customer,
-                properties: ['phone_no' => $customer->phone_no],
-                causer: $customer
+                subject: $newCustomer,
+                properties: $isEmail ? ['email' => $newCustomer->email] : ['phone_no' => $newCustomer->phone_no],
+                causer: $newCustomer
             );
+
+            // Send registration success welcome email (only for email users)
+            if ($isEmail) {
+                try {
+                    Mail::to($newCustomer->email)->send(new RegistrationSuccessMail($newCustomer));
+                } catch (\Exception $e) {
+                    Log::error('Failed to send registration success email: '.$e->getMessage());
+                }
+            }
+
+            // Log customer in and regenerate session
+            Auth::guard('customer')->login($newCustomer);
+            $request->session()->regenerate();
+
+            // Merge guest cart
+            if (!empty($regData['guest_session_id'])) {
+                Cart::mergeGuestCart($newCustomer->id, $regData['guest_session_id']);
+            }
+
+            // Forget registration data
+            session()->forget('registration_data');
+
+            return redirect()->intended(route('store.account'))->with('success', $isEmail
+                ? 'Email verified successfully! Welcome to SG CART.'
+                : 'Phone number verified successfully! Welcome to SG CART.');
+        } else {
+            if ($isEmail) {
+                app(CustomerEmailVerifiedAction::class)->execute($customer);
+            } else {
+                $customer->phone_verified_at = now();
+                $customer->save();
+
+                app(LogActivity::class)->capture(
+                    description: "Customer phone verified successfully: {$customer->phone_no}",
+                    event: 'otp.verified',
+                    subject: $customer,
+                    properties: ['phone_no' => $customer->phone_no],
+                    causer: $customer
+                );
+            }
         }
 
         return redirect()->intended(route('store.account'))->with('success', $isEmail
@@ -369,15 +472,28 @@ class AuthController extends Controller
     /**
      * Handle resending/regenerating the OTP.
      */
-    public function otpResend(Request $request)
+    public function otpResend()
     {
-        $customer = Auth::guard('customer')->user();
+        $customer = null;
+        $isEmail = false;
 
-        $isEmail = $customer->email && ! $customer->email_verified_at;
-        $isPhone = $customer->phone_no && ! $customer->phone_verified_at;
+        if (Auth::guard('customer')->check()) {
+            $customer = Auth::guard('customer')->user();
+            $isEmail = $customer->email && ! $customer->email_verified_at;
+            $isPhone = $customer->phone_no && ! $customer->phone_verified_at;
 
-        if (! $isEmail && ! $isPhone) {
-            return redirect()->route('store.account');
+            if (! $isEmail && ! $isPhone) {
+                return redirect()->route('store.account');
+            }
+        } elseif (session()->has('registration_data')) {
+            $regData = session('registration_data');
+            $customer = new Customer($regData);
+            $isEmail = !empty($regData['email']);
+            $isPhone = !empty($regData['phone_no']);
+        }
+
+        if (! $customer) {
+            return redirect()->route('store.register')->with('error', 'Please register first.');
         }
 
         $cooldownTimestamp = app(ManageOtp::class)->getCooldownTimestamp($customer);

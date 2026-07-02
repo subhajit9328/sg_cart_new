@@ -82,8 +82,14 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        $order->load(['items', 'customer', 'payments']);
-        return view('admin.orders.show', compact('order'));
+        $order->load(['items', 'customer', 'payments', 'activities.causer']);
+
+        $couriers = [];
+        if (class_exists(\SGCart\LogisticTracking\Models\ShippingCourier::class)) {
+            $couriers = \SGCart\LogisticTracking\Models\ShippingCourier::all();
+        }
+
+        return view('admin.orders.show', compact('order', 'couriers'));
     }
 
     /**
@@ -91,13 +97,28 @@ class OrderController extends Controller
      */
     public function update(Request $request, Order $order)
     {
-        $data = $request->validate([
+        $validationRules = [
             'status' => 'required|in:Processing,Shipped,Delivered,Cancelled',
             'payment_status' => 'required|in:Pending,Paid,Failed',
-            'tracking_number' => 'nullable|string|max:100',
-            'shipping_carrier' => 'nullable|string|max:100',
-            'tracking_url' => 'nullable|url|max:255',
-            'estimated_delivery_at' => 'nullable|date',
+        ];
+
+        $packageInstalled = class_exists(\SGCart\LogisticTracking\Actions\UpdateLogisticTrackingAction::class);
+
+        if ($packageInstalled) {
+            $isShipped = $request->input('status') === 'Shipped';
+            $validationRules = array_merge($validationRules, [
+                'tracking_number' => $isShipped ? 'required|string|max:100' : 'nullable|string|max:100',
+                'shipping_courier_id' => $isShipped ? 'required' : 'nullable',
+                'tracking_url' => $isShipped ? 'required|url|max:255' : 'nullable|url|max:255',
+                'estimated_delivery_at' => $isShipped ? 'required|date' : 'nullable|date',
+            ]);
+        }
+
+        $data = $request->validate($validationRules, [], [
+            'tracking_number' => 'tracking number',
+            'shipping_courier_id' => 'shipping carrier',
+            'tracking_url' => 'tracking URL',
+            'estimated_delivery_at' => 'estimated delivery date',
         ]);
 
         $order->update(['status' => $data['status']]);
@@ -114,14 +135,30 @@ class OrderController extends Controller
                 'card_number_masked' => $latestPayment ? $latestPayment->card_number_masked : null,
             ]);
         }
-        if ($data['status'] === 'Shipped' && empty($data['tracking_number'])) {
-            $data['tracking_number'] = 'SG-TRK-' . rand(10000000, 99999999);
-            $data['shipping_carrier'] = $data['shipping_carrier'] ?? 'Delhivery Express';
-            $data['tracking_url'] = $data['tracking_url'] ?? 'https://www.delhivery.com/track/package/' . $data['tracking_number'];
-            $data['estimated_delivery_at'] = $data['estimated_delivery_at'] ?? now()->addDays(5)->format('Y-m-d H:i:s');
-        }
 
-        $order->update($data);
+        if ($packageInstalled) {
+            $shippingCourierIdInput = $data['shipping_courier_id'] ?? null;
+            $shippingCourierId = null;
+            $shippingCarrier = null;
+
+            if ($shippingCourierIdInput === '__KEEP__') {
+                $shippingCarrier = $order->shipping_carrier;
+                $shippingCourierId = null;
+            } elseif (!empty($shippingCourierIdInput)) {
+                $shippingCourierId = (int)$shippingCourierIdInput;
+            }
+
+            $dto = new \SGCart\LogisticTracking\DTO\LogisticTrackingData(
+                order_status: $data['status'],
+                tracking_number: $data['tracking_number'] ?? null,
+                shipping_carrier: $shippingCarrier,
+                tracking_url: $data['tracking_url'] ?? null,
+                estimated_delivery_at: $data['estimated_delivery_at'] ?? null,
+                shipping_courier_id: $shippingCourierId
+            );
+
+            app(\SGCart\LogisticTracking\Actions\UpdateLogisticTrackingAction::class)->execute($order, $dto);
+        }
 
         return redirect()->back()->with('success', 'Order status has been updated successfully.');
     }

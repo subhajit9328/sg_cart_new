@@ -28,17 +28,15 @@ class PhoneOtpVerificationTest extends TestCase
             'password_confirmation' => 'password123',
         ]);
 
-        $customer = Customer::where('phone_no', '+1234567890')->first();
-        $this->assertNotNull($customer);
-        $this->assertNull($customer->phone_verified_at);
-
+        $this->assertEquals(0, Customer::count());
+ 
         // Verify redirect
         $response->assertRedirect(route('store.otp.verify'));
-
+ 
         // Verify OTP is in cache
-        $otpKey = "customer_otp_{$customer->id}";
+        $otpKey = "customer_otp_+1234567890";
         $this->assertTrue(Cache::has($otpKey));
-
+ 
         // Verify no mail was sent
         Mail::assertNothingSent();
     }

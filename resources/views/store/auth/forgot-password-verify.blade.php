@@ -19,7 +19,7 @@
 
         <form action="{{ route('store.forgot-password.verify.submit') }}" method="POST" class="flex flex-col gap-4" novalidate>
             @csrf
-            
+
             <div class="flex flex-col gap-1">
                 <label class="label">Reset Code (OTP)</label>
                 <input type="text" name="otp" id="otp" required maxlength="6" pattern="[0-9]{6}" class="inp text-center tracking-[8px] font-mono text-xl" placeholder="••••••" autofocus value="{{ old('otp') }}"/>
@@ -40,7 +40,7 @@
                     </button>
                 </form>
             </div>
-            
+
             <div id="countdown-wrapper" class="{{ $remainingSeconds > 0 ? '' : 'hidden' }}">
                 <span class="text-xs text-slate-400">
                     Resend code in <span id="timer" class="font-bold text-slate-600">{{ sprintf('%02d:%02d', floor($remainingSeconds / 60), $remainingSeconds % 60) }}</span>
@@ -52,7 +52,6 @@
 @endsection
 
 @section('scripts')
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
 $(document).ready(function() {
     const $form = $('form[action*="verify"]');
