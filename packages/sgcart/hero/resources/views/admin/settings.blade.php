@@ -71,14 +71,27 @@
         <!-- Slides Management List -->
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
             <!-- Card Header -->
-            <div class="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-900/10 flex items-center justify-between gap-3">
+            <div class="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-900/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">Slide Management</h3>
                     <p class="text-[10px] text-slate-400 dark:text-slate-500">Manage uploaded slides, set sort order, or delete images.</p>
                 </div>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                    {{ $images->count() }} Slide(s)
-                </span>
+                <div class="flex items-center gap-3 flex-wrap">
+                    @if($images->isNotEmpty())
+                        <div class="flex items-center gap-2">
+                            <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
+                                <input type="checkbox" id="select-all-slides" class="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                                <span>Select All</span>
+                            </label>
+                            <button type="button" id="btn-bulk-delete" class="hidden bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/20 dark:hover:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="selected-count">0</span>)
+                            </button>
+                        </div>
+                    @endif
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                        {{ $images->count() }} Slide(s)
+                    </span>
+                </div>
             </div>
 
             <!-- Card Body -->
@@ -93,6 +106,11 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="slides-container">
                         @foreach($images as $img)
                             <div class="relative bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-xl p-3 flex flex-col justify-between transition-all duration-300 hover:shadow-sm slide-card cursor-grab active:cursor-grabbing" draggable="true" data-id="{{ $img->id }}">
+                                <!-- Bulk Selection Checkbox -->
+                                <div class="absolute top-4 left-4 z-10" draggable="false" ondragstart="return false;">
+                                    <input type="checkbox" name="bulk_ids[]" value="{{ $img->id }}" class="slide-checkbox w-4 h-4 rounded border-slate-300 dark:border-slate-700 bg-white/90 backdrop-blur-xs text-blue-600 focus:ring-blue-500 shadow-sm cursor-pointer transition-all hover:scale-105" draggable="false">
+                                </div>
+
                                 <!-- Thumbnail -->
                                 <div class="w-full aspect-[16/9] rounded-lg overflow-hidden border border-slate-100 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
                                     <img src="{{ Storage::url($img->image_path) }}" class="w-full h-full object-cover pointer-events-none">
@@ -129,6 +147,12 @@
 
 <!-- Dummy Hidden Deletion Form -->
 <form id="delete-slide-form" action="" method="POST" class="hidden">
+    @csrf
+    @method('DELETE')
+</form>
+
+<!-- Dummy Hidden Bulk Deletion Form -->
+<form id="bulk-delete-form" action="{{ route('admin.hero.settings.bulk-delete') }}" method="POST" class="hidden">
     @csrf
     @method('DELETE')
 </form>
@@ -370,6 +394,72 @@
                     }
                 });
             }
+
+            // Prevent drag events when clicking inputs or buttons
+            cards.forEach(card => {
+                card.querySelectorAll('input[type="checkbox"], button').forEach(el => {
+                    el.addEventListener('dragstart', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                });
+            });
+        }
+
+        // Bulk Delete Actions
+        const selectAllCheckbox = document.getElementById('select-all-slides');
+        const slideCheckboxes = document.querySelectorAll('.slide-checkbox');
+        const bulkDeleteBtn = document.getElementById('btn-bulk-delete');
+        const selectedCountSpan = document.getElementById('selected-count');
+        const bulkDeleteForm = document.getElementById('bulk-delete-form');
+
+        if (selectAllCheckbox && bulkDeleteBtn) {
+            selectAllCheckbox.addEventListener('change', function () {
+                slideCheckboxes.forEach(cb => {
+                    cb.checked = this.checked;
+                });
+                updateBulkDeleteButton();
+            });
+
+            slideCheckboxes.forEach(cb => {
+                cb.addEventListener('change', function () {
+                    const allChecked = Array.from(slideCheckboxes).every(c => c.checked);
+                    selectAllCheckbox.checked = allChecked;
+                    updateBulkDeleteButton();
+                });
+            });
+
+            function updateBulkDeleteButton() {
+                const checkedCount = Array.from(slideCheckboxes).filter(c => c.checked).length;
+                selectedCountSpan.innerText = checkedCount;
+                if (checkedCount > 0) {
+                    bulkDeleteBtn.classList.remove('hidden');
+                } else {
+                    bulkDeleteBtn.classList.add('hidden');
+                }
+            }
+
+            bulkDeleteBtn.addEventListener('click', function () {
+                const checkedIds = Array.from(slideCheckboxes)
+                    .filter(c => c.checked)
+                    .map(c => c.value);
+
+                if (checkedIds.length === 0) return;
+
+                showConfirm(`Are you sure you want to delete the selected ${checkedIds.length} slides?`, () => {
+                    bulkDeleteForm.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
+                    
+                    checkedIds.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'ids[]';
+                        input.value = id;
+                        bulkDeleteForm.appendChild(input);
+                    });
+
+                    bulkDeleteForm.submit();
+                }, 'Bulk Delete Slides');
+            });
         }
     });
 </script>

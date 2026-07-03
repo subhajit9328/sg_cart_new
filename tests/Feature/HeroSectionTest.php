@@ -122,6 +122,53 @@ class HeroSectionTest extends TestCase
     }
 
     /**
+     * Test admin can bulk delete uploaded images.
+     */
+    public function test_admin_can_bulk_delete_uploaded_images(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        if (class_exists(\Spatie\Permission\Models\Permission::class)) {
+            $admin->givePermissionTo('manage hero section');
+        }
+
+        // Pre-create slide 1 & 2
+        $path1 = Storage::disk('public')->putFile('hero', UploadedFile::fake()->image('slide1.jpg'));
+        $slide1 = HeroImage::create([
+            'image_path' => $path1,
+            'sort_order' => 0,
+        ]);
+        $path2 = Storage::disk('public')->putFile('hero', UploadedFile::fake()->image('slide2.jpg'));
+        $slide2 = HeroImage::create([
+            'image_path' => $path2,
+            'sort_order' => 1,
+        ]);
+
+        Storage::disk('public')->assertExists($path1);
+        Storage::disk('public')->assertExists($path2);
+
+        $response = $this->actingAs($admin)
+            ->delete(route('admin.hero.settings.bulk-delete'), [
+                'ids' => [$slide1->id, $slide2->id]
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        // Assert record is deleted from DB
+        $this->assertEquals(0, HeroImage::count());
+
+        // Assert file is deleted from disk
+        Storage::disk('public')->assertMissing($path1);
+        Storage::disk('public')->assertMissing($path2);
+    }
+
+    /**
      * Test storefront home page variables load.
      */
     public function test_home_page_loads_hero_settings_variables(): void
