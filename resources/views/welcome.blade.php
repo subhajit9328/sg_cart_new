@@ -6,65 +6,70 @@
 
 
 <!-- HERO SECTION -->
-<div class="hero">
-    <div class="hero-left">
-        <div class="absolute w-80 h-80 rounded-full bg-blue-500/10 blur-3xl -top-10 -left-10"></div>
-        <div class="hero-eyebrow">Spring Collection 2026</div>
-        <h1 class="hero-title">Elevate Your<br>Standard <em>Style</em></h1>
-        <p class="hero-sub">Discover high-quality linen shirts, structured accessories, and lightweight knitwear engineered for maximum ease and durability.</p>
-        <div class="hero-actions">
-            <a href="{{ route('store.shop') }}" class="btn btn-accent">Shop The Drop <i class="fa-solid fa-arrow-right"></i></a>
-            <a href="{{ route('store.shop', ['category' => "Women's Clothing"]) }}" class="btn btn-ghost">View Editorial</a>
-        </div>
-    </div>
-    <div class="hero-right">
-        @if(isset($heroImages) && $heroImages->count() > 1)
-            <!-- CAROUSEL/SLIDER MODE -->
-            <div class="hero-carousel">
-                <div class="carousel-slides">
-                    @foreach($heroImages as $img)
-                        <div class="carousel-slide">
-                            @if($img->url)
-                                <a href="{{ $img->url }}" target="_blank" class="w-full h-full block">
+<div class="hero @if(isset($heroImages) && $heroImages->isNotEmpty()) hero-full-width @endif">
+    @if(isset($heroImages) && $heroImages->isNotEmpty())
+        <!-- BACKGROUND CAROUSEL / SLIDER / IMAGE -->
+        <div class="hero-bg-container">
+            @if($heroImages->count() > 1)
+                <!-- CAROUSEL/SLIDER MODE -->
+                <div class="hero-carousel">
+                    <div class="carousel-slides">
+                        @foreach($heroImages as $img)
+                            <div class="carousel-slide">
+                                @if($img->url)
+                                    <a href="{{ $img->url }}" target="_blank" class="w-full h-full block">
+                                        <img src="{{ \Illuminate\Support\Facades\Storage::url($img->image_path) }}" alt="Hero Collection Slide"/>
+                                    </a>
+                                @else
                                     <img src="{{ \Illuminate\Support\Facades\Storage::url($img->image_path) }}" alt="Hero Collection Slide"/>
-                                </a>
-                            @else
-                                <img src="{{ \Illuminate\Support\Facades\Storage::url($img->image_path) }}" alt="Hero Collection Slide"/>
-                            @endif
-                        </div>
-                    @endforeach
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                    <!-- Navigation Dots -->
+                    <div class="carousel-dots">
+                        @foreach($heroImages as $index => $img)
+                            <button class="carousel-dot" data-index="{{ $index }}"></button>
+                        @endforeach
+                    </div>
+                    <!-- Prev/Next Controls -->
+                    <button class="carousel-prev" aria-label="Previous slide"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="carousel-next" aria-label="Next slide"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
-                <!-- Navigation Dots -->
-                <div class="carousel-dots">
-                    @foreach($heroImages as $index => $img)
-                        <button class="carousel-dot" data-index="{{ $index }}"></button>
-                    @endforeach
-                </div>
-                <!-- Prev/Next Controls -->
-                <button class="carousel-prev" aria-label="Previous slide"><i class="fa-solid fa-chevron-left"></i></button>
-                <button class="carousel-next" aria-label="Next slide"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-        @else
-            <!-- SINGLE STATIC IMAGE MODE -->
-            @if(isset($heroImages) && $heroImages->isNotEmpty())
-                @php $firstImg = $heroImages->first(); @endphp
-                @if($firstImg->url)
-                    <a href="{{ $firstImg->url }}" target="_blank" class="w-full h-full block">
-                        <img src="{{ \Illuminate\Support\Facades\Storage::url($firstImg->image_path) }}" alt="Hero Collection Slide"/>
-                    </a>
-                @else
-                    <img src="{{ \Illuminate\Support\Facades\Storage::url($firstImg->image_path) }}" alt="Hero Collection Slide"/>
-                @endif
             @else
-                <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&auto=format&fit=crop&q=80" alt="Model wear in linen"/>
+                <!-- SINGLE IMAGE MODE -->
+                @php $firstImg = $heroImages->first(); @endphp
+                <div class="hero-single-image">
+                    @if($firstImg->url)
+                        <a href="{{ $firstImg->url }}" target="_blank" class="w-full h-full block">
+                            <img src="{{ \Illuminate\Support\Facades\Storage::url($firstImg->image_path) }}" alt="Hero Collection Slide"/>
+                        </a>
+                    @else
+                        <img src="{{ \Illuminate\Support\Facades\Storage::url($firstImg->image_path) }}" alt="Hero Collection Slide"/>
+                    @endif
+                </div>
             @endif
-        @endif
-
-        <div class="hero-overlay-tag">
-            <p class="tag-num">100%</p>
-            <p class="tag-label">Organic Cotton</p>
         </div>
-    </div>
+    @else
+        <!-- DEFAULT 2-COLUMN VIEW WHEN NO IMAGES UPLOADED -->
+        <div class="hero-left">
+            <div class="absolute w-80 h-80 rounded-full bg-blue-500/10 blur-3xl -top-10 -left-10"></div>
+            <div class="hero-eyebrow">Spring Collection 2026</div>
+            <h1 class="hero-title">Elevate Your<br>Standard <em>Style</em></h1>
+            <p class="hero-sub">Discover high-quality linen shirts, structured accessories, and lightweight knitwear engineered for maximum ease and durability.</p>
+            <div class="hero-actions">
+                <a href="{{ route('store.shop') }}" class="btn btn-accent">Shop The Drop <i class="fa-solid fa-arrow-right"></i></a>
+                <a href="{{ route('store.shop', ['category' => "Women's Clothing"]) }}" class="btn btn-ghost">View Editorial</a>
+            </div>
+        </div>
+        <div class="hero-right">
+            <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&auto=format&fit=crop&q=80" alt="Model wear in linen"/>
+            <div class="hero-overlay-tag">
+                <p class="tag-num">100%</p>
+                <p class="tag-label">Organic Cotton</p>
+            </div>
+        </div>
+    @endif
 </div>
 
 <!-- MARQUEE STRIP -->
@@ -227,6 +232,36 @@
     }
     .carousel-next {
         right: 16px;
+    }
+
+    /* Full width hero overrides when package slides are present */
+    .hero.hero-full-width {
+        display: block;
+        position: relative;
+        min-height: 70vh;
+    }
+    .hero-full-width .hero-bg-container {
+        position: relative;
+        width: 100%;
+        height: 70vh;
+        overflow: hidden;
+    }
+    .hero-full-width .hero-single-image {
+        width: 100%;
+        height: 100%;
+    }
+    .hero-full-width .hero-single-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    @media(max-width: 1024px) {
+        .hero.hero-full-width {
+            min-height: 50vh;
+        }
+        .hero-full-width .hero-bg-container {
+            height: 50vh;
+        }
     }
 </style>
 
