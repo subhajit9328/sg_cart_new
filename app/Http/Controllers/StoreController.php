@@ -834,6 +834,7 @@ class StoreController extends Controller
             $order = \App\Models\Order::create([
                 'order_number' => $orderNumber,
                 'customer_id' => auth('customer')->id(),
+                'session_id' => request()->session()->getId(),
                 'first_name' => $firstName,
                 'last_name' => $lastName,
                 'email' => $email,

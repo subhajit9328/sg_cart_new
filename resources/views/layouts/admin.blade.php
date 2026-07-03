@@ -109,6 +109,7 @@
 
             @includeIf('coupons::admin-menu')
             @includeIf('hero::admin-menu')
+            @includeIf('reporting::admin-menu')
             @includeIf('product-variants::admin-menu')
             @includeIf('shipping::admin-menu')
             @includeIf('logistic-tracking::admin-menu')

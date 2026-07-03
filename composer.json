@@ -17,6 +17,7 @@
         "sgcart/logistic-tracking": "@dev",
         "sgcart/payment-razorpay": "@dev",
         "sgcart/product-variants": "@dev",
+        "sgcart/reporting": "@dev",
         "sgcart/reviews": "@dev",
         "sgcart/shipping": "@dev",
         "sgcart/tax": "@dev",
@@ -105,6 +106,13 @@
         {
             "type": "path",
             "url": "packages/sgcart/hero",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/reporting",
             "options": {
                 "symlink": true
             }
