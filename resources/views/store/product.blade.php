@@ -3,20 +3,25 @@
 @section('title', !empty($product['meta_title']) ? $product['meta_title'] : $product['name'] . ' — sgcart')
 
 @section('meta')
-    <meta name="description" content="{{ !empty($product['meta_description']) ? $product['meta_description'] : Str::limit(strip_tags($product['desc']), 155) }}">
+    <meta name="description"
+          content="{{ !empty($product['meta_description']) ? $product['meta_description'] : Str::limit(strip_tags($product['desc']), 155) }}">
     @if(!empty($product['meta_keywords']))
         <meta name="keywords" content="{{ $product['meta_keywords'] }}">
     @endif
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="product">
-    <meta property="og:title" content="{{ !empty($product['meta_title']) ? $product['meta_title'] : $product['name'] }}">
-    <meta property="og:description" content="{{ !empty($product['meta_description']) ? $product['meta_description'] : Str::limit(strip_tags($product['desc']), 155) }}">
+    <meta property="og:title"
+          content="{{ !empty($product['meta_title']) ? $product['meta_title'] : $product['name'] }}">
+    <meta property="og:description"
+          content="{{ !empty($product['meta_description']) ? $product['meta_description'] : Str::limit(strip_tags($product['desc']), 155) }}">
     <meta property="og:image" content="{{ $product['img'] }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ !empty($product['meta_title']) ? $product['meta_title'] : $product['name'] }}">
-    <meta name="twitter:description" content="{{ !empty($product['meta_description']) ? $product['meta_description'] : Str::limit(strip_tags($product['desc']), 155) }}">
+    <meta name="twitter:title"
+          content="{{ !empty($product['meta_title']) ? $product['meta_title'] : $product['name'] }}">
+    <meta name="twitter:description"
+          content="{{ !empty($product['meta_description']) ? $product['meta_description'] : Str::limit(strip_tags($product['desc']), 155) }}">
     <meta name="twitter:image" content="{{ $product['img'] }}">
 @endsection
 
@@ -238,7 +243,6 @@
                         @if(!empty($product['sku']) || !empty($product['manufacturer']) || !empty($product['weight']) || !empty($product['dimensions']))
                             <button type="button" class="tab-btn" onclick="setSpecTab('specs')">Specifications</button>
                         @endif
-                        <button type="button" class="tab-btn" onclick="setSpecTab('shipping')">Shipping</button>
                         <button type="button" class="tab-btn" onclick="setSpecTab('reviews')">Reviews
                             ({{ $approvedReviews->count() }})
                         </button>
@@ -279,11 +283,7 @@
                             </table>
                         </div>
                     @endif
-                    <div id="spec-shipping" class="spec-content" style="display:none">
-                        <p class="text-xs text-slate-500 leading-relaxed">Standard shipping takes between 3 to 7
-                            business days depending on location. Tracking information is sent automatically via email
-                            once shipped.</p>
-                    </div>
+
                     <div id="spec-reviews" class="spec-content" style="display:none">
                         <!-- Summary Widget Grid -->
                         <div
@@ -379,313 +379,313 @@
                         </div>
                     </div>
                 </div>
-
             </div>
+        </div>
 
 
-            <!-- RELATED PRODUCTS -->
-            @if(isset($related) && count($related) > 0)
-                <div class="section" style="margin-top:40px">
-                    <div class="section-header">
-                        <h2 class="section-title">Related Products</h2>
-                    </div>
-                    <div class="grid-4">
-                        @foreach($related as $rel)
-                            <div class="product-card"
-                                 onclick="window.location.href='{{ route('store.product', $rel['slug']) }}'">
-                                <div class="product-card-img">
-                                    <img src="{{ $rel['img'] }}" alt="{{ $rel['name'] }}"/>
-                                    @php
-                                        $inWishlist = in_array($rel['id'], session('wishlist', []));
-                                    @endphp
-                                    <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}"
-                                            data-product-id="{{ $rel['id'] }}"
-                                            onclick="event.stopPropagation(); toggleWishlist(this)"
-                                            title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
-                                        <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
-                                    </button>
-                                </div>
-                                <div class="product-card-body">
-                                    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $rel['cat'] }}</p>
-                                    <h3 class="font-display font-bold text-sm mt-1 text-slate-800 line-clamp-1">{{ $rel['name'] }}</h3>
-                                    <div class="flex items-center gap-1.5 mt-2">
+        <!-- RELATED PRODUCTS -->
+        @if(isset($related) && count($related) > 0)
+            <div class="section" style="margin-top:40px">
+                <div class="section-header">
+                    <h2 class="section-title">Related Products</h2>
+                </div>
+                <div class="grid-4">
+                    @foreach($related as $rel)
+                        <div class="product-card"
+                             onclick="window.location.href='{{ route('store.product', $rel['slug']) }}'">
+                            <div class="product-card-img">
+                                <img src="{{ $rel['img'] }}" alt="{{ $rel['name'] }}"/>
+                                @php
+                                    $inWishlist = in_array($rel['id'], session('wishlist', []));
+                                @endphp
+                                <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}"
+                                        data-product-id="{{ $rel['id'] }}"
+                                        onclick="event.stopPropagation(); toggleWishlist(this)"
+                                        title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                                    <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
+                                </button>
+                            </div>
+                            <div class="product-card-body">
+                                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $rel['cat'] }}</p>
+                                <h3 class="font-display font-bold text-sm mt-1 text-slate-800 line-clamp-1">{{ $rel['name'] }}</h3>
+                                <div class="flex items-center gap-1.5 mt-2">
                                         <span
                                             class="font-bold text-sm text-slate-900">₹{{ number_format($rel['price'], 2) }}</span>
-                                    </div>
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
+                        </div>
+                    @endforeach
                 </div>
-            @endif
+            </div>
+        @endif
 
-        </div>
-        @endsection
+    </div>
+@endsection
 
-        @section('scripts')
-            <script>
-                function changeImage(src, el) {
-                    document.getElementById('mainProductImg').src = src;
-                    document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
-                    el.classList.add('active');
+@section('scripts')
+    <script>
+        function changeImage(src, el) {
+            document.getElementById('mainProductImg').src = src;
+            document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function selectSize(val, el) {
+            document.getElementById('sizeInput').value = val;
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function selectColor(val, el) {
+            document.getElementById('colorInput').value = val;
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function adjQty(dir) {
+            const inp = document.getElementById('qtyInput');
+            if (!inp) return;
+            let val = parseInt(inp.value) + dir;
+            if (val < 1) val = 1;
+            inp.value = val;
+        }
+
+        function setSpecTab(name) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.spec-content').forEach(c => c.style.display = 'none');
+
+            event.target.classList.add('active');
+            document.getElementById(`spec-${name}`).style.display = 'block';
+            if (name === 'reviews') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const filter = urlParams.get('review_filter') || 'helpful';
+                const page = parseInt(urlParams.get('review_page')) || 1;
+                fetchReviews(filter, page, true);
+            }
+        }
+
+        // Zoom Image Feature
+        document.addEventListener('DOMContentLoaded', function () {
+            const gallery = document.querySelector('.pd-main-img');
+            const img = document.getElementById('mainProductImg');
+
+            if (gallery && img) {
+                // Reusable zoom coordinate calculation and scaling
+                function zoomMove(clientX, clientY) {
+                    const rect = gallery.getBoundingClientRect();
+                    const x = ((clientX - rect.left) / rect.width) * 100;
+                    const y = ((clientY - rect.top) / rect.height) * 100;
+
+                    // Clamp coordinates between 0% and 100%
+                    const clampedX = Math.max(0, Math.min(100, x));
+                    const clampedY = Math.max(0, Math.min(100, y));
+
+                    img.style.transformOrigin = `${clampedX}% ${clampedY}%`;
+                    img.style.transform = 'scale(2.5)';
                 }
 
-                function selectSize(val, el) {
-                    document.getElementById('sizeInput').value = val;
-                    document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
-                    el.classList.add('active');
+                function zoomReset() {
+                    img.style.transform = 'scale(1)';
+                    img.style.transformOrigin = 'center center';
                 }
 
-                function selectColor(val, el) {
-                    document.getElementById('colorInput').value = val;
-                    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-                    el.classList.add('active');
-                }
+                // Mouse Events
+                gallery.addEventListener('mousemove', function (e) {
+                    zoomMove(e.clientX, e.clientY);
+                });
 
-                function adjQty(dir) {
-                    const inp = document.getElementById('qtyInput');
-                    if (!inp) return;
-                    let val = parseInt(inp.value) + dir;
-                    if (val < 1) val = 1;
-                    inp.value = val;
-                }
+                gallery.addEventListener('mouseleave', function () {
+                    zoomReset();
+                });
 
-                function setSpecTab(name) {
+                // Mobile Touch Events (Swipe to zoom & pan)
+                gallery.addEventListener('touchstart', function (e) {
+                    if (e.touches.length > 0) {
+                        zoomMove(e.touches[0].clientX, e.touches[0].clientY);
+                    }
+                }, {passive: true});
+
+                gallery.addEventListener('touchmove', function (e) {
+                    if (e.touches.length > 0) {
+                        // Prevent page scroll when interacting with zoom container
+                        if (e.cancelable) {
+                            e.preventDefault();
+                        }
+                        zoomMove(e.touches[0].clientX, e.touches[0].clientY);
+                    }
+                }, {passive: false});
+
+                gallery.addEventListener('touchend', function () {
+                    zoomReset();
+                });
+
+                gallery.addEventListener('touchcancel', function () {
+                    zoomReset();
+                });
+            }
+        });
+    </script>
+
+    <!-- Photo Lightbox Modal -->
+    <div id="lightbox-modal"
+         class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/85 hidden"
+         onclick="closeLightbox()">
+        <button
+            class="absolute top-4 right-4 text-white hover:text-slate-350 bg-transparent border-none cursor-pointer outline-none">
+            <i class="fa-solid fa-xmark text-2xl"></i>
+        </button>
+        <img id="lightbox-image" src="" alt="Zoomed Review Image"
+             class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+             onclick="event.stopPropagation()">
+    </div>
+
+    <script>
+        function openLightbox(src) {
+            const modal = document.getElementById('lightbox-modal');
+            const img = document.getElementById('lightbox-image');
+            img.src = src;
+            modal.classList.remove('hidden');
+        }
+
+        function closeLightbox() {
+            const modal = document.getElementById('lightbox-modal');
+            modal.classList.add('hidden');
+        }
+
+        function showShimmer(callback) {
+            const listContainer = document.getElementById('review-list-container');
+            const shimmerContainer = document.getElementById('reviews-shimmer');
+            if (listContainer && shimmerContainer) {
+                listContainer.classList.add('hidden');
+                listContainer.style.display = 'none';
+                shimmerContainer.classList.remove('hidden');
+                shimmerContainer.style.display = 'block';
+                setTimeout(() => {
+                    shimmerContainer.classList.add('hidden');
+                    shimmerContainer.style.display = 'none';
+                    listContainer.classList.remove('hidden');
+                    listContainer.style.display = 'block';
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                }, 500);
+            } else {
+                if (typeof callback === 'function') {
+                    callback();
+                }
+            }
+        }
+
+        function filterReviews(type) {
+            fetchReviews(type, 1);
+        }
+
+        function changeReviewPage(page) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentFilter = urlParams.get('review_filter') || 'helpful';
+            fetchReviews(currentFilter, page);
+        }
+
+        function fetchReviews(filter, page, useShimmer = true) {
+            function executeFetch() {
+                const url = new URL(window.location.href);
+                url.searchParams.set('review_filter', filter);
+                url.searchParams.set('review_page', page);
+                url.searchParams.set('ajax', '1');
+
+                fetch(url.toString(), {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(response => response.text())
+                    .then(html => {
+                        const container = document.getElementById('review-list-container');
+                        if (container) {
+                            container.innerHTML = html;
+                        }
+
+                        // Update URL parameters in the address bar without reloading
+                        const displayUrl = new URL(window.location.href);
+                        displayUrl.searchParams.set('review_filter', filter);
+                        displayUrl.searchParams.set('review_page', page);
+                        window.history.pushState({
+                            review_filter: filter,
+                            review_page: page
+                        }, '', displayUrl.toString());
+
+                        // Update active filter button styles
+                        updateFilterButtonStyles(filter);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching reviews:', error);
+                    });
+            }
+
+            if (useShimmer) {
+                showShimmer(executeFetch);
+            } else {
+                executeFetch();
+            }
+        }
+
+        function updateFilterButtonStyles(activeFilter) {
+            const container = document.getElementById('review-filter-container');
+            if (container) {
+                container.querySelectorAll('.review-filter-btn').forEach(btn => {
+                    const btnFilter = btn.getAttribute('data-filter');
+                    if (btnFilter === activeFilter) {
+                        btn.classList.add('border-amber-500', 'text-amber-500', 'bg-amber-50/50', 'dark:bg-amber-200/20');
+                        btn.classList.remove('border-slate-200', 'dark:border-slate-800', 'text-slate-655', 'dark:text-slate-400', 'bg-transparent');
+                    } else {
+                        btn.classList.remove('border-amber-500', 'text-amber-500', 'bg-amber-50/50', 'dark:bg-amber-200/20');
+                        btn.classList.add('border-slate-200', 'dark:border-slate-800', 'text-slate-655', 'dark:text-slate-400', 'bg-transparent');
+                    }
+                });
+            }
+        }
+
+        // Listen for browser Back/Forward navigation
+        window.addEventListener('popstate', function (event) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const filter = urlParams.get('review_filter') || 'helpful';
+            const page = parseInt(urlParams.get('review_page')) || 1;
+
+            // Only fetch with shimmer if we are actually viewing the reviews tab
+            const reviewsTabContent = document.getElementById('spec-reviews');
+            if (reviewsTabContent && reviewsTabContent.style.display !== 'none') {
+                fetchReviews(filter, page, true);
+            } else {
+                fetchReviews(filter, page, false);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const filter = urlParams.get('review_filter') || 'helpful';
+            const page = parseInt(urlParams.get('review_page')) || 1;
+
+            // Sync filter buttons with url parameter on initial page load
+            updateFilterButtonStyles(filter);
+
+            // If URL parameters indicate reviews are queried or we have a reviews hash, activate reviews tab
+            if (urlParams.has('review_filter') || urlParams.has('review_page') || window.location.hash === '#spec-reviews') {
+                const reviewsTabBtn = document.querySelector('button[onclick*="reviews"]');
+                if (reviewsTabBtn) {
+                    // Set tab active without full page transition
                     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                     document.querySelectorAll('.spec-content').forEach(c => c.style.display = 'none');
-
-                    event.target.classList.add('active');
-                    document.getElementById(`spec-${name}`).style.display = 'block';
-                    if (name === 'reviews') {
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const filter = urlParams.get('review_filter') || 'helpful';
-                        const page = parseInt(urlParams.get('review_page')) || 1;
-                        fetchReviews(filter, page, true);
+                    reviewsTabBtn.classList.add('active');
+                    const reviewsSpec = document.getElementById('spec-reviews');
+                    if (reviewsSpec) {
+                        reviewsSpec.style.display = 'block';
                     }
+                    // Fetch reviews with shimmer
+                    fetchReviews(filter, page, true);
                 }
-
-                // Zoom Image Feature
-                document.addEventListener('DOMContentLoaded', function () {
-                    const gallery = document.querySelector('.pd-main-img');
-                    const img = document.getElementById('mainProductImg');
-
-                    if (gallery && img) {
-                        // Reusable zoom coordinate calculation and scaling
-                        function zoomMove(clientX, clientY) {
-                            const rect = gallery.getBoundingClientRect();
-                            const x = ((clientX - rect.left) / rect.width) * 100;
-                            const y = ((clientY - rect.top) / rect.height) * 100;
-
-                            // Clamp coordinates between 0% and 100%
-                            const clampedX = Math.max(0, Math.min(100, x));
-                            const clampedY = Math.max(0, Math.min(100, y));
-
-                            img.style.transformOrigin = `${clampedX}% ${clampedY}%`;
-                            img.style.transform = 'scale(2.5)';
-                        }
-
-                        function zoomReset() {
-                            img.style.transform = 'scale(1)';
-                            img.style.transformOrigin = 'center center';
-                        }
-
-                        // Mouse Events
-                        gallery.addEventListener('mousemove', function (e) {
-                            zoomMove(e.clientX, e.clientY);
-                        });
-
-                        gallery.addEventListener('mouseleave', function () {
-                            zoomReset();
-                        });
-
-                        // Mobile Touch Events (Swipe to zoom & pan)
-                        gallery.addEventListener('touchstart', function (e) {
-                            if (e.touches.length > 0) {
-                                zoomMove(e.touches[0].clientX, e.touches[0].clientY);
-                            }
-                        }, {passive: true});
-
-                        gallery.addEventListener('touchmove', function (e) {
-                            if (e.touches.length > 0) {
-                                // Prevent page scroll when interacting with zoom container
-                                if (e.cancelable) {
-                                    e.preventDefault();
-                                }
-                                zoomMove(e.touches[0].clientX, e.touches[0].clientY);
-                            }
-                        }, {passive: false});
-
-                        gallery.addEventListener('touchend', function () {
-                            zoomReset();
-                        });
-
-                        gallery.addEventListener('touchcancel', function () {
-                            zoomReset();
-                        });
-                    }
-                });
-            </script>
-
-            <!-- Photo Lightbox Modal -->
-            <div id="lightbox-modal"
-                 class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/85 hidden"
-                 onclick="closeLightbox()">
-                <button
-                    class="absolute top-4 right-4 text-white hover:text-slate-350 bg-transparent border-none cursor-pointer outline-none">
-                    <i class="fa-solid fa-xmark text-2xl"></i>
-                </button>
-                <img id="lightbox-image" src="" alt="Zoomed Review Image"
-                     class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-                     onclick="event.stopPropagation()">
-            </div>
-
-            <script>
-                function openLightbox(src) {
-                    const modal = document.getElementById('lightbox-modal');
-                    const img = document.getElementById('lightbox-image');
-                    img.src = src;
-                    modal.classList.remove('hidden');
-                }
-
-                function closeLightbox() {
-                    const modal = document.getElementById('lightbox-modal');
-                    modal.classList.add('hidden');
-                }
-
-                function showShimmer(callback) {
-                    const listContainer = document.getElementById('review-list-container');
-                    const shimmerContainer = document.getElementById('reviews-shimmer');
-                    if (listContainer && shimmerContainer) {
-                        listContainer.classList.add('hidden');
-                        listContainer.style.display = 'none';
-                        shimmerContainer.classList.remove('hidden');
-                        shimmerContainer.style.display = 'block';
-                        setTimeout(() => {
-                            shimmerContainer.classList.add('hidden');
-                            shimmerContainer.style.display = 'none';
-                            listContainer.classList.remove('hidden');
-                            listContainer.style.display = 'block';
-                            if (typeof callback === 'function') {
-                                callback();
-                            }
-                        }, 500);
-                    } else {
-                        if (typeof callback === 'function') {
-                            callback();
-                        }
-                    }
-                }
-
-                function filterReviews(type) {
-                    fetchReviews(type, 1);
-                }
-
-                function changeReviewPage(page) {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const currentFilter = urlParams.get('review_filter') || 'helpful';
-                    fetchReviews(currentFilter, page);
-                }
-
-                function fetchReviews(filter, page, useShimmer = true) {
-                    function executeFetch() {
-                        const url = new URL(window.location.href);
-                        url.searchParams.set('review_filter', filter);
-                        url.searchParams.set('review_page', page);
-                        url.searchParams.set('ajax', '1');
-
-                        fetch(url.toString(), {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                            .then(response => response.text())
-                            .then(html => {
-                                const container = document.getElementById('review-list-container');
-                                if (container) {
-                                    container.innerHTML = html;
-                                }
-
-                                // Update URL parameters in the address bar without reloading
-                                const displayUrl = new URL(window.location.href);
-                                displayUrl.searchParams.set('review_filter', filter);
-                                displayUrl.searchParams.set('review_page', page);
-                                window.history.pushState({
-                                    review_filter: filter,
-                                    review_page: page
-                                }, '', displayUrl.toString());
-
-                                // Update active filter button styles
-                                updateFilterButtonStyles(filter);
-                            })
-                            .catch(error => {
-                                console.error('Error fetching reviews:', error);
-                            });
-                    }
-
-                    if (useShimmer) {
-                        showShimmer(executeFetch);
-                    } else {
-                        executeFetch();
-                    }
-                }
-
-                function updateFilterButtonStyles(activeFilter) {
-                    const container = document.getElementById('review-filter-container');
-                    if (container) {
-                        container.querySelectorAll('.review-filter-btn').forEach(btn => {
-                            const btnFilter = btn.getAttribute('data-filter');
-                            if (btnFilter === activeFilter) {
-                                btn.classList.add('border-amber-500', 'text-amber-500', 'bg-amber-50/50', 'dark:bg-amber-200/20');
-                                btn.classList.remove('border-slate-200', 'dark:border-slate-800', 'text-slate-655', 'dark:text-slate-400', 'bg-transparent');
-                            } else {
-                                btn.classList.remove('border-amber-500', 'text-amber-500', 'bg-amber-50/50', 'dark:bg-amber-200/20');
-                                btn.classList.add('border-slate-200', 'dark:border-slate-800', 'text-slate-655', 'dark:text-slate-400', 'bg-transparent');
-                            }
-                        });
-                    }
-                }
-
-                // Listen for browser Back/Forward navigation
-                window.addEventListener('popstate', function (event) {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const filter = urlParams.get('review_filter') || 'helpful';
-                    const page = parseInt(urlParams.get('review_page')) || 1;
-
-                    // Only fetch with shimmer if we are actually viewing the reviews tab
-                    const reviewsTabContent = document.getElementById('spec-reviews');
-                    if (reviewsTabContent && reviewsTabContent.style.display !== 'none') {
-                        fetchReviews(filter, page, true);
-                    } else {
-                        fetchReviews(filter, page, false);
-                    }
-                });
-
-                document.addEventListener('DOMContentLoaded', function () {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const filter = urlParams.get('review_filter') || 'helpful';
-                    const page = parseInt(urlParams.get('review_page')) || 1;
-
-                    // Sync filter buttons with url parameter on initial page load
-                    updateFilterButtonStyles(filter);
-
-                    // If URL parameters indicate reviews are queried or we have a reviews hash, activate reviews tab
-                    if (urlParams.has('review_filter') || urlParams.has('review_page') || window.location.hash === '#spec-reviews') {
-                        const reviewsTabBtn = document.querySelector('button[onclick*="reviews"]');
-                        if (reviewsTabBtn) {
-                            // Set tab active without full page transition
-                            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                            document.querySelectorAll('.spec-content').forEach(c => c.style.display = 'none');
-                            reviewsTabBtn.classList.add('active');
-                            const reviewsSpec = document.getElementById('spec-reviews');
-                            if (reviewsSpec) {
-                                reviewsSpec.style.display = 'block';
-                            }
-                            // Fetch reviews with shimmer
-                            fetchReviews(filter, page, true);
-                        }
-                    }
-                });
-            </script>
+            }
+        });
+    </script>
 
     @includeIf('product-variants::storefront-variant-script')
 @endsection
