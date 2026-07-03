@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use App\Observers\OrderObserver;
@@ -12,6 +13,7 @@ use App\Observers\OrderObserver;
 #[ObservedBy([OrderObserver::class])]
 class Order extends Model
 {
+    use HasFactory;
     use HasUlids;
 
     // Use the HasTickets trait stub

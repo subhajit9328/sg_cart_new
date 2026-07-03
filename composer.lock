@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "009282ea1deadc4ead056671f287d675",
+    "content-hash": "b49339b4f41fdecbbd92bb3a61f01508",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -3976,7 +3976,7 @@
         },
         {
             "name": "sgcart/coupons",
-            "version": "dev-feature/117748-crm",
+            "version": "dev-feature/117825-reporting-module",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/coupons",
@@ -4015,7 +4015,7 @@
         },
         {
             "name": "sgcart/crm-tickets",
-            "version": "dev-feature/117748-crm",
+            "version": "dev-feature/117825-reporting-module",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/crm-tickets",
@@ -4051,7 +4051,7 @@
         },
         {
             "name": "sgcart/image-search",
-            "version": "dev-feature/117748-crm",
+            "version": "dev-feature/117825-reporting-module",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/image-search",
@@ -4087,7 +4087,7 @@
         },
         {
             "name": "sgcart/logistic-tracking",
-            "version": "dev-feature/117748-crm",
+            "version": "dev-feature/117825-reporting-module",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/logistic-tracking",
@@ -4123,7 +4123,7 @@
         },
         {
             "name": "sgcart/payment-razorpay",
-            "version": "dev-feature/117748-crm",
+            "version": "dev-feature/117825-reporting-module",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/payment-razorpay",
@@ -4162,7 +4162,7 @@
         },
         {
             "name": "sgcart/product-variants",
-            "version": "dev-feature/117748-crm",
+            "version": "dev-feature/117825-reporting-module",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/product-variants",
@@ -4201,8 +4201,44 @@
             }
         },
         {
+            "name": "sgcart/reporting",
+            "version": "dev-feature/117825-reporting-module",
+            "dist": {
+                "type": "path",
+                "url": "packages/sgcart/reporting",
+                "reference": "113017321a341c07f0c2cbd9286f0aac48610840"
+            },
+            "require": {
+                "php": "^8.2|^8.3"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "SGCart\\Reporting\\Providers\\ReportingServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SGCart\\Reporting\\": "src/"
+                }
+            },
+            "authors": [
+                {
+                    "name": "SGCart Team",
+                    "email": "support@sgcart.com"
+                }
+            ],
+            "description": "Analytics and reporting dashboard for SGCart admin — Orders and Sales insights",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "sgcart/reviews",
-            "version": "dev-feature/117748-crm",
+            "version": "dev-feature/117825-reporting-module",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/reviews",
@@ -4238,7 +4274,7 @@
         },
         {
             "name": "sgcart/shipping",
-            "version": "dev-feature/117748-crm",
+            "version": "dev-feature/117825-reporting-module",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/shipping",
@@ -4277,7 +4313,7 @@
         },
         {
             "name": "sgcart/tax",
-            "version": "dev-feature/117748-crm",
+            "version": "dev-feature/117825-reporting-module",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/tax",
@@ -9663,6 +9699,7 @@
         "sgcart/logistic-tracking": 20,
         "sgcart/payment-razorpay": 20,
         "sgcart/product-variants": 20,
+        "sgcart/reporting": 20,
         "sgcart/reviews": 20,
         "sgcart/shipping": 20,
         "sgcart/tax": 20
