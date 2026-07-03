@@ -90,19 +90,20 @@
                         <p class="text-[10px] mt-0.5">Upload multiple images above to build your hero slide deck.</p>
                     </div>
                 @else
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="slides-container">
                         @foreach($images as $img)
-                            <div class="relative bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-xl p-3 flex flex-col justify-between transition-all duration-300 hover:shadow-sm">
+                            <div class="relative bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-xl p-3 flex flex-col justify-between transition-all duration-300 hover:shadow-sm slide-card cursor-grab active:cursor-grabbing" draggable="true" data-id="{{ $img->id }}">
                                 <!-- Thumbnail -->
                                 <div class="w-full aspect-[16/9] rounded-lg overflow-hidden border border-slate-100 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
-                                    <img src="{{ Storage::url($img->image_path) }}" class="w-full h-full object-cover">
+                                    <img src="{{ Storage::url($img->image_path) }}" class="w-full h-full object-cover pointer-events-none">
                                 </div>
 
                                 <!-- Image Meta & Actions -->
                                 <div class="mt-3.5 flex items-center justify-between gap-3">
-                                    <div class="flex-1 min-w-0 flex items-center gap-1.5">
-                                        <label class="shrink-0 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Sort</label>
-                                        <input type="number" name="sort_order[{{ $img->id }}]" value="{{ old('sort_order.'.$img->id, $img->sort_order) }}" class="w-16 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-center text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100" required>
+                                    <div class="flex-1 min-w-0 flex items-center gap-2">
+                                        <i class="fa-solid fa-grip-lines text-slate-400 dark:text-slate-600 text-xs"></i>
+                                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Drag to reorder</span>
+                                        <input type="hidden" name="sort_order[{{ $img->id }}]" class="slide-sort-order" value="{{ $img->sort_order }}">
                                     </div>
 
                                     <!-- Delete Button Form -->
@@ -298,6 +299,77 @@
                     }
                 }
             });
+        }
+
+        // Draggable Slide Management
+        const slidesContainer = document.getElementById('slides-container');
+        if (slidesContainer) {
+            let draggingCard = null;
+
+            const cards = slidesContainer.querySelectorAll('.slide-card');
+            cards.forEach(card => {
+                registerDragEvents(card);
+            });
+
+            function registerDragEvents(card) {
+                card.addEventListener('dragstart', function (e) {
+                    draggingCard = this;
+                    this.classList.add('opacity-40', 'border-blue-500', 'ring-2', 'ring-blue-500/10');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/html', this.innerHTML);
+                });
+
+                card.addEventListener('dragend', function () {
+                    draggingCard = null;
+                    this.classList.remove('opacity-40', 'border-blue-500', 'ring-2', 'ring-blue-500/10');
+                    
+                    slidesContainer.querySelectorAll('.slide-card').forEach(c => {
+                        c.classList.remove('border-blue-400', 'ring-2', 'ring-blue-500/20');
+                    });
+
+                    updateSortOrders();
+                });
+
+                card.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+                    if (draggingCard && draggingCard !== this) {
+                        const rect = this.getBoundingClientRect();
+                        const midX = rect.left + rect.width / 2;
+                        const midY = rect.top + rect.height / 2;
+                        
+                        const isAfter = e.clientX > midX || e.clientY > midY;
+                        
+                        if (isAfter) {
+                            slidesContainer.insertBefore(draggingCard, this.nextSibling);
+                        } else {
+                            slidesContainer.insertBefore(draggingCard, this);
+                        }
+                    }
+                    return false;
+                });
+                
+                card.addEventListener('dragenter', function (e) {
+                    if (draggingCard && draggingCard !== this) {
+                        this.classList.add('border-blue-400', 'ring-2', 'ring-blue-500/20');
+                    }
+                });
+
+                card.addEventListener('dragleave', function () {
+                    if (draggingCard !== this) {
+                        this.classList.remove('border-blue-400', 'ring-2', 'ring-blue-500/20');
+                    }
+                });
+            }
+
+            function updateSortOrders() {
+                const sortedCards = slidesContainer.querySelectorAll('.slide-card');
+                sortedCards.forEach((card, index) => {
+                    const hiddenInput = card.querySelector('.slide-sort-order');
+                    if (hiddenInput) {
+                        hiddenInput.value = index + 1;
+                    }
+                });
+            }
         }
     });
 </script>
