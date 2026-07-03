@@ -1,0 +1,27 @@
+{
+    "name": "sgcart/hero",
+    "description": "Customizable storefront hero section with multiple image upload and dynamic carousel functionalities.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "SGCart Team",
+            "email": "support@sgcart.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2|^8.3|^8.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "SGCart\\Hero\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SGCart\\Hero\\Providers\\HeroServiceProvider"
+            ]
+        }
+    }
+}

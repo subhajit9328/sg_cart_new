@@ -18,7 +18,35 @@
         </div>
     </div>
     <div class="hero-right">
-        <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&auto=format&fit=crop&q=80" alt="Model wear in linen"/>
+        @if(isset($heroImages) && $heroImages->count() > 1)
+            <!-- CAROUSEL/SLIDER MODE -->
+            <div class="hero-carousel">
+                <div class="carousel-slides">
+                    @foreach($heroImages as $img)
+                        <div class="carousel-slide">
+                            <img src="{{ \Illuminate\Support\Facades\Storage::url($img->image_path) }}" alt="Hero Collection Slide"/>
+                        </div>
+                    @endforeach
+                </div>
+                <!-- Navigation Dots -->
+                <div class="carousel-dots">
+                    @foreach($heroImages as $index => $img)
+                        <button class="carousel-dot" data-index="{{ $index }}"></button>
+                    @endforeach
+                </div>
+                <!-- Prev/Next Controls -->
+                <button class="carousel-prev" aria-label="Previous slide"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="carousel-next" aria-label="Next slide"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        @else
+            <!-- SINGLE STATIC IMAGE MODE -->
+            @if(isset($heroImages) && $heroImages->isNotEmpty())
+                <img src="{{ \Illuminate\Support\Facades\Storage::url($heroImages->first()->image_path) }}" alt="Hero Collection Slide"/>
+            @else
+                <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&auto=format&fit=crop&q=80" alt="Model wear in linen"/>
+            @endif
+        @endif
+
         <div class="hero-overlay-tag">
             <p class="tag-num">100%</p>
             <p class="tag-label">Organic Cotton</p>
@@ -103,3 +131,162 @@
     </div>
 </div>
 @endsection
+
+<style>
+    /* Carousel Container */
+    .hero-carousel {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    .carousel-slides {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .carousel-slide {
+        flex-shrink: 0;
+        width: 100%;
+        height: 100%;
+    }
+    .carousel-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    /* Navigation dots */
+    .carousel-dots {
+        position: absolute;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 8px;
+        z-index: 10;
+    }
+    .carousel-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        padding: 0;
+        transition: all 0.3s ease;
+    }
+    .carousel-dot.active {
+        background: #fff;
+        width: 24px;
+        border-radius: 4px;
+    }
+
+    /* Arrow Controls */
+    .carousel-prev,
+    .carousel-next {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 10;
+    }
+    .carousel-prev:hover,
+    .carousel-next:hover {
+        background: rgba(0, 0, 0, 0.5);
+    }
+    .carousel-prev {
+        left: 16px;
+    }
+    .carousel-next {
+        right: 16px;
+    }
+</style>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const carousel = document.querySelector('.hero-carousel');
+        if (!carousel) return;
+
+        const slides = carousel.querySelector('.carousel-slides');
+        const slideItems = carousel.querySelectorAll('.carousel-slide');
+        const dots = carousel.querySelectorAll('.carousel-dot');
+        const prevBtn = carousel.querySelector('.carousel-prev');
+        const nextBtn = carousel.querySelector('.carousel-next');
+
+        let currentIndex = 0;
+        const totalSlides = slideItems.length;
+        let autoPlayInterval;
+
+        function showSlide(index) {
+            if (index < 0) index = totalSlides - 1;
+            if (index >= totalSlides) index = 0;
+            currentIndex = index;
+
+            slides.style.transform = `translateX(-${currentIndex * 100}%)`;
+
+            dots.forEach((dot, idx) => {
+                if (idx === currentIndex) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+
+        function nextSlide() {
+            showSlide(currentIndex + 1);
+        }
+
+        function startAutoPlay() {
+            autoPlayInterval = setInterval(nextSlide, 5000);
+        }
+
+        function stopAutoPlay() {
+            clearInterval(autoPlayInterval);
+        }
+
+        dots.forEach((dot) => {
+            dot.addEventListener('click', () => {
+                const index = parseInt(dot.getAttribute('data-index'));
+                showSlide(index);
+                stopAutoPlay();
+                startAutoPlay();
+            });
+        });
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                showSlide(currentIndex - 1);
+                stopAutoPlay();
+                startAutoPlay();
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                showSlide(currentIndex + 1);
+                stopAutoPlay();
+                startAutoPlay();
+            });
+        }
+
+        // Initialize
+        showSlide(0);
+        startAutoPlay();
+    });
+</script>
+@endpush

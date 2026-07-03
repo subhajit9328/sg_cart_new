@@ -120,6 +120,7 @@
             @endcan
             @includeIf('image-search::admin-menu')
             @includeIf('crm-tickets::admin-menu')
+            @includeIf('hero::admin-menu')
         </nav>
 
 
