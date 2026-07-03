@@ -58,6 +58,16 @@ class StoreController extends Controller
                 }
             }
 
+            $rating = 4.5;
+            if (class_exists(\SGCart\Reviews\Models\Review::class)) {
+                $avgRating = \SGCart\Reviews\Models\Review::where('product_id', $p->id)
+                    ->where('status_id', 2)
+                    ->avg('rating');
+                if (!is_null($avgRating)) {
+                    $rating = (float) $avgRating;
+                }
+            }
+
             return [
                 'id' => $p->id,
                 'slug' => $p->slug,
@@ -65,7 +75,7 @@ class StoreController extends Controller
                 'cat' => $catName,
                 'price' => $p->sale_price ?? $p->price,
                 'old' => $p->sale_price ? $p->price : null,
-                'rating' => 4.5,
+                'rating' => $rating,
                 'badge' => $p->sale_price ? 'Sale' : '',
                 'sizes' => $sizes,
                 'colors' => $colors,
@@ -184,7 +194,7 @@ class StoreController extends Controller
     /**
      * Product details page.
      */
-    public function product($slug)
+    public function product(Request $request, $slug)
     {
         $products = collect(self::getProducts());
         $product = $products->firstWhere('slug', $slug);
@@ -198,8 +208,83 @@ class StoreController extends Controller
             ->where('slug', '!=', $product['slug'])
             ->take(4);
 
-        return view('store.product', compact('product', 'related'));
+        if ($request->ajax() || $request->has('ajax')) {
+            $reviewsData = $this->getProductReviews($product['id'], $request);
+            return view('store.partials.reviews', compact('reviewsData'))->render();
+        }
+
+        $reviewsData = $this->getProductReviews($product['id'], $request);
+
+        $approvedReviews = collect();
+        $avgProductRating = 0;
+        $totalReviewsCount = 0;
+        $count5 = 0; $count4 = 0; $count3 = 0; $count2 = 0; $count1 = 0;
+        $pct5 = 0; $pct4 = 0; $pct3 = 0; $pct2 = 0; $pct1 = 0;
+
+        if (class_exists(\SGCart\Reviews\Models\Review::class)) {
+            $approvedReviews = \SGCart\Reviews\Models\Review::where('product_id', $product['id'])
+                ->where('status_id', 2)
+                ->latest()
+                ->get();
+            if ($approvedReviews->isNotEmpty()) {
+                $avgProductRating = $approvedReviews->avg('rating');
+                $totalReviewsCount = $approvedReviews->count();
+                
+                $count5 = $approvedReviews->where('rating', 5)->count();
+                $count4 = $approvedReviews->where('rating', 4)->count();
+                $count3 = $approvedReviews->where('rating', 3)->count();
+                $count2 = $approvedReviews->where('rating', 2)->count();
+                $count1 = $approvedReviews->where('rating', 1)->count();
+                
+                $pct5 = ($count5 / $totalReviewsCount) * 100;
+                $pct4 = ($count4 / $totalReviewsCount) * 100;
+                $pct3 = ($count3 / $totalReviewsCount) * 100;
+                $pct2 = ($count2 / $totalReviewsCount) * 100;
+                $pct1 = ($count1 / $totalReviewsCount) * 100;
+            }
+        }
+
+        return view('store.product', compact(
+            'product', 'related', 'reviewsData', 'approvedReviews', 'avgProductRating',
+            'totalReviewsCount', 'count5', 'count4', 'count3', 'count2', 'count1',
+            'pct5', 'pct4', 'pct3', 'pct2', 'pct1'
+        ));
     }
+
+    /**
+     * Get filtered and paginated reviews for a product.
+     */
+    public function getProductReviews($productId, Request $request)
+    {
+        if (!class_exists(\SGCart\Reviews\Models\Review::class)) {
+            return [];
+        }
+
+        $filter = $request->input('review_filter', 'helpful');
+        $page = (int) $request->input('review_page', 1);
+
+        $query = \SGCart\Reviews\Models\Review::with(['customer', 'images'])
+            ->where('product_id', $productId)
+            ->where('status_id', 2);
+
+        // Apply filtration based on the captured URL param
+        if ($filter === 'positive') {
+            $query->where('rating', '>=', 4);
+        } elseif ($filter === 'negative') {
+            $query->where('rating', '<=', 3);
+        }
+
+        // Sorting
+        if ($filter === 'latest') {
+            $query->latest();
+        } else {
+            // default/helpful: rating descending, then latest
+            $query->orderBy('rating', 'desc')->latest();
+        }
+
+        return $query->paginate(5, ['*'], 'review_page', $page);
+    }
+
 
     /**
      * View cart page.
@@ -765,6 +850,7 @@ class StoreController extends Controller
             $order = \App\Models\Order::create([
                 'order_number' => $orderNumber,
                 'customer_id' => auth('customer')->id(),
+                'session_id' => request()->session()->getId(),
                 'first_name' => $firstName,
                 'last_name' => $lastName,
                 'email' => $email,
@@ -1525,8 +1611,13 @@ class StoreController extends Controller
             return redirect()->route('store.login')->with('error', 'Please log in to view order details.');
         }
 
+        $relations = ['items.product'];
+        if (class_exists(\SGCart\CrmTickets\Models\Ticket::class)) {
+            $relations[] = 'tickets.status';
+        }
+
         $order = auth('customer')->user()->orders()
-            ->with(['items.product'])
+            ->with($relations)
             ->where('ulid', $ulid)
             ->first();
 

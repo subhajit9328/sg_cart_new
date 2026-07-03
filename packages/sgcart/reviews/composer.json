@@ -1,0 +1,25 @@
+{
+    "name": "sgcart/reviews",
+    "description": "Allows product reviews and ratings with image attachments",
+    "autoload": {
+        "psr-4": {
+            "SGCart\\Reviews\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "SGCart Team",
+            "email": "support@sgcart.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2|^8.3"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SGCart\\Reviews\\Providers\\ReviewsServiceProvider"
+            ]
+        }
+    }
+}

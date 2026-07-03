@@ -56,20 +56,29 @@
                 <div class="flex flex-col gap-4">
                     <!-- Provider Input -->
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-400 mb-1.5 uppercase tracking-wider">AI Provider</label>
-                        <input type="text" name="provider" value="{{ $setting->provider }}" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 transition-all shadow-2xs" placeholder="e.g. gemini or openai" required>
+                        <label for="provider" class="block text-[10px] font-bold text-slate-400 dark:text-slate-400 mb-1.5 uppercase tracking-wider">AI Provider <span class="text-rose-600">*</span></label>
+                        <input type="text" name="provider" id="provider" value="{{ old('provider', $setting->provider) }}" class="w-full bg-white dark:bg-slate-800 border @error('provider') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 transition-all shadow-2xs" placeholder="e.g. gemini or openai" required>
+                        @error('provider')
+                            <p class="text-rose-500 text-[10px] mt-1 font-medium">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Model Input -->
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Image Analyzer Model</label>
-                        <input type="text" name="model" value="{{ $setting->model }}" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 transition-all shadow-2xs" placeholder="e.g. gemini-2.5-flash or gpt-4o" required>
+                        <label for="model" class="block text-[10px] font-bold text-slate-400 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Image Analyzer Model <span class="text-rose-600">*</span></label>
+                        <input type="text" name="model" id="model" value="{{ old('model', $setting->model) }}" class="w-full bg-white dark:bg-slate-800 border @error('model') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 transition-all shadow-2xs" placeholder="e.g. gemini-2.5-flash or gpt-4o" required>
+                        @error('model')
+                            <p class="text-rose-500 text-[10px] mt-1 font-medium">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- API Key Input -->
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-400 mb-1.5 uppercase tracking-wider">API Key</label>
-                        <input type="password" name="api_key" value="{{ $setting->api_key }}" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 transition-all shadow-2xs" placeholder="••••••••••••••••••••••••••••••••" required>
+                        <label for="api_key" class="block text-[10px] font-bold text-slate-400 dark:text-slate-400 mb-1.5 uppercase tracking-wider">API Key <span class="text-rose-600">*</span></label>
+                        <input type="password" name="api_key" id="api_key" value="{{ old('api_key', $setting->api_key) }}" class="w-full bg-white dark:bg-slate-800 border @error('api_key') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @else border-slate-200 dark:border-slate-700 @enderror rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 transition-all shadow-2xs" placeholder="••••••••••••••••••••••••••••••••" oninvalid="this.setCustomValidity('API Key required.')" oninput="this.setCustomValidity('')" required>
+                        @error('api_key')
+                            <p class="text-rose-500 text-[10px] mt-1 font-medium">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
             </form>

@@ -14,11 +14,15 @@
         "sgcart/blog": "@dev",
         "sgcart/coupons": "@dev",
         "sgcart/dashboard-analytics": "@dev",
+        "sgcart/crm-tickets": "@dev",
+        "sgcart/hero": "@dev",
         "sgcart/image-search": "@dev",
         "sgcart/inventory": "@dev",
         "sgcart/logistic-tracking": "@dev",
         "sgcart/payment-razorpay": "@dev",
         "sgcart/product-variants": "@dev",
+        "sgcart/reporting": "@dev",
+        "sgcart/reviews": "@dev",
         "sgcart/shipping": "@dev",
         "sgcart/tax": "@dev",
         "spatie/laravel-permission": "^8.0"
@@ -36,6 +40,13 @@
         {
             "type": "path",
             "url": "packages/sgcart/inventory",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/reviews",
             "options": {
                 "symlink": true
             }
@@ -102,17 +113,38 @@
             "options": {
                 "symlink": true
             }
-        }, 
+        },
         {
             "type": "path",
             "url": "packages/sgcart/image-search",
             "options": {
                 "symlink": true
             }
-        }, 
+        },
         {
             "type": "path",
             "url": "packages/sgcart/dashboard-analytics",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/crm-tickets",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/hero",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/reporting",
             "options": {
                 "symlink": true
             }

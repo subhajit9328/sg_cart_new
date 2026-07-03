@@ -88,21 +88,7 @@
                 <span class="sidebar-text">Orders</span>
             </a>
             @endcan
-
-            @includeIf('inventory::admin-menu')
-            @includeIf('coupons::admin-menu')
-            @includeIf('blog::admin-menu')
-            @includeIf('dashboard-analytics::admin-menu')
-            @includeIf('product-variants::admin-menu')
-            @includeIf('shipping::admin-menu')
-            @includeIf('tax::admin-menu')
-            @can('manage payments')
-            <a href="{{ route('admin.payments.settings') }}" class="nav-link {{ Request::is('admin/payments*') ? 'active' : '' }}" data-tooltip="Payment Gateways">
-                <i class="fa-solid fa-credit-card"></i>
-                <span class="sidebar-text">Payment Gateways</span>
-            </a>
-            @endcan
-
+            @includeIf('reviews::admin-menu')
             @canany(['manage users', 'manage roles'])
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Access Control</p>
 
@@ -122,6 +108,8 @@
             @endcanany
 
             @includeIf('coupons::admin-menu')
+            @includeIf('hero::admin-menu')
+            @includeIf('reporting::admin-menu')
             @includeIf('product-variants::admin-menu')
             @includeIf('shipping::admin-menu')
             @includeIf('logistic-tracking::admin-menu')
@@ -133,6 +121,7 @@
             </a>
             @endcan
             @includeIf('image-search::admin-menu')
+            @includeIf('crm-tickets::admin-menu')
         </nav>
 
 
