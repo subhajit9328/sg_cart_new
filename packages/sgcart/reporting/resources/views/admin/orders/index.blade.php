@@ -8,9 +8,13 @@
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
     <div>
         <h1 class="text-xl font-bold text-slate-900 dark:text-slate-50 font-display flex items-center gap-2">
-            <i class="fa-solid fa-chart-line text-blue-500"></i>
             Orders Report
         </h1>
+        <x-breadcrumbs :items="[
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'Reporting'],
+            ['label' => 'Orders']
+        ]" />
         <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             Showing data from
             <span class="font-semibold text-slate-700 dark:text-slate-200">{{ $date_from->format('d M Y') }}</span>
@@ -40,7 +44,7 @@
             </div>
         </div>
         <button type="submit"
-                class="btn btn-primary px-4! py-2! rounded-xl text-sm font-semibold sm:mt-auto self-end sm:self-auto">
+                class="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium shadow-lg shadow-blue-600/10 no-underline mt-4 sm:mt-auto self-end sm:self-auto">
             <i class="fa-solid fa-filter mr-1.5"></i>Apply
         </button>
         <a href="{{ route('admin.reports.orders') }}"
