@@ -62,7 +62,7 @@
             </td>
             <td class="px-5 py-3.5 text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap font-mono">{{ $p->sku }}</td>
             <td class="px-5 py-3.5 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">{{ $p->category->name ?? 'N/A' }}</td>
-            <td class="px-5 py-3.5 text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap font-semibold">${{ number_format($p->price, 2) }}</td>
+            <td class="px-5 py-3.5 text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap font-semibold">₹{{ number_format($p->price, 2) }}</td>
             <td class="px-5 py-3.5 text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap">{{ $p->stock }} units</td>
             <td class="px-5 py-3.5 text-right whitespace-nowrap">
                 <div class="inline-flex gap-1.5 justify-end">

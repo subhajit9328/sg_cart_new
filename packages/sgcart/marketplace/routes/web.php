@@ -62,6 +62,7 @@ Route::middleware(['web', 'auth'])->prefix('admin')->name('admin.')->group(funct
         Route::get('/sellers/{seller}', [AdminSellerController::class, 'show'])->name('sellers.show');
         Route::post('/sellers/{seller}/approve', [AdminSellerController::class, 'approve'])->name('sellers.approve');
         Route::post('/sellers/{seller}/suspend', [AdminSellerController::class, 'suspend'])->name('sellers.suspend');
+        Route::post('/sellers/{seller}/reject', [AdminSellerController::class, 'reject'])->name('sellers.reject');
         Route::post('/sellers/{seller}/update-commission', [AdminSellerController::class, 'updateCommission'])->name('sellers.update-commission');
 
         // Product Approvals

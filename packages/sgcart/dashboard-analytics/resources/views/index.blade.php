@@ -151,7 +151,7 @@
                 <span class="text-emerald-500 text-sm"><i class="fa-solid fa-money-bill-trend-up"></i></span>
             </div>
             <div class="mt-3">
-                <p class="font-display text-xl font-black text-slate-800 dark:text-slate-100">${{ number_format($totalOrdersRevenue, 2) }}</p>
+                <p class="font-display text-xl font-black text-slate-800 dark:text-slate-100">₹{{ number_format($totalOrdersRevenue, 2) }}</p>
                 <p class="text-[9px] text-slate-400 mt-0.5">Excludes rejected</p>
             </div>
         </div>
@@ -242,7 +242,7 @@
             <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                 <h3 class="text-xs font-bold text-slate-800 dark:text-slate-100">Revenue & Order Trends</h3>
                 <div class="flex items-center gap-3 text-[10px]">
-                    <span class="flex items-center gap-1 text-blue-500"><i class="fa-solid fa-circle text-[6px]"></i> Sales ($)</span>
+                    <span class="flex items-center gap-1 text-blue-500"><i class="fa-solid fa-circle text-[6px]"></i> Sales (₹)</span>
                     <span class="flex items-center gap-1 text-emerald-500"><i class="fa-solid fa-circle text-[6px]"></i> Orders</span>
                 </div>
             </div>
@@ -303,7 +303,7 @@
                             <th class="px-4 py-2.5 text-left w-12">Rank</th>
                             <th class="px-4 py-2.5 text-left">Product</th>
                             <th class="px-4 py-2.5 text-center w-24">Qty Sold</th>
-                            <th class="px-4 py-2.5 text-right w-28">Revenue ($)</th>
+                            <th class="px-4 py-2.5 text-right w-28">Revenue (₹)</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-850">
@@ -312,7 +312,7 @@
                             <td class="px-4 py-3 font-bold text-slate-400">#{{ $index + 1 }}</td>
                             <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">{{ $prod->product_name }}</td>
                             <td class="px-4 py-3 text-center font-bold">{{ $prod->qty }}</td>
-                            <td class="px-4 py-3 text-right font-semibold text-emerald-600 dark:text-emerald-400">${{ number_format($prod->revenue, 2) }}</td>
+                            <td class="px-4 py-3 text-right font-semibold text-emerald-600 dark:text-emerald-400">₹{{ number_format($prod->revenue, 2) }}</td>
                         </tr>
                         @empty
                         <tr>
@@ -580,7 +580,7 @@
                 labels: trendLabels,
                 datasets: [
                     {
-                        label: 'Sales Revenue ($)',
+                        label: 'Sales Revenue (₹)',
                         data: trendRevenue,
                         borderColor: '#3b82f6',
                         borderWidth: 2,
@@ -618,7 +618,7 @@
                         ticks: {
                             color: labelColor,
                             font: { size: 9 },
-                            callback: function(value) { return '$' + value; }
+                            callback: function(value) { return '₹' + value; }
                         }
                     },
                     yOrders: {

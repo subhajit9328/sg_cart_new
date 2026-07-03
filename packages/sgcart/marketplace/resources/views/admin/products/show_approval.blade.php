@@ -107,7 +107,7 @@
                 <div class="space-y-1">
                     <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wider block">Regular Retail Price</span>
                     <span class="text-2xl font-extrabold text-slate-850 dark:text-slate-100 block">
-                        ${{ number_format($product->price, 2) }}
+                        ₹{{ number_format($product->price, 2) }}
                     </span>
                 </div>
                 
@@ -116,7 +116,7 @@
                     @if($product->sale_price)
                         <div class="flex items-center gap-2">
                             <span class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-450 block">
-                                ${{ number_format($product->sale_price, 2) }}
+                                ₹{{ number_format($product->sale_price, 2) }}
                             </span>
                             <span class="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
                                 Save {{ round((($product->price - $product->sale_price) / $product->price) * 100) }}%

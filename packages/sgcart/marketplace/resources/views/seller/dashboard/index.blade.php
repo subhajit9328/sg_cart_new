@@ -18,11 +18,37 @@
                     <i class="fa-solid fa-ban"></i>
                 </div>
                 <h2 class="font-display text-xl font-bold text-slate-900 dark:text-slate-100">Account Suspended</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto">
-                    Your seller account for <strong>{{ auth('seller')->user()->shop_name }}</strong> has been suspended. Please contact our support team to resolve this issue.
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
+                    Your seller account for <strong>{{ auth('seller')->user()->shop_name }}</strong> has been suspended. Please contact our support team at <a href="mailto:{{ 'support@sgcart.com' }}" class="text-blue-500 hover:underline font-semibold">{{ 'support@sgcart.com' }}</a> to resolve this issue.
                 </p>
+                @if(auth('seller')->user()->suspension_reason)
+                    <div class="mt-4 p-4 bg-rose-50 dark:bg-rose-950/15 border border-rose-100 dark:border-rose-900/30 rounded-lg text-left text-xs max-w-md mx-auto">
+                        <span class="font-bold text-rose-700 dark:text-rose-400 block mb-1">Reason for Suspension:</span>
+                        <p class="text-slate-600 dark:text-slate-400 leading-relaxed m-0">{{ auth('seller')->user()->suspension_reason }}</p>
+                    </div>
+                @endif
                 <div class="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/20">
                     Status: Suspended
+                </div>
+            </div>
+        @elseif(auth('seller')->user()->status->value === 'rejected')
+            <!-- Rejected Account Message -->
+            <div class="bg-white dark:bg-slate-900 border border-rose-500/20 dark:border-rose-500/30 rounded-xl p-8 text-center shadow-sm">
+                <div class="w-16 h-16 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center text-3xl mx-auto mb-4">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </div>
+                <h2 class="font-display text-xl font-bold text-slate-900 dark:text-slate-100">Application Rejected</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
+                    Your seller application has been rejected by the administrator. Please reach out to our support team at <a href="mailto:{{ 'support@sgcart.com' }}" class="text-blue-500 hover:underline font-semibold">{{ 'support@sgcart.com' }}</a> to resolve this.
+                </p>
+                @if(auth('seller')->user()->suspension_reason)
+                    <div class="mt-4 p-4 bg-rose-50 dark:bg-rose-950/15 border border-rose-100 dark:border-rose-900/30 rounded-lg text-left text-xs max-w-md mx-auto">
+                        <span class="font-bold text-rose-700 dark:text-rose-400 block mb-1">Reason for Rejection:</span>
+                        <p class="text-slate-600 dark:text-slate-400 leading-relaxed m-0">{{ auth('seller')->user()->suspension_reason }}</p>
+                    </div>
+                @endif
+                <div class="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                    Status: Rejected
                 </div>
             </div>
         @else
@@ -48,7 +74,7 @@
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
             <div>
                 <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Gross Sales</p>
-                <p class="font-display text-2xl font-extrabold mt-1.5">${{ number_format($totalSales, 2) }}</p>
+                <p class="font-display text-2xl font-extrabold mt-1.5">₹{{ number_format($totalSales, 2) }}</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center text-xl">
                 <i class="fa-solid fa-chart-line"></i>
@@ -59,7 +85,7 @@
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 flex items-center justify-between shadow-sm">
             <div>
                 <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Net Earnings</p>
-                <p class="font-display text-2xl font-extrabold mt-1.5 text-emerald-600 dark:text-emerald-450">${{ number_format($totalEarnings, 2) }}</p>
+                <p class="font-display text-2xl font-extrabold mt-1.5 text-emerald-600 dark:text-emerald-450">₹{{ number_format($totalEarnings, 2) }}</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center text-xl">
                 <i class="fa-solid fa-wallet"></i>

@@ -171,7 +171,7 @@ class MarketplaceServiceProvider extends ServiceProvider
                 $product = $orderItem->product;
                 if ($product && $product->seller_id) {
                     $seller = Seller::find($product->seller_id);
-                    if ($seller && $seller->status === 'approved') {
+                    if ($seller && $seller->status->value === 'approved') {
                         $price = (float) $orderItem->price;
                         $qty = (int) $orderItem->quantity;
                         $subtotal = $price * $qty;

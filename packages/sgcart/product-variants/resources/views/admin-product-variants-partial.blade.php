@@ -239,7 +239,7 @@
                 <button type="button" onclick="closeQuickAttributeModal()" class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium transition-colors text-slate-700 dark:text-slate-300 no-underline bg-transparent cursor-pointer">
                     Cancel
                 </button>
-                <button type="submit" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors shadow-lg shadow-blue-600/10 border-none cursor-pointer">
+                <button type="submit" id="quickAttrSubmitBtn" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors shadow-lg shadow-blue-600/10 border-none cursor-pointer">
                     Add Swatch
                 </button>
             </div>
@@ -536,6 +536,7 @@
         const extraLabel = document.getElementById('quickAttrExtraLabel');
         const extraInput = document.getElementById('quickAttrExtra');
         const colorPickerWrapper = document.getElementById('quickAttrExtraFieldWrapper');
+        const submitBtn = document.getElementById('quickAttrSubmitBtn');
 
         formType.value = type;
         document.getElementById('quickAttrName').value = '';
@@ -546,11 +547,13 @@
             extraLabel.textContent = 'Hex Code';
             extraInput.placeholder = '#800020';
             document.getElementById('quickAttrColorPicker').style.display = 'block';
+            if (submitBtn) submitBtn.textContent = 'Add Color';
         } else {
             title.textContent = 'Quick Add Size';
             extraLabel.textContent = 'Size Code / Abbreviation';
             extraInput.placeholder = 'XXL';
             document.getElementById('quickAttrColorPicker').style.display = 'none';
+            if (submitBtn) submitBtn.textContent = 'Add Size';
         }
 
         modal.classList.remove('hidden');

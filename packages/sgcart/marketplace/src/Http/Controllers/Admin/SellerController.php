@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Log;
 use SGCart\Marketplace\Models\Seller;
 use SGCart\Marketplace\Models\SellerCommission;
 use SGCart\Marketplace\Mail\SellerApprovedMail;
+use SGCart\Marketplace\Mail\SellerRejectedMail;
+use SGCart\Marketplace\Mail\SellerSuspendedMail;
 
 class SellerController extends Controller
 {
@@ -89,7 +91,40 @@ class SellerController extends Controller
             'suspension_reason' => $request->suspension_reason,
         ]);
 
+        if ($seller->email && !str_starts_with($seller->email, 'temp_')) {
+            try {
+                Mail::to($seller->email)->send(new SellerSuspendedMail($seller));
+            } catch (\Exception $e) {
+                Log::error('Failed to send seller suspended email: ' . $e->getMessage());
+            }
+        }
+
         return redirect()->back()->with('success', "Seller '{$seller->shop_name}' suspended successfully.");
+    }
+
+    /**
+     * Reject a seller registration.
+     */
+    public function reject(Request $request, Seller $seller)
+    {
+        $request->validate([
+            'rejection_reason' => 'required|string|max:1000',
+        ]);
+
+        $seller->update([
+            'status' => \App\Enums\SellerStatus::REJECTED,
+            'suspension_reason' => $request->rejection_reason,
+        ]);
+
+        if ($seller->email && !str_starts_with($seller->email, 'temp_')) {
+            try {
+                Mail::to($seller->email)->send(new SellerRejectedMail($seller));
+            } catch (\Exception $e) {
+                Log::error('Failed to send seller rejected email: ' . $e->getMessage());
+            }
+        }
+
+        return redirect()->back()->with('success', "Seller '{$seller->shop_name}' application rejected.");
     }
 
     /**
