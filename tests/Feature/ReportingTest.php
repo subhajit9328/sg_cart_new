@@ -210,4 +210,36 @@ class ReportingTest extends TestCase
             'guard_name' => 'web',
         ]);
     }
+
+    #[Test]
+    public function orders_export_is_accessible_to_users_with_view_reports_permission(): void
+    {
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('admin.reports.orders.export'));
+
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $response->assertHeader('Content-Disposition', 'attachment; filename="orders-report-' . now()->startOfMonth()->format('Y-m-d') . '-to-' . now()->format('Y-m-d') . '.csv"');
+    }
+
+    #[Test]
+    public function orders_export_is_forbidden_to_users_without_permission(): void
+    {
+        $response = $this->actingAs($this->regularUser)
+            ->get(route('admin.reports.orders.export'));
+
+        $response->assertStatus(403);
+    }
+
+    #[Test]
+    public function orders_export_rejects_invalid_date_range(): void
+    {
+        $response = $this->actingAs($this->adminUser)
+            ->get(route('admin.reports.orders.export', [
+                'date_from' => '2026-07-03',
+                'date_to'   => '2026-07-01',
+            ]));
+
+        $response->assertSessionHasErrors('date_to');
+    }
 }

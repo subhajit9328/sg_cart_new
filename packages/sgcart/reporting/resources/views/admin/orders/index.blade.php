@@ -44,8 +44,12 @@
             <i class="fa-solid fa-filter mr-1.5"></i>Apply
         </button>
         <a href="{{ route('admin.reports.orders') }}"
-           class="px-4 py-2 rounded-xl text-sm font-semibold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors mt-4 sm:mt-auto self-end sm:self-auto text-center">
+           class="px-4! py-2! rounded-xl text-sm font-semibold border! border-slate-200! !dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors mt-4 sm:mt-auto self-end sm:self-auto text-center">
             Reset
+        </a>
+        <a href="{{ route('admin.reports.orders.export', request()->only(['date_from', 'date_to'])) }}"
+           class="px-4! py-2! rounded-xl text-sm font-semibold border! border-slate-200! !dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors mt-4 sm:mt-auto self-end sm:self-auto text-center">
+          Export CSV
         </a>
     </form>
 </div>

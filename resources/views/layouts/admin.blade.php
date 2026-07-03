@@ -107,8 +107,8 @@
             @endcan
             @endcanany
 
-            @includeIf('reporting::admin-menu')
             @includeIf('coupons::admin-menu')
+            @includeIf('reporting::admin-menu')
             @includeIf('product-variants::admin-menu')
             @includeIf('shipping::admin-menu')
             @includeIf('logistic-tracking::admin-menu')
