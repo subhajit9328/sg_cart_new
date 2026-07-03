@@ -273,7 +273,7 @@ class StoreController extends Controller
         $color = $request->color;
 
         $product = Product::find($productId);
-        if (! $product || $product->status !== 'active') {
+        if (! $product || $product->status !== \App\Enums\ProductStatus::ACTIVE) {
             return redirect()->back()->with('error', 'Product not found.');
         }
 

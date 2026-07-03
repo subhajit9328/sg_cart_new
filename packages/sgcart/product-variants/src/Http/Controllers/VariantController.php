@@ -89,11 +89,25 @@ class VariantController extends Controller
             ->where('product_id', $product->id)
             ->get();
             
-        $colors = config('product-variants.features.color', true) ? Color::all() : collect();
-        $sizes = config('product-variants.features.size', true) ? Size::all() : collect();
+        $sellerId = auth('seller')->check() ? auth('seller')->id() : null;
+        if ($sellerId) {
+            $colors = config('product-variants.features.color', true) 
+                ? Color::whereNull('seller_id')->orWhere('seller_id', $sellerId)->get() 
+                : collect();
+            $sizes = config('product-variants.features.size', true) 
+                ? Size::whereNull('seller_id')->orWhere('seller_id', $sellerId)->get() 
+                : collect();
+        } else {
+            $colors = config('product-variants.features.color', true) ? Color::all() : collect();
+            $sizes = config('product-variants.features.size', true) ? Size::all() : collect();
+        }
 
         if ($request->ajax()) {
             return view('product-variants::admin-product-variants-partial', compact('product', 'variants', 'colors', 'sizes'));
+        }
+
+        if (auth('seller')->check()) {
+            return redirect()->route('seller.products.edit', [$product->ulid, 'tab' => 'variants']);
         }
 
         return redirect()->route('admin.products.edit', [$product->ulid, 'tab' => 'variants']);
@@ -169,7 +183,7 @@ class VariantController extends Controller
                     'is_active'  => isset($varData['is_active']) ? (bool)$varData['is_active'] : false,
                 ];
 
-                if (!class_exists(\SGCart\Inventory\Models\InventoryLog::class)) {
+                if (auth('seller')->check() || !class_exists(\SGCart\Inventory\Models\InventoryLog::class)) {
                     $data['stock'] = (int) ($varData['stock'] ?? 0);
                 }
 
@@ -254,6 +268,11 @@ class VariantController extends Controller
             }
         });
 
+        if (auth('seller')->check()) {
+            return redirect()->route('seller.products.edit', [$product->ulid, 'tab' => 'variants'])
+                ->with('success', 'Product variants updated successfully.');
+        }
+
         return redirect()->route('admin.products.edit', [$product->ulid, 'tab' => 'variants'])->with('success', 'Product variants updated successfully.');
     }
 
@@ -268,10 +287,29 @@ class VariantController extends Controller
             if (!config('product-variants.features.color', true)) {
                 return response()->json(['success' => false, 'message' => 'Color feature is uninstalled.'], 400);
             }
+            $sellerId = auth('seller')->check() ? auth('seller')->id() : null;
             $data = $request->validate([
-                'name' => 'required|string|unique:colors,name|max:255',
+                'name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    function ($attribute, $value, $fail) use ($sellerId) {
+                        $exists = Color::where('name', $value)
+                            ->where(function ($query) use ($sellerId) {
+                                $query->whereNull('seller_id')
+                                      ->when($sellerId, function ($q) use ($sellerId) {
+                                          $q->orWhere('seller_id', $sellerId);
+                                      });
+                            })
+                            ->exists();
+                        if ($exists) {
+                            $fail('The color name has already been taken.');
+                        }
+                    }
+                ],
                 'hex_code' => 'required|string|max:10',
             ]);
+            $data['seller_id'] = $sellerId;
             $color = Color::create($data);
             return response()->json([
                 'success' => true,
@@ -283,10 +321,29 @@ class VariantController extends Controller
             if (!config('product-variants.features.size', true)) {
                 return response()->json(['success' => false, 'message' => 'Size feature is uninstalled.'], 400);
             }
+            $sellerId = auth('seller')->check() ? auth('seller')->id() : null;
             $data = $request->validate([
                 'name' => 'required|string|max:255',
-                'code' => 'required|string|unique:sizes,code|max:10',
+                'code' => [
+                    'required',
+                    'string',
+                    'max:10',
+                    function ($attribute, $value, $fail) use ($sellerId) {
+                        $exists = Size::where('code', $value)
+                            ->where(function ($query) use ($sellerId) {
+                                $query->whereNull('seller_id')
+                                      ->when($sellerId, function ($q) use ($sellerId) {
+                                          $q->orWhere('seller_id', $sellerId);
+                                      });
+                            })
+                            ->exists();
+                        if ($exists) {
+                            $fail('The size code has already been taken.');
+                        }
+                    }
+                ],
             ]);
+            $data['seller_id'] = $sellerId;
             $size = Size::create($data);
             return response()->json([
                 'success' => true,

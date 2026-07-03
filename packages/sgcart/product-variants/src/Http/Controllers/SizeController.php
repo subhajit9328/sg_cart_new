@@ -10,7 +10,7 @@ class SizeController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Size::query();
+        $query = Size::with('seller');
 
         if ($search = $request->input('search')) {
             $query->where('name', 'like', '%' . $search . '%')

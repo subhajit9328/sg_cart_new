@@ -145,10 +145,11 @@
             <!-- Status -->
             <td class="px-5 py-3.5 whitespace-nowrap">
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold 
-                    {{ $product->status === 'active' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/20' :
-                      ($product->status === 'draft'  ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200/20' : 
-                      'bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200/50') }}">
-                    {{ ucfirst($product->status) }}
+                    {{ $product->status->value === 'active' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/20' :
+                      ($product->status->value === 'draft'  ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200/20' : 
+                      ($product->status->value === 'rejected' ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200/20' :
+                      'bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200/50')) }}">
+                    {{ ucfirst($product->status->value) }}
                 </span>
             </td>
             <!-- Actions -->

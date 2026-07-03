@@ -10,7 +10,7 @@ class ColorController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Color::query();
+        $query = Color::with('seller');
 
         if ($search = $request->input('search')) {
             $query->where('name', 'like', '%' . $search . '%')

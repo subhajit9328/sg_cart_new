@@ -19,18 +19,30 @@ class ProductController extends Controller
         $sortOrder = $request->input('sort_order') ?? $request->input('sort_dir') ?? 'desc';
         $allowedSortFields = ['name', 'sku', 'price', 'stock', 'status', 'created_at'];
 
-        $products = Product::with(['category', 'manufacturer'])
+        $products = Product::with(['category', 'manufacturer', 'seller'])
+            ->whereNotIn('status', [\App\Enums\ProductStatus::PENDING_APPROVAL, \App\Enums\ProductStatus::REJECTED])
             ->when($request->search, fn ($q) => $q->where(fn($sq) => $sq->where('name', 'like', "%{$request->search}%")
                                                                          ->orWhere('sku', 'like', "%{$request->search}%")))
             ->when($request->category_id, fn ($q) => $q->where('category_id', $request->category_id))
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
+            ->when($request->seller_id, function ($q) use ($request) {
+                if ($request->seller_id === 'admin') {
+                    return $q->whereNull('seller_id');
+                }
+                return $q->where('seller_id', $request->seller_id);
+            })
             ->when(in_array($sortBy, $allowedSortFields), fn ($q) => $q->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc'), fn ($q) => $q->latest())
             ->paginate(10)
             ->withQueryString();
 
         $categories = Category::all();
+        
+        $sellers = [];
+        if (class_exists(\SGCart\Marketplace\Models\Seller::class)) {
+            $sellers = \SGCart\Marketplace\Models\Seller::where('status', 'approved')->get();
+        }
 
-        return view('admin.products.index', compact('products', 'categories'));
+        return view('admin.products.index', compact('products', 'categories', 'sellers'));
     }
 
     public function create()
@@ -208,13 +220,18 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        $relations = ['category', 'manufacturer', 'images'];
+        $relations = ['category', 'manufacturer', 'images', 'seller'];
         if (class_exists(\SGCart\ProductVariants\Models\ProductVariant::class)) {
             $relations[] = 'variants.color';
             $relations[] = 'variants.size';
             $relations[] = 'variants.images';
         }
         $product->load($relations);
+
+        if ($product->seller_id && ($product->status === \App\Enums\ProductStatus::PENDING_APPROVAL || $product->status === \App\Enums\ProductStatus::REJECTED)) {
+            return view('marketplace::admin.products.show_approval', compact('product'));
+        }
+
         return view('admin.products.show', compact('product'));
     }
 

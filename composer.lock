@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eba33f252c6aa6e90c222286d53c3077",
+    "content-hash": "c8e10fc090c945d1a5eae01ea3988ce4",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -3976,7 +3976,7 @@
         },
         {
             "name": "sgcart/blog",
-            "version": "dev-fix_issues_and_bugs_debanjan",
+            "version": "dev-implement_store_package_v1",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/blog",
@@ -4016,7 +4016,7 @@
         },
         {
             "name": "sgcart/coupons",
-            "version": "dev-fix_issues_and_bugs_debanjan",
+            "version": "dev-implement_store_package_v1",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/coupons",
@@ -4055,7 +4055,7 @@
         },
         {
             "name": "sgcart/dashboard-analytics",
-            "version": "dev-fix_issues_and_bugs_debanjan",
+            "version": "dev-implement_store_package_v1",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/dashboard-analytics",
@@ -4094,7 +4094,7 @@
         },
         {
             "name": "sgcart/image-search",
-            "version": "dev-fix_issues_and_bugs_debanjan",
+            "version": "dev-implement_store_package_v1",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/image-search",
@@ -4130,7 +4130,7 @@
         },
         {
             "name": "sgcart/inventory",
-            "version": "dev-fix_issues_and_bugs_debanjan",
+            "version": "dev-implement_store_package_v1",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/inventory",
@@ -4169,7 +4169,7 @@
         },
         {
             "name": "sgcart/logistic-tracking",
-            "version": "dev-fix_issues_and_bugs_debanjan",
+            "version": "dev-implement_store_package_v1",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/logistic-tracking",
@@ -4204,8 +4204,47 @@
             }
         },
         {
+            "name": "sgcart/marketplace",
+            "version": "dev-implement_store_package_v1",
+            "dist": {
+                "type": "path",
+                "url": "packages/sgcart/marketplace",
+                "reference": "3251af7c884932a550c18d7e11a79fcd9e8e9828"
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "SGCart\\Marketplace\\Providers\\MarketplaceServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "SGCart\\Marketplace\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "SGCart Team",
+                    "email": "support@sgcart.com"
+                }
+            ],
+            "description": "multi-vendor marketplace seller package for SGCart",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "sgcart/payment-razorpay",
-            "version": "dev-fix_issues_and_bugs_debanjan",
+            "version": "dev-implement_store_package_v1",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/payment-razorpay",
@@ -4244,7 +4283,7 @@
         },
         {
             "name": "sgcart/product-variants",
-            "version": "dev-fix_issues_and_bugs_debanjan",
+            "version": "dev-implement_store_package_v1",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/product-variants",
@@ -4284,7 +4323,7 @@
         },
         {
             "name": "sgcart/shipping",
-            "version": "dev-fix_issues_and_bugs_debanjan",
+            "version": "dev-implement_store_package_v1",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/shipping",
@@ -4323,7 +4362,7 @@
         },
         {
             "name": "sgcart/tax",
-            "version": "dev-fix_issues_and_bugs_debanjan",
+            "version": "dev-implement_store_package_v1",
             "dist": {
                 "type": "path",
                 "url": "packages/sgcart/tax",
@@ -9818,6 +9857,7 @@
         "sgcart/image-search": 20,
         "sgcart/inventory": 20,
         "sgcart/logistic-tracking": 20,
+        "sgcart/marketplace": 20,
         "sgcart/payment-razorpay": 20,
         "sgcart/product-variants": 20,
         "sgcart/shipping": 20,

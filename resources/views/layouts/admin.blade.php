@@ -66,14 +66,14 @@
             </a>
             @endcan
 
-            @can('manage products')
+            @can('manage categories')
             <a href="{{ route('admin.categories.index') }}" class="nav-link {{ Request::is('admin/categories*') ? 'active' : '' }}" data-tooltip="Categories">
                 <i class="fa-solid fa-tags"></i>
                 <span class="sidebar-text">Categories</span>
             </a>
             @endcan
 
-            @can('manage products')
+            @can('manage manufacturers')
             <a href="{{ route('admin.manufacturers.index') }}" class="nav-link {{ Request::is('admin/manufacturers*') ? 'active' : '' }}" data-tooltip="Manufacturers">
                 <i class="fa-solid fa-industry"></i>
                 <span class="sidebar-text">Manufacturers</span>
@@ -94,6 +94,7 @@
             @includeIf('blog::admin-menu')
             @includeIf('dashboard-analytics::admin-menu')
             @includeIf('product-variants::admin-menu')
+            @includeIf('marketplace::admin-menu')
             @includeIf('shipping::admin-menu')
             @includeIf('tax::admin-menu')
             @can('manage payments')
@@ -120,18 +121,7 @@
             </a>
             @endcan
             @endcanany
-
-            @includeIf('coupons::admin-menu')
-            @includeIf('product-variants::admin-menu')
-            @includeIf('shipping::admin-menu')
             @includeIf('logistic-tracking::admin-menu')
-            @includeIf('tax::admin-menu')
-            @can('manage payments')
-            <a href="{{ route('admin.payments.settings') }}" class="nav-link {{ Request::is('admin/payments*') ? 'active' : '' }}" data-tooltip="Payment Gateways">
-                <i class="fa-solid fa-credit-card"></i>
-                <span class="sidebar-text">Payment Gateways</span>
-            </a>
-            @endcan
             @includeIf('image-search::admin-menu')
         </nav>
 

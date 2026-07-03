@@ -16,7 +16,7 @@ class Product extends Model
     protected $fillable = [
         'name', 'slug', 'sku', 'category_id', 'manufacturer_id',
         'short_description', 'description', 'price', 'sale_price',
-        'stock', 'min_stock', 'status', 'weight', 'dimensions',
+        'stock', 'min_stock', 'status', 'rejection_reason', 'seller_note', 'weight', 'dimensions',
         'meta_title', 'meta_description', 'meta_keywords',
     ];
 
@@ -60,11 +60,23 @@ class Product extends Model
         return 'ulid';
     }
 
+    /**
+     * Resolve the route binding to support both ULID and standard auto-increment integer ID.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if (is_numeric($value)) {
+            return $this->where('id', $value)->first() ?? abort(404);
+        }
+        return $this->where($field ?? 'ulid', $value)->first() ?? abort(404);
+    }
+
     protected function casts(): array
     {
         return [
             'price'       => 'decimal:2',
             'sale_price'  => 'decimal:2',
+            'status'      => \App\Enums\ProductStatus::class,
         ];
     }
 
@@ -80,6 +92,14 @@ class Product extends Model
     public function category()    { return $this->belongsTo(Category::class); }
     public function manufacturer(){ return $this->belongsTo(Manufacturer::class); }
     
+    public function seller()
+    {
+        if (class_exists(\SGCart\Marketplace\Models\Seller::class)) {
+            return $this->belongsTo(\SGCart\Marketplace\Models\Seller::class, 'seller_id');
+        }
+        return $this->belongsTo(\App\Models\User::class, 'seller_id');
+    }
+
     public function images()
     {
         return $this->hasMany(ProductImage::class);
