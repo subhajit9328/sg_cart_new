@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('hero_images', function (Blueprint $table) {
             $table->id();
             $table->string('image_path');
+            $table->string('url')->nullable();
             $table->integer('sort_order')->default(0);
             $table->timestamps();
         });

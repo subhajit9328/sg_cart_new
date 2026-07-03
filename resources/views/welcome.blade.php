@@ -24,7 +24,13 @@
                 <div class="carousel-slides">
                     @foreach($heroImages as $img)
                         <div class="carousel-slide">
-                            <img src="{{ \Illuminate\Support\Facades\Storage::url($img->image_path) }}" alt="Hero Collection Slide"/>
+                            @if($img->url)
+                                <a href="{{ $img->url }}" target="_blank" class="w-full h-full block">
+                                    <img src="{{ \Illuminate\Support\Facades\Storage::url($img->image_path) }}" alt="Hero Collection Slide"/>
+                                </a>
+                            @else
+                                <img src="{{ \Illuminate\Support\Facades\Storage::url($img->image_path) }}" alt="Hero Collection Slide"/>
+                            @endif
                         </div>
                     @endforeach
                 </div>
@@ -41,7 +47,14 @@
         @else
             <!-- SINGLE STATIC IMAGE MODE -->
             @if(isset($heroImages) && $heroImages->isNotEmpty())
-                <img src="{{ \Illuminate\Support\Facades\Storage::url($heroImages->first()->image_path) }}" alt="Hero Collection Slide"/>
+                @php $firstImg = $heroImages->first(); @endphp
+                @if($firstImg->url)
+                    <a href="{{ $firstImg->url }}" target="_blank" class="w-full h-full block">
+                        <img src="{{ \Illuminate\Support\Facades\Storage::url($firstImg->image_path) }}" alt="Hero Collection Slide"/>
+                    </a>
+                @else
+                    <img src="{{ \Illuminate\Support\Facades\Storage::url($firstImg->image_path) }}" alt="Hero Collection Slide"/>
+                @endif
             @else
                 <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&auto=format&fit=crop&q=80" alt="Model wear in linen"/>
             @endif

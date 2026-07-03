@@ -42,7 +42,8 @@ class HeroSectionTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Hero Section Settings');
-        $response->assertSee('Upload Slides');
+        $response->assertSee('Slide Management');
+        $response->assertSee('Add Slide');
     }
 
     /**
@@ -67,17 +68,20 @@ class HeroSectionTest extends TestCase
         $response = $this->actingAs($admin)
             ->post(route('admin.hero.settings.update'), [
                 'images' => [$file1, $file2],
+                'new_urls' => ['https://google.com', 'https://yahoo.com'],
                 'sort_order' => [],
             ]);
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
 
-        // Assert DB has images
+        // Assert DB has images and URLs saved correctly
         $this->assertEquals(2, HeroImage::count());
+        $images = HeroImage::orderBy('id')->get();
+        $this->assertEquals('https://google.com', $images[0]->url);
+        $this->assertEquals('https://yahoo.com', $images[1]->url);
 
         // Assert files are stored
-        $images = HeroImage::all();
         foreach ($images as $img) {
             Storage::disk('public')->assertExists($img->image_path);
         }
@@ -166,6 +170,86 @@ class HeroSectionTest extends TestCase
         // Assert file is deleted from disk
         Storage::disk('public')->assertMissing($path1);
         Storage::disk('public')->assertMissing($path2);
+    }
+
+    /**
+     * Test uploading images fails when exceeding configured maximum limit.
+     */
+    public function test_uploading_images_fails_exceeding_max_limit(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        if (class_exists(\Spatie\Permission\Models\Permission::class)) {
+            $admin->givePermissionTo('manage hero section');
+        }
+
+        // Mock max images to 1
+        config(['hero.max_images' => 1]);
+
+        $file1 = UploadedFile::fake()->image('slide1.jpg');
+        $file2 = UploadedFile::fake()->image('slide2.jpg');
+
+        $response = $this->actingAs($admin)
+            ->post(route('admin.hero.settings.update'), [
+                'images' => [$file1, $file2],
+                'sort_order' => [],
+            ]);
+
+        $response->assertSessionHasErrors('images');
+    }
+
+    /**
+     * Test admin can replace existing slide image.
+     */
+    public function test_admin_can_replace_existing_slide_image(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        if (class_exists(\Spatie\Permission\Models\Permission::class)) {
+            $admin->givePermissionTo('manage hero section');
+        }
+
+        // Pre-create slide
+        $oldPath = Storage::disk('public')->putFile('hero', UploadedFile::fake()->image('old.jpg'));
+        $slide = HeroImage::create([
+            'image_path' => $oldPath,
+            'sort_order' => 1,
+        ]);
+
+        Storage::disk('public')->assertExists($oldPath);
+
+        $replacementFile = UploadedFile::fake()->image('replacement.jpg');
+
+        $response = $this->actingAs($admin)
+            ->post(route('admin.hero.settings.update'), [
+                'replace_images' => [
+                    $slide->id => $replacementFile
+                ],
+                'sort_order' => [
+                    $slide->id => 1
+                ],
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        // Assert record is updated
+        $updatedSlide = HeroImage::findOrFail($slide->id);
+        $this->assertNotEquals($oldPath, $updatedSlide->image_path);
+
+        // Assert old file deleted and new file stored
+        Storage::disk('public')->assertMissing($oldPath);
+        Storage::disk('public')->assertExists($updatedSlide->image_path);
     }
 
     /**

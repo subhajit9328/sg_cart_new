@@ -28,26 +28,66 @@ class HeroController extends Controller
         $request->validate([
             'images' => 'nullable|array',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+            'replace_images' => 'nullable|array',
+            'replace_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+            'urls' => 'nullable|array',
             'sort_order' => 'nullable|array',
             'sort_order.*' => 'required|integer',
         ]);
 
+        $maxImages = config('hero.max_images', 5);
+        $currentCount = HeroImage::count();
+        $newCount = $request->hasFile('images') ? count($request->file('images')) : 0;
+
+        if ($currentCount + $newCount > $maxImages) {
+            $message = "You cannot have more than {$maxImages} slide images in total. Current count is {$currentCount}.";
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 422);
+            }
+            return redirect()->back()->withErrors(['images' => $message]);
+        }
+
         // 1. Handle image slide uploads
         if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $file) {
+            $newUrls = $request->input('new_urls', []);
+            $maxSortOrder = HeroImage::max('sort_order') ?? 0;
+            
+            foreach ($request->file('images') as $index => $file) {
                 $path = $file->store('hero', 'public');
+                $url = isset($newUrls[$index]) ? $newUrls[$index] : null;
+                $maxSortOrder++;
                 HeroImage::create([
                     'image_path' => $path,
-                    'sort_order' => 0,
+                    'url' => $url,
+                    'sort_order' => $maxSortOrder,
                 ]);
             }
         }
 
-        // 2. Update existing slide sorting orders
+        // 2. Handle specific slide image replacements
+        if ($request->hasFile('replace_images')) {
+            foreach ($request->file('replace_images') as $id => $file) {
+                $image = HeroImage::findOrFail($id);
+                if (Storage::disk('public')->exists($image->image_path)) {
+                    Storage::disk('public')->delete($image->image_path);
+                }
+                $path = $file->store('hero', 'public');
+                $image->update([
+                    'image_path' => $path,
+                ]);
+            }
+        }
+
+        // 3. Update existing slide sorting orders and URLs
         if ($request->has('sort_order')) {
+            $existingUrls = $request->input('urls', []);
             foreach ($request->input('sort_order') as $id => $order) {
                 HeroImage::where('id', $id)->update([
                     'sort_order' => (int) $order,
+                    'url' => isset($existingUrls[$id]) ? $existingUrls[$id] : null,
                 ]);
             }
         }

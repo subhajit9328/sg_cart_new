@@ -14,7 +14,9 @@ class HeroServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // No config to merge as of now, but standard merge just in case
+        $this->mergeConfigFrom(
+            __DIR__.'/../../config/hero.php', 'hero'
+        );
     }
 
     /**
@@ -32,6 +34,10 @@ class HeroServiceProvider extends ServiceProvider
                 \SGCart\Hero\Console\Commands\InstallCommand::class,
                 \SGCart\Hero\Console\Commands\UninstallCommand::class,
             ]);
+
+            $this->publishes([
+                __DIR__.'/../../config/hero.php' => config_path('hero.php'),
+            ], 'hero-config');
         }
 
         // View Composer for welcome storefront page

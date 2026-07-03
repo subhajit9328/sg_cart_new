@@ -8,5 +8,5 @@ class HeroImage extends Model
 {
     protected $table = 'hero_images';
 
-    protected $fillable = ['image_path', 'sort_order'];
+    protected $fillable = ['image_path', 'url', 'sort_order'];
 }
