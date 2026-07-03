@@ -110,7 +110,8 @@ class ManageOtp
     public function generate(
         Customer $customer,
         string $reason = self::REASON_REGISTRATION,
-        ?string $customDescription = null
+        ?string $customDescription = null,
+        bool $sendEmail = true
     ): string {
         $existingOtp = $this->getOtp($customer);
 
@@ -151,16 +152,16 @@ class ManageOtp
         }
         if (!$existingOtp) {
             try {
-                $sendEmail = false;
-                if ($customer->email) {
+                $shouldSendEmail = false;
+                if ($customer->email && $sendEmail) {
                     if ($reason === self::REASON_FORGOT_PASSWORD) {
-                        $sendEmail = session('forgot_password_method', 'email') === 'email';
+                        $shouldSendEmail = session('forgot_password_method', 'email') === 'email';
                     } else {
-                        $sendEmail = !$customer->email_verified_at;
+                        $shouldSendEmail = !$customer->email_verified_at;
                     }
                 }
 
-                if ($sendEmail) {
+                if ($shouldSendEmail) {
                     Mail::to($customer->email)->send(new CustomerOtpMail($customer, $otp, $reason));
                 }
 
