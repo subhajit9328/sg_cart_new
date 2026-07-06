@@ -123,13 +123,46 @@ class OrderReportQuery
     /**
      * Paginated detailed orders query with eager-loaded relationships.
      */
-    public function detailedOrdersPaginated(Carbon $from, Carbon $to, int $perPage = 25): \Illuminate\Contracts\Pagination\LengthAwarePaginator
-    {
-        return $this->baseQuery($from, $to)
-            ->with(['customer', 'payments' => fn($q) => $q->latest()->limit(1)])
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage)
-            ->withQueryString();
+    public function detailedOrdersPaginated(
+        Carbon $from,
+        Carbon $to,
+        int $perPage = 25,
+        ?string $search = null,
+        ?string $sortBy = null,
+        ?string $sortDir = null
+    ): \Illuminate\Contracts\Pagination\LengthAwarePaginator {
+        $query = $this->baseQuery($from, $to)
+            ->with(['customer', 'payments' => fn($q) => $q->latest()->limit(1)]);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                  ->orWhere('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply sorting
+        $sortDir = strtolower($sortDir ?? '') === 'asc' ? 'asc' : 'desc';
+
+        $allowedSorts = [
+            'created_at' => 'created_at',
+            'total' => 'total',
+            'discount' => 'discount',
+            'tax' => 'tax',
+            'shipping_charge' => 'shipping_charge',
+        ];
+
+        if ($sortBy && array_key_exists($sortBy, $allowedSorts)) {
+            $query->orderBy($allowedSorts[$sortBy], $sortDir);
+        } elseif ($sortBy === 'net_amount') {
+            $query->orderByRaw('(total - COALESCE(discount, 0)) ' . $sortDir);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        return $query->paginate($perPage)->withQueryString();
     }
 
     /**

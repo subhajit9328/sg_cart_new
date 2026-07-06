@@ -162,13 +162,18 @@ class CustomerReportQuery
     /**
      * Paginated list of customer stats within the date range.
      */
-    public function customersDetailedQuery(Carbon $from, Carbon $to, int $perPage = 25): \Illuminate\Contracts\Pagination\LengthAwarePaginator
-    {
+    public function customersDetailedQuery(
+        Carbon $from,
+        Carbon $to,
+        int $perPage = 25,
+        ?string $search = null,
+        ?string $sortBy = null,
+        ?string $sortDir = null
+    ): \Illuminate\Contracts\Pagination\LengthAwarePaginator {
         $start = $from->copy()->startOfDay();
         $end   = $to->copy()->endOfDay();
 
-        // Get all customer IDs that placed orders in the range
-        return Order::whereBetween('created_at', [$start, $end])
+        $query = Order::whereBetween('created_at', [$start, $end])
             ->whereNotNull('customer_id')
             ->select(
                 'customer_id',
@@ -181,9 +186,34 @@ class CustomerReportQuery
                 DB::raw('AVG(total) as aov'),
                 DB::raw('MAX(created_at) as last_order_date')
             )
-            ->groupBy('customer_id', 'first_name', 'last_name', 'email', 'phone')
-            ->orderByDesc('total_spent')
-            ->paginate($perPage)
-            ->withQueryString();
+            ->groupBy('customer_id', 'first_name', 'last_name', 'email', 'phone');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%");
+            });
+        }
+
+        // Apply sorting
+        $sortDir = strtolower($sortDir ?? '') === 'asc' ? 'asc' : 'desc';
+
+        $allowedSorts = [
+            'total_orders' => 'total_orders',
+            'total_spent' => 'total_spent',
+            'aov' => 'aov',
+            'last_order_date' => 'last_order_date',
+        ];
+
+        if ($sortBy && array_key_exists($sortBy, $allowedSorts)) {
+            $query->orderBy($allowedSorts[$sortBy], $sortDir);
+        } else {
+            $query->orderByDesc('total_spent');
+        }
+
+        return $query->paginate($perPage)->withQueryString();
     }
 }

@@ -26,7 +26,14 @@ class BehaviorReportController extends Controller
             : Carbon::now()->endOfDay();
 
         $perPage = config('reporting.per_page', 25);
-        $behavior = $this->advancedQuery->customerBehavior($from, $to, $perPage);
+        $behavior = $this->advancedQuery->customerBehavior(
+            $from,
+            $to,
+            $perPage,
+            $request->input('search'),
+            $request->input('sort_by'),
+            $request->input('sort_dir') ?? $request->input('sort_order')
+        );
 
         return view('reporting::admin.behavior.index', [
             'date_from' => $from,

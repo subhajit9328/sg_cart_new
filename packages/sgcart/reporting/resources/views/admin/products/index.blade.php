@@ -73,75 +73,49 @@
 </div>
 
 {{-- Main product details table --}}
-<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden mb-6">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-        <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Product Performance Analytics</h2>
-        <span class="text-xs text-slate-400">{{ $performance->total() }} products found</span>
-    </div>
+@php
+    $headers = [
+        ['label' => 'Product Name', 'key' => 'name', 'sortable' => false],
+        ['label' => 'SKU', 'key' => 'sku', 'sortable' => false],
+        ['label' => 'Units Sold', 'key' => 'units_sold', 'sortable' => true, 'align' => 'right'],
+        ['label' => 'Cancelled Units', 'key' => 'cancelled_units', 'sortable' => true, 'align' => 'right'],
+        ['label' => 'Total Revenue', 'key' => 'total_revenue', 'sortable' => true, 'align' => 'right'],
+        ['label' => 'Total Orders', 'key' => 'total_orders', 'sortable' => true, 'align' => 'right'],
+    ];
+@endphp
 
-    @if($performance->isEmpty())
-        <div class="text-center py-16 text-slate-400">
-            <i class="fa-solid fa-boxes-packing text-4xl mb-3 block"></i>
-            <p class="text-sm font-medium">No product metrics recorded for this date range.</p>
-        </div>
-    @else
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800">
-                    <tr>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Product Name</th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">SKU</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Units Sold</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Cancelled Units</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Revenue</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Orders</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @foreach($performance as $row)
-                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                        <td class="px-4 py-3.5 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $row->name }}</td>
-                        <td class="px-4 py-3.5 text-sm text-slate-500 dark:text-slate-400 font-mono">{{ $row->sku ?? '—' }}</td>
-                        <td class="px-4 py-3.5 text-sm text-right font-medium">{{ number_format($row->units_sold) }}</td>
-                        <td class="px-4 py-3.5 text-sm text-right text-rose-500">{{ number_format($row->cancelled_units) }}</td>
-                        <td class="px-4 py-3.5 text-sm text-right font-bold text-slate-900 dark:text-slate-100">₹{{ number_format($row->total_revenue, 2) }}</td>
-                        <td class="px-4 py-3.5 text-sm text-right text-slate-500">{{ number_format($row->total_orders) }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+<x-data-table
+    title="Product Performance Analytics"
+    :totalCount="$performance->total()"
+    action="{{ route('admin.reports.products') }}"
+    tableId="detailedProductsTableWrapper"
+    searchInputId="detailedProductsSearchInput"
+    totalCountId="detailedProductsTotalCount"
+    :items="$performance"
+    :headers="$headers"
+>
+    <x-slot name="filters">
+        <input type="hidden" name="date_from" value="{{ request('date_from', $date_from->format('Y-m-d')) }}">
+        <input type="hidden" name="date_to" value="{{ request('date_to', $date_to->format('Y-m-d')) }}">
+    </x-slot>
 
-        {{-- Pagination --}}
-        @if($performance->hasPages())
-        <div class="px-5 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <p class="text-xs text-slate-400">
-                Showing {{ $performance->firstItem() }}–{{ $performance->lastItem() }} of {{ $performance->total() }} items
-            </p>
-            <div class="flex items-center gap-1">
-                @if($performance->onFirstPage())
-                    <span class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-300 cursor-not-allowed">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </span>
-                @else
-                    <a href="{{ $performance->previousPageUrl() }}" class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </a>
-                @endif
-
-                @if($performance->hasMorePages())
-                    <a href="{{ $performance->nextPageUrl() }}" class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </a>
-                @else
-                    <span class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-300 cursor-not-allowed">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </span>
-                @endif
-            </div>
-        </div>
-        @endif
-    @endif
-</div>
+    @forelse($performance as $row)
+        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+            <td class="px-4 py-3.5 text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $row->name }}</td>
+            <td class="px-4 py-3.5 text-sm text-slate-500 dark:text-slate-400 font-mono">{{ $row->sku ?? '—' }}</td>
+            <td class="px-4 py-3.5 text-sm text-right font-medium">{{ number_format($row->units_sold) }}</td>
+            <td class="px-4 py-3.5 text-sm text-right text-rose-500">{{ number_format($row->cancelled_units) }}</td>
+            <td class="px-4 py-3.5 text-sm text-right font-bold text-slate-900 dark:text-slate-100">₹{{ number_format($row->total_revenue, 2) }}</td>
+            <td class="px-4 py-3.5 text-sm text-right text-slate-500">{{ number_format($row->total_orders) }}</td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="6" class="px-4 py-16 text-center text-slate-400">
+                <i class="fa-solid fa-boxes-packing text-4xl mb-3 block"></i>
+                <p class="text-sm font-medium">No product metrics recorded for this date range.</p>
+            </td>
+        </tr>
+    @endforelse
+</x-data-table>
 
 @endsection

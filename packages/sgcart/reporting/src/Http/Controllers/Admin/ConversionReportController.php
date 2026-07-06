@@ -28,7 +28,13 @@ class ConversionReportController extends Controller
         $funnel = $this->advancedQuery->conversionFunnelMetrics($from, $to);
 
         // Get detailed abandoned carts
-        $abandonedCarts = $this->advancedQuery->abandonedCartsQuery($from, $to)
+        $abandonedCarts = $this->advancedQuery->abandonedCartsQuery(
+            $from,
+            $to,
+            $request->input('search'),
+            $request->input('sort_by'),
+            $request->input('sort_dir') ?? $request->input('sort_order')
+        )
             ->paginate(config('reporting.per_page', 25))
             ->withQueryString();
 

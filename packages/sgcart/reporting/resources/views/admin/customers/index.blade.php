@@ -252,101 +252,66 @@
 </div>
 
 {{-- ── Detailed Table ──────────────────────────────────────────────────── --}}
-<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden mb-6">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-        <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <i class="fa-solid fa-table text-slate-400 text-sm"></i>
-            Detailed Customer Report
-        </h2>
-        <span class="text-xs text-slate-400 dark:text-slate-500">
-            {{ $customers->total() }} active customers found
-        </span>
-    </div>
+@php
+    $headers = [
+        ['label' => 'Customer Name', 'key' => 'customer_name', 'sortable' => false],
+        ['label' => 'Email', 'key' => 'email', 'sortable' => false],
+        ['label' => 'Phone', 'key' => 'phone', 'sortable' => false],
+        ['label' => 'Total Orders', 'key' => 'total_orders', 'sortable' => true, 'align' => 'right'],
+        ['label' => 'Total Spent', 'key' => 'total_spent', 'sortable' => true, 'align' => 'right'],
+        ['label' => 'Avg. Order Value', 'key' => 'aov', 'sortable' => true, 'align' => 'right'],
+        ['label' => 'Last Order Date', 'key' => 'last_order_date', 'sortable' => true],
+    ];
+@endphp
 
-    @if($customers->isEmpty())
-        <div class="text-center py-16 text-slate-400 dark:text-slate-600">
-            <i class="fa-solid fa-inbox text-4xl mb-3 block"></i>
-            <p class="text-sm font-medium">No customer purchases found for this date range.</p>
-        </div>
-    @else
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[900px]">
-                <thead class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800">
-                    <tr>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Customer Name</th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Email</th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Phone</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Orders</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Spent</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">AOV</th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Last Order Date</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @foreach($customers as $row)
-                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap font-medium text-slate-900 dark:text-slate-100">
-                            {{ $row->first_name }} {{ $row->last_name }}
-                        </td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                            {{ $row->email ?? '—' }}
-                        </td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                            {{ $row->phone ?? '—' }}
-                        </td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right font-semibold">
-                            {{ number_format($row->total_orders) }}
-                        </td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right font-bold text-slate-900 dark:text-slate-100">
-                            ₹{{ number_format($row->total_spent, 2) }}
-                        </td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right text-slate-500 dark:text-slate-400">
-                            ₹{{ number_format($row->aov, 2) }}
-                        </td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-slate-500 dark:text-slate-400">
-                            {{ Carbon\Carbon::parse($row->last_order_date)->format('d M Y H:i') }}
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+<x-data-table
+    title="Detailed Customer Report"
+    :totalCount="$customers->total()"
+    action="{{ route('admin.reports.customers') }}"
+    tableId="detailedCustomersTableWrapper"
+    searchInputId="detailedCustomersSearchInput"
+    totalCountId="detailedCustomersTotalCount"
+    :items="$customers"
+    :headers="$headers"
+>
+    <x-slot name="filters">
+        <input type="hidden" name="date_from" value="{{ request('date_from', $date_from->format('Y-m-d')) }}">
+        <input type="hidden" name="date_to" value="{{ request('date_to', $date_to->format('Y-m-d')) }}">
+    </x-slot>
 
-        {{-- Pagination --}}
-        @if($customers->hasPages())
-        <div class="px-5 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <p class="text-xs text-slate-400">
-                Showing {{ $customers->firstItem() }}–{{ $customers->lastItem() }} of {{ $customers->total() }} buyers
-            </p>
-            <div class="flex items-center gap-1">
-                {{-- Previous --}}
-                @if($customers->onFirstPage())
-                    <span class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 cursor-not-allowed">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </span>
-                @else
-                    <a href="{{ $customers->previousPageUrl() }}"
-                       class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </a>
-                @endif
-
-                {{-- Next --}}
-                @if($customers->hasMorePages())
-                    <a href="{{ $customers->nextPageUrl() }}"
-                       class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </a>
-                @else
-                    <span class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 cursor-not-allowed">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </span>
-                @endif
-            </div>
-        </div>
-        @endif
-    @endif
-</div>
+    @forelse($customers as $row)
+        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap font-medium text-slate-900 dark:text-slate-100">
+                {{ $row->first_name }} {{ $row->last_name }}
+            </td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                {{ $row->email ?? '—' }}
+            </td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                {{ $row->phone ?? '—' }}
+            </td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right font-semibold">
+                {{ number_format($row->total_orders) }}
+            </td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right font-bold text-slate-900 dark:text-slate-100">
+                ₹{{ number_format($row->total_spent, 2) }}
+            </td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right text-slate-500 dark:text-slate-400">
+                ₹{{ number_format($row->aov, 2) }}
+            </td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-slate-500 dark:text-slate-400">
+                {{ Carbon\Carbon::parse($row->last_order_date)->format('d M Y H:i') }}
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="7" class="px-4 py-16 text-center text-slate-400 dark:text-slate-600">
+                <i class="fa-solid fa-inbox text-4xl mb-3 block"></i>
+                <p class="text-sm font-medium">No customer purchases found for this date range.</p>
+            </td>
+        </tr>
+    @endforelse
+</x-data-table>
 
 @endsection
 

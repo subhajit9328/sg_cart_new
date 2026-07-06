@@ -354,159 +354,111 @@
 </div>
 
 {{-- ── Detailed Orders Table ────────────────────────────────────────────── --}}
-<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden mb-6">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-        <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <i class="fa-solid fa-table-list text-slate-400 text-sm"></i>
-            Detailed Orders
-        </h2>
-        <span class="text-xs text-slate-400 dark:text-slate-500">
-            {{ $orders->total() }} {{ Str::plural('order', $orders->total()) }} found
-        </span>
-    </div>
+@php
+    $headers = [
+        ['label' => 'Order ID', 'key' => 'order_number', 'sortable' => false],
+        ['label' => 'Customer', 'key' => 'customer', 'sortable' => false],
+        ['label' => 'Date', 'key' => 'created_at', 'sortable' => true],
+        ['label' => 'Status', 'key' => 'status', 'sortable' => false],
+        ['label' => 'Payment', 'key' => 'payment_status', 'sortable' => false],
+        ['label' => 'Method', 'key' => 'payment_method', 'sortable' => false],
+        ['label' => 'Total', 'key' => 'total', 'sortable' => true, 'align' => 'right'],
+        ['label' => 'Discount', 'key' => 'discount', 'sortable' => true, 'align' => 'right'],
+        ['label' => 'Tax', 'key' => 'tax', 'sortable' => true, 'align' => 'right'],
+        ['label' => 'Shipping', 'key' => 'shipping_charge', 'sortable' => true, 'align' => 'right'],
+        ['label' => 'Net Amount', 'key' => 'net_amount', 'sortable' => true, 'align' => 'right'],
+    ];
+@endphp
 
-    @if($orders->isEmpty())
-        <div class="text-center py-16 text-slate-400 dark:text-slate-600">
-            <i class="fa-solid fa-inbox text-4xl mb-3 block"></i>
-            <p class="text-sm font-medium">No orders found for this date range.</p>
-        </div>
-    @else
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[900px]">
-                <thead class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Order ID</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Customer</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Date</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Status</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Payment</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Method</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Total</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Discount</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Tax</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Shipping</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Net Amount</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @foreach($orders as $order)
-                    @php
-                        $netAmount = $order->total - ($order->discount ?? 0);
-                        $latestPayment = $order->payments->first();
-                        $paymentStatus = $latestPayment?->status?->value ?? $latestPayment?->status ?? 'Pending';
-                        $paymentMethod = $latestPayment?->payment_method ?? '—';
+<x-data-table
+    title="Detailed Orders"
+    :totalCount="$orders->total()"
+    action="{{ route('admin.reports.orders') }}"
+    tableId="detailedOrdersTableWrapper"
+    searchInputId="detailedOrdersSearchInput"
+    totalCountId="detailedOrdersTotalCount"
+    searchPlaceholder="Search by order id, email, name…"
+    :items="$orders"
+    :headers="$headers"
+>
+    <x-slot name="filters">
+        <input type="hidden" name="date_from" value="{{ request('date_from', $date_from->format('Y-m-d')) }}">
+        <input type="hidden" name="date_to" value="{{ request('date_to', $date_to->format('Y-m-d')) }}">
+    </x-slot>
 
-                        $statusBadge = match($order->status?->value ?? $order->status) {
-                            'Processing' => 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400',
-                            'Shipped'    => 'bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400',
-                            'Delivered'  => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400',
-                            'Cancelled'  => 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400',
-                            default      => 'bg-slate-100 text-slate-500',
-                        };
-                        $paymentBadge = match($paymentStatus) {
-                            'Paid'    => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400',
-                            'Failed'  => 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400',
-                            default   => 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400',
-                        };
-                    @endphp
-                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                            <a href="{{ route('admin.orders.show', $order) }}"
-                               class="font-mono text-blue-600 dark:text-blue-400 hover:underline text-xs font-semibold">
-                                #{{ $order->order_number }}
-                            </a>
-                        </td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                            <span class="font-medium text-slate-800 dark:text-slate-200">
-                                {{ $order->first_name }} {{ $order->last_name }}
-                            </span>
-                            @if($order->email)
-                            <p class="text-xs text-slate-400 truncate max-w-[160px]">{{ $order->email }}</p>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-slate-500 dark:text-slate-400">
-                            {{ $order->created_at->format('d M Y') }}
-                            <p class="text-xs text-slate-400">{{ $order->created_at->format('H:i') }}</p>
-                        </td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $statusBadge }}">
-                                {{ $order->status?->value ?? $order->status }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $paymentBadge }}">{{ $paymentStatus }}</span>
-                        </td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-slate-500 dark:text-slate-400 text-xs">{{ $paymentMethod }}</td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right font-semibold text-slate-800 dark:text-slate-200">
-                            ₹{{ number_format($order->total, 2) }}
-                        </td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right text-slate-500 dark:text-slate-400">
-                            {{ $order->discount ? '₹'.number_format($order->discount, 2) : '—' }}
-                        </td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right text-slate-500 dark:text-slate-400">
-                            {{ $order->tax ? '₹'.number_format($order->tax, 2) : '—' }}
-                        </td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right text-slate-500 dark:text-slate-400">
-                            {{ $order->shipping_charge ? '₹'.number_format($order->shipping_charge, 2) : '—' }}
-                        </td>
-                        <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right font-bold text-slate-900 dark:text-slate-100">
-                            ₹{{ number_format($netAmount, 2) }}
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+    @forelse($orders as $order)
+        @php
+            $netAmount = $order->total - ($order->discount ?? 0);
+            $latestPayment = $order->payments->first();
+            $paymentStatus = $latestPayment?->status?->value ?? $latestPayment?->status ?? 'Pending';
+            $paymentMethod = $latestPayment?->payment_method ?? '—';
 
-        {{-- Pagination --}}
-        @if($orders->hasPages())
-        <div class="px-5 py-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p class="text-xs text-slate-400">
-                Showing {{ $orders->firstItem() }}–{{ $orders->lastItem() }} of {{ $orders->total() }} orders
-            </p>
-            <div class="flex items-center gap-1">
-                {{-- Previous --}}
-                @if($orders->onFirstPage())
-                    <span class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 cursor-not-allowed">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </span>
-                @else
-                    <a href="{{ $orders->previousPageUrl() }}"
-                       class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </a>
+            $statusBadge = match($order->status?->value ?? $order->status) {
+                'Processing' => 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400',
+                'Shipped'    => 'bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400',
+                'Delivered'  => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400',
+                'Cancelled'  => 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400',
+                default      => 'bg-slate-100 text-slate-500',
+            };
+            $paymentBadge = match($paymentStatus) {
+                'Paid'    => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400',
+                'Failed'  => 'bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400',
+                default   => 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400',
+            };
+        @endphp
+        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                <a href="{{ route('admin.orders.show', $order) }}"
+                   class="font-mono text-blue-600 dark:text-blue-400 hover:underline text-xs font-semibold">
+                    {{ $order->order_number }}
+                </a>
+            </td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                <span class="font-medium text-slate-800 dark:text-slate-200">
+                    {{ $order->first_name }} {{ $order->last_name }}
+                </span>
+                @if($order->email)
+                    <p class="text-xs text-slate-400 truncate max-w-[160px]">{{ $order->email }}</p>
                 @endif
-
-                {{-- Page numbers --}}
-                @foreach($orders->getUrlRange(max(1, $orders->currentPage() - 2), min($orders->lastPage(), $orders->currentPage() + 2)) as $page => $url)
-                    @if($page === $orders->currentPage())
-                        <span class="px-3 py-1.5 text-xs rounded-lg bg-blue-600 text-white font-semibold border border-blue-600">
-                            {{ $page }}
-                        </span>
-                    @else
-                        <a href="{{ $url }}"
-                           class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                            {{ $page }}
-                        </a>
-                    @endif
-                @endforeach
-
-                {{-- Next --}}
-                @if($orders->hasMorePages())
-                    <a href="{{ $orders->nextPageUrl() }}"
-                       class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </a>
-                @else
-                    <span class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 cursor-not-allowed">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </span>
-                @endif
-            </div>
-        </div>
-        @endif
-    @endif
-</div>
+            </td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-slate-500 dark:text-slate-400">
+                {{ $order->created_at->format('d M Y') }}
+                <p class="text-xs text-slate-400">{{ $order->created_at->format('H:i') }}</p>
+            </td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $statusBadge }}">
+                    {{ $order->status?->value ?? $order->status }}
+                </span>
+            </td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $paymentBadge }}">{{ $paymentStatus }}</span>
+            </td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-slate-500 dark:text-slate-400 text-xs">{{ $paymentMethod }}</td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right font-semibold text-slate-800 dark:text-slate-200">
+                ₹{{ number_format($order->total, 2) }}
+            </td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right text-slate-500 dark:text-slate-400">
+                {{ $order->discount ? '₹'.number_format($order->discount, 2) : '—' }}
+            </td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right text-slate-500 dark:text-slate-400">
+                {{ $order->tax ? '₹'.number_format($order->tax, 2) : '—' }}
+            </td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right text-slate-500 dark:text-slate-400">
+                {{ $order->shipping_charge ? '₹'.number_format($order->shipping_charge, 2) : '—' }}
+            </td>
+            <td class="px-4 py-3.5 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap text-right font-bold text-slate-900 dark:text-slate-100">
+                ₹{{ number_format($netAmount, 2) }}
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="11" class="px-4 py-16 text-center text-slate-400 dark:text-slate-600">
+                <i class="fa-solid fa-inbox text-4xl mb-3 block"></i>
+                <p class="text-sm font-medium">No orders found for this date range.</p>
+            </td>
+        </tr>
+    @endforelse
+</x-data-table>
 
 @endsection
 

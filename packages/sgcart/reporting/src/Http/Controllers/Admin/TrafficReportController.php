@@ -28,15 +28,32 @@ class TrafficReportController extends Controller
         $traffic = $this->advancedQuery->trafficAnalysisMetrics($from, $to);
 
         // Paginated list of page views
-        $pageViews = \Illuminate\Support\Facades\DB::table('traffic_logs')
+        $query = \Illuminate\Support\Facades\DB::table('traffic_logs')
             ->leftJoin('customers', 'traffic_logs.customer_id', '=', 'customers.id')
             ->whereBetween('traffic_logs.created_at', [
                 $from->copy()->startOfDay(),
                 $to->copy()->endOfDay(),
             ])
-            ->select('traffic_logs.id', 'traffic_logs.session_id', 'customers.name as customer_name', 'traffic_logs.path', 'traffic_logs.referrer', 'traffic_logs.ip_address', 'traffic_logs.created_at')
-            ->orderByDesc('traffic_logs.created_at')
-            ->paginate(config('reporting.per_page', 25))
+            ->select('traffic_logs.id', 'traffic_logs.session_id', 'customers.name as customer_name', 'traffic_logs.path', 'traffic_logs.referrer', 'traffic_logs.ip_address', 'traffic_logs.created_at');
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('traffic_logs.path', 'like', "%{$search}%")
+                  ->orWhere('customers.name', 'like', "%{$search}%")
+                  ->orWhere('traffic_logs.ip_address', 'like', "%{$search}%");
+            });
+        }
+
+        $sortDir = strtolower($request->input('sort_dir') ?? $request->input('sort_order') ?? '') === 'asc' ? 'asc' : 'desc';
+
+        if ($request->input('sort_by') === 'created_at') {
+            $query->orderBy('traffic_logs.created_at', $sortDir);
+        } else {
+            $query->orderByDesc('traffic_logs.created_at');
+        }
+
+        $pageViews = $query->paginate(config('reporting.per_page', 25))
             ->withQueryString();
 
         return view('reporting::admin.traffic.index', [

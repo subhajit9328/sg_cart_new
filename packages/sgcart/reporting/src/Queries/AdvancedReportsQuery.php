@@ -65,12 +65,17 @@ class AdvancedReportsQuery
     /**
      * Get the query builder for product performance metrics (with date filtering).
      */
-    public function productPerformanceQuery(Carbon $from, Carbon $to): \Illuminate\Database\Query\Builder
-    {
+    public function productPerformanceQuery(
+        Carbon $from,
+        Carbon $to,
+        ?string $search = null,
+        ?string $sortBy = null,
+        ?string $sortDir = null
+    ): \Illuminate\Database\Query\Builder {
         $start = $from->copy()->startOfDay();
         $end   = $to->copy()->endOfDay();
 
-        return DB::table('products')
+        $query = DB::table('products')
             ->leftJoin('order_items', 'products.id', '=', 'order_items.product_id')
             ->leftJoin('orders', function ($join) use ($start, $end) {
                 $join->on('order_items.order_id', '=', 'orders.id')
@@ -85,16 +90,40 @@ class AdvancedReportsQuery
                 DB::raw('COALESCE(SUM(CASE WHEN orders.status = "Cancelled" THEN order_items.quantity ELSE 0 END), 0) as cancelled_units'),
                 DB::raw('COUNT(DISTINCT orders.id) as total_orders')
             )
-            ->groupBy('products.id', 'products.name', 'products.sku')
-            ->orderByDesc('total_revenue');
+            ->groupBy('products.id', 'products.name', 'products.sku');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('products.name', 'like', "%{$search}%")
+                  ->orWhere('products.sku', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply sorting
+        $sortDir = strtolower($sortDir ?? '') === 'asc' ? 'asc' : 'desc';
+
+        $allowedSorts = [
+            'units_sold' => 'units_sold',
+            'cancelled_units' => 'cancelled_units',
+            'total_revenue' => 'total_revenue',
+            'total_orders' => 'total_orders',
+        ];
+
+        if ($sortBy && array_key_exists($sortBy, $allowedSorts)) {
+            $query->orderBy($allowedSorts[$sortBy], $sortDir);
+        } else {
+            $query->orderByDesc('total_revenue');
+        }
+
+        return $query;
     }
 
     /**
      * Get product performance detailed details (paginated).
      */
-    public function productPerformance(Carbon $from, Carbon $to, int $perPage = 25)
+    public function productPerformance(Carbon $from, Carbon $to, int $perPage = 25, ?string $search = null, ?string $sortBy = null, ?string $sortDir = null)
     {
-        return $this->productPerformanceQuery($from, $to)
+        return $this->productPerformanceQuery($from, $to, $search, $sortBy, $sortDir)
             ->paginate($perPage)
             ->withQueryString();
     }
@@ -102,12 +131,17 @@ class AdvancedReportsQuery
     /**
      * Get the query builder for customer behavior metrics (with date filtering).
      */
-    public function customerBehaviorQuery(Carbon $from, Carbon $to): \Illuminate\Database\Query\Builder
-    {
+    public function customerBehaviorQuery(
+        Carbon $from,
+        Carbon $to,
+        ?string $search = null,
+        ?string $sortBy = null,
+        ?string $sortDir = null
+    ): \Illuminate\Database\Query\Builder {
         $start = $from->copy()->startOfDay();
         $end   = $to->copy()->endOfDay();
 
-        return DB::table('customers')
+        $query = DB::table('customers')
             ->leftJoin('orders', function ($join) use ($start, $end) {
                 $join->on('customers.id', '=', 'orders.customer_id')
                      ->whereBetween('orders.created_at', [$start, $end]);
@@ -124,16 +158,39 @@ class AdvancedReportsQuery
                 DB::raw('COALESCE(SUM(orders.total), 0) as total_sales'),
                 DB::raw('COUNT(DISTINCT reviews.id) as reviews_count')
             )
-            ->groupBy('customers.id', 'customers.name', 'customers.email')
-            ->orderByDesc('total_sales');
+            ->groupBy('customers.id', 'customers.name', 'customers.email');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('customers.name', 'like', "%{$search}%")
+                  ->orWhere('customers.email', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply sorting
+        $sortDir = strtolower($sortDir ?? '') === 'asc' ? 'asc' : 'desc';
+
+        $allowedSorts = [
+            'total_orders' => 'total_orders',
+            'reviews_count' => 'reviews_count',
+            'total_sales' => 'total_sales',
+        ];
+
+        if ($sortBy && array_key_exists($sortBy, $allowedSorts)) {
+            $query->orderBy($allowedSorts[$sortBy], $sortDir);
+        } else {
+            $query->orderByDesc('total_sales');
+        }
+
+        return $query;
     }
 
     /**
      * Get customer behavior logs (paginated).
      */
-    public function customerBehavior(Carbon $from, Carbon $to, int $perPage = 25)
+    public function customerBehavior(Carbon $from, Carbon $to, int $perPage = 25, ?string $search = null, ?string $sortBy = null, ?string $sortDir = null)
     {
-        return $this->customerBehaviorQuery($from, $to)
+        return $this->customerBehaviorQuery($from, $to, $search, $sortBy, $sortDir)
             ->paginate($perPage)
             ->withQueryString();
     }
@@ -186,12 +243,17 @@ class AdvancedReportsQuery
     /**
      * Query builder for abandoned carts list.
      */
-    public function abandonedCartsQuery(Carbon $from, Carbon $to): \Illuminate\Database\Query\Builder
-    {
+    public function abandonedCartsQuery(
+        Carbon $from,
+        Carbon $to,
+        ?string $search = null,
+        ?string $sortBy = null,
+        ?string $sortDir = null
+    ): \Illuminate\Database\Query\Builder {
         $start = $from->copy()->startOfDay();
         $end   = $to->copy()->endOfDay();
 
-        return DB::table('carts')
+        $query = DB::table('carts')
             ->leftJoin('customers', 'carts.customer_id', '=', 'customers.id')
             ->whereBetween('carts.created_at', [$start, $end])
             ->whereNotExists(function ($query) {
@@ -207,8 +269,31 @@ class AdvancedReportsQuery
             })
             ->select('carts.id', 'carts.session_id', 'customers.name as customer_name', 'carts.created_at',
                 DB::raw('(SELECT SUM(quantity) FROM cart_items WHERE cart_items.cart_id = carts.id) as items_count')
-            )
-            ->orderByDesc('carts.created_at');
+            );
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('carts.id', '=', $search)
+                  ->orWhere('carts.session_id', 'like', "%{$search}%")
+                  ->orWhere('customers.name', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply sorting
+        $sortDir = strtolower($sortDir ?? '') === 'asc' ? 'asc' : 'desc';
+
+        $allowedSorts = [
+            'items_count' => 'items_count',
+            'created_at' => 'carts.created_at',
+        ];
+
+        if ($sortBy && array_key_exists($sortBy, $allowedSorts)) {
+            $query->orderBy($allowedSorts[$sortBy], $sortDir);
+        } else {
+            $query->orderByDesc('carts.created_at');
+        }
+
+        return $query;
     }
 
     /**

@@ -35,7 +35,7 @@ class GetOrderReportDataAction
      *     orders: LengthAwarePaginator,
      * }
      */
-    public function execute(Carbon $from, Carbon $to, int $perPage = 25): array
+    public function execute(Carbon $from, Carbon $to, int $perPage = 25, ?string $search = null, ?string $sortBy = null, ?string $sortDir = null): array
     {
         // ── Core Metrics ────────────────────────────────────────────────────
         $totalOrders = $this->query->totalOrders($from, $to);
@@ -107,7 +107,7 @@ class GetOrderReportDataAction
         }
 
         // ── Detailed Paginated Orders ────────────────────────────────────────
-        $orders = $this->query->detailedOrdersPaginated($from, $to, $perPage);
+        $orders = $this->query->detailedOrdersPaginated($from, $to, $perPage, $search, $sortBy, $sortDir);
 
         return [
             'date_from' => $from,

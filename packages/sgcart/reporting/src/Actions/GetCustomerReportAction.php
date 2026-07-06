@@ -16,7 +16,7 @@ class GetCustomerReportAction
     /**
      * Compute all customer report analytics.
      */
-    public function execute(Carbon $from, Carbon $to, int $perPage = 25): array
+    public function execute(Carbon $from, Carbon $to, int $perPage = 25, ?string $search = null, ?string $sortBy = null, ?string $sortDir = null): array
     {
         $newCustomers = $this->customerQuery->newCustomersCount($from, $to);
         $activeCustomers = $this->customerQuery->activeCustomersCount($from, $to);
@@ -44,7 +44,7 @@ class GetCustomerReportAction
         $topByOrders = $this->customerQuery->topCustomersByOrders($from, $to, 5);
 
         // Detailed table
-        $customersDetailed = $this->customerQuery->customersDetailedQuery($from, $to, $perPage);
+        $customersDetailed = $this->customerQuery->customersDetailedQuery($from, $to, $perPage, $search, $sortBy, $sortDir);
 
         return [
             'date_from' => $from,

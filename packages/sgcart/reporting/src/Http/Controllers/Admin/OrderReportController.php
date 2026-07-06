@@ -34,7 +34,14 @@ class OrderReportController extends Controller
 
         $perPage = config('reporting.per_page', 25);
 
-        $data = $this->action->execute($from, $to, $perPage);
+        $data = $this->action->execute(
+            $from,
+            $to,
+            $perPage,
+            $request->input('search'),
+            $request->input('sort_by'),
+            $request->input('sort_dir') ?? $request->input('sort_order')
+        );
 
         return view('reporting::admin.orders.index', $data);
     }

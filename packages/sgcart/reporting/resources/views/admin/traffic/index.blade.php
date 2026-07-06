@@ -153,70 +153,45 @@
 </div>
 
 {{-- Traffic Logs list --}}
-<div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden mb-6 shadow-sm">
-    <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-        <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Live Traffic Logs</h2>
-    </div>
+@php
+    $headers = [
+        ['label' => 'Page', 'key' => 'path', 'sortable' => false],
+        ['label' => 'Customer Name', 'key' => 'customer_name', 'sortable' => false],
+        ['label' => 'IP Address', 'key' => 'ip_address', 'sortable' => false],
+        ['label' => 'Date/Time', 'key' => 'created_at', 'sortable' => true],
+    ];
+@endphp
 
-    @if($page_views->isEmpty())
-        <div class="text-center py-16 text-slate-400">
-            <i class="fa-solid fa-circle-exclamation text-4xl mb-3 block"></i>
-            <p class="text-sm font-medium">No page views logged for this date range.</p>
-        </div>
-    @else
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800">
-                    <tr>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Page</th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Customer Name</th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">IP Address</th>
-                        <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Date/Time</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @foreach($page_views as $row)
-                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                        <td class="px-4 py-3.5 text-sm font-medium text-slate-900 dark:text-slate-100 font-mono">{{ $row->path }}</td>
-                        <td class="px-4 py-3.5 text-sm">{{ $row->customer_name ?? 'Guest Visitor' }}</td>
-                        <td class="px-4 py-3.5 text-sm font-mono text-slate-500">{{ $row->ip_address ?? '—' }}</td>
-                        <td class="px-4 py-3.5 text-sm text-slate-450">{{ $row->created_at }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+<x-data-table
+    title="Live Traffic Logs"
+    :totalCount="$page_views->total()"
+    action="{{ route('admin.reports.traffic') }}"
+    tableId="detailedTrafficTableWrapper"
+    searchInputId="detailedTrafficSearchInput"
+    totalCountId="detailedTrafficTotalCount"
+    :items="$page_views"
+    :headers="$headers"
+>
+    <x-slot name="filters">
+        <input type="hidden" name="date_from" value="{{ request('date_from', $date_from->format('Y-m-d')) }}">
+        <input type="hidden" name="date_to" value="{{ request('date_to', $date_to->format('Y-m-d')) }}">
+    </x-slot>
 
-        {{-- Pagination --}}
-        @if($page_views->hasPages())
-        <div class="px-5 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <p class="text-xs text-slate-400">
-                Showing {{ $page_views->firstItem() }}–{{ $page_views->lastItem() }} of {{ $page_views->total() }} views
-            </p>
-            <div class="flex items-center gap-1">
-                @if($page_views->onFirstPage())
-                    <span class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-300 cursor-not-allowed">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </span>
-                @else
-                    <a href="{{ $page_views->previousPageUrl() }}" class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </a>
-                @endif
-
-                @if($page_views->hasMorePages())
-                    <a href="{{ $page_views->nextPageUrl() }}" class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </a>
-                @else
-                    <span class="px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 text-slate-300 cursor-not-allowed">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </span>
-                @endif
-            </div>
-        </div>
-        @endif
-    @endif
-</div>
+    @forelse($page_views as $row)
+        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+            <td class="px-4 py-3.5 text-sm font-medium text-slate-900 dark:text-slate-100 font-mono">{{ $row->path }}</td>
+            <td class="px-4 py-3.5 text-sm">{{ $row->customer_name ?? 'Guest Visitor' }}</td>
+            <td class="px-4 py-3.5 text-sm font-mono text-slate-500">{{ $row->ip_address ?? '—' }}</td>
+            <td class="px-4 py-3.5 text-sm text-slate-450">{{ $row->created_at }}</td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="4" class="px-4 py-16 text-center text-slate-400">
+                <i class="fa-solid fa-circle-exclamation text-4xl mb-3 block"></i>
+                <p class="text-sm font-medium">No page views logged for this date range.</p>
+            </td>
+        </tr>
+    @endforelse
+</x-data-table>
 
 @endsection

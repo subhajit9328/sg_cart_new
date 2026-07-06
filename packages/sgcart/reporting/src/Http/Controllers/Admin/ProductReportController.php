@@ -26,7 +26,14 @@ class ProductReportController extends Controller
             : Carbon::now()->endOfDay();
 
         $perPage = config('reporting.per_page', 25);
-        $performance = $this->advancedQuery->productPerformance($from, $to, $perPage);
+        $performance = $this->advancedQuery->productPerformance(
+            $from,
+            $to,
+            $perPage,
+            $request->input('search'),
+            $request->input('sort_by'),
+            $request->input('sort_dir') ?? $request->input('sort_order')
+        );
 
         return view('reporting::admin.products.index', [
             'date_from' => $from,
