@@ -22,6 +22,10 @@ This API provides stateless customer authentication for mobile applications usin
 | [`/api/customer/login`](#4-customer-login) | `POST` | No | Authenticates customer credentials and returns JWT. |
 | [`/api/customer/me`](#5-get-profile-details) | `GET` | **Yes** | Retrieves authenticated customer profile details. |
 | [`/api/customer/logout`](#6-customer-logout) | `POST` | **Yes** | Invalidates the JWT access token and logs out the customer. |
+| [`/api/customer/forgot-password`](#7-request-forgot-password) | `POST` | No | Initiates forgot password flow by generating/sending reset OTP. |
+| [`/api/customer/forgot-password/verify`](#8-verify-forgot-password-otp) | `POST` | No | Verifies forgot password OTP and authorizes password reset. |
+| [`/api/customer/forgot-password/resend`](#9-resend-forgot-password-otp) | `POST` | No | Generates and resends a new forgot password OTP. |
+| [`/api/customer/forgot-password/reset`](#10-reset-password) | `POST` | No | Sets a new password for the customer after successful verification. |
 
 ---
 
@@ -347,9 +351,219 @@ None.
 
 ---
 
+### 7. Request Forgot Password
+
+Initiates the forgot password flow by validating the identifier (email or phone) and generating/sending a verification OTP.
+
+* **URL:** `/api/customer/forgot-password`
+* **Method:** `POST`
+* **Headers:**
+  * `Accept: application/json`
+  * `Content-Type: application/json`
+
+#### Request Parameters
+
+| Parameter | Type | Required | Rules & Description |
+| :--- | :--- | :--- | :--- |
+| `email_or_phone` | `string` | **Yes** | Registered email or phone number. |
+
+#### Example Request Payload
+```json
+{
+  "email_or_phone": "john.reset@example.com"
+}
+```
+
+#### Example Responses
+
+* **Success (200 OK):**
+  ```json
+  {
+    "success": true,
+    "message": "A verification code has been sent to your email.",
+    "data": {
+      "email_or_phone": "john.reset@example.com",
+      "is_email": true,
+      "verification_code": "583920",
+      "otp": "583920"
+    }
+  }
+  ```
+
+* **Validation Failure (422 Unprocessable Content):**
+  ```json
+  {
+    "success": false,
+    "message": "No account found with this email or phone number.",
+    "errors": {
+      "email_or_phone": [
+        "No account found with this email or phone number."
+      ]
+    }
+  }
+  ```
+
+---
+
+### 8. Verify Forgot Password OTP
+
+Verifies the OTP submitted for the customer and authorizes the password reset step.
+
+* **URL:** `/api/customer/forgot-password/verify`
+* **Method:** `POST`
+* **Headers:**
+  * `Accept: application/json`
+  * `Content-Type: application/json`
+
+#### Request Parameters
+
+| Parameter | Type | Required | Rules & Description |
+| :--- | :--- | :--- | :--- |
+| `email_or_phone` | `string` | **Yes** | Registered email or phone number. |
+| `otp` | `string` | **Semi** | Exact length of 6 digits. *Required if `verification_code` is missing.* |
+| `verification_code` | `string` | **Semi** | Exact length of 6 digits. *Required if `otp` is missing.* |
+
+#### Example Request Payload
+```json
+{
+  "email_or_phone": "john.reset@example.com",
+  "otp": "583920"
+}
+```
+
+#### Example Responses
+
+* **Success (200 OK):**
+  ```json
+  {
+    "success": true,
+    "message": "Email verified successfully! You can now choose a new password.",
+    "data": {
+      "email_or_phone": "john.reset@example.com"
+    }
+  }
+  ```
+
+* **Incorrect OTP (422 Unprocessable Content):**
+  ```json
+  {
+    "success": false,
+    "message": "The entered OTP is incorrect or has expired.",
+    "errors": {
+      "otp": [
+        "The entered OTP is incorrect or has expired."
+      ],
+      "verification_code": [
+        "The entered verification code is incorrect or has expired."
+      ]
+    }
+  }
+  ```
+
+---
+
+### 9. Resend Forgot Password OTP
+
+Generates and resends a new OTP. Follows the standard 5-minute resend cooldown.
+
+* **URL:** `/api/customer/forgot-password/resend`
+* **Method:** `POST`
+* **Headers:**
+  * `Accept: application/json`
+  * `Content-Type: application/json`
+
+#### Request Parameters
+
+| Parameter | Type | Required | Rules & Description |
+| :--- | :--- | :--- | :--- |
+| `email_or_phone` | `string` | **Yes** | Registered email or phone number. |
+
+#### Example Request Payload
+```json
+{
+  "email_or_phone": "john.reset@example.com"
+}
+```
+
+#### Example Responses
+
+* **Success (200 OK):**
+  ```json
+  {
+    "success": true,
+    "message": "A new OTP has been sent to your email.",
+    "data": {
+      "email_or_phone": "john.reset@example.com",
+      "is_email": true,
+      "verification_code": "830291",
+      "otp": "830291"
+    }
+  }
+  ```
+
+* **Rate Limited / Cooldown Active (429 Too Many Requests):**
+  ```json
+  {
+    "success": false,
+    "message": "Please wait 5 minute(s) before requesting a new OTP.",
+    "cooldown_remaining_seconds": 298
+  }
+  ```
+
+---
+
+### 10. Reset Password
+
+Resets the customer's password with the new provided password. Requires the OTP verification step to be completed first.
+
+* **URL:** `/api/customer/forgot-password/reset`
+* **Method:** `POST`
+* **Headers:**
+  * `Accept: application/json`
+  * `Content-Type: application/json`
+
+#### Request Parameters
+
+| Parameter | Type | Required | Rules & Description |
+| :--- | :--- | :--- | :--- |
+| `email_or_phone` | `string` | **Yes** | Registered email or phone number. |
+| `password` | `string` | **Yes** | Minimum 8 characters. Must match `password_confirmation`. |
+| `password_confirmation` | `string` | **Yes** | Must match `password` exactly. |
+
+#### Example Request Payload
+```json
+{
+  "email_or_phone": "john.reset@example.com",
+  "password": "newpassword123",
+  "password_confirmation": "newpassword123"
+}
+```
+
+#### Example Responses
+
+* **Success (200 OK):**
+  ```json
+  {
+    "success": true,
+    "message": "Your password has been reset successfully!",
+    "data": null
+  }
+  ```
+
+* **Error - Unauthorized Reset (403 Forbidden):**
+  ```json
+  {
+    "success": false,
+    "message": "Please verify your OTP code first."
+  }
+  ```
+
+---
+
 ## Development & Testing
 
-You can run the PHPUnit test suite validating all the routes, inputs, limits, and authentication states:
+You can run the PHPUnit test suites validating all the routes, inputs, limits, and authentication states:
 ```bash
 php artisan test --filter=CustomerApiAuthTest
+php artisan test --filter=CustomerForgotPasswordApiTest
 ```
