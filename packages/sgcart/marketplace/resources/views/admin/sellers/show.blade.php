@@ -180,7 +180,7 @@
             <div>
                 <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider leading-none">Settled Balance (Paid)</p>
                 <h4 class="text-lg font-bold text-indigo-600 dark:text-indigo-450 mt-1">₹{{ number_format($settledBalance, 2) }}</h4>
-                <p class="text-[9px] text-slate-450 mt-0.5">Fund payouts disbursed to vendor.</p>
+                <p class="text-[9px] text-slate-450 mt-0.5">Fund payouts disbursed to seller.</p>
             </div>
         </div>
     </div>
@@ -476,7 +476,7 @@
                                    class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-2 px-3 text-xs font-semibold focus:outline-none focus:border-blue-500 transition-colors">
                             <span class="absolute right-4 top-2 text-xs font-semibold text-slate-400">%</span>
                         </div>
-                        <p class="text-[9px] text-slate-400 leading-relaxed mt-0.5">Overrides the default global commission rate for all orders checked out from this vendor shop.</p>
+                        <p class="text-[9px] text-slate-400 leading-relaxed mt-0.5">Overrides the default global commission rate for all orders checked out from this seller shop.</p>
                         @error('commission_rate') <p class="text-rose-500 text-[10px] mt-1">{{ $message }}</p> @enderror
                     </div>
                     

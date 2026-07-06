@@ -1122,6 +1122,280 @@
                 });
             });
 
+            // Global Form Submit Loader
+            document.addEventListener('submit', (e) => {
+                if (e.defaultPrevented) return;
+
+                const form = e.target;
+                // Skip logout form
+                if (form.id === 'logoutForm') return;
+
+                const submitBtns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+                submitBtns.forEach(btn => {
+                    // Check if spinner is already added
+                    if (!btn.querySelector('.fa-spinner')) {
+                        const spinner = document.createElement('i');
+                        spinner.className = 'fa-solid fa-spinner fa-spin mr-2';
+                        btn.insertBefore(spinner, btn.firstChild);
+                    }
+
+                    btn.disabled = true;
+                    btn.style.pointerEvents = 'none';
+                    btn.style.opacity = '0.8';
+                });
+            });
+
+            // Global jQuery Inline Validation
+            $(document).ready(function() {
+                // Target all POST forms (including those with method spoofing)
+                const $forms = $('form').filter(function() {
+                    return this.id !== 'logoutForm' &&
+                           (($(this).attr('method') || '').toUpperCase() === 'POST' || $(this).find('input[name="_token"]').length > 0);
+                });
+
+                // Set novalidate to prevent default HTML5 browser tooltips
+                $forms.attr('novalidate', 'novalidate');
+
+                // Helper to get descriptive name for the field
+                function getFieldName($input) {
+                    const id = $input.attr('id');
+                    let labelText = '';
+
+                    // Try to find label by 'for' attribute
+                    if (id) {
+                        labelText = $(`label[for="${id}"]`).text().trim();
+                    }
+                    // Try to find closest label in parent container
+                    if (!labelText) {
+                        labelText = $input.closest('div').find('label').first().text().trim();
+                    }
+                    // Fall back to placeholder or name
+                    if (!labelText) {
+                        labelText = $input.attr('placeholder') || $input.attr('name') || 'Field';
+                    }
+
+                    // Clean up common label patterns
+                    labelText = labelText.replace(/[:*]/g, '').trim();
+                    if (labelText.toLowerCase().startsWith('new ')) {
+                        labelText = labelText.substring(4);
+                    }
+                    return labelText || 'Field';
+                }
+
+                // Helper to get or create error element
+                function getErrorElement($input) {
+                    let name = $input.attr('name') || $input.attr('id') || 'field';
+                    name = name.replace(/\[\]/g, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+
+                    // Locate existing or create new error sibling
+                    let $err = $input.siblings(`.js-error-${name}`);
+                    if ($err.length === 0) {
+                        $err = $(`<p class="js-error-${name} text-rose-500 text-xs mt-1.5 font-medium hidden"></p>`);
+
+                        // If input has a relative wrapper (e.g. password toggle), insert after the wrapper
+                        let $target = $input;
+                        if ($input.parent().hasClass('relative')) {
+                            $target = $input.parent();
+                        }
+                        $target.after($err);
+                    }
+                    return $err;
+                }
+
+                // Helper to display error
+                function showError($input, message) {
+                    const $err = getErrorElement($input);
+                    $err.text(message).removeClass('hidden');
+                    $input.addClass('border-rose-500 focus:border-rose-500 focus:ring-rose-500');
+                    $input.removeClass('border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500');
+
+                    // Hide Laravel server-side error if present
+                    $input.siblings('p.text-rose-500').not($err).addClass('hidden');
+                    if ($input.parent().hasClass('relative')) {
+                        $input.parent().siblings('p.text-rose-500').not($err).addClass('hidden');
+                    }
+                }
+
+                // Helper to clear error
+                function clearError($input) {
+                    const $err = getErrorElement($input);
+                    $err.text('').addClass('hidden');
+                    $input.removeClass('border-rose-500 focus:border-rose-500 focus:ring-rose-500');
+                    $input.addClass('border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-blue-500');
+
+                    // Clear Laravel server-side error if present
+                    $input.siblings('p.text-rose-500').not($err).addClass('hidden');
+                    if ($input.parent().hasClass('relative')) {
+                        $input.parent().siblings('p.text-rose-500').not($err).addClass('hidden');
+                    }
+                }
+
+                // Main validation routine for a single field
+                function validateField(inputElement) {
+                    const $input = $(inputElement);
+
+                    // Skip hidden, disabled, or CSRF/method token fields
+                    if ($input.is(':hidden') || $input.is(':disabled') ||
+                        $input.attr('type') === 'submit' || $input.attr('type') === 'button' ||
+                        ['/token', '_token', '_method'].includes($input.attr('name'))) {
+                        return true;
+                    }
+
+                    const type = $input.attr('type');
+                    const name = $input.attr('name');
+                    const value = $input.val();
+                    const isRequired = $input.prop('required') || $input.attr('required') !== undefined;
+                    const displayName = getFieldName($input);
+
+                    // Required field check
+                    if (isRequired) {
+                        if (type === 'checkbox' || type === 'radio') {
+                            const checkedName = $input.attr('name');
+                            if (checkedName) {
+                                const $group = $(`input[name="${checkedName}"]`);
+                                if (!$group.is(':checked')) {
+                                    showError($group.first(), `At least one ${displayName} is required.`);
+                                    return false;
+                                } else {
+                                    clearError($group.first());
+                                    return true;
+                                }
+                            }
+                        } else if (!value || value.trim() === '') {
+                            showError($input, `${displayName} is required.`);
+                            return false;
+                        }
+                    }
+
+                    // Email format validation
+                    if (type === 'email' && value && value.trim() !== '') {
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(value.trim())) {
+                            showError($input, `Please enter a valid email address.`);
+                            return false;
+                        }
+                    }
+
+                    // Password minimum length validation
+                    if (type === 'password' && value) {
+                        const minLen = parseInt($input.attr('minlength') || '8');
+                        if (value.length < minLen) {
+                            showError($input, `Password must be at least ${minLen} characters.`);
+                            return false;
+                        }
+                    }
+
+                    // Password confirmation matching validation
+                    if (name === 'password_confirmation' || $input.attr('id') === 'password_confirmation') {
+                        const $pwd = $input.closest('form').find('input[type="password"]').not($input).first();
+                        if ($pwd.length > 0 && value !== $pwd.val()) {
+                            showError($pwd.first(), `Passwords do not match.`);
+                            return false;
+                        }
+                    }
+
+                    // Number validation
+                    if (type === 'number' && value && value.trim() !== '') {
+                        const num = parseFloat(value);
+                        if (isNaN(num)) {
+                            showError($input, `Please enter a valid number.`);
+                            return false;
+                        }
+                        const min = $input.attr('min');
+                        if (min !== undefined && num < parseFloat(min)) {
+                            showError($input, `Value must be at least ${min}.`);
+                            return false;
+                        }
+                        const max = $input.attr('max');
+                        if (max !== undefined && num > parseFloat(max)) {
+                            showError($input, `Value must be at most ${max}.`);
+                            return false;
+                        }
+                    }
+
+                    clearError($input);
+                    return true;
+                }
+
+                // Validate fields inline on input, blur, or change
+                $forms.on('input blur change', 'input, select, textarea', function() {
+                    validateField(this);
+                });
+
+                // Block form submission and scroll to error if form is invalid
+                $forms.on('submit', function(e) {
+                    let isFormValid = true;
+                    let $firstInvalid = null;
+
+                    $(this).find('input, select, textarea').each(function() {
+                        const isValid = validateField(this);
+                        if (!isValid) {
+                            isFormValid = false;
+                            if (!$firstInvalid) {
+                                $firstInvalid = $(this);
+                            }
+                        }
+                    });
+
+                    if (!isFormValid) {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+
+                        // If loading spinner was added by the submit loader, remove it
+                        const submitBtns = $(this).find('button[type="submit"], input[type="submit"]');
+                        submitBtns.each(function() {
+                            $(this).find('.fa-spinner').remove();
+                            $(this).prop('disabled', false).css({
+                                'pointer-events': 'auto',
+                                'opacity': '1'
+                            });
+                        });
+
+                        if ($firstInvalid) {
+                            $('html, body').animate({
+                                scrollTop: $firstInvalid.offset().top - 120
+                            }, 300);
+                            $firstInvalid.focus();
+                        }
+                    }
+                });
+            });
+
+            // Password visibility toggle
+            document.querySelectorAll('input[type="password"]:not([name="card_cvv"])').forEach(input => {
+                let parent = input.parentNode;
+                if (!parent.classList.contains('relative')) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'relative w-full flex items-center';
+                    parent.insertBefore(wrapper, input);
+                    wrapper.appendChild(input);
+                    parent = wrapper;
+                } else {
+                    parent.classList.add('flex', 'items-center');
+                }
+
+                input.classList.add('pr-12');
+
+                const toggleBtn = document.createElement('button');
+                toggleBtn.type = 'button';
+                toggleBtn.className = 'absolute right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer border-none bg-transparent outline-none focus:outline-none flex items-center justify-center p-1 text-sm z-10';
+                toggleBtn.innerHTML = '<i class="fa-regular fa-eye"></i>';
+
+                parent.appendChild(toggleBtn);
+
+                toggleBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        toggleBtn.innerHTML = '<i class="fa-regular fa-eye-slash"></i>';
+                    } else {
+                        input.type = 'password';
+                        toggleBtn.innerHTML = '<i class="fa-regular fa-eye"></i>';
+                    }
+                });
+            });
+
             // Flash Toast triggers
             @if(session('success'))
                 showToast("{{ session('success') }}", 'success');

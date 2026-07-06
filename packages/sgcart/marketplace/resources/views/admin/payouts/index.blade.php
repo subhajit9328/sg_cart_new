@@ -63,7 +63,7 @@
         </div>
         <div class="p-5 flex items-center justify-between">
             <div>
-                <span class="text-[11px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Unverified Vendors</span>
+                <span class="text-[11px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Unverified Sellers</span>
                 <h4 class="text-2xl font-extrabold text-amber-600 dark:text-amber-500 mt-1.5">{{ $unverifiedCount }} {{ Str::plural('Seller', $unverifiedCount) }}</h4>
             </div>
             <span class="text-xs font-bold {{ $unverifiedCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400' }} flex items-center gap-1.5">
@@ -110,12 +110,12 @@
                             <x-select2 
                                 name="verification_filter" 
                                 id="verificationFilter" 
-                                placeholder="All Vendors"
+                                placeholder=""
                                 :compact="true"
                                 :allowClear="false"
                                 :searchable="false"
                             >
-                                <option value="all" selected>All Vendors</option>
+                                <option value="all" selected>All Sellers</option>
                                 <option value="verified">Verified Account</option>
                                 <option value="unverified">Verification Pending</option>
                             </x-select2>

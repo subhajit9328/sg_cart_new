@@ -19,8 +19,19 @@ class ProductController extends Controller
         $sortOrder = $request->input('sort_order') ?? $request->input('sort_dir') ?? 'desc';
         $allowedSortFields = ['name', 'sku', 'price', 'stock', 'status', 'created_at'];
 
-        $products = Product::with(['category', 'manufacturer', 'seller'])
-            ->whereNotIn('status', [\App\Enums\ProductStatus::PENDING_APPROVAL, \App\Enums\ProductStatus::REJECTED])
+        $query = Product::with(['category', 'manufacturer', 'seller'])
+            ->whereNotIn('status', [\App\Enums\ProductStatus::PENDING_APPROVAL, \App\Enums\ProductStatus::REJECTED]);
+
+        if (class_exists(\SGCart\Marketplace\Models\Seller::class)) {
+            $query->where(function ($q) {
+                $q->whereNull('seller_id')
+                  ->orWhereHas('seller', function ($sub) {
+                      $sub->where('status', 'approved');
+                  });
+            });
+        }
+
+        $products = $query
             ->when($request->search, fn ($q) => $q->where(fn($sq) => $sq->where('name', 'like', "%{$request->search}%")
                                                                          ->orWhere('sku', 'like', "%{$request->search}%")))
             ->when($request->category_id, fn ($q) => $q->where('category_id', $request->category_id))
