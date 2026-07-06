@@ -593,7 +593,7 @@
                 @if($order->discount > 0)
                 <div class="flex justify-between text-emerald-600 font-semibold">
                     <span>Discount</span>
-                    <span class="font-mono">-₹{{ number_format($order->discount, 2) }}</span>
+                    <span class="font-mono">₹{{ number_format($order->discount, 2) }}</span>
                 </div>
                 @endif
                 <div class="flex justify-between">

@@ -14,10 +14,44 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $dateRange = $request->input('date_range');
+        $startDate = null;
+        $endDate = null;
+
+        if ($dateRange) {
+            $parts = explode(' - ', $dateRange);
+            $startPart = isset($parts[0]) ? trim($parts[0]) : null;
+            $endPart = isset($parts[1]) ? trim($parts[1]) : $startPart;
+
+            try {
+                $startDate = $startPart ? \Carbon\Carbon::createFromFormat('d-m-Y h:i A', $startPart)->format('Y-m-d H:i:s') : null;
+                $endDate = $endPart ? \Carbon\Carbon::createFromFormat('d-m-Y h:i A', $endPart)->format('Y-m-d H:i:s') : $startDate;
+            } catch (\Exception $e) {
+                try {
+                    $startDate = $startPart ? \Carbon\Carbon::createFromFormat('d-m-Y H:i', $startPart)->format('Y-m-d H:i:s') : null;
+                    $endDate = $endPart ? \Carbon\Carbon::createFromFormat('d-m-Y H:i', $endPart)->format('Y-m-d H:i:s') : $startDate;
+                } catch (\Exception $ex) {
+                    try {
+                        $startDate = $startPart ? \Carbon\Carbon::createFromFormat('d-m-Y', $startPart)->startOfDay()->format('Y-m-d H:i:s') : null;
+                        $endDate = $endPart ? \Carbon\Carbon::createFromFormat('d-m-Y', $endPart)->endOfDay()->format('Y-m-d H:i:s') : $startDate;
+                    } catch (\Exception $ex2) {
+                        try {
+                            $startDate = $startPart ? \Carbon\Carbon::parse($startPart)->format('Y-m-d H:i:s') : null;
+                            $endDate = $endPart ? \Carbon\Carbon::parse($endPart)->format('Y-m-d H:i:s') : $startDate;
+                        } catch (\Exception $ex3) {
+                            $startDate = null;
+                            $endDate = null;
+                        }
+                    }
+                }
+            }
+        }
 
         // Scoped automatically by Eloquent global scope!
         $orders = Order::with(['items', 'customer'])
             ->when($search, fn($q) => $q->where('id', $search)->orWhereHas('customer', fn($c) => $c->where('name', 'like', "%{$search}%")))
+            ->when($startDate, fn($q) => $q->where('created_at', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->where('created_at', '<=', $endDate))
             ->latest()
             ->paginate(15)
             ->withQueryString();

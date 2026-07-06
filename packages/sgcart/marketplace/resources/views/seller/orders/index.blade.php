@@ -34,7 +34,11 @@
     clearBtnWrapperId="ordersClearBtnWrapper"
     :items="$orders"
     :headers="$headers"
+    :filterKeys="['date_range']"
 >
+    <x-slot name="filters">
+        <x-date-picker id="orderDateRangePicker" name="date_range" enableTime="true" time_24hr="false" dateFormat="d-m-Y h:i K" placeholder="Filter by date & time…" width="w-72" />
+    </x-slot>
     @forelse($orders as $order)
         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/15 transition-colors">
             <td class="px-5 py-3.5 font-semibold whitespace-nowrap text-slate-800 dark:text-slate-100">

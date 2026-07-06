@@ -1,6 +1,7 @@
 @extends('marketplace::layouts.seller')
 
 @section('title', 'My Earnings — Seller Portal')
+@section('loader_text', 'Updating statistics...')
 
 @section('content')
 <!-- Page Header -->
@@ -9,6 +10,12 @@
         <h1 class="font-display text-2xl font-bold">My Earnings</h1>
         <p class="text-sm text-slate-400 mt-0.5">Track your payouts, commissions, and revenue statistics.</p>
     </div>
+    <form id="commissionDateForm" action="{{ route('seller.commissions') }}" method="GET" class="flex items-center gap-2">
+        @if(request('search'))
+            <input type="hidden" name="search" value="{{ request('search') }}">
+        @endif
+        <x-date-picker id="commissionDateRangePicker" name="date_range" enableTime="false" dateFormat="d-m-Y" placeholder="Filter by date range…" width="w-60" />
+    </form>
 </div>
 
 <!-- Earnings Overview Cards -->
@@ -69,7 +76,13 @@
     clearBtnWrapperId="earningsClearBtnWrapper"
     :items="$ledger"
     :headers="$headers"
+    :filterKeys="['date_range']"
 >
+    <x-slot name="filters">
+        @if(request('date_range'))
+            <input type="hidden" name="date_range" value="{{ request('date_range') }}">
+        @endif
+    </x-slot>
     @forelse($ledger as $item)
         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/15 transition-colors">
             <td class="px-5 py-3.5 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
@@ -84,7 +97,7 @@
             </td>
             <td class="px-5 py-3.5 text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap font-medium">₹{{ number_format($item->subtotal, 2) }}</td>
             <td class="px-5 py-3.5 text-xs text-slate-550 dark:text-slate-450 whitespace-nowrap font-mono">{{ $item->commission_rate }}%</td>
-            <td class="px-5 py-3.5 text-xs text-rose-600 dark:text-rose-400 whitespace-nowrap font-medium">-₹{{ number_format($item->commission_amount, 2) }}</td>
+            <td class="px-5 py-3.5 text-xs text-rose-600 dark:text-rose-400 whitespace-nowrap font-medium">₹{{ number_format($item->commission_amount, 2) }}</td>
             <td class="px-5 py-3.5 text-xs text-emerald-600 dark:text-emerald-400 whitespace-nowrap font-bold">₹{{ number_format($item->seller_earning, 2) }}</td>
             <td class="px-5 py-3.5 whitespace-nowrap">
                 <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase {{ $item->status === 'allocated' || $item->status === 'paid' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400' : ($item->status === 'cancelled' ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400') }}">
@@ -99,3 +112,109 @@
     @endforelse
 </x-data-table>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const dateInput = document.getElementById('commissionDateRangePicker');
+        const searchInput = document.getElementById('earningSearchInput');
+        const dateForm = document.getElementById('commissionDateForm');
+
+        if (searchInput && dateForm) {
+            let hiddenSearch = dateForm.querySelector('input[name="search"]');
+            if (!hiddenSearch) {
+                hiddenSearch = document.createElement('input');
+                hiddenSearch.type = 'hidden';
+                hiddenSearch.name = 'search';
+                dateForm.appendChild(hiddenSearch);
+            }
+
+            // Sync on typing/changes to search input
+            searchInput.addEventListener('input', () => {
+                hiddenSearch.value = searchInput.value;
+            });
+            searchInput.addEventListener('change', () => {
+                hiddenSearch.value = searchInput.value;
+            });
+
+            // Also handle initial value
+            hiddenSearch.value = searchInput.value;
+        }
+
+        if (dateForm) {
+            dateForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                let hiddenSearch = dateForm.querySelector('input[name="search"]');
+                if (!hiddenSearch) {
+                    hiddenSearch = document.createElement('input');
+                    hiddenSearch.type = 'hidden';
+                    hiddenSearch.name = 'search';
+                    dateForm.appendChild(hiddenSearch);
+                }
+                if (searchInput) {
+                    hiddenSearch.value = searchInput.value;
+                }
+
+                const formData = new FormData(dateForm);
+                const params = new URLSearchParams();
+                for (const [key, value] of formData.entries()) {
+                    if (value.trim() !== '') {
+                        params.append(key, value);
+                    }
+                }
+                const queryString = params.toString();
+                const url = queryString ? `${dateForm.action}?${queryString}` : dateForm.action;
+
+                if (typeof window.showFullPageLoader === 'function') {
+                    window.showFullPageLoader();
+                }
+                window.location.href = url;
+            });
+        }
+
+        if (dateInput && searchInput) {
+            const searchForm = searchInput.form;
+            if (searchForm) {
+                let hiddenDate = searchForm.querySelector('input[name="date_range"]');
+                if (!hiddenDate) {
+                    hiddenDate = document.createElement('input');
+                    hiddenDate.type = 'hidden';
+                    hiddenDate.name = 'date_range';
+                    searchForm.appendChild(hiddenDate);
+                }
+
+                // Sync on date changes
+                dateInput.addEventListener('change', () => {
+                    hiddenDate.value = dateInput.value;
+                });
+                dateInput.addEventListener('input', () => {
+                    hiddenDate.value = dateInput.value;
+                });
+
+                // Handle flatpickr change trigger if any
+                const fp = dateInput._flatpickr;
+                if (fp) {
+                    fp.config.onChange.push(() => {
+                        hiddenDate.value = dateInput.value;
+                    });
+                } else {
+                    // Fallback in case flatpickr is not initialized yet
+                    setTimeout(() => {
+                        const fpLazy = dateInput._flatpickr;
+                        if (fpLazy) {
+                            fpLazy.config.onChange.push(() => {
+                                hiddenDate.value = dateInput.value;
+                            });
+                        }
+                    }, 500);
+                }
+
+                // Also handle initial value
+                hiddenDate.value = dateInput.value;
+            }
+        }
+    });
+</script>
+@endpush
+

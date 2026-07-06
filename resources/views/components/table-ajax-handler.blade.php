@@ -11,7 +11,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const tableWrapper = document.getElementById('{{ $tableId }}');
         const searchInput = @json($searchInputId) ? document.getElementById(@json($searchInputId)) : null;
-        const form = searchInput ? searchInput.form : (tableWrapper ? tableWrapper.closest('form') || document.querySelector('form[action]') : null);
+        const form = searchInput ? searchInput.form : (tableWrapper ? tableWrapper.closest('.relative')?.querySelector('form[action]') || tableWrapper.parentNode.querySelector('form[action]') : null);
         const refreshBtn = @json($refreshBtnId) ? document.getElementById(@json($refreshBtnId)) : null;
         const clearBtnId = @json($clearBtnId);
         const inlineClearBtn = document.getElementById('clearSearchInputBtn');
@@ -100,14 +100,20 @@
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const formData = new FormData(form);
-                const params = new URLSearchParams(formData);
-                const url = `${form.action}?${params.toString()}`;
+                const params = new URLSearchParams();
+                for (const [key, value] of formData.entries()) {
+                    if (value.trim() !== '') {
+                        params.append(key, value);
+                    }
+                }
+                const queryString = params.toString();
+                const url = queryString ? `${form.action}?${queryString}` : form.action;
                 updateTable(url);
             });
 
-            // Intercept select dropdown changes
+            // Intercept select dropdown changes and date input changes
             form.addEventListener('change', (e) => {
-                if (e.target.tagName === 'SELECT') {
+                if (e.target.tagName === 'SELECT' || (e.target.tagName === 'INPUT' && e.target.type === 'date')) {
                     form.dispatchEvent(new Event('submit'));
                 }
             });
@@ -167,11 +173,25 @@
                 const clearBtn = e.target.closest('#' + clearBtnId);
                 if (clearBtn) {
                     e.preventDefault();
+                    
+                    // If page-level query filters are active, do a full reload to reset all components
+                    const params = new URLSearchParams(window.location.search);
+                    const hasPageFilters = params.has('date_range') || params.has('start_date') || params.has('end_date');
+                    if (hasPageFilters) {
+                        if (typeof window.showFullPageLoader === 'function') {
+                            window.showFullPageLoader();
+                        }
+                        window.location.href = clearBtn.href;
+                        return;
+                    }
+
                     if (form) {
                         form.reset();
                         const inputs = form.querySelectorAll('input, select');
                         inputs.forEach(input => {
-                            if (input.type === 'text') input.value = '';
+                            if (input._flatpickr) input._flatpickr.clear();
+                            else if (input.type === 'text') input.value = '';
+                            else if (input.type === 'date') input.value = '';
                             else if (input.tagName === 'SELECT') input.selectedIndex = 0;
                         });
                     }
@@ -210,6 +230,18 @@
                 selects.forEach(select => {
                     const val = params.get(select.name) || '';
                     select.value = val;
+                });
+
+                // Sync text inputs (including Flatpickr) and date inputs
+                const textAndDateInputs = form.querySelectorAll('input');
+                textAndDateInputs.forEach(input => {
+                    if (input._flatpickr) {
+                        const val = params.get(input.name) || '';
+                        input._flatpickr.setDate(val, false);
+                    } else if (input.type === 'date') {
+                        const val = params.get(input.name) || '';
+                        input.value = val;
+                    }
                 });
             }
         });

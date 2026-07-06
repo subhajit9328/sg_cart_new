@@ -368,7 +368,7 @@
                 @php $heroPct = round(($product->price - $product->sale_price) / $product->price * 100); @endphp
                 <div class="pv-price-main sale">&#x20B9;{{ number_format($product->sale_price, 2) }}</div>
                 <div class="pv-price-orig">&#x20B9;{{ number_format($product->price, 2) }}</div>
-                <span class="pv-pill emerald" style="margin-top:6px;">-{{ $heroPct }}% OFF</span>
+                <span class="pv-pill emerald" style="margin-top:6px;">{{ $heroPct }}% OFF</span>
             @else
                 <div class="pv-price-main">&#x20B9;{{ number_format($product->price, 2) }}</div>
                 <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Base Price</div>

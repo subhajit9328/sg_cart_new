@@ -105,7 +105,7 @@
             </div>
             <div>
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Platform Fees</p>
-                <p class="font-display text-xl font-bold text-slate-800 dark:text-white mt-1 font-mono">-₹{{ number_format($totalCommission, 2) }}</p>
+                <p class="font-display text-xl font-bold text-slate-800 dark:text-white mt-1 font-mono">₹{{ number_format($totalCommission, 2) }}</p>
             </div>
         </div>
 
@@ -128,7 +128,6 @@
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
                 <div class="p-6 border-b border-slate-100 dark:border-slate-850 flex items-center justify-between">
                     <h3 class="font-display text-base font-bold text-slate-800 dark:text-white">Order Reference: {{ $order->order_number }}</h3>
-                    <span class="text-xs text-slate-400 font-mono">{{ $order->ulid }}</span>
                 </div>
                 
                 <div class="divide-y divide-slate-100 dark:divide-slate-850">
@@ -177,7 +176,7 @@
                                 <div class="mt-4 pt-3 border-t border-dashed border-slate-100 dark:border-slate-805 flex flex-wrap items-center justify-between text-xs gap-3">
                                     <div class="flex items-center gap-4 text-slate-400">
                                         <span>Commission Rate: <strong class="text-slate-600 dark:text-slate-300">{{ number_format($comm->commission_rate, 1) }}%</strong></span>
-                                        <span>Fee deducted: <strong class="text-rose-500 font-mono">-₹{{ number_format($comm->commission_amount, 2) }}</strong></span>
+                                        <span>Fee deducted: <strong class="text-rose-500 font-mono">₹{{ number_format($comm->commission_amount, 2) }}</strong></span>
                                     </div>
                                     <div class="text-emerald-600 dark:text-emerald-400 font-semibold">
                                         My Earnings: <span class="font-bold font-mono text-sm">₹{{ number_format($comm->seller_earning, 2) }}</span>
