@@ -37,7 +37,7 @@
 <div class="flex min-h-screen" id="appShell">
 
     <!-- ============ Sidebar ============ -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 flex flex-col -translate-x-full lg:translate-x-0 transition-all duration-200 border-r border-white/10">
+    <aside id="sidebar" class="fixed group inset-y-0 left-0 z-40 w-64 bg-slate-900 flex flex-col -translate-x-full lg:translate-x-0 transition-all duration-200 border-r border-white/10">
         <div class="h-16 flex items-center justify-between px-5 border-b border-white/10 flex-shrink-0 logo-container-admin">
             <a class="logo-admin" href="{{ route('admin.dashboard') }}">
                 <i class="fa-solid fa-cart-shopping logo-icon"></i>
