@@ -178,14 +178,21 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-    // Scroll active sidebar option into view
+    // Scroll active sidebar option into view instantly on page load without animated scroll
     window.addEventListener('DOMContentLoaded', () => {
         const activeOption = document.querySelector('.nav-link.active');
         if (activeOption) {
-            activeOption.scrollIntoView({
-                behavior: 'smooth',
-                block: 'nearest'
-            });
+            const container = activeOption.closest('nav');
+            if (container) {
+                const containerRect = container.getBoundingClientRect();
+                const optionRect = activeOption.getBoundingClientRect();
+                const padding = 20; // Padding to prevent option from being stuck to the extreme top/bottom
+                if (optionRect.top < containerRect.top + padding) {
+                    container.scrollTop -= (containerRect.top + padding - optionRect.top);
+                } else if (optionRect.bottom > containerRect.bottom - padding) {
+                    container.scrollTop += (optionRect.bottom - (containerRect.bottom - padding));
+                }
+            }
         }
     });
 

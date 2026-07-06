@@ -81,6 +81,7 @@
     @endforeach
 </div>
 
+<h2 class="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">Overview</h2>
 {{-- ── Dashboard Metric Cards ───────────────────────────────────────────── --}}
 <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 

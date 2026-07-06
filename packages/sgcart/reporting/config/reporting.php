@@ -16,6 +16,6 @@ return [
     | Detailed Orders Table — Items Per Page
     |--------------------------------------------------------------------------
     */
-    'per_page' => 25,
+    'per_page' => 15,
 
 ];
