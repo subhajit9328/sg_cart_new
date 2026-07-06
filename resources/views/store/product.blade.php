@@ -326,9 +326,8 @@
                                 @endforeach
                             </div>
                             <!-- Review Filter & Sorting Container -->
-                            @if($approvedReviews->isNotEmpty())
-                                <div class="col-span-2">
-
+                            <div class="col-span-2">
+                                @if($approvedReviews->isNotEmpty())
                                     <div class="mb-6">
                                         <h4 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-2.5">
                                             User reviews sorted by</h4>
@@ -351,461 +350,463 @@
                                             </button>
                                         </div>
                                     </div>
-                                    @endif
+                                @endif
 
-                                    <!-- Reviews Shimmer Placeholder -->
-                                    <div id="reviews-shimmer" class="space-y-6 hidden" style="display: none;">
-                                        <div
-                                            class="animate-pulse flex flex-col gap-3 pb-6 border-b border-slate-100 dark:border-slate-800/60">
-                                            <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4"></div>
-                                            <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-full"></div>
-                                            <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-5/6"></div>
-                                            <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/3 mt-2"></div>
-                                        </div>
-                                        <div
-                                            class="animate-pulse flex flex-col gap-3 pb-6 border-b border-slate-100 dark:border-slate-800/60">
-                                            <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4"></div>
-                                            <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-full"></div>
-                                            <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2 mt-2"></div>
-                                        </div>
+                                <!-- Reviews Shimmer Placeholder -->
+                                <div id="reviews-shimmer" class="space-y-6 hidden" style="display: none;">
+                                    <div
+                                        class="animate-pulse flex flex-col gap-3 pb-6 border-b border-slate-100 dark:border-slate-800/60">
+                                        <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4"></div>
+                                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-full"></div>
+                                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-5/6"></div>
+                                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/3 mt-2"></div>
                                     </div>
-
-                                    <!-- Reviews List Container -->
-                                    <div class="space-y-6" id="review-list-container">
-                                        @include('store.partials.reviews', ['reviewsData' => $reviewsData])
+                                    <div
+                                        class="animate-pulse flex flex-col gap-3 pb-6 border-b border-slate-100 dark:border-slate-800/60">
+                                        <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4"></div>
+                                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-full"></div>
+                                        <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2 mt-2"></div>
                                     </div>
                                 </div>
+
+                                <!-- Reviews List Container -->
+                                <div class="space-y-6" id="review-list-container">
+                                    @include('store.partials.reviews', ['reviewsData' => $reviewsData])
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- RELATED PRODUCTS -->
-            @if(isset($related) && count($related) > 0)
-                <div class="section related-products-section" style="margin-top:48px">
-                    <div class="section-header" style="margin-bottom:20px">
-                        <h2 class="section-title">Related Products</h2>
-                    </div>
+        </div>
+    <!-- RELATED PRODUCTS -->
+    @if(isset($related) && count($related) > 0)
+        <div class="section related-products-section" style="margin-top:48px">
+            <div class="section-header" style="margin-bottom:20px">
+                <h2 class="section-title">Related Products</h2>
+            </div>
 
-                    <!-- Slider wrapper -->
-                    <div class="related-slider-outer">
-                        <div class="related-slider pt-6 pb-15!" id="relatedSlider">
-                            @foreach($related as $rel)
-                                <div class="related-slide product-card"
-                                     onclick="window.location.href='{{ route('store.product', $rel['slug']) }}'">
-                                    <div class="product-card-img">
-                                        <img src="{{ $rel['img'] }}" alt="{{ $rel['name'] }}"/>
-                                        @php
-                                            $inWishlist = in_array($rel['id'], session('wishlist', []));
-                                        @endphp
-                                        <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}"
-                                                data-product-id="{{ $rel['id'] }}"
-                                                onclick="event.stopPropagation(); toggleWishlist(this)"
-                                                title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
-                                            <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
-                                        </button>
-                                    </div>
-                                    <div class="product-card-body">
-                                        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $rel['cat'] }}</p>
-                                        <h3 class="font-display font-bold text-sm mt-1 text-slate-800 line-clamp-1">{{ $rel['name'] }}</h3>
-                                        <div class="flex items-center gap-1.5 mt-2">
-                                            @if($rel['old'])
-                                                <span
-                                                    class="font-bold text-sm text-slate-900">₹{{ number_format($rel['price'], 2) }}</span>
-                                                <span
-                                                    class="text-xs text-slate-400 line-through">₹{{ number_format($rel['old'], 2) }}</span>
-                                            @else
-                                                <span
-                                                    class="font-bold text-sm text-slate-900">₹{{ number_format($rel['price'], 2) }}</span>
-                                            @endif
-                                        </div>
-                                    </div>
+            <!-- Slider wrapper -->
+            <div class="related-slider-outer">
+                <div class="related-slider pt-6 pb-15!" id="relatedSlider">
+                    @foreach($related as $rel)
+                        <div class="related-slide product-card"
+                             onclick="window.location.href='{{ route('store.product', $rel['slug']) }}'">
+                            <div class="product-card-img">
+                                <img src="{{ $rel['img'] }}" alt="{{ $rel['name'] }}"/>
+                                @php
+                                    $inWishlist = in_array($rel['id'], session('wishlist', []));
+                                @endphp
+                                <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}"
+                                        data-product-id="{{ $rel['id'] }}"
+                                        onclick="event.stopPropagation(); toggleWishlist(this)"
+                                        title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                                    <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
+                                </button>
+                            </div>
+                            <div class="product-card-body">
+                                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $rel['cat'] }}</p>
+                                <h3 class="font-display font-bold text-sm mt-1 text-slate-800 line-clamp-1">{{ $rel['name'] }}</h3>
+                                <div class="flex items-center gap-1.5 mt-2">
+                                    @if($rel['old'])
+                                        <span
+                                            class="font-bold text-sm text-slate-900">₹{{ number_format($rel['price'], 2) }}</span>
+                                        <span
+                                            class="text-xs text-slate-400 line-through">₹{{ number_format($rel['old'], 2) }}</span>
+                                    @else
+                                        <span
+                                            class="font-bold text-sm text-slate-900">₹{{ number_format($rel['price'], 2) }}</span>
+                                    @endif
                                 </div>
-                            @endforeach
+                            </div>
                         </div>
-
-                        <!-- Scroll arrow buttons -->
-                        <button class="related-arrow related-arrow-prev" id="relatedPrev" aria-label="Scroll left"
-                                onclick="scrollRelated(-1)">
-                            <i class="fa-solid fa-chevron-left"></i>
-                        </button>
-                        <button class="related-arrow related-arrow-next" id="relatedNext" aria-label="Scroll right"
-                                onclick="scrollRelated(1)">
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </button>
-                    </div>
+                    @endforeach
                 </div>
-                <style>
-                    .related-slider-outer {
-                        position: relative;
-                    }
 
-                    .related-slider {
-                        display: flex;
-                        gap: 20px;
-                        overflow-x: auto;
-                        scroll-behavior: smooth;
-                        -webkit-overflow-scrolling: touch;
-                        padding-bottom: 12px;
-                        scrollbar-width: thin;
-                        scrollbar-color: #cbd5e1 transparent;
-                    }
-
-                    .related-slider::-webkit-scrollbar {
-                        height: 5px;
-                    }
-
-                    .related-slider::-webkit-scrollbar-track {
-                        background: transparent;
-                    }
-
-                    .related-slider::-webkit-scrollbar-thumb {
-                        background: #cbd5e1;
-                        border-radius: 99px;
-                    }
-
-                    .related-slide {
-                        flex: 0 0 220px;
-                        min-width: 220px;
-                        cursor: pointer;
-                    }
-
-                    @media (max-width: 640px) {
-                        .related-slide {
-                            flex: 0 0 170px;
-                            min-width: 170px;
-                        }
-                    }
-
-                    .related-arrow {
-                        position: absolute;
-                        top: 50%;
-                        transform: translateY(-60%);
-                        width: 38px;
-                        height: 38px;
-                        border-radius: 50%;
-                        border: 1px solid #e2e8f0;
-                        background: #fff;
-                        box-shadow: 0 2px 8px rgba(0, 0, 0, .10);
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        cursor: pointer;
-                        z-index: 10;
-                        transition: background .2s, box-shadow .2s;
-                        color: #475569;
-                        font-size: 13px;
-                        padding: 0;
-                        line-height: 1;
-                    }
-
-                    .related-arrow:hover {
-                        background: #f8fafc;
-                        box-shadow: 0 4px 14px rgba(0, 0, 0, .14);
-                    }
-
-                    .related-arrow-prev {
-                        left: -18px;
-                    }
-
-                    .related-arrow-next {
-                        right: -18px;
-                    }
-
-                    .related-arrow.hidden {
-                        display: none;
-                    }
-                </style>
-                <script>
-                    (function () {
-                        const slider = document.getElementById('relatedSlider');
-                        const btnPrev = document.getElementById('relatedPrev');
-                        const btnNext = document.getElementById('relatedNext');
-                        const CARD_W = 240; // px to scroll per click
-
-                        function updateArrows() {
-                            const atStart = slider.scrollLeft <= 2;
-                            const atEnd = slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 2;
-                            btnPrev.classList.toggle('hidden', atStart);
-                            btnNext.classList.toggle('hidden', atEnd);
-                        }
-
-                        window.scrollRelated = function (dir) {
-                            slider.scrollBy({left: dir * CARD_W, behavior: 'smooth'});
-                        };
-
-                        slider.addEventListener('scroll', updateArrows, {passive: true});
-                        updateArrows(); // set initial state
-                    })();
-                </script>
-            @endif
+                <!-- Scroll arrow buttons -->
+                <button class="related-arrow related-arrow-prev" id="relatedPrev" aria-label="Scroll left"
+                        onclick="scrollRelated(-1)">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button class="related-arrow related-arrow-next" id="relatedNext" aria-label="Scroll right"
+                        onclick="scrollRelated(1)">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
         </div>
     </div>
-@endsection
-
-@section('scripts')
-    <script>
-        function changeImage(src, el) {
-            document.getElementById('mainProductImg').src = src;
-            document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-        }
-
-        function selectSize(val, el) {
-            document.getElementById('sizeInput').value = val;
-            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-        }
-
-        function selectColor(val, el) {
-            document.getElementById('colorInput').value = val;
-            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-        }
-
-        function adjQty(dir) {
-            const inp = document.getElementById('qtyInput');
-            if (!inp) return;
-            let val = parseInt(inp.value) + dir;
-            if (val < 1) val = 1;
-            inp.value = val;
-        }
-
-        function setSpecTab(name) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.spec-content').forEach(c => c.style.display = 'none');
-
-            event.target.classList.add('active');
-            document.getElementById(`spec-${name}`).style.display = 'block';
-            if (name === 'reviews') {
-                const urlParams = new URLSearchParams(window.location.search);
-                const filter = urlParams.get('review_filter') || 'helpful';
-                const page = parseInt(urlParams.get('review_page')) || 1;
-                fetchReviews(filter, page, true);
+        <style>
+            .related-slider-outer {
+                position: relative;
             }
-        }
 
-        // Zoom Image Feature
-        document.addEventListener('DOMContentLoaded', function () {
-            const gallery = document.querySelector('.pd-main-img');
-            const img = document.getElementById('mainProductImg');
-
-            if (gallery && img) {
-                // Reusable zoom coordinate calculation and scaling
-                function zoomMove(clientX, clientY) {
-                    const rect = gallery.getBoundingClientRect();
-                    const x = ((clientX - rect.left) / rect.width) * 100;
-                    const y = ((clientY - rect.top) / rect.height) * 100;
-
-                    // Clamp coordinates between 0% and 100%
-                    const clampedX = Math.max(0, Math.min(100, x));
-                    const clampedY = Math.max(0, Math.min(100, y));
-
-                    img.style.transformOrigin = `${clampedX}% ${clampedY}%`;
-                    img.style.transform = 'scale(2.5)';
-                }
-
-                function zoomReset() {
-                    img.style.transform = 'scale(1)';
-                    img.style.transformOrigin = 'center center';
-                }
-
-                // Mouse Events
-                gallery.addEventListener('mousemove', function (e) {
-                    zoomMove(e.clientX, e.clientY);
-                });
-
-                gallery.addEventListener('mouseleave', function () {
-                    zoomReset();
-                });
-
-                // Mobile Touch Events (Swipe to zoom & pan)
-                gallery.addEventListener('touchstart', function (e) {
-                    if (e.touches.length > 0) {
-                        zoomMove(e.touches[0].clientX, e.touches[0].clientY);
-                    }
-                }, {passive: true});
-
-                gallery.addEventListener('touchmove', function (e) {
-                    if (e.touches.length > 0) {
-                        // Prevent page scroll when interacting with zoom container
-                        if (e.cancelable) {
-                            e.preventDefault();
-                        }
-                        zoomMove(e.touches[0].clientX, e.touches[0].clientY);
-                    }
-                }, {passive: false});
-
-                gallery.addEventListener('touchend', function () {
-                    zoomReset();
-                });
-
-                gallery.addEventListener('touchcancel', function () {
-                    zoomReset();
-                });
+            .related-slider {
+                display: flex;
+                gap: 20px;
+                overflow-x: auto;
+                scroll-behavior: smooth;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 12px;
+                scrollbar-width: thin;
+                scrollbar-color: #cbd5e1 transparent;
             }
-        });
-    </script>
 
-    <!-- Photo Lightbox Modal -->
-    <div id="lightbox-modal"
-         class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/85 hidden"
-         onclick="closeLightbox()">
-        <button
-            class="absolute top-4 right-4 text-white hover:text-slate-350 bg-transparent border-none cursor-pointer outline-none">
-            <i class="fa-solid fa-xmark text-2xl"></i>
-        </button>
-        <img id="lightbox-image" src="" alt="Zoomed Review Image"
-             class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-             onclick="event.stopPropagation()">
-    </div>
+            .related-slider::-webkit-scrollbar {
+                height: 5px;
+            }
 
-    <script>
-        function openLightbox(src) {
-            const modal = document.getElementById('lightbox-modal');
-            const img = document.getElementById('lightbox-image');
-            img.src = src;
-            modal.classList.remove('hidden');
-        }
+            .related-slider::-webkit-scrollbar-track {
+                background: transparent;
+            }
 
-        function closeLightbox() {
-            const modal = document.getElementById('lightbox-modal');
-            modal.classList.add('hidden');
-        }
+            .related-slider::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 99px;
+            }
 
-        function showShimmer(callback) {
-            const listContainer = document.getElementById('review-list-container');
-            const shimmerContainer = document.getElementById('reviews-shimmer');
-            if (listContainer && shimmerContainer) {
-                listContainer.classList.add('hidden');
-                listContainer.style.display = 'none';
-                shimmerContainer.classList.remove('hidden');
-                shimmerContainer.style.display = 'block';
-                setTimeout(() => {
-                    shimmerContainer.classList.add('hidden');
-                    shimmerContainer.style.display = 'none';
-                    listContainer.classList.remove('hidden');
-                    listContainer.style.display = 'block';
-                    if (typeof callback === 'function') {
-                        callback();
-                    }
-                }, 500);
-            } else {
-                if (typeof callback === 'function') {
-                    callback();
+            .related-slide {
+                flex: 0 0 220px;
+                min-width: 220px;
+                cursor: pointer;
+            }
+
+            @media (max-width: 640px) {
+                .related-slide {
+                    flex: 0 0 170px;
+                    min-width: 170px;
                 }
             }
-        }
 
-        function filterReviews(type) {
-            fetchReviews(type, 1);
-        }
-
-        function changeReviewPage(page) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const currentFilter = urlParams.get('review_filter') || 'helpful';
-            fetchReviews(currentFilter, page);
-        }
-
-        function fetchReviews(filter, page, useShimmer = true) {
-            function executeFetch() {
-                const url = new URL(window.location.href);
-                url.searchParams.set('review_filter', filter);
-                url.searchParams.set('review_page', page);
-                url.searchParams.set('ajax', '1');
-
-                fetch(url.toString(), {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                    .then(response => response.text())
-                    .then(html => {
-                        const container = document.getElementById('review-list-container');
-                        if (container) {
-                            container.innerHTML = html;
-                        }
-
-                        // Update URL parameters in the address bar without reloading
-                        const displayUrl = new URL(window.location.href);
-                        displayUrl.searchParams.set('review_filter', filter);
-                        displayUrl.searchParams.set('review_page', page);
-                        window.history.pushState({
-                            review_filter: filter,
-                            review_page: page
-                        }, '', displayUrl.toString());
-
-                        // Update active filter button styles
-                        updateFilterButtonStyles(filter);
-                    })
-                    .catch(error => {
-                        console.error('Error fetching reviews:', error);
-                    });
+            .related-arrow {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-60%);
+                width: 38px;
+                height: 38px;
+                border-radius: 50%;
+                border: 1px solid #e2e8f0;
+                background: #fff;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, .10);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                z-index: 10;
+                transition: background .2s, box-shadow .2s;
+                color: #475569;
+                font-size: 13px;
+                padding: 0;
+                line-height: 1;
             }
 
-            if (useShimmer) {
-                showShimmer(executeFetch);
-            } else {
-                executeFetch();
+            .related-arrow:hover {
+                background: #f8fafc;
+                box-shadow: 0 4px 14px rgba(0, 0, 0, .14);
             }
-        }
 
-        function updateFilterButtonStyles(activeFilter) {
-            const container = document.getElementById('review-filter-container');
-            if (container) {
-                container.querySelectorAll('.review-filter-btn').forEach(btn => {
-                    const btnFilter = btn.getAttribute('data-filter');
-                    if (btnFilter === activeFilter) {
-                        btn.classList.add('border-amber-500', 'text-amber-500', 'bg-amber-50/50', 'dark:bg-amber-200/20');
-                        btn.classList.remove('border-slate-200', 'dark:border-slate-800', 'text-slate-655', 'dark:text-slate-400', 'bg-transparent');
-                    } else {
-                        btn.classList.remove('border-amber-500', 'text-amber-500', 'bg-amber-50/50', 'dark:bg-amber-200/20');
-                        btn.classList.add('border-slate-200', 'dark:border-slate-800', 'text-slate-655', 'dark:text-slate-400', 'bg-transparent');
-                    }
-                });
+            .related-arrow-prev {
+                left: -18px;
             }
-        }
 
-        // Listen for browser Back/Forward navigation
-        window.addEventListener('popstate', function (event) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const filter = urlParams.get('review_filter') || 'helpful';
-            const page = parseInt(urlParams.get('review_page')) || 1;
-
-            // Only fetch with shimmer if we are actually viewing the reviews tab
-            const reviewsTabContent = document.getElementById('spec-reviews');
-            if (reviewsTabContent && reviewsTabContent.style.display !== 'none') {
-                fetchReviews(filter, page, true);
-            } else {
-                fetchReviews(filter, page, false);
+            .related-arrow-next {
+                right: -18px;
             }
-        });
 
-        document.addEventListener('DOMContentLoaded', function () {
-            const urlParams = new URLSearchParams(window.location.search);
-            const filter = urlParams.get('review_filter') || 'helpful';
-            const page = parseInt(urlParams.get('review_page')) || 1;
+            .related-arrow.hidden {
+                display: none;
+            }
+        </style>
+        <script>
+            (function () {
+                const slider = document.getElementById('relatedSlider');
+                const btnPrev = document.getElementById('relatedPrev');
+                const btnNext = document.getElementById('relatedNext');
+                const CARD_W = 240; // px to scroll per click
 
-            // Sync filter buttons with url parameter on initial page load
-            updateFilterButtonStyles(filter);
+                function updateArrows() {
+                    const atStart = slider.scrollLeft <= 2;
+                    const atEnd = slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 2;
+                    btnPrev.classList.toggle('hidden', atStart);
+                    btnNext.classList.toggle('hidden', atEnd);
+                }
 
-            // If URL parameters indicate reviews are queried or we have a reviews hash, activate reviews tab
-            if (urlParams.has('review_filter') || urlParams.has('review_page') || window.location.hash === '#spec-reviews') {
-                const reviewsTabBtn = document.querySelector('button[onclick*="reviews"]');
-                if (reviewsTabBtn) {
-                    // Set tab active without full page transition
+                window.scrollRelated = function (dir) {
+                    slider.scrollBy({left: dir * CARD_W, behavior: 'smooth'});
+                };
+
+                slider.addEventListener('scroll', updateArrows, {passive: true});
+                updateArrows(); // set initial state
+            })();
+        </script>
+        @endif
+        </div>
+        </div>
+        @endsection
+
+        @section('scripts')
+            <script>
+                function changeImage(src, el) {
+                    document.getElementById('mainProductImg').src = src;
+                    document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
+                    el.classList.add('active');
+                }
+
+                function selectSize(val, el) {
+                    document.getElementById('sizeInput').value = val;
+                    document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+                    el.classList.add('active');
+                }
+
+                function selectColor(val, el) {
+                    document.getElementById('colorInput').value = val;
+                    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+                    el.classList.add('active');
+                }
+
+                function adjQty(dir) {
+                    const inp = document.getElementById('qtyInput');
+                    if (!inp) return;
+                    let val = parseInt(inp.value) + dir;
+                    if (val < 1) val = 1;
+                    inp.value = val;
+                }
+
+                function setSpecTab(name) {
                     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                     document.querySelectorAll('.spec-content').forEach(c => c.style.display = 'none');
-                    reviewsTabBtn.classList.add('active');
-                    const reviewsSpec = document.getElementById('spec-reviews');
-                    if (reviewsSpec) {
-                        reviewsSpec.style.display = 'block';
-                    }
-                    // Fetch reviews with shimmer
-                    fetchReviews(filter, page, true);
-                }
-            }
-        });
-    </script>
 
-    @includeIf('product-variants::storefront-variant-script')
-@endsection
+                    event.target.classList.add('active');
+                    document.getElementById(`spec-${name}`).style.display = 'block';
+                    if (name === 'reviews') {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const filter = urlParams.get('review_filter') || 'helpful';
+                        const page = parseInt(urlParams.get('review_page')) || 1;
+                        fetchReviews(filter, page, true);
+                    }
+                }
+
+                // Zoom Image Feature
+                document.addEventListener('DOMContentLoaded', function () {
+                    const gallery = document.querySelector('.pd-main-img');
+                    const img = document.getElementById('mainProductImg');
+
+                    if (gallery && img) {
+                        // Reusable zoom coordinate calculation and scaling
+                        function zoomMove(clientX, clientY) {
+                            const rect = gallery.getBoundingClientRect();
+                            const x = ((clientX - rect.left) / rect.width) * 100;
+                            const y = ((clientY - rect.top) / rect.height) * 100;
+
+                            // Clamp coordinates between 0% and 100%
+                            const clampedX = Math.max(0, Math.min(100, x));
+                            const clampedY = Math.max(0, Math.min(100, y));
+
+                            img.style.transformOrigin = `${clampedX}% ${clampedY}%`;
+                            img.style.transform = 'scale(2.5)';
+                        }
+
+                        function zoomReset() {
+                            img.style.transform = 'scale(1)';
+                            img.style.transformOrigin = 'center center';
+                        }
+
+                        // Mouse Events
+                        gallery.addEventListener('mousemove', function (e) {
+                            zoomMove(e.clientX, e.clientY);
+                        });
+
+                        gallery.addEventListener('mouseleave', function () {
+                            zoomReset();
+                        });
+
+                        // Mobile Touch Events (Swipe to zoom & pan)
+                        gallery.addEventListener('touchstart', function (e) {
+                            if (e.touches.length > 0) {
+                                zoomMove(e.touches[0].clientX, e.touches[0].clientY);
+                            }
+                        }, {passive: true});
+
+                        gallery.addEventListener('touchmove', function (e) {
+                            if (e.touches.length > 0) {
+                                // Prevent page scroll when interacting with zoom container
+                                if (e.cancelable) {
+                                    e.preventDefault();
+                                }
+                                zoomMove(e.touches[0].clientX, e.touches[0].clientY);
+                            }
+                        }, {passive: false});
+
+                        gallery.addEventListener('touchend', function () {
+                            zoomReset();
+                        });
+
+                        gallery.addEventListener('touchcancel', function () {
+                            zoomReset();
+                        });
+                    }
+                });
+            </script>
+
+            <!-- Photo Lightbox Modal -->
+            <div id="lightbox-modal"
+                 class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/85 hidden"
+                 onclick="closeLightbox()">
+                <button
+                    class="absolute top-4 right-4 text-white hover:text-slate-350 bg-transparent border-none cursor-pointer outline-none">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+                <img id="lightbox-image" src="" alt="Zoomed Review Image"
+                     class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+                     onclick="event.stopPropagation()">
+            </div>
+
+            <script>
+                function openLightbox(src) {
+                    const modal = document.getElementById('lightbox-modal');
+                    const img = document.getElementById('lightbox-image');
+                    img.src = src;
+                    modal.classList.remove('hidden');
+                }
+
+                function closeLightbox() {
+                    const modal = document.getElementById('lightbox-modal');
+                    modal.classList.add('hidden');
+                }
+
+                function showShimmer(callback) {
+                    const listContainer = document.getElementById('review-list-container');
+                    const shimmerContainer = document.getElementById('reviews-shimmer');
+                    if (listContainer && shimmerContainer) {
+                        listContainer.classList.add('hidden');
+                        listContainer.style.display = 'none';
+                        shimmerContainer.classList.remove('hidden');
+                        shimmerContainer.style.display = 'block';
+                        setTimeout(() => {
+                            shimmerContainer.classList.add('hidden');
+                            shimmerContainer.style.display = 'none';
+                            listContainer.classList.remove('hidden');
+                            listContainer.style.display = 'block';
+                            if (typeof callback === 'function') {
+                                callback();
+                            }
+                        }, 500);
+                    } else {
+                        if (typeof callback === 'function') {
+                            callback();
+                        }
+                    }
+                }
+
+                function filterReviews(type) {
+                    fetchReviews(type, 1);
+                }
+
+                function changeReviewPage(page) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const currentFilter = urlParams.get('review_filter') || 'helpful';
+                    fetchReviews(currentFilter, page);
+                }
+
+                function fetchReviews(filter, page, useShimmer = true) {
+                    function executeFetch() {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('review_filter', filter);
+                        url.searchParams.set('review_page', page);
+                        url.searchParams.set('ajax', '1');
+
+                        fetch(url.toString(), {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                            .then(response => response.text())
+                            .then(html => {
+                                const container = document.getElementById('review-list-container');
+                                if (container) {
+                                    container.innerHTML = html;
+                                }
+
+                                // Update URL parameters in the address bar without reloading
+                                const displayUrl = new URL(window.location.href);
+                                displayUrl.searchParams.set('review_filter', filter);
+                                displayUrl.searchParams.set('review_page', page);
+                                window.history.pushState({
+                                    review_filter: filter,
+                                    review_page: page
+                                }, '', displayUrl.toString());
+
+                                // Update active filter button styles
+                                updateFilterButtonStyles(filter);
+                            })
+                            .catch(error => {
+                                console.error('Error fetching reviews:', error);
+                            });
+                    }
+
+                    if (useShimmer) {
+                        showShimmer(executeFetch);
+                    } else {
+                        executeFetch();
+                    }
+                }
+
+                function updateFilterButtonStyles(activeFilter) {
+                    const container = document.getElementById('review-filter-container');
+                    if (container) {
+                        container.querySelectorAll('.review-filter-btn').forEach(btn => {
+                            const btnFilter = btn.getAttribute('data-filter');
+                            if (btnFilter === activeFilter) {
+                                btn.classList.add('border-amber-500', 'text-amber-500', 'bg-amber-50/50', 'dark:bg-amber-200/20');
+                                btn.classList.remove('border-slate-200', 'dark:border-slate-800', 'text-slate-655', 'dark:text-slate-400', 'bg-transparent');
+                            } else {
+                                btn.classList.remove('border-amber-500', 'text-amber-500', 'bg-amber-50/50', 'dark:bg-amber-200/20');
+                                btn.classList.add('border-slate-200', 'dark:border-slate-800', 'text-slate-655', 'dark:text-slate-400', 'bg-transparent');
+                            }
+                        });
+                    }
+                }
+
+                // Listen for browser Back/Forward navigation
+                window.addEventListener('popstate', function (event) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const filter = urlParams.get('review_filter') || 'helpful';
+                    const page = parseInt(urlParams.get('review_page')) || 1;
+
+                    // Only fetch with shimmer if we are actually viewing the reviews tab
+                    const reviewsTabContent = document.getElementById('spec-reviews');
+                    if (reviewsTabContent && reviewsTabContent.style.display !== 'none') {
+                        fetchReviews(filter, page, true);
+                    } else {
+                        fetchReviews(filter, page, false);
+                    }
+                });
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const filter = urlParams.get('review_filter') || 'helpful';
+                    const page = parseInt(urlParams.get('review_page')) || 1;
+
+                    // Sync filter buttons with url parameter on initial page load
+                    updateFilterButtonStyles(filter);
+
+                    // If URL parameters indicate reviews are queried or we have a reviews hash, activate reviews tab
+                    if (urlParams.has('review_filter') || urlParams.has('review_page') || window.location.hash === '#spec-reviews') {
+                        const reviewsTabBtn = document.querySelector('button[onclick*="reviews"]');
+                        if (reviewsTabBtn) {
+                            // Set tab active without full page transition
+                            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                            document.querySelectorAll('.spec-content').forEach(c => c.style.display = 'none');
+                            reviewsTabBtn.classList.add('active');
+                            const reviewsSpec = document.getElementById('spec-reviews');
+                            if (reviewsSpec) {
+                                reviewsSpec.style.display = 'block';
+                            }
+                            // Fetch reviews with shimmer
+                            fetchReviews(filter, page, true);
+                        }
+                    }
+                });
+            </script>
+
+            @includeIf('product-variants::storefront-variant-script')
+        @endsection
