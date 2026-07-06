@@ -646,6 +646,24 @@
                 <span class="sidebar-text">My Earnings</span>
             </a>
 
+            <a href="{{ route('seller.payouts') }}" class="nav-link {{ Request::is('seller/payouts*') ? 'active' : '' }}" data-tooltip="Payouts">
+                <i class="fa-solid fa-money-bill-transfer"></i>
+                <span class="sidebar-text">Payout History</span>
+            </a>
+
+            <a href="{{ route('seller.account-details') }}" class="nav-link {{ Request::is('seller/account-details*') ? 'active' : '' }}" data-tooltip="Payment Account">
+                <i class="fa-solid fa-building-columns"></i>
+                <span class="sidebar-text flex items-center justify-between w-full">
+                    <span>Payment Account</span>
+                    @if(auth('seller')->user() && auth('seller')->user()->account_verification_status === 'unsubmitted')
+                        <span class="flex h-2 w-2 relative ml-1.5 flex-shrink-0">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500" title="Setup Required"></span>
+                        </span>
+                    @endif
+                </span>
+            </a>
+
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Catalogue</p>
 
             <a href="{{ route('seller.products.index') }}" class="nav-link {{ Request::is('seller/products*') ? 'active' : '' }}" data-tooltip="Products">
@@ -676,19 +694,22 @@
         
         <!-- Topbar -->
         <header id="topbar" class="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 px-4 lg:px-6 z-20 transition-all duration-200">
-            <button id="sidebarToggleBtn" class="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex-shrink-0">
+            <button id="sidebarToggleBtn" class="w-10 h-10 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex-shrink-0 border-none outline-none focus:outline-none focus:ring-0">
                 <i class="fa-solid fa-bars"></i>
             </button>
             
             <div class="flex items-center gap-2 ml-auto">
                 <!-- Theme Toggle -->
-                <button id="themeToggleBtn" class="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                <button id="themeToggleBtn" class="w-10 h-10 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border-none outline-none focus:outline-none focus:ring-0">
                     <i class="fa-solid fa-moon" id="themeIcon"></i>
                 </button>
 
+                <!-- Dynamic Notification Dropdown -->
+                <x-notification-dropdown />
+
                 <!-- User Dropdown Menu -->
                 <div class="relative">
-                    <button id="userMenuBtn" class="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <button id="userMenuBtn" class="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 border-none outline-none focus:outline-none focus:ring-0">
                         <div class="w-8 h-8 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold text-xs uppercase">
                             {{ substr(auth('seller')->user()->name, 0, 2) }}
                         </div>
@@ -705,6 +726,7 @@
                         <a href="{{ route('seller.dashboard') }}" class="block px-3 py-2 text-slate-700 dark:text-slate-350 hover:bg-slate-55 dark:hover:bg-slate-700"><i class="fa-solid fa-chart-pie mr-2 w-4"></i>Dashboard</a>
                         @endif
                         @if(auth('seller')->user()->status->value === 'approved')
+                        <a href="{{ route('seller.account-details') }}" class="block px-3 py-2 text-slate-700 dark:text-slate-350 hover:bg-slate-55 dark:hover:bg-slate-700"><i class="fa-solid fa-building-columns mr-2 w-4"></i>Payment Account</a>
                         <a href="{{ route('seller.products.index') }}" class="block px-3 py-2 text-slate-700 dark:text-slate-350 hover:bg-slate-55 dark:hover:bg-slate-700"><i class="fa-solid fa-box-open mr-2 w-4"></i>My Products</a>
                         @endif
                         <hr class="my-1 border-slate-200 dark:border-slate-700">

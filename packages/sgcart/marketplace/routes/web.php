@@ -40,6 +40,14 @@ Route::middleware(['web', 'auth:seller', 'seller.onboarded'])->prefix('seller')-
         Route::resource('products', SellerProductController::class);
         Route::resource('orders', SellerOrderController::class)->only(['index', 'show']);
         Route::get('/commissions', [SellerCommissionController::class, 'index'])->name('commissions');
+        Route::get('/account-details', [SellerCommissionController::class, 'showAccountDetails'])->name('account-details');
+        Route::post('/account-details', [SellerCommissionController::class, 'updateAccountDetails'])->name('account-details.update');
+        Route::get('/payouts', [SellerCommissionController::class, 'payouts'])->name('payouts');
+
+        // Notifications
+        Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markRead'])->name('notifications.read');
+        Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('notifications.read-all');
 
         // Product Variant Management Endpoints (copied from SGCart\ProductVariants package for Sellers)
         if (class_exists(\SGCart\ProductVariants\Http\Controllers\VariantController::class)) {
@@ -64,6 +72,12 @@ Route::middleware(['web', 'auth'])->prefix('admin')->name('admin.')->group(funct
         Route::post('/sellers/{seller}/suspend', [AdminSellerController::class, 'suspend'])->name('sellers.suspend');
         Route::post('/sellers/{seller}/reject', [AdminSellerController::class, 'reject'])->name('sellers.reject');
         Route::post('/sellers/{seller}/update-commission', [AdminSellerController::class, 'updateCommission'])->name('sellers.update-commission');
+        Route::post('/sellers/{seller}/approve-account', [AdminSellerController::class, 'approveAccount'])->name('sellers.approve-account');
+        Route::post('/sellers/{seller}/reject-account', [AdminSellerController::class, 'rejectAccount'])->name('sellers.reject-account');
+        Route::post('/sellers/{seller}/allow-account-edit', [AdminSellerController::class, 'allowAccountEdit'])->name('sellers.allow-account-edit');
+        Route::post('/sellers/{seller}/payout', [AdminSellerController::class, 'recordPayout'])->name('sellers.payout');
+        Route::get('/payouts', [AdminSellerController::class, 'payoutsList'])->name('payouts.index');
+        Route::post('/payouts/bulk', [AdminSellerController::class, 'bulkPayout'])->name('payouts.bulk');
 
         // Product Approvals
         Route::get('/product-approvals', [AdminProductApprovalController::class, 'index'])->name('products.approvals');

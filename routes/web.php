@@ -11,6 +11,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\ProfilePictureController;
 use App\Http\Controllers\StoreController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 // Storefront Frontend Routes
@@ -136,6 +137,10 @@ Route::prefix('admin')->group(function () {
                 Route::post('bulk-upload', [ProductController::class, 'bulkUpload'])->name('bulk-upload');
                 Route::delete('image/{productImage}', [ProductController::class, 'deleteImage'])->name('delete-image');
             });
+            // Notifications
+            Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+            Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+            Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
         });
     });
 });

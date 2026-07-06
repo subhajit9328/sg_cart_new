@@ -19,6 +19,19 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('alternate_phone')->nullable();
+            $table->enum('address_type', ['office', 'work', 'other'])->default('work');
+            $table->string('landmark')->nullable();
+            $table->boolean('shipping_and_billing_same')->default(true);
+            $table->string('billing_first_name')->nullable();
+            $table->string('billing_last_name')->nullable();
+            $table->string('billing_address')->nullable();
+            $table->string('billing_city')->nullable();
+            $table->string('billing_state')->nullable();
+            $table->string('billing_zip')->nullable();
+            $table->string('billing_country')->nullable();
+            $table->string('billing_phone')->nullable();
             $table->string('address');
             $table->string('city');
             $table->string('state')->nullable();
@@ -28,7 +41,7 @@ return new class extends Migration
             $table->decimal('tax', 10, 2);
             $table->decimal('discount', 10, 2)->default(0);
             $table->decimal('total', 10, 2);
-            $table->enum('status', ['Processing', 'Delivered', 'Shipped', 'Cancelled'])->default('Processing');
+            $table->enum('status', ['New Order', 'Processed', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Processing'])->default('New Order');
             $table->timestamps();
         });
     }

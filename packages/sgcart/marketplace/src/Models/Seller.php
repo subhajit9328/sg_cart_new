@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use App\Models\Product;
 
+use Illuminate\Notifications\Notifiable;
+
 class Seller extends Authenticatable
 {
-    use SoftDeletes, HasUlids;
+    use SoftDeletes, HasUlids, Notifiable;
 
     protected $fillable = [
         'ulid',
@@ -24,7 +26,9 @@ class Seller extends Authenticatable
         'status',
         'suspension_reason',
         'commission_rate',
-        'bank_details',
+        'account_details',
+        'account_verification_status',
+        'account_rejection_reason',
         'approved_at',
         'approved_by',
     ];
@@ -41,6 +45,7 @@ class Seller extends Authenticatable
             'approved_at' => 'datetime',
             'commission_rate' => 'decimal:2',
             'status' => \App\Enums\SellerStatus::class,
+            'account_details' => 'array',
         ];
     }
 
@@ -66,6 +71,22 @@ class Seller extends Authenticatable
     public function products()
     {
         return $this->hasMany(Product::class, 'seller_id');
+    }
+
+    /**
+     * Relationship to payouts sent to the seller.
+     */
+    public function payouts()
+    {
+        return $this->hasMany(SellerPayout::class);
+    }
+
+    /**
+     * Relationship to commissions earned by the seller.
+     */
+    public function commissions()
+    {
+        return $this->hasMany(SellerCommission::class);
     }
 
     /**

@@ -157,10 +157,27 @@ class MarketplaceServiceProvider extends ServiceProvider
             if ($isSellerPortal && auth('seller')->check()) {
                 $product->seller_id = auth('seller')->id();
                 
-                // Force status to pending_approval on creation or if price/title updates occur
-                if (!$product->exists || $product->isDirty('status') || $product->isDirty('price') || $product->isDirty('name')) {
+                // Get the status the seller is trying to set
+                $targetStatus = $product->status;
+
+                if ($targetStatus === \App\Enums\ProductStatus::ACTIVE || $targetStatus === 'active') {
+                    // Seller wants it active/live, so it needs admin approval
                     $product->status = \App\Enums\ProductStatus::PENDING_APPROVAL;
                     $product->rejection_reason = null;
+                } elseif (!$product->exists) {
+                    // For new products, if not marked active, respect seller's draft/inactive choice
+                } else {
+                    // For existing products, if seller updates name or price and current status in DB is active/pending/rejected,
+                    // we reset status to pending_approval (unless they explicitly selected draft/inactive).
+                    $currentStatusInDb = $product->getOriginal('status');
+                    if (in_array($currentStatusInDb, [\App\Enums\ProductStatus::ACTIVE, \App\Enums\ProductStatus::PENDING_APPROVAL, \App\Enums\ProductStatus::REJECTED])) {
+                        if ($product->isDirty('price') || $product->isDirty('name')) {
+                            if ($targetStatus !== \App\Enums\ProductStatus::DRAFT && $targetStatus !== \App\Enums\ProductStatus::INACTIVE) {
+                                $product->status = \App\Enums\ProductStatus::PENDING_APPROVAL;
+                                $product->rejection_reason = null;
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -198,16 +215,28 @@ class MarketplaceServiceProvider extends ServiceProvider
             }
         });
 
-        // 6. Cancel commissions if order is cancelled
+        // 6. Transition commissions based on order status changes
         Order::updated(function ($order) {
             try {
                 $statusStr = is_object($order->status) ? ($order->status->value ?? $order->status->name) : $order->status;
                 $originalStatus = $order->getOriginal('status');
                 $originalStatusStr = is_object($originalStatus) ? ($originalStatus->value ?? $originalStatus->name) : $originalStatus;
 
-                if ($statusStr === 'Cancelled' && $originalStatusStr !== 'Cancelled') {
+                if ($statusStr === 'Delivered' && $originalStatusStr !== 'Delivered') {
+                    // Mark pending commissions as allocated
                     SellerCommission::where('order_id', $order->id)
+                        ->where('status', 'pending')
+                        ->update(['status' => 'allocated']);
+                } elseif ($statusStr === 'Cancelled' && $originalStatusStr !== 'Cancelled') {
+                    // Mark non-paid commissions as cancelled
+                    SellerCommission::where('order_id', $order->id)
+                        ->where('status', '!=', 'paid')
                         ->update(['status' => 'cancelled']);
+                } elseif ($statusStr !== 'Delivered' && $statusStr !== 'Cancelled' && $originalStatusStr === 'Delivered') {
+                    // If order status is reverted from Delivered, move allocated commissions back to pending
+                    SellerCommission::where('order_id', $order->id)
+                        ->where('status', 'allocated')
+                        ->update(['status' => 'pending']);
                 }
             } catch (\Exception $e) {
                 // Silence update errors

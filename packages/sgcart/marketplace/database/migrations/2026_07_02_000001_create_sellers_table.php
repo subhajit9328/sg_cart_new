@@ -22,10 +22,12 @@ return new class extends Migration
             $table->string('shop_slug')->nullable()->unique();
             $table->text('shop_description')->nullable();
             $table->text('address')->nullable();
-            $table->string('status')->default('pending'); // pending, approved, suspended, inactive
+            $table->enum('status', ['pending_onboarding', 'pending', 'approved', 'suspended', 'rejected'])->default('pending');
             $table->text('suspension_reason')->nullable();
             $table->decimal('commission_rate', 5, 2)->nullable(); // Overrides default commission if set
-            $table->text('bank_details')->nullable();
+            $table->json('account_details')->nullable();
+            $table->enum('account_verification_status', ['unsubmitted', 'pending', 'verified', 'rejected'])->default('unsubmitted');
+            $table->text('account_rejection_reason')->nullable();
             $table->timestamp('approved_at')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->rememberToken();

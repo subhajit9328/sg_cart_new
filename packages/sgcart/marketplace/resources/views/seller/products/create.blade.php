@@ -47,7 +47,7 @@
         <h2 class="font-semibold text-sm font-display" id="cardTitle">Enter Product Specifications & Details</h2>
     </div>
 
-    <form method="POST" action="{{ route('seller.products.store') }}" enctype="multipart/form-data" class="p-4 sm:p-6 space-y-6 sm:space-y-8">
+    <form id="productCreateForm" method="POST" action="{{ route('seller.products.store') }}" enctype="multipart/form-data" class="p-4 sm:p-6 space-y-6 sm:space-y-8">
         @csrf
 
         <div id="detailsTabContent" class="tab-content space-y-8">
@@ -443,6 +443,20 @@ function removeNewImage(id) {
             switchTab(activeTab);
         } else {
             switchTab('details');
+        }
+
+        // Show submit loader on form submit
+        const createForm = document.getElementById('productCreateForm');
+        if (createForm) {
+            createForm.addEventListener('submit', function() {
+                const btn = createForm.querySelector('button[type="submit"]');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.7';
+                    btn.style.cursor = 'not-allowed';
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Saving...';
+                }
+            });
         }
     });
 </script>

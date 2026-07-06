@@ -139,9 +139,9 @@
 
                         <!-- Address -->
                         <div class="md:col-span-2">
-                            <label for="address" class="block text-slate-700 dark:text-slate-300 text-xs font-semibold uppercase tracking-wider mb-2">Business Address</label>
-                            <textarea name="address" id="address" rows="3" required
-                                class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl py-3 px-4 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none transition-all resize-none font-sans"
+                            <label for="address" class="block text-slate-700 dark:text-slate-300 text-xs font-semibold uppercase tracking-wider mb-2">Business Address <span class="text-slate-400 font-normal">(Optional)</span></label>
+                            <textarea name="address" id="address" rows="3"
+                                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl py-3 px-4 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none transition-all resize-none font-sans"
                                 placeholder="Enter your physical store or warehouse address...">{{ old('address', $seller->address) }}</textarea>
                             <p class="error-address text-rose-500 text-xs mt-1.5 font-medium hidden"></p>
                         </div>
@@ -215,10 +215,6 @@
         }
 
         function validateAddress() {
-            if (!$address.val().trim()) {
-                showError($address, 'Address is required.');
-                return false;
-            }
             clearError($address);
             return true;
         }

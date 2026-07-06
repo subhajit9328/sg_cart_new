@@ -766,6 +766,17 @@
             return false;
         }
 
+        // Show submit loader on Save Variant Settings button
+        if (event && event.target) {
+            const btn = event.target.querySelector('button[type="submit"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.style.opacity = '0.7';
+                btn.style.cursor = 'not-allowed';
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Saving...';
+            }
+        }
+
         return true;
     }
 

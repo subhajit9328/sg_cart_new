@@ -45,8 +45,8 @@
                     @if($m->logo)
                         <img src="{{ Storage::url($m->logo) }}" class="w-8 h-8 object-cover rounded-lg border border-slate-200 dark:border-slate-800 bg-white">
                     @else
-                        <div class="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-[9px] text-slate-400 font-bold border border-slate-200 dark:border-slate-700/50">
-                            {{ strtoupper(substr($m->name, 0, 2)) }}
+                        <div class="w-8 h-8 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center text-xs font-bold border border-blue-100 dark:border-blue-900/50 select-none">
+                            {{ \App\Helpers\AvatarHelper::getInitials($m->name) }}
                         </div>
                     @endif
                     <span>{{ $m->name }}</span>

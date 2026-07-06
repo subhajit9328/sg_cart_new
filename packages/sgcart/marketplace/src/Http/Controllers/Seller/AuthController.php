@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use SGCart\Marketplace\Mail\SellerOtpMail;
 use SGCart\Marketplace\Mail\SellerOnboardingCompletedMail;
+use App\Helpers\NotificationHelper;
 
 class AuthController extends Controller
 {
@@ -315,7 +316,7 @@ class AuthController extends Controller
         $request->validate([
             'shop_name' => ['required', 'string', 'max:255', 'unique:sellers,shop_name,' . $seller->id],
             'shop_description' => ['nullable', 'string', 'max:1000'],
-            'address' => ['required', 'string', 'max:1000'],
+            'address' => ['nullable', 'string', 'max:1000'],
             'phone_no' => ['required', 'string', 'max:20'], // Contact Number
         ]);
 
@@ -327,6 +328,14 @@ class AuthController extends Controller
             'phone_no' => $request->phone_no,
             'status' => 'pending', // change status to pending admin approval
         ]);
+
+        NotificationHelper::sendToAdmin(
+            'New Shop Onboarded',
+            "The seller '{$seller->name}' has completed onboarding for shop '{$request->shop_name}' and is awaiting approval.",
+            route('admin.sellers.show', $seller->ulid),
+            'product',
+            'fa-store'
+        );
 
         if ($seller->email && !str_starts_with($seller->email, 'temp_')) {
             try {

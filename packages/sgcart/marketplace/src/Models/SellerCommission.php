@@ -19,6 +19,7 @@ class SellerCommission extends Model
         'commission_amount',
         'seller_earning',
         'status',
+        'seller_payout_id',
     ];
 
     protected function casts(): array
@@ -48,5 +49,13 @@ class SellerCommission extends Model
     public function seller()
     {
         return $this->belongsTo(Seller::class, 'seller_id');
+    }
+
+    /**
+     * Relationship to the payout record that settled this commission.
+     */
+    public function payout()
+    {
+        return $this->belongsTo(SellerPayout::class, 'seller_payout_id');
     }
 }

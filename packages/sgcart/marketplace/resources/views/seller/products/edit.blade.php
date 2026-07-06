@@ -47,7 +47,7 @@
         <h2 class="font-semibold text-sm font-display" id="cardTitle">Update Product Information</h2>
     </div>
 
-    <form method="POST" action="{{ route('seller.products.update', $product->id) }}" enctype="multipart/form-data">
+    <form id="productEditForm" method="POST" action="{{ route('seller.products.update', $product->id) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -618,6 +618,20 @@ function removeNewImage(id) {
             switchTab(activeTab);
         } else {
             switchTab('details');
+        }
+
+        // Show submit loader on form submit
+        const editForm = document.getElementById('productEditForm');
+        if (editForm) {
+            editForm.addEventListener('submit', function() {
+                const btn = editForm.querySelector('button[type="submit"]');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.7';
+                    btn.style.cursor = 'not-allowed';
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Saving...';
+                }
+            });
         }
     });
 </script>

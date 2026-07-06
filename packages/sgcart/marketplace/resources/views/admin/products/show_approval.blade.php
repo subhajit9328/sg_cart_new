@@ -370,7 +370,7 @@
                         </div>
                     </div>
 
-                    <div class="pt-4 border-t border-slate-150 dark:border-slate-800/60 space-y-3 text-xs">
+                    <div class="pt-4 border-t border-slate-200 dark:border-slate-800/60 space-y-3 text-xs">
                         <div class="flex justify-between items-center">
                             <span class="text-slate-400 font-medium"><i class="fa-regular fa-user mr-1.5 w-3.5 text-center"></i>Shop Owner</span>
                             <span class="font-semibold text-slate-700 dark:text-slate-300">{{ $product->seller->name }}</span>

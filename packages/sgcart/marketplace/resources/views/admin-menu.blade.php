@@ -25,6 +25,11 @@
     <span class="sidebar-text">Platform Revenue</span>
 </a>
 
+<a href="{{ route('admin.payouts.index') }}" class="nav-link {{ Request::is('admin/payouts*') ? 'active' : '' }}" data-tooltip="Payouts">
+    <i class="fa-solid fa-money-bill-transfer"></i>
+    <span class="sidebar-text">Seller Payouts</span>
+</a>
+
 @pushOnce('styles')
 <style>
     @keyframes pulse-subtle {

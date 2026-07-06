@@ -106,13 +106,34 @@ class ProductController extends Controller
             return $product;
         });
 
+        $seller = auth('seller')->user();
+        if ($seller && $product->status === \App\Enums\ProductStatus::PENDING_APPROVAL) {
+            try {
+                \App\Helpers\NotificationHelper::sendToAdmin(
+                    'New Product Submitted',
+                    "Seller '{$seller->shop_name}' has submitted a new product '{$product->name}' for review.",
+                    route('admin.products.approvals'),
+                    'product',
+                    'fa-box-open'
+                );
+            } catch (\Exception $e) {
+                \Log::error('Failed to notify admin of new product: ' . $e->getMessage());
+            }
+        }
+
         if (\Route::has('seller.products.variants.grid')) {
             return redirect()->route('seller.products.edit', [$product->ulid, 'tab' => 'variants'])
                 ->with('success', 'Product has been created successfully. Now configure variants.');
         }
 
+        if ($product->status === \App\Enums\ProductStatus::PENDING_APPROVAL) {
+            $msg = 'Product has been submitted for review. It will show up on storefront once approved by admin.';
+        } else {
+            $msg = 'Product has been created successfully.';
+        }
+
         // Redirect back to seller catalog
-        return redirect()->route('seller.products.index')->with('success', 'Product has been submitted for review. It will show up on storefront once approved by admin.');
+        return redirect()->route('seller.products.index')->with('success', $msg);
     }
 
     /**
@@ -150,6 +171,7 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
+        $wasPending = $product->status === \App\Enums\ProductStatus::PENDING_APPROVAL;
         $data = $request->validate([
             'name'              => 'required|string|max:255',
             'slug'              => 'nullable|string|max:255|unique:products,slug,' . $product->id,
@@ -240,7 +262,28 @@ class ProductController extends Controller
             }
         });
 
-        return redirect()->route('seller.products.index')->with('success', 'Product has been updated successfully and submitted for admin review.');
+        $seller = auth('seller')->user();
+        if ($seller && !$wasPending && $product->status === \App\Enums\ProductStatus::PENDING_APPROVAL) {
+            try {
+                \App\Helpers\NotificationHelper::sendToAdmin(
+                    'New Product Submitted',
+                    "Seller '{$seller->shop_name}' has submitted product '{$product->name}' for review.",
+                    route('admin.products.approvals'),
+                    'product',
+                    'fa-box-open'
+                );
+            } catch (\Exception $e) {
+                \Log::error('Failed to notify admin of product update review: ' . $e->getMessage());
+            }
+        }
+
+        if ($product->status === \App\Enums\ProductStatus::PENDING_APPROVAL) {
+            $msg = 'Product has been updated successfully and submitted for admin review.';
+        } else {
+            $msg = 'Product has been updated successfully.';
+        }
+
+        return redirect()->route('seller.products.index')->with('success', $msg);
     }
 
     /**

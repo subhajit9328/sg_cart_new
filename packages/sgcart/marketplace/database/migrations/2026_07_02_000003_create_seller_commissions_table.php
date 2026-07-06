@@ -11,6 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::create('seller_payouts', function (Blueprint $table) {
+            $table->id();
+            $table->string('ulid', 26)->unique();
+            $table->foreignId('seller_id')->constrained('sellers')->cascadeOnDelete();
+            $table->decimal('amount', 12, 2);
+            $table->string('payment_method'); // bank_transfer, upi, cash, other
+            $table->string('transaction_reference')->nullable(); // UTR/Txn ID
+            $table->text('admin_notes')->nullable();
+            $table->timestamp('payout_date');
+            $table->timestamps();
+        });
+
         Schema::create('seller_commissions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
@@ -23,6 +35,7 @@ return new class extends Migration
             $table->decimal('commission_amount', 10, 2);
             $table->decimal('seller_earning', 10, 2);
             $table->string('status')->default('pending'); // pending, allocated, paid, cancelled
+            $table->foreignId('seller_payout_id')->nullable()->constrained('seller_payouts')->nullOnDelete();
             $table->timestamps();
         });
     }
@@ -33,5 +46,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('seller_commissions');
+        Schema::dropIfExists('seller_payouts');
     }
 };

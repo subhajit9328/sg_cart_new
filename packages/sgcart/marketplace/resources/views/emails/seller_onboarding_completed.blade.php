@@ -166,18 +166,24 @@
                                 </p>
                                 
                                 <div class="details-box">
-                                    <div class="detail-row">
-                                        <span class="detail-label">Shop Name:</span>
-                                        <span>{{ $seller->shop_name }}</span>
-                                    </div>
-                                    <div class="detail-row">
-                                        <span class="detail-label">Contact No:</span>
-                                        <span>{{ $seller->phone_no }}</span>
-                                    </div>
-                                    <div class="detail-row">
-                                        <span class="detail-label">Address:</span>
-                                        <span>{{ $seller->address }}</span>
-                                    </div>
+                                    @if(!empty($seller->shop_name))
+                                        <div class="detail-row">
+                                            <span class="detail-label">Shop Name:</span>
+                                            <span>{{ $seller->shop_name }}</span>
+                                        </div>
+                                    @endif
+                                    @if(!empty($seller->phone_no))
+                                        <div class="detail-row">
+                                            <span class="detail-label">Contact No:</span>
+                                            <span>{{ $seller->phone_no }}</span>
+                                        </div>
+                                    @endif
+                                    @if(!empty($seller->address))
+                                        <div class="detail-row">
+                                            <span class="detail-label">Address:</span>
+                                            <span>{{ $seller->address }}</span>
+                                        </div>
+                                    @endif
                                 </div>
 
                                 <p class="body-text">
