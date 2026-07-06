@@ -444,20 +444,6 @@ function removeNewImage(id) {
         } else {
             switchTab('details');
         }
-
-        // Show submit loader on form submit
-        const createForm = document.getElementById('productCreateForm');
-        if (createForm) {
-            createForm.addEventListener('submit', function() {
-                const btn = createForm.querySelector('button[type="submit"]');
-                if (btn) {
-                    btn.disabled = true;
-                    btn.style.opacity = '0.7';
-                    btn.style.cursor = 'not-allowed';
-                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Saving...';
-                }
-            });
-        }
     });
 </script>
 @endpush

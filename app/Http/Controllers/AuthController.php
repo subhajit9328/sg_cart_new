@@ -190,6 +190,8 @@ class AuthController extends Controller
                 causer: $customer
             );
 
+            $this->clearAdminIntendedUrl($request);
+
             return redirect()->intended(route('store.account'))->with('success', 'Logged in successfully!');
         }
 
@@ -445,6 +447,8 @@ class AuthController extends Controller
             // Forget registration data
             session()->forget('registration_data');
 
+            $this->clearAdminIntendedUrl($request);
+
             return redirect()->intended(route('store.account'))->with('success', $isEmail
                 ? 'Email verified successfully! Welcome to SG CART.'
                 : 'Phone number verified successfully! Welcome to SG CART.');
@@ -464,6 +468,8 @@ class AuthController extends Controller
                 );
             }
         }
+
+        $this->clearAdminIntendedUrl($request);
 
         return redirect()->intended(route('store.account'))->with('success', $isEmail
             ? 'Email verified successfully! Welcome to SG CART.'
@@ -534,5 +540,16 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('store.home')->with('success', 'Logged out successfully!');
+    }
+
+    /**
+     * Clear the intended URL from session if it points to the admin panel.
+     */
+    private function clearAdminIntendedUrl(Request $request): void
+    {
+        $intended = $request->session()->get('url.intended');
+        if ($intended && str_contains($intended, '/admin')) {
+            $request->session()->forget('url.intended');
+        }
     }
 }

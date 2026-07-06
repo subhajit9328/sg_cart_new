@@ -33,7 +33,18 @@ class StoreController extends Controller
             $relations[] = 'variants.size';
         }
 
-        return Product::with($relations)->where('status', 'active')->get()->map(function ($p) {
+        $query = Product::with($relations)->where('status', 'active');
+
+        if (class_exists(\SGCart\Marketplace\Models\Seller::class)) {
+            $query->where(function ($q) {
+                $q->whereNull('seller_id')
+                  ->orWhereHas('seller', function ($sub) {
+                      $sub->where('status', 'approved');
+                  });
+            });
+        }
+
+        return $query->get()->map(function ($p) {
             $catName = 'Fashion';
             if ($p->category) {
                 $topParent = $p->category;
@@ -273,6 +284,13 @@ class StoreController extends Controller
         $product = Product::find($productId);
         if (! $product || $product->status !== \App\Enums\ProductStatus::ACTIVE) {
             return redirect()->back()->with('error', 'Product not found.');
+        }
+
+        if (class_exists(\SGCart\Marketplace\Models\Seller::class)) {
+            $seller = $product->seller;
+            if ($seller && $seller->status->value !== 'approved') {
+                return redirect()->back()->with('error', 'Product not found.');
+            }
         }
 
         $cartModel = Cart::getActiveCart();

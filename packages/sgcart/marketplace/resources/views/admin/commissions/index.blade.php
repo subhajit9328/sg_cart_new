@@ -39,7 +39,7 @@
 
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex items-center justify-between">
         <div>
-            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Net Vendor Earnings</p>
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Net Seller Earnings</p>
             <h3 class="text-2xl font-bold text-slate-800 dark:text-white mt-1">₹{{ number_format($totalSellerEarnings, 2) }}</h3>
         </div>
         <div class="w-12 h-12 rounded-xl bg-violet-50 dark:bg-violet-950/50 flex items-center justify-center text-violet-600">
