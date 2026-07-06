@@ -55,7 +55,6 @@
         <div class="pd-layout">
 
             <!-- Left Gallery Column -->
-            <!-- Left Gallery Column -->
             <div class="pd-gallery">
                 <div class="pd-thumbs"
                      style="{{ (!isset($product['images']) || count($product['images']) <= 1) ? 'display: none;' : '' }}">
@@ -380,45 +379,166 @@
                     </div>
                 </div>
             </div>
-        </div>
+            <!-- RELATED PRODUCTS -->
+            @if(isset($related) && count($related) > 0)
+                <div class="section related-products-section" style="margin-top:48px">
+                    <div class="section-header" style="margin-bottom:20px">
+                        <h2 class="section-title">Related Products</h2>
+                    </div>
 
-
-        <!-- RELATED PRODUCTS -->
-        @if(isset($related) && count($related) > 0)
-            <div class="section" style="margin-top:40px">
-                <div class="section-header">
-                    <h2 class="section-title">Related Products</h2>
-                </div>
-                <div class="grid-4">
-                    @foreach($related as $rel)
-                        <div class="product-card"
-                             onclick="window.location.href='{{ route('store.product', $rel['slug']) }}'">
-                            <div class="product-card-img">
-                                <img src="{{ $rel['img'] }}" alt="{{ $rel['name'] }}"/>
-                                @php
-                                    $inWishlist = in_array($rel['id'], session('wishlist', []));
-                                @endphp
-                                <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}"
-                                        data-product-id="{{ $rel['id'] }}"
-                                        onclick="event.stopPropagation(); toggleWishlist(this)"
-                                        title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
-                                    <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
-                                </button>
-                            </div>
-                            <div class="product-card-body">
-                                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $rel['cat'] }}</p>
-                                <h3 class="font-display font-bold text-sm mt-1 text-slate-800 line-clamp-1">{{ $rel['name'] }}</h3>
-                                <div class="flex items-center gap-1.5 mt-2">
-                                        <span
-                                            class="font-bold text-sm text-slate-900">₹{{ number_format($rel['price'], 2) }}</span>
+                    <!-- Slider wrapper -->
+                    <div class="related-slider-outer">
+                        <div class="related-slider pt-6 pb-15!" id="relatedSlider">
+                            @foreach($related as $rel)
+                                <div class="related-slide product-card"
+                                     onclick="window.location.href='{{ route('store.product', $rel['slug']) }}'">
+                                    <div class="product-card-img">
+                                        <img src="{{ $rel['img'] }}" alt="{{ $rel['name'] }}"/>
+                                        @php
+                                            $inWishlist = in_array($rel['id'], session('wishlist', []));
+                                        @endphp
+                                        <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}"
+                                                data-product-id="{{ $rel['id'] }}"
+                                                onclick="event.stopPropagation(); toggleWishlist(this)"
+                                                title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">
+                                            <i class="{{ $inWishlist ? 'fa-solid' : 'fa-regular' }} fa-heart"></i>
+                                        </button>
+                                    </div>
+                                    <div class="product-card-body">
+                                        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">{{ $rel['cat'] }}</p>
+                                        <h3 class="font-display font-bold text-sm mt-1 text-slate-800 line-clamp-1">{{ $rel['name'] }}</h3>
+                                        <div class="flex items-center gap-1.5 mt-2">
+                                            @if($rel['old'])
+                                                <span
+                                                    class="font-bold text-sm text-slate-900">₹{{ number_format($rel['price'], 2) }}</span>
+                                                <span
+                                                    class="text-xs text-slate-400 line-through">₹{{ number_format($rel['old'], 2) }}</span>
+                                            @else
+                                                <span
+                                                    class="font-bold text-sm text-slate-900">₹{{ number_format($rel['price'], 2) }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            @endforeach
                         </div>
-                    @endforeach
-                </div>
-            </div>
-        @endif
 
+                        <!-- Scroll arrow buttons -->
+                        <button class="related-arrow related-arrow-prev" id="relatedPrev" aria-label="Scroll left"
+                                onclick="scrollRelated(-1)">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button class="related-arrow related-arrow-next" id="relatedNext" aria-label="Scroll right"
+                                onclick="scrollRelated(1)">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <style>
+                    .related-slider-outer {
+                        position: relative;
+                    }
+
+                    .related-slider {
+                        display: flex;
+                        gap: 20px;
+                        overflow-x: auto;
+                        scroll-behavior: smooth;
+                        -webkit-overflow-scrolling: touch;
+                        padding-bottom: 12px;
+                        scrollbar-width: thin;
+                        scrollbar-color: #cbd5e1 transparent;
+                    }
+
+                    .related-slider::-webkit-scrollbar {
+                        height: 5px;
+                    }
+
+                    .related-slider::-webkit-scrollbar-track {
+                        background: transparent;
+                    }
+
+                    .related-slider::-webkit-scrollbar-thumb {
+                        background: #cbd5e1;
+                        border-radius: 99px;
+                    }
+
+                    .related-slide {
+                        flex: 0 0 220px;
+                        min-width: 220px;
+                        cursor: pointer;
+                    }
+
+                    @media (max-width: 640px) {
+                        .related-slide {
+                            flex: 0 0 170px;
+                            min-width: 170px;
+                        }
+                    }
+
+                    .related-arrow {
+                        position: absolute;
+                        top: 50%;
+                        transform: translateY(-60%);
+                        width: 38px;
+                        height: 38px;
+                        border-radius: 50%;
+                        border: 1px solid #e2e8f0;
+                        background: #fff;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, .10);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        cursor: pointer;
+                        z-index: 10;
+                        transition: background .2s, box-shadow .2s;
+                        color: #475569;
+                        font-size: 13px;
+                        padding: 0;
+                        line-height: 1;
+                    }
+
+                    .related-arrow:hover {
+                        background: #f8fafc;
+                        box-shadow: 0 4px 14px rgba(0, 0, 0, .14);
+                    }
+
+                    .related-arrow-prev {
+                        left: -18px;
+                    }
+
+                    .related-arrow-next {
+                        right: -18px;
+                    }
+
+                    .related-arrow.hidden {
+                        display: none;
+                    }
+                </style>
+                <script>
+                    (function () {
+                        const slider = document.getElementById('relatedSlider');
+                        const btnPrev = document.getElementById('relatedPrev');
+                        const btnNext = document.getElementById('relatedNext');
+                        const CARD_W = 240; // px to scroll per click
+
+                        function updateArrows() {
+                            const atStart = slider.scrollLeft <= 2;
+                            const atEnd = slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 2;
+                            btnPrev.classList.toggle('hidden', atStart);
+                            btnNext.classList.toggle('hidden', atEnd);
+                        }
+
+                        window.scrollRelated = function (dir) {
+                            slider.scrollBy({left: dir * CARD_W, behavior: 'smooth'});
+                        };
+
+                        slider.addEventListener('scroll', updateArrows, {passive: true});
+                        updateArrows(); // set initial state
+                    })();
+                </script>
+            @endif
+        </div>
     </div>
 @endsection
 

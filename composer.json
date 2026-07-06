@@ -13,14 +13,15 @@
         "php-open-source-saver/jwt-auth": "^2.9",
         "sgcart/blog": "@dev",
         "sgcart/coupons": "@dev",
-        "sgcart/dashboard-analytics": "@dev",
         "sgcart/crm-tickets": "@dev",
+        "sgcart/dashboard-analytics": "@dev",
         "sgcart/hero": "@dev",
         "sgcart/image-search": "@dev",
         "sgcart/inventory": "@dev",
         "sgcart/logistic-tracking": "@dev",
         "sgcart/payment-razorpay": "@dev",
         "sgcart/product-variants": "@dev",
+        "sgcart/related-products": "@dev",
         "sgcart/reporting": "@dev",
         "sgcart/reviews": "@dev",
         "sgcart/shipping": "@dev",
@@ -138,6 +139,13 @@
         {
             "type": "path",
             "url": "packages/sgcart/hero",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/related-products",
             "options": {
                 "symlink": true
             }

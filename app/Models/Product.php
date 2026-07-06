@@ -112,4 +112,12 @@ class Product extends Model
         }
         return $this->hasMany(self::class, 'id', 'id')->whereRaw('1 = 0');
     }
+
+    public function relatedProducts()
+    {
+        if (class_exists(\SGCart\RelatedProducts\Models\RelatedProduct::class)) {
+            return $this->belongsToMany(self::class, 'related_products', 'product_id', 'related_id');
+        }
+        return $this->belongsToMany(self::class, 'products', 'id', 'id')->whereRaw('1 = 0');
+    }
 }

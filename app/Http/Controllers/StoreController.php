@@ -6,6 +6,7 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Actions\LogActivity;
 use App\Actions\ManageOtp;
+use App\Actions\ResolveRelatedProducts;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Cart;
@@ -203,10 +204,25 @@ class StoreController extends Controller
             abort(404);
         }
 
-        // Fetch related products (same category)
-        $related = $products->where('cat', $product['cat'])
-            ->where('slug', '!=', $product['slug'])
-            ->take(4);
+        // Fetch related products (manually assigned via package or fallback logic: Name -> Category -> Search Tag)
+        $productModel = Product::find($product['id']);
+        $relatedIds = [];
+
+        if (class_exists(\SGCart\RelatedProducts\Models\RelatedProduct::class) && $productModel) {
+            // Package is installed: Fetch products related via the relationship
+            $relatedIds = $productModel->relatedProducts()->where('status', 'active')->pluck('products.id')->toArray();
+        }
+
+        if (empty($relatedIds) && $productModel) {
+            // Fallback: Name -> Category -> Search Tag (via ResolveRelatedProducts action)
+            $relatedIds = app(ResolveRelatedProducts::class)->handle($productModel);
+        }
+
+        $related = collect($relatedIds)
+            ->map(fn($id) => $products->firstWhere('id', $id))
+            ->filter()
+            ->take(config('store.max_no_related_products', 4))
+            ->values();
 
         if ($request->ajax() || $request->has('ajax')) {
             $reviewsData = $this->getProductReviews($product['id'], $request);
@@ -229,13 +245,13 @@ class StoreController extends Controller
             if ($approvedReviews->isNotEmpty()) {
                 $avgProductRating = $approvedReviews->avg('rating');
                 $totalReviewsCount = $approvedReviews->count();
-                
+
                 $count5 = $approvedReviews->where('rating', 5)->count();
                 $count4 = $approvedReviews->where('rating', 4)->count();
                 $count3 = $approvedReviews->where('rating', 3)->count();
                 $count2 = $approvedReviews->where('rating', 2)->count();
                 $count1 = $approvedReviews->where('rating', 1)->count();
-                
+
                 $pct5 = ($count5 / $totalReviewsCount) * 100;
                 $pct4 = ($count4 / $totalReviewsCount) * 100;
                 $pct3 = ($count3 / $totalReviewsCount) * 100;

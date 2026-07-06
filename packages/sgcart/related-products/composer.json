@@ -1,0 +1,25 @@
+{
+    "name": "sgcart/related-products",
+    "description": "Admin manually selected related products with fallback query logic",
+    "autoload": {
+        "psr-4": {
+            "SGCart\\RelatedProducts\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "SGCart Team",
+            "email": "support@sgcart.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2|^8.3"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SGCart\\RelatedProducts\\Providers\\RelatedProductsServiceProvider"
+            ]
+        }
+    }
+}

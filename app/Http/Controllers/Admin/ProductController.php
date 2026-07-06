@@ -90,6 +90,10 @@ class ProductController extends Controller
                 }
             }
 
+            if (class_exists(\SGCart\RelatedProducts\Models\RelatedProduct::class)) {
+                $product->relatedProducts()->sync($request->input('related_product_ids', []));
+            }
+
             return $product;
         });
 
@@ -190,6 +194,10 @@ class ProductController extends Controller
                 foreach ($product->images as $img) {
                     $img->update(['is_default' => ($img->id === $targetDefaultImage->id)]);
                 }
+            }
+
+            if (class_exists(\SGCart\RelatedProducts\Models\RelatedProduct::class)) {
+                $product->relatedProducts()->sync($request->input('related_product_ids', []));
             }
         });
 
