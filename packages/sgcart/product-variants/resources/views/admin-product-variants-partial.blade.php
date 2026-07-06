@@ -1,4 +1,4 @@
-<form id="variantSaveForm" method="POST" action="{{ route('admin.products.variants.save', $product->id) }}" enctype="multipart/form-data" onsubmit="return validateVariants(event)">
+<form id="variantSaveForm" method="POST" action="{{ route(auth('seller')->check() ? 'seller.products.variants.save' : 'admin.products.variants.save', $product->id) }}" enctype="multipart/form-data" onsubmit="return validateVariants(event)">
     @csrf
 
     <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
@@ -25,7 +25,7 @@
 
     <!-- Variants Spreadsheet Grid -->
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden mb-6">
-        @if(class_exists(\SGCart\Inventory\Models\InventoryLog::class))
+        @if(!auth('seller')->check() && class_exists(\SGCart\Inventory\Models\InventoryLog::class))
             <div class="px-4 py-2.5 bg-blue-50/50 dark:bg-blue-950/20 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 text-xs text-blue-650 dark:text-blue-400 font-bold">
                 <i class="fa-solid fa-circle-info text-blue-500"></i> Variant stock levels are read-only. They are managed via the <a href="{{ route('admin.inventory.index') }}" class="underline hover:text-blue-700">Inventory Management System</a>.
             </div>
@@ -98,7 +98,7 @@
                         </td>
 
                         <td class="px-4 py-3.5">
-                            @if(class_exists(\SGCart\Inventory\Models\InventoryLog::class))
+                            @if(!auth('seller')->check() && class_exists(\SGCart\Inventory\Models\InventoryLog::class))
                                 <input type="number" name="variants[{{ $index }}][stock]" value="{{ $v->stock ?? 0 }}" readonly
                                     class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm text-slate-500 cursor-not-allowed font-mono" style="pointer-events: none;">
                             @else
@@ -145,7 +145,7 @@
 
     <!-- Form Actions -->
     <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 w-full">
-        <a href="{{ route('admin.products.index') }}" class="w-full sm:w-auto text-center px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium transition-colors text-slate-700 dark:text-slate-300 no-underline">
+        <a href="{{ route(auth('seller')->check() ? 'seller.products.index' : 'admin.products.index') }}" class="w-full sm:w-auto text-center px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium transition-colors text-slate-700 dark:text-slate-300 no-underline">
             Cancel
         </a>
         <button type="submit" class="w-full sm:w-auto justify-center px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium transition-colors shadow-lg shadow-blue-600/10 border-none cursor-pointer flex items-center">
@@ -239,7 +239,7 @@
                 <button type="button" onclick="closeQuickAttributeModal()" class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium transition-colors text-slate-700 dark:text-slate-300 no-underline bg-transparent cursor-pointer">
                     Cancel
                 </button>
-                <button type="submit" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors shadow-lg shadow-blue-600/10 border-none cursor-pointer">
+                <button type="submit" id="quickAttrSubmitBtn" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors shadow-lg shadow-blue-600/10 border-none cursor-pointer">
                     Add Swatch
                 </button>
             </div>
@@ -287,7 +287,7 @@
         </td>
 
         <td class="px-4 py-3.5">
-            @if(class_exists(\SGCart\Inventory\Models\InventoryLog::class))
+            @if(!auth('seller')->check() && class_exists(\SGCart\Inventory\Models\InventoryLog::class))
                 <input type="number" name="variants[__INDEX__][stock]" value="0" readonly
                     class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 px-3 text-sm text-slate-500 cursor-not-allowed font-mono" style="pointer-events: none;">
             @else
@@ -536,6 +536,7 @@
         const extraLabel = document.getElementById('quickAttrExtraLabel');
         const extraInput = document.getElementById('quickAttrExtra');
         const colorPickerWrapper = document.getElementById('quickAttrExtraFieldWrapper');
+        const submitBtn = document.getElementById('quickAttrSubmitBtn');
 
         formType.value = type;
         document.getElementById('quickAttrName').value = '';
@@ -546,11 +547,13 @@
             extraLabel.textContent = 'Hex Code';
             extraInput.placeholder = '#800020';
             document.getElementById('quickAttrColorPicker').style.display = 'block';
+            if (submitBtn) submitBtn.textContent = 'Add Color';
         } else {
             title.textContent = 'Quick Add Size';
             extraLabel.textContent = 'Size Code / Abbreviation';
             extraInput.placeholder = 'XXL';
             document.getElementById('quickAttrColorPicker').style.display = 'none';
+            if (submitBtn) submitBtn.textContent = 'Add Size';
         }
 
         modal.classList.remove('hidden');
@@ -584,7 +587,7 @@
         submitBtn.disabled = true;
         submitBtn.textContent = 'Saving...';
 
-        fetch('{{ route("admin.products.variants.quick-add-attribute", $product->id) }}', {
+        fetch('{{ route(auth("seller")->check() ? "seller.products.variants.quick-add-attribute" : "admin.products.variants.quick-add-attribute", $product->id) }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -761,6 +764,17 @@
                 event.preventDefault();
             }
             return false;
+        }
+
+        // Show submit loader on Save Variant Settings button
+        if (event && event.target) {
+            const btn = event.target.querySelector('button[type="submit"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.style.opacity = '0.7';
+                btn.style.cursor = 'not-allowed';
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Saving...';
+            }
         }
 
         return true;

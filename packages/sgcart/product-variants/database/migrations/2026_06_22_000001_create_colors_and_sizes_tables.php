@@ -12,8 +12,9 @@ return new class extends Migration {
             if (!Schema::hasTable('colors')) {
                 Schema::create('colors', function (Blueprint $table) {
                     $table->id();
-                    $table->string('name')->unique();
+                    $table->string('name');
                     $table->string('hex_code');
+                    $table->unsignedBigInteger('seller_id')->nullable()->index();
                     $table->timestamps();
                 });
             }
@@ -27,7 +28,8 @@ return new class extends Migration {
                 Schema::create('sizes', function (Blueprint $table) {
                     $table->id();
                     $table->string('name');
-                    $table->string('code')->unique();
+                    $table->string('code');
+                    $table->unsignedBigInteger('seller_id')->nullable()->index();
                     $table->timestamps();
                 });
             }

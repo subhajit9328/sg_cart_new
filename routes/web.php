@@ -11,6 +11,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\ProfilePictureController;
 use App\Http\Controllers\StoreController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 // Storefront Frontend Routes
@@ -142,6 +143,10 @@ Route::prefix('admin')->group(function () {
                 Route::post('{product}/search-tags/generate', [ProductController::class, 'generateSearchTags'])->name('search-tags.generate');
                 Route::get('{product}/search-tags-json', [ProductController::class, 'getSearchTagsJson'])->name('search-tags.json');
             });
+            // Notifications
+            Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+            Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+            Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
         });
     });
 });

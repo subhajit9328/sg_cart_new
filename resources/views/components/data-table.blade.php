@@ -13,6 +13,7 @@
     'items', // paginator collection
     'headers', // array of ['label' => '...', 'key' => '...', 'sortable' => true/false, 'sort_field' => '...', 'align' => 'left/right/center']
     'filterKeys' => [], // array of query param keys for clearing filters
+    'exportable' => false,
 ])
 
 <div class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
@@ -73,6 +74,14 @@
                         </a>
                     @endif
                 </div>
+            @endif
+
+            @if($exportable)
+                <button type="button" onclick="exportTableToCSV('{{ $tableId }}', '{{ Str::slug($title) }}_export.csv')" 
+                        class="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer bg-white dark:bg-slate-800" 
+                        title="Export table data to CSV/Excel">
+                    <i class="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-500"></i> Export
+                </button>
             @endif
 
             @if($refreshBtn)
@@ -153,3 +162,70 @@
     :clearBtnId="$clearBtnId"
     :refreshBtnId="$refreshBtn ? 'refreshTableBtn' : null"
 />
+
+<script>
+    if (typeof window.exportTableToCSV !== 'function') {
+        window.exportTableToCSV = function(tableId, filename) {
+            const tableWrapper = document.getElementById(tableId);
+            if (!tableWrapper) return;
+            const table = tableWrapper.querySelector('table');
+            if (!table) return;
+
+            const rows = Array.from(table.querySelectorAll('tr'));
+            if (rows.length === 0) return;
+
+            // Find column indices that contain headers named "Actions" or "Action"
+            const headerCells = Array.from(rows[0].querySelectorAll('th'));
+            const excludeIndices = [];
+            headerCells.forEach((cell, idx) => {
+                const text = cell.innerText.trim().toLowerCase();
+                if (text === 'actions' || text === 'action') {
+                    excludeIndices.push(idx);
+                }
+            });
+
+            // Iterate rows and build CSV content
+            const csvLines = [];
+            rows.forEach((row) => {
+                // Ignore rows that are hidden or empty placeholder rows
+                if (row.offsetHeight === 0) return;
+                
+                const cells = Array.from(row.querySelectorAll('th, td'));
+                const rowData = [];
+                
+                cells.forEach((cell, idx) => {
+                    if (excludeIndices.includes(idx)) return;
+                    
+                    let text = cell.innerText.trim();
+                    
+                    // Format cell values for standard Excel recognition
+                    // Escape double quotes inside the string
+                    text = text.replace(/"/g, '""');
+                    
+                    // Wrap value in quotes if it contains separator character (comma), quotes, or newline
+                    if (text.includes(',') || text.includes('\n') || text.includes('"')) {
+                        text = `"${text}"`;
+                    }
+                    rowData.push(text);
+                });
+                
+                if (rowData.length > 0) {
+                    csvLines.push(rowData.join(','));
+                }
+            });
+
+            const csvContent = csvLines.join('\r\n');
+            const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        };
+    }
+</script>

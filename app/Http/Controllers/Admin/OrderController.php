@@ -97,10 +97,10 @@ class OrderController extends Controller
      */
     public function update(Request $request, Order $order)
     {
-        $data = $request->validate([
+        $validationRules = [
             'status' => 'required|in:New Order,Processed,Shipped,Out for Delivery,Delivered,Cancelled',
             'payment_status' => 'required|in:Pending,Paid,Failed',
-        ]);
+        ];
 
         $packageInstalled = class_exists(\SGCart\LogisticTracking\Actions\UpdateLogisticTrackingAction::class);
 

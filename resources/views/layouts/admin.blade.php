@@ -66,14 +66,14 @@
             </a>
             @endcan
 
-            @can('manage products')
+            @can('manage categories')
             <a href="{{ route('admin.categories.index') }}" class="nav-link {{ Request::is('admin/categories*') ? 'active' : '' }}" data-tooltip="Categories">
                 <i class="fa-solid fa-tags"></i>
                 <span class="sidebar-text">Categories</span>
             </a>
             @endcan
 
-            @can('manage products')
+            @can('manage manufacturers')
             <a href="{{ route('admin.manufacturers.index') }}" class="nav-link {{ Request::is('admin/manufacturers*') ? 'active' : '' }}" data-tooltip="Manufacturers">
                 <i class="fa-solid fa-industry"></i>
                 <span class="sidebar-text">Manufacturers</span>
@@ -94,6 +94,7 @@
             @includeIf('blog::admin-menu')
             @includeIf('dashboard-analytics::admin-menu')
             @includeIf('product-variants::admin-menu')
+            @includeIf('marketplace::admin-menu')
             @includeIf('shipping::admin-menu')
             @includeIf('tax::admin-menu')
             @can('manage payments')
@@ -120,18 +121,7 @@
             </a>
             @endcan
             @endcanany
-
-            @includeIf('coupons::admin-menu')
-            @includeIf('product-variants::admin-menu')
-            @includeIf('shipping::admin-menu')
             @includeIf('logistic-tracking::admin-menu')
-            @includeIf('tax::admin-menu')
-            @can('manage payments')
-            <a href="{{ route('admin.payments.settings') }}" class="nav-link {{ Request::is('admin/payments*') ? 'active' : '' }}" data-tooltip="Payment Gateways">
-                <i class="fa-solid fa-credit-card"></i>
-                <span class="sidebar-text">Payment Gateways</span>
-            </a>
-            @endcan
             @includeIf('image-search::admin-menu')
         </nav>
 
@@ -146,21 +136,19 @@
         <!-- Topbar -->
         <header id="topbar" class="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 px-4 lg:px-6 z-20 transition-all duration-200">
 
-            <button id="sidebarToggleBtn" class="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex-shrink-0">
+            <button id="sidebarToggleBtn" class="w-10 h-10 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex-shrink-0 border-none outline-none focus:outline-none focus:ring-0">
                 <i class="fa-solid fa-bars"></i>
             </button>
 
             <div class="flex items-center gap-2 ml-auto">
-                <button id="themeToggleBtn" class="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                <button id="themeToggleBtn" class="w-10 h-10 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border-none outline-none focus:outline-none focus:ring-0">
                     <i class="fa-solid fa-moon" id="themeIcon"></i>
                 </button>
-                <button class="relative w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
-                    <i class="fa-regular fa-bell"></i>
-                    <span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500"></span>
-                </button>
+                <!-- Reusable Notifications Dropdown -->
+                <x-notification-dropdown />
 
                 <div class="relative">
-                    <button id="userMenuBtn" class="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <button id="userMenuBtn" class="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 border-none outline-none focus:outline-none focus:ring-0">
                         <img src="https://i.pravatar.cc/64?img=12" class="w-8 h-8 rounded-full object-cover">
                         <div class="hidden md:block text-left leading-tight">
                             <p class="text-sm font-semibold">{{ auth()->user()->name }}</p>

@@ -20,9 +20,12 @@ return new class extends Migration {
             $table->decimal('price', 10, 2)->default(0);
             $table->decimal('sale_price', 10, 2)->nullable();
             $table->unsignedInteger('stock')->default(0);
-            $table->string('status')->default('draft'); // draft, active, inactive
+            $table->enum('status', ['draft', 'active', 'inactive', 'pending_approval', 'rejected'])->default('draft');
             $table->string('weight')->nullable();
             $table->string('dimensions')->nullable(); // LxWxH
+            $table->string('meta_title')->nullable();
+            $table->text('meta_description')->nullable();
+            $table->text('meta_keywords')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

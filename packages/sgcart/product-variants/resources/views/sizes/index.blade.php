@@ -41,6 +41,11 @@
         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/15 transition-colors">
             <td class="px-5 py-3.5 font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap text-sm">
                 {{ $size->name }}
+                @if($size->seller_id === null)
+                    <span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Global</span>
+                @else
+                    <span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/30" title="Created by Seller: {{ $size->seller?->name }}">Seller: {{ $size->seller?->shop_name ?? $size->seller?->name ?? 'Deleted Seller' }}</span>
+                @endif
             </td>
             <td class="px-5 py-3.5 text-slate-500 dark:text-slate-400 font-mono text-xs whitespace-nowrap">
                 {{ $size->code }}

@@ -42,6 +42,9 @@
         <div class="text-center mt-6 pt-6 border-t border-slate-100 text-xs text-slate-400">
             Already have an account? <a href="{{ route('store.login') }}" class="text-accent hover:text-ink font-bold no-underline transition-colors">Sign In</a>
         </div>
+        <div class="text-center mt-4 text-xs text-slate-400">
+            Want to expand your business? <a href="{{ route('seller.register') }}"  target="_blank" class="text-accent hover:text-ink font-bold no-underline transition-colors text-blue-500">Register as a Seller</a>
+        </div>
     </div>
 </div>
 @endsection

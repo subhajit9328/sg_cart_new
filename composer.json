@@ -20,6 +20,7 @@
         "sgcart/payment-razorpay": "@dev",
         "sgcart/product-variants": "@dev",
         "sgcart/shipping": "@dev",
+        "sgcart/marketplace": "@dev",
         "sgcart/tax": "@dev",
         "spatie/laravel-permission": "^8.0"
     },
@@ -113,6 +114,13 @@
         {
             "type": "path",
             "url": "packages/sgcart/dashboard-analytics",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/marketplace",
             "options": {
                 "symlink": true
             }

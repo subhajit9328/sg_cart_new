@@ -29,6 +29,7 @@
         ['label' => 'Image', 'key' => 'image', 'sortable' => false, 'width' => '20'],
         ['label' => 'Product Name', 'key' => 'name', 'sortable' => true],
         ['label' => 'SKU', 'key' => 'sku', 'sortable' => true],
+        ['label' => 'Seller', 'key' => 'seller_id', 'sortable' => false],
         ['label' => 'Category', 'key' => 'category_id', 'sortable' => false],
         ['label' => 'Price', 'key' => 'price', 'sortable' => true],
         ['label' => 'Stock', 'key' => 'stock', 'sortable' => true],
@@ -67,6 +68,27 @@
             />
         </div>
 
+        @if(!empty($sellers) && count($sellers) > 0)
+        <!-- Seller Filter Dropdown -->
+        <div class="min-w-[160px]">
+            <x-select2 
+                name="seller_id" 
+                id="seller_id_filter"
+                placeholder="All Sellers"
+                :selected="request('seller_id')"
+                :compact="true"
+                :allowClear="false"
+                :searchable="true"
+            >
+                <option value="">All Sellers</option>
+                <option value="admin" {{ request('seller_id') === 'admin' ? 'selected' : '' }}>Admin Only</option>
+                @foreach($sellers as $sel)
+                    <option value="{{ $sel->id }}" {{ request('seller_id') == $sel->id ? 'selected' : '' }}>{{ $sel->shop_name }}</option>
+                @endforeach
+            </x-select2>
+        </div>
+        @endif
+
         <!-- Status Filter Dropdown -->
         <div class="min-w-[130px]">
             <x-select2 
@@ -101,8 +123,21 @@
             <td class="px-5 py-3.5 font-semibold text-slate-800 dark:text-slate-100 text-sm" title="{{ $product->name }}">
                 {{ \Illuminate\Support\Str::limit($product->name, 30) }}
             </td>
-            <td class="px-5 py-3.5 text-slate-500 dark:text-slate-400 font-mono text-xs whitespace-nowrap">
+            <td class="px-5 py-3.5 text-slate-550 dark:text-slate-400 font-mono text-xs whitespace-nowrap">
                 {{ $product->sku }}
+            </td>
+            <td class="px-5 py-3.5 text-xs text-slate-650 dark:text-slate-350 whitespace-nowrap">
+                @if($product->seller)
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-200/20" title="Seller Product: {{ $product->seller->shop_name }}">
+                        <i class="fa-solid fa-store text-[9px] opacity-75"></i>
+                        {{ \Illuminate\Support\Str::limit($product->seller->shop_name, 18) }}
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/20">
+                        <i class="fa-solid fa-shield-halved text-[9px] opacity-75"></i>
+                        SGCart
+                    </span>
+                @endif
             </td>
             <td class="px-5 py-3.5 text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap">
                 {{ $product->category?->name ?? '—' }}
@@ -130,15 +165,16 @@
             </td>
             <td class="px-5 py-3.5 whitespace-nowrap">
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold 
-                    {{ $product->status === 'active' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/20' :
-                      ($product->status === 'draft'  ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200/20' : 
-                      'bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200/50') }}">
-                    {{ ucfirst($product->status) }}
+                    {{ $product->status->value === 'active' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/20' :
+                      ($product->status->value === 'draft'  ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200/20' : 
+                      ($product->status->value === 'rejected' ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200/20' :
+                      'bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200/50')) }}">
+                    {{ ucfirst($product->status->value) }}
                 </span>
             </td>
             <td class="px-5 py-3.5 text-right whitespace-nowrap">
                 <div class="inline-flex gap-1.5 justify-end">
-                    @if($product->status === 'active')
+                    @if($product->status->value === 'active')
                         <a href="{{ route('store.product', $product->slug) }}" target="_blank" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors" title="Preview Product">
                             <i class="fa-solid fa-arrow-up-right-from-square text-slate-500 dark:text-slate-400 text-xs"></i>
                         </a>

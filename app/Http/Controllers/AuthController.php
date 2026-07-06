@@ -281,6 +281,7 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'email' => $isEmail ? $emailOrPhone : null,
             'phone_no' => $isEmail ? null : $emailOrPhone,
+            'guest_session_id' => $request->session()->getId(),
         ];
 
         // Store registration details in session

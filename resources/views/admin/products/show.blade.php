@@ -270,7 +270,7 @@
     $totalVariants  = $product->variants->count();
     $activeVariants = $product->variants->where('is_active', true)->count();
     $totalVarStock  = $product->variants->sum('stock');
-    $statusKey      = in_array($product->status, ['active','draft','inactive']) ? $product->status : 'inactive';
+    $statusKey      = in_array($product->status->value, ['active','draft','inactive','rejected']) ? $product->status->value : 'inactive';
 @endphp
 <div class="pv-page">
 
@@ -324,8 +324,19 @@
                 <span class="pv-pname">{{ $product->name }}</span>
                 <span class="pv-pill {{ $statusKey }}">
                     <i class="fa-solid fa-circle" style="font-size:5px;opacity:.7;"></i>
-                    {{ ucfirst($product->status) }}
+                    {{ ucfirst($product->status->value) }}
                 </span>
+                @if($product->seller)
+                    <span class="pv-pill indigo" title="Seller Product: {{ $product->seller->shop_name }}">
+                        <i class="fa-solid fa-store" style="font-size:9px;opacity:.7;"></i>
+                        {{ \Illuminate\Support\Str::limit($product->seller->shop_name, 18) }}
+                    </span>
+                @else
+                    <span class="pv-pill emerald">
+                        <i class="fa-solid fa-shield-halved" style="font-size:9px;opacity:.7;"></i>
+                        SGCart
+                    </span>
+                @endif
             </div>
             <div class="pv-meta-row">
                 @if($product->sku)
@@ -357,7 +368,7 @@
                 @php $heroPct = round(($product->price - $product->sale_price) / $product->price * 100); @endphp
                 <div class="pv-price-main sale">&#x20B9;{{ number_format($product->sale_price, 2) }}</div>
                 <div class="pv-price-orig">&#x20B9;{{ number_format($product->price, 2) }}</div>
-                <span class="pv-pill emerald" style="margin-top:6px;">-{{ $heroPct }}% OFF</span>
+                <span class="pv-pill emerald" style="margin-top:6px;">{{ $heroPct }}% OFF</span>
             @else
                 <div class="pv-price-main">&#x20B9;{{ number_format($product->price, 2) }}</div>
                 <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Base Price</div>
@@ -464,6 +475,85 @@
                 </div>
             </div>
         </div>
+        
+        @if($product->seller)
+        <!-- Seller & Financials Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+            <!-- Seller Shop Info -->
+            <div class="pv-card" style="margin: 0;">
+                <div class="pv-card-header">
+                    <div class="pv-card-hicon"><i class="fa-solid fa-store"></i></div>
+                    <span class="pv-card-htitle">Seller &amp; Shop</span>
+                </div>
+                <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div class="pv-sicon indigo" style="width:36px;height:36px;font-size:14px;"><i class="fa-solid fa-store"></i></div>
+                        <div style="min-width:0;flex:1;">
+                            <div class="pv-ivalue" style="text-align:left;font-size:14px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">
+                                {{ $product->seller->shop_name }}
+                            </div>
+                            @if(Route::has('admin.sellers.show'))
+                                <a href="{{ route('admin.sellers.show', $product->seller) }}" style="font-size:11px;color:#6366f1;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:3px;">
+                                    View Profile <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:9px;"></i>
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                    <div style="margin-top:4px;">
+                        <div class="pv-irow">
+                            <span class="pv-ilabel">Shop Owner</span>
+                            <span class="pv-ivalue">{{ $product->seller->name }}</span>
+                        </div>
+                        <div class="pv-irow">
+                            <span class="pv-ilabel">Email</span>
+                            <span class="pv-ivalue" style="font-family:monospace;font-size:12px;word-break:break-all;">{{ $product->seller->email }}</span>
+                        </div>
+                        <div class="pv-irow">
+                            <span class="pv-ilabel">Commission</span>
+                            <span class="pv-ivalue">
+                                {{ $product->seller->commission_rate ? $product->seller->commission_rate.'%' : 'Default ('.config('marketplace.default_commission_rate', 10.00).'%)' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Commission & Payout -->
+            <div class="pv-card" style="margin: 0;">
+                <div class="pv-card-header">
+                    <div class="pv-card-hicon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                    <span class="pv-card-htitle">Commission &amp; Payout</span>
+                </div>
+                <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+                    @php
+                        $price = (float) ($product->sale_price ?: $product->price);
+                        $rate = (float) ($product->seller->commission_rate ?: config('marketplace.default_commission_rate', 10.00));
+                        $platformCommission = $price * ($rate / 100);
+                        $sellerPayout = $price - $platformCommission;
+                    @endphp
+                    <div class="pv-irow">
+                        <span class="pv-ilabel">Commission Rate</span>
+                        <span class="pv-ivalue">
+                            {{ $product->seller->commission_rate ? $product->seller->commission_rate.'%' : 'Default ('.config('marketplace.default_commission_rate', 10.00).'%)' }}
+                        </span>
+                    </div>
+                    <div class="pv-irow">
+                        <span class="pv-ilabel">Platform Share</span>
+                        <span class="pv-ivalue" style="color:#7c3aed;font-weight:700;">
+                            &#x20B9;{{ number_format($platformCommission, 2) }}
+                        </span>
+                    </div>
+                    <div class="pv-irow">
+                        <span class="pv-ilabel">Seller Payout</span>
+                        <span class="pv-ivalue" style="color:#059669;font-weight:700;">
+                            &#x20B9;{{ number_format($sellerPayout, 2) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         @if(Route::has('admin.products.variants.grid'))
         <!-- Variants Card -->
         <div class="pv-card">
@@ -477,6 +567,7 @@
                 <table class="pv-vt">
                     <thead>
                         <tr>
+                            <th style="width:60px;">Image</th>
                             <th>Color</th><th>Size</th><th>SKU Override</th>
                             <th>Price</th>
                             <th>Sale Price</th>
@@ -487,6 +578,17 @@
                     <tbody>
                     @foreach($product->variants as $variant)
                     <tr style="{{ !$variant->is_active ? 'opacity:.45;' : '' }}">
+                        <td>
+                            @if($variant->image)
+                                <div class="pv-gthumb" style="width:40px; height:40px; border-radius:6px; overflow:hidden; border:1px solid #e2e8f0; cursor:pointer;" onclick="pvSwitch('{{ Storage::url($variant->image) }}', this)">
+                                    <img src="{{ Storage::url($variant->image) }}" alt="Variant Image" style="width:100%; height:100%; object-fit:cover;">
+                                </div>
+                            @else
+                                <div style="width:40px; height:40px; border-radius:6px; background:#f1f5f9; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; color:#94a3b8;">
+                                    <i class="fa-solid fa-image"></i>
+                                </div>
+                            @endif
+                        </td>
                         <td>
                             <div style="display:flex;align-items:center;gap:7px;">
                                 @if($variant->color)
@@ -511,7 +613,7 @@
                                 <span style="color:#94a3b8;">—</span>
                             @endif
                         </td>
-                        <td style="font-family:monospace;font-size:12px;color:#64748b;">{{ $variant->sku ?: '—' }}</td>
+                        <td style="font-family:monospace;font-size:12px;color:#64748b;">{{ $variant->sku ?: $product->sku }}</td>
                         <td>
                             @if($variant->price)
                                 <span style="font-weight:700;font-size:13px;color:#1e293b;">&#x20B9;{{ number_format($variant->price, 2) }}</span>
@@ -563,13 +665,15 @@
                         <div style="font-size:10px;color:#94a3b8;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px;">Publish Status</div>
                         <div class="pv-sname {{ $statusKey }}">
                             <i class="fa-solid fa-circle" style="font-size:7px;margin-right:5px;opacity:.7;"></i>
-                            {{ ucfirst($product->status) }}
+                            {{ ucfirst($product->status->value) }}
                         </div>
                     </div>
-                    @if($product->status === 'active')
+                    @if($product->status->value === 'active')
                         <i class="fa-solid fa-circle-check" style="font-size:22px;color:#10b981;opacity:.7;"></i>
-                    @elseif($product->status === 'draft')
+                    @elseif($product->status->value === 'draft')
                         <i class="fa-solid fa-pen-ruler" style="font-size:22px;color:#f59e0b;opacity:.7;"></i>
+                    @elseif($product->status->value === 'rejected')
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size:22px;color:#ef4444;opacity:.8;"></i>
                     @else
                         <i class="fa-solid fa-eye-slash" style="font-size:22px;color:#94a3b8;opacity:.5;"></i>
                     @endif
@@ -590,6 +694,7 @@
                 </div>
             </div>
         </div>
+
         <!-- Pricing -->
         <div class="pv-card">
             <div class="pv-card-header">
@@ -618,6 +723,8 @@
                 @endif
             </div>
         </div>
+
+
         <!-- Inventory -->
         <div class="pv-card">
             <div class="pv-card-header">
@@ -664,10 +771,13 @@
 <script>
 function pvSwitch(src, btn) {
     var img = document.getElementById('pvMainImg');
+    if (!img) return;
     img.classList.add('fading');
     setTimeout(function() { img.src = src; img.classList.remove('fading'); }, 180);
     document.querySelectorAll('.pv-gthumb').forEach(function(t) { t.classList.remove('active'); });
-    btn.classList.add('active');
+    if (btn && btn.classList.contains('pv-gthumb')) {
+        btn.classList.add('active');
+    }
 }
 </script>
 @endpush
