@@ -144,6 +144,7 @@ Route::prefix('admin')->group(function () {
                 Route::get('{product}/search-tags-json', [ProductController::class, 'getSearchTagsJson'])->name('search-tags.json');
             });
             // Notifications
+            Route::get('/notifications/all', [NotificationController::class, 'all'])->name('notifications.all');
             Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
             Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
             Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');

@@ -44,12 +44,19 @@
                 <div class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-slate-400 dark:text-slate-500 flex items-center justify-center mx-auto mb-3">
                     <i class="fa-solid fa-bell-slash text-base"></i>
                 </div>
-                <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">No new notifications</p>
+                <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">No notifications yet</p>
                 <p class="text-[10px] text-slate-450 mt-0.5">We'll alert you when something happens.</p>
             </div>
 
             <!-- List Container -->
             <div id="notificationItemsContainer"></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-4 py-2.5 border-t border-slate-100 dark:border-slate-800/40 bg-slate-50/50 dark:bg-slate-900/50 text-center flex-shrink-0">
+            <a id="viewAllNotificationsBtn" href="#" class="text-xs font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 no-underline inline-block w-full py-1">
+                View all notifications
+            </a>
         </div>
     </div>
 </div>
@@ -67,9 +74,14 @@
         const loader = document.getElementById('notificationLoader');
         const emptyState = document.getElementById('notificationEmptyState');
         const itemsContainer = document.getElementById('notificationItemsContainer');
+        const viewAllBtn = document.getElementById('viewAllNotificationsBtn');
 
         const isSeller = window.location.pathname.startsWith('/seller');
         const baseUrl = isSeller ? '/seller/notifications' : '/admin/notifications';
+
+        if (viewAllBtn) {
+            viewAllBtn.href = `${baseUrl}/all`;
+        }
 
         const backdrop = document.getElementById('notificationBackdrop');
 
@@ -147,7 +159,13 @@
         function createNotificationItem(item) {
             const row = document.createElement('a');
             row.href = item.url || '#';
-            row.className = 'flex gap-3 px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors no-underline text-left cursor-pointer';
+            
+            const isUnread = !item.read_at;
+            const bgClass = isUnread 
+                ? 'bg-indigo-50/50 dark:bg-indigo-950/30 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/50' 
+                : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50';
+            
+            row.className = `flex gap-3 px-4 py-3.5 transition-colors no-underline text-left cursor-pointer border-b border-slate-100/50 dark:border-slate-800/30 last:border-b-0 ${bgClass}`;
 
             // Determine badge colors based on notification type
             let colorClasses = 'bg-blue-500/10 text-blue-600';
@@ -158,13 +176,25 @@
             else if (item.type === 'order') colorClasses = 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-450';
             else if (item.type === 'product') colorClasses = 'bg-violet-500/10 text-violet-600 dark:text-violet-450';
 
+            const titleClass = isUnread 
+                ? 'text-xs font-bold text-slate-900 dark:text-slate-100' 
+                : 'text-xs font-medium text-slate-500 dark:text-slate-400';
+
+            const messageClass = isUnread 
+                ? 'text-[11px] text-slate-700 dark:text-slate-300 font-medium leading-normal mt-0.5' 
+                : 'text-[11px] text-slate-400 dark:text-slate-500 leading-normal mt-0.5';
+
             row.innerHTML = `
-                <div class="w-8 h-8 rounded-lg ${colorClasses} flex items-center justify-center flex-shrink-0">
+                <div class="w-8 h-8 rounded-lg ${colorClasses} flex items-center justify-center flex-shrink-0 relative">
                     <i class="fa-solid ${item.icon || 'fa-bell'} text-sm"></i>
+                    ${isUnread ? '<span class="absolute -top-0.5 -right-0.5 w-2 h-2 bg-indigo-600 dark:bg-indigo-450 border border-white dark:border-slate-900 rounded-full"></span>' : ''}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">${item.title}</p>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-normal">${item.message}</p>
+                    <div class="flex items-center justify-between gap-1.5">
+                        <p class="${titleClass} truncate">${item.title}</p>
+                        ${isUnread ? '<span class="px-1.5 py-0.5 text-[8px] font-bold text-indigo-600 bg-indigo-100/60 dark:text-indigo-400 dark:bg-indigo-950/60 rounded flex-shrink-0">New</span>' : ''}
+                    </div>
+                    <p class="${messageClass}">${item.message}</p>
                     <p class="text-[9px] text-slate-400 mt-1">${item.created_at}</p>
                 </div>
             `;
@@ -187,28 +217,34 @@
             backdrop.classList.add('hidden');
             document.body.style.overflow = '';
 
-            fetch(`${baseUrl}/${id}/read`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(() => {
-                if (redirectUrl && redirectUrl !== '#') {
-                    window.location.href = redirectUrl;
-                } else {
+            if (redirectUrl && redirectUrl !== '#') {
+                fetch(`${baseUrl}/${id}/read`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    keepalive: true
+                }).catch(err => console.error('Error marking notification read:', err));
+
+                window.location.href = redirectUrl;
+            } else {
+                fetch(`${baseUrl}/${id}/read`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(() => {
                     fetchNotifications();
-                }
-            })
-            .catch(err => {
-                console.error('Error marking notification read:', err);
-                if (redirectUrl && redirectUrl !== '#') {
-                    window.location.href = redirectUrl;
-                }
-            });
+                })
+                .catch(err => console.error('Error marking notification read:', err));
+            }
         }
 
         // Mark all notifications as read

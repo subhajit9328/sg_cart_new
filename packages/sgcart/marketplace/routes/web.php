@@ -45,6 +45,7 @@ Route::middleware(['web', 'auth:seller', 'seller.onboarded'])->prefix('seller')-
         Route::get('/payouts', [SellerCommissionController::class, 'payouts'])->name('payouts');
 
         // Notifications
+        Route::get('/notifications/all', [\App\Http\Controllers\NotificationController::class, 'all'])->name('notifications.all');
         Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
         Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markRead'])->name('notifications.read');
         Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('notifications.read-all');
