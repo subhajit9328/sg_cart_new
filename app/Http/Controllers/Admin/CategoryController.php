@@ -12,14 +12,34 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Category::with('parent');
+        $query = Category::parents();
 
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                  ->orWhereHas('children', function ($childQuery) use ($search) {
+                      $childQuery->where('name', 'like', "%{$search}%");
+                  });
             });
+
+            $query->with(['children' => function ($q) use ($search) {
+                $q->where(function ($subQ) use ($search) {
+                    $subQ->where('name', 'like', "%{$search}%")
+                         ->orWhere(function ($parentQ) use ($search) {
+                             $parentQ->whereHas('parent', function ($pQ) use ($search) {
+                                 $pQ->where('name', 'like', "%{$search}%")
+                                    ->whereDoesntHave('children', function ($cQ) use ($search) {
+                                        $cQ->where('name', 'like', "%{$search}%");
+                                    });
+                             });
+                         });
+                })->orderBy('sort_order');
+            }]);
+        } else {
+            $query->with(['children' => function ($q) {
+                $q->orderBy('sort_order');
+            }]);
         }
 
         $sortBy = $request->input('sort_by');
@@ -102,5 +122,22 @@ class CategoryController extends Controller
         if ($category->image) Storage::disk('public')->delete($category->image);
         $category->delete();
         return redirect()->route('admin.categories.index')->with('success', 'Category is deleted successfully.');
+    }
+
+    public function reorder(Request $request)
+    {
+        $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'required|exists:categories,id',
+        ]);
+
+        foreach ($request->input('order') as $index => $id) {
+            Category::where('id', $id)->update(['sort_order' => $index]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Categories reordered successfully.'
+        ]);
     }
 }

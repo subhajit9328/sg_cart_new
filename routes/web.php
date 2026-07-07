@@ -111,6 +111,11 @@ Route::prefix('admin')->group(function () {
             Route::resource('roles', RoleController::class)
                 ->middleware('permission:manage roles');
 
+            // Category Management Reorder
+            Route::post('categories/reorder', [CategoryController::class, 'reorder'])
+                ->name('categories.reorder')
+                ->middleware('permission:manage products');
+
             // Category Management CRUD
             Route::resource('categories', CategoryController::class)
                 ->middleware('permission:manage products');
