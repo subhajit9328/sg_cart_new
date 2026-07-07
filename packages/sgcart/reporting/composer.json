@@ -1,0 +1,25 @@
+{
+    "name": "sgcart/reporting",
+    "description": "Analytics and reporting dashboard for SGCart admin — Orders and Sales insights",
+    "autoload": {
+        "psr-4": {
+            "SGCart\\Reporting\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "SGCart Team",
+            "email": "support@sgcart.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2|^8.3"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SGCart\\Reporting\\Providers\\ReportingServiceProvider"
+            ]
+        }
+    }
+}

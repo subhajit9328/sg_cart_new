@@ -13,12 +13,17 @@
         "php-open-source-saver/jwt-auth": "^2.9",
         "sgcart/blog": "@dev",
         "sgcart/coupons": "@dev",
+        "sgcart/crm-tickets": "@dev",
         "sgcart/dashboard-analytics": "@dev",
+        "sgcart/hero": "@dev",
         "sgcart/image-search": "@dev",
         "sgcart/inventory": "@dev",
         "sgcart/logistic-tracking": "@dev",
         "sgcart/payment-razorpay": "@dev",
         "sgcart/product-variants": "@dev",
+        "sgcart/related-products": "@dev",
+        "sgcart/reporting": "@dev",
+        "sgcart/reviews": "@dev",
         "sgcart/shipping": "@dev",
         "sgcart/marketplace": "@dev",
         "sgcart/tax": "@dev",
@@ -37,6 +42,13 @@
         {
             "type": "path",
             "url": "packages/sgcart/inventory",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/reviews",
             "options": {
                 "symlink": true
             }
@@ -103,14 +115,14 @@
             "options": {
                 "symlink": true
             }
-        }, 
+        },
         {
             "type": "path",
             "url": "packages/sgcart/image-search",
             "options": {
                 "symlink": true
             }
-        }, 
+        },
         {
             "type": "path",
             "url": "packages/sgcart/dashboard-analytics",
@@ -120,7 +132,35 @@
         },
         {
             "type": "path",
+            "url": "packages/sgcart/crm-tickets",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
             "url": "packages/sgcart/marketplace",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/hero",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/related-products",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "packages/sgcart/reporting",
             "options": {
                 "symlink": true
             }

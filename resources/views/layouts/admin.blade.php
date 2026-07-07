@@ -40,7 +40,7 @@
 <div class="flex min-h-screen" id="appShell">
 
     <!-- ============ Sidebar ============ -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 flex flex-col -translate-x-full lg:translate-x-0 transition-all duration-200 border-r border-white/10">
+    <aside id="sidebar" class="fixed group inset-y-0 left-0 z-40 w-64 bg-slate-900 flex flex-col -translate-x-full lg:translate-x-0 transition-all duration-200 border-r border-white/10">
         <div class="h-16 flex items-center justify-between px-5 border-b border-white/10 flex-shrink-0 logo-container-admin">
             <a class="logo-admin" href="{{ route('admin.dashboard') }}">
                 <i class="fa-solid fa-cart-shopping logo-icon"></i>
@@ -107,6 +107,7 @@
             </a>
             @endcan
 
+            @includeIf('reviews::admin-menu')
             @canany(['manage users', 'manage roles'])
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Access Control</p>
 
@@ -124,8 +125,15 @@
             </a>
             @endcan
             @endcanany
+
+            @includeIf('coupons::admin-menu')
+            @includeIf('hero::admin-menu')
+            @includeIf('reporting::admin-menu')
+            @includeIf('product-variants::admin-menu')
+            @includeIf('shipping::admin-menu')
             @includeIf('logistic-tracking::admin-menu')
             @includeIf('image-search::admin-menu')
+            @includeIf('crm-tickets::admin-menu')
         </nav>
 
 
@@ -181,14 +189,21 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-    // Scroll active sidebar option into view
+    // Scroll active sidebar option into view instantly on page load without animated scroll
     window.addEventListener('DOMContentLoaded', () => {
         const activeOption = document.querySelector('.nav-link.active');
         if (activeOption) {
-            activeOption.scrollIntoView({
-                behavior: 'smooth',
-                block: 'nearest'
-            });
+            const container = activeOption.closest('nav');
+            if (container) {
+                const containerRect = container.getBoundingClientRect();
+                const optionRect = activeOption.getBoundingClientRect();
+                const padding = 20; // Padding to prevent option from being stuck to the extreme top/bottom
+                if (optionRect.top < containerRect.top + padding) {
+                    container.scrollTop -= (containerRect.top + padding - optionRect.top);
+                } else if (optionRect.bottom > containerRect.bottom - padding) {
+                    container.scrollTop += (optionRect.bottom - (containerRect.bottom - padding));
+                }
+            }
         }
     });
 
