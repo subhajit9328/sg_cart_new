@@ -20,7 +20,7 @@ class NotificationController extends Controller
     }
 
     /**
-     * Fetch latest notifications for the dropdown.
+     * Fetch latest notifications for the dropdown (both read and unread).
      */
     public function index()
     {
@@ -29,7 +29,7 @@ class NotificationController extends Controller
             return response()->json(['error' => 'Unauthenticated'], 401);
         }
 
-        $notifications = $notifiable->unreadNotifications()->take(10)->get()->map(function ($notification) {
+        $notifications = $notifiable->notifications()->latest()->take(10)->get()->map(function ($notification) {
             return [
                 'id'         => $notification->id,
                 'title'      => $notification->data['title'] ?? 'Notification',
@@ -38,6 +38,7 @@ class NotificationController extends Controller
                 'type'       => $notification->data['type'] ?? 'info',
                 'icon'       => $notification->data['icon'] ?? 'fa-circle-info',
                 'created_at' => $notification->created_at->diffForHumans(),
+                'read_at'    => $notification->read_at,
             ];
         });
 
@@ -45,6 +46,46 @@ class NotificationController extends Controller
             'unread_count'  => $notifiable->unreadNotifications()->count(),
             'notifications' => $notifications,
         ]);
+    }
+
+    /**
+     * View all notifications in a paginated list/table.
+     */
+    public function all(Request $request)
+    {
+        $notifiable = $this->getNotifiable();
+        if (!$notifiable) {
+            abort(401, 'Unauthenticated');
+        }
+
+        $query = $notifiable->notifications();
+
+        // Search functionality in the notification content
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('data->title', 'like', "%{$search}%")
+                  ->orWhere('data->message', 'like', "%{$search}%");
+            });
+        }
+
+        // Status filter (all, read, unread)
+        if ($request->filled('status')) {
+            $status = $request->input('status');
+            if ($status === 'read') {
+                $query->whereNotNull('read_at');
+            } elseif ($status === 'unread') {
+                $query->whereNull('read_at');
+            }
+        }
+
+        $notifications = $query->latest()->paginate(10)->withQueryString();
+
+        if (Auth::guard('seller')->check()) {
+            return view('marketplace::seller.notifications.index', compact('notifications'));
+        }
+
+        return view('admin.notifications.index', compact('notifications'));
     }
 
     /**
