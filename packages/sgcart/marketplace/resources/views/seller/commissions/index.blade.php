@@ -115,10 +115,10 @@
                 {{ $item->created_at->format('d M Y, H:i A') }}
             </td>
             <td class="px-5 py-3.5 font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">
-                #{{ $item->order->order_number ?? $item->order->id }}
+                {{ $item->order ? ($item->order->order_number ?? '#' . $item->order->id) : 'Deleted Order' }}
             </td>
             <td class="px-5 py-3.5">
-                <p class="font-semibold text-xs text-slate-800 dark:text-slate-100 leading-tight">{{ $item->orderItem->product_name }}</p>
+                <p class="font-semibold text-xs text-slate-800 dark:text-slate-100 leading-tight">{{ $item->orderItem?->product_name ?? 'Deleted Item' }}</p>
                 <p class="text-[10px] text-slate-400 mt-0.5">₹{{ number_format($item->product_price, 2) }} x {{ $item->quantity }}</p>
             </td>
             <td class="px-5 py-3.5 text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap font-medium">₹{{ number_format($item->subtotal, 2) }}</td>

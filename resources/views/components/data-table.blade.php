@@ -40,57 +40,112 @@
             100% { transform: translateX(100%) scaleX(0.2); }
         }
     </style>
-    <!-- Card Header -->
-    <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/50">
-        <div class="flex items-center gap-2">
-            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">{{ $title }}</h2>
-            <span id="{{ $totalCountId }}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300/35 dark:border-slate-700/50">
-                {{ $totalCount }}
-            </span>
-        </div>
-        
-        <form action="{{ $action }}" method="GET" class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-            <!-- Search Box -->
-            <div class="relative flex items-center w-full sm:w-60">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 text-slate-400 text-xs"></i>
-                <input type="text" id="{{ $searchInputId }}" name="{{ $searchName }}" value="{{ request($searchName) }}"
-                    class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 pl-8 pr-8 text-xs placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100"
-                    placeholder="{{ $searchPlaceholder }}">
-                <button type="button" id="clearSearchInputBtn" class="absolute right-2.5 flex items-center justify-center w-5 h-5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700/50 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 border-none bg-transparent cursor-pointer transition-colors {{ request($searchName) ? '' : 'hidden' }}" title="Clear Search">
-                    <i class="fa-solid fa-xmark text-xs"></i>
-                </button>
+    @php
+        $hasAdvancedFilters = isset($advancedFilters);
+        $activeFiltersCount = 0;
+        if ($hasAdvancedFilters) {
+            foreach ($filterKeys as $key) {
+                if (request()->filled($key)) {
+                    $activeFiltersCount++;
+                }
+            }
+        }
+    @endphp
+
+    <form action="{{ $action }}" method="GET" id="{{ $tableId }}_filter_form">
+        <!-- Card Header -->
+        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/50">
+            <div class="flex items-center gap-2">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">{{ $title }}</h2>
+                <span id="{{ $totalCountId }}" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300/35 dark:border-slate-700/50">
+                    {{ $totalCount }}
+                </span>
             </div>
-
-            <!-- Custom Filters Slot (e.g. category, status dropdowns) -->
-            @if(isset($filters))
-                {{ $filters }}
-            @endif
-
-            @if($clearBtnId && $clearBtnWrapperId)
-                <div id="{{ $clearBtnWrapperId }}">
-                    @if(request()->anyFilled(array_merge([$searchName], $filterKeys)))
-                        <a href="{{ $action }}" id="{{ $clearBtnId }}" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 dark:bg-rose-950/20 dark:border-rose-900/30 dark:text-rose-400 text-xs font-semibold transition-colors text-center no-underline flex items-center justify-center animate-fadeIn">
-                            Clear
-                        </a>
-                    @endif
+            
+            <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+                <!-- Search Box -->
+                <div class="relative flex items-center w-full sm:w-60">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 text-slate-400 text-xs"></i>
+                    <input type="text" id="{{ $searchInputId }}" name="{{ $searchName }}" value="{{ request($searchName) }}"
+                        class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 pl-8 pr-8 text-xs placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100"
+                        placeholder="{{ $searchPlaceholder }}">
+                    <button type="button" id="clearSearchInputBtn" class="absolute right-2.5 flex items-center justify-center w-5 h-5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700/50 text-slate-400 hover:text-slate-650 dark:hover:text-slate-300 border-none bg-transparent cursor-pointer transition-colors {{ request($searchName) ? '' : 'hidden' }}" title="Clear Search">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
                 </div>
-            @endif
 
-            @if($exportable)
-                <button type="button" onclick="exportTableToCSV('{{ $tableId }}', '{{ Str::slug($title) }}_export.csv')" 
-                        class="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer bg-white dark:bg-slate-800" 
-                        title="Export table data to CSV/Excel">
-                    <i class="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-500"></i> Export
-                </button>
-            @endif
+                <!-- Custom Filters Slot (e.g. category, status dropdowns) -->
+                @if(isset($filters))
+                    {{ $filters }}
+                @endif
 
-            @if($refreshBtn)
-                <button type="button" id="refreshTableBtn" class="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer bg-white dark:bg-slate-800" title="Refresh Table">
-                    <i class="fa-solid fa-arrows-rotate"></i> Refresh
-                </button>
-            @endif
-        </form>
-    </div>
+                @if($exportable)
+                    <button type="button" onclick="exportTableToCSV('{{ $tableId }}', '{{ Str::slug($title) }}_export.csv')" 
+                            class="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer bg-white dark:bg-slate-800" 
+                            title="Export table data to CSV/Excel">
+                        <i class="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-500"></i> Export
+                    </button>
+                @endif
+
+                @if($refreshBtn)
+                    <button type="button" id="refreshTableBtn" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer bg-white dark:bg-slate-800 shrink-0" title="Refresh Table">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                    </button>
+                @endif
+
+                @if($hasAdvancedFilters)
+                    <button type="button" id="{{ $tableId }}_filter_toggle_btn" 
+                            class="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer bg-white dark:bg-slate-800 select-none">
+                        <span id="{{ $tableId }}_filter_toggle_btn_content" class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-filter"></i> Filters
+                            @if($activeFiltersCount > 0)
+                                <span class="w-4.5 h-4.5 rounded-full bg-blue-600 text-white text-[9px] font-black flex items-center justify-center px-1">{{ $activeFiltersCount }}</span>
+                            @endif
+                            <span id="{{ $tableId }}_filter_caret" class="transition-transform duration-200 ml-0.5 inline-block {{ $activeFiltersCount > 0 ? 'rotate-180' : '' }}">
+                                <i class="fa-solid fa-chevron-down text-[9px] opacity-70"></i>
+                            </span>
+                        </span>
+                    </button>
+                @endif
+
+                @if($clearBtnId && $clearBtnWrapperId)
+                    <div id="{{ $clearBtnWrapperId }}">
+                        @if(request()->anyFilled(array_merge([$searchName], $filterKeys)))
+                            <a href="{{ $action }}" id="{{ $clearBtnId }}" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 dark:bg-rose-950/20 dark:border-rose-900/30 dark:text-rose-400 text-xs font-semibold transition-colors text-center no-underline flex items-center justify-center animate-fadeIn">
+                                Clear
+                            </a>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Advanced Collapsible Filters -->
+        @if($hasAdvancedFilters)
+            <div id="{{ $tableId }}_advanced_filters_wrapper" 
+                 class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/25 dark:bg-slate-900/10 transition-all duration-300 {{ $activeFiltersCount > 0 ? '' : 'hidden' }}">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
+                    {{ $advancedFilters }}
+                </div>
+            </div>
+            
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const toggleBtn = document.getElementById('{{ $tableId }}_filter_toggle_btn');
+                    const wrapper = document.getElementById('{{ $tableId }}_advanced_filters_wrapper');
+                    if (toggleBtn && wrapper) {
+                        toggleBtn.addEventListener('click', () => {
+                            wrapper.classList.toggle('hidden');
+                            const caret = document.getElementById('{{ $tableId }}_filter_caret');
+                            if (caret) {
+                                caret.classList.toggle('rotate-180');
+                            }
+                        });
+                    }
+                });
+            </script>
+        @endif
+    </form>
 
     <!-- Table content wrapper -->
     <div id="{{ $tableId }}">

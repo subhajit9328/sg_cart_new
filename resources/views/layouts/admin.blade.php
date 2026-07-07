@@ -18,6 +18,9 @@
     <!-- Select2 Searchable Dropdown Styles -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
+    <!-- Flatpickr Datepicker Styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" crossorigin="anonymous">
+
     <!-- Tailwind compiled by Vite -->
     @vite(['resources/css/app.css', 'resources/css/admin.css', 'resources/js/app.js'])
 
@@ -176,6 +179,7 @@
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     // Scroll active sidebar option into view
     window.addEventListener('DOMContentLoaded', () => {

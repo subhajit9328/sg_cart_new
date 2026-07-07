@@ -14,6 +14,7 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $status = $request->input('status');
         $dateRange = $request->input('date_range');
         $startDate = null;
         $endDate = null;
@@ -50,6 +51,7 @@ class OrderController extends Controller
         // Scoped automatically by Eloquent global scope!
         $orders = Order::with(['items', 'customer'])
             ->when($search, fn($q) => $q->where('id', $search)->orWhereHas('customer', fn($c) => $c->where('name', 'like', "%{$search}%")))
+            ->when($status, fn($q) => $q->where('status', $status))
             ->when($startDate, fn($q) => $q->where('created_at', '>=', $startDate))
             ->when($endDate, fn($q) => $q->where('created_at', '<=', $endDate))
             ->latest()
