@@ -18,7 +18,7 @@
 
 <div class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
     <!-- Top Indeterminate Progress Bar -->
-    <div id="{{ $tableId }}_progress" class="absolute top-0 left-0 right-0 h-[3px] bg-blue-500/10 overflow-hidden hidden z-20">
+    <div id="{{ $tableId }}_progress" class="absolute top-0 left-0 right-0 h-[3px] bg-blue-500/10 overflow-hidden hidden z-30">
         <div class="h-full bg-blue-600 dark:bg-blue-400 w-full origin-left animate-[loadingBar_1.5s_infinite_ease-in-out]"></div>
     </div>
 
