@@ -39,6 +39,12 @@
             </button>
         </x-tooltip>
         @endif
+        @if(class_exists(\SGCart\RelatedProducts\Models\RelatedProduct::class))
+        <button type="button" onclick="switchTab('related')" id="tabBtn_related" class="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 outline-none select-none bg-transparent cursor-pointer flex items-center gap-2">
+            <i class="fa-solid fa-link text-xs"></i>
+            <span>Related Products</span>
+        </button>
+        @endif
     </div>
 </div>
 
@@ -55,7 +61,7 @@
         {{-- ── Basic Info Section ── --}}
         <div class="space-y-4">
             <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">Basic Information</h3>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label for="name" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Product Name <span class="text-rose-600">*</span></label>
@@ -128,7 +134,7 @@
         {{-- ── Pricing & Inventory Section ── --}}
         <div class="space-y-4">
             <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">Pricing & Inventory</h3>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label for="price" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Price (₹) <span class="text-rose-600">*</span></label>
@@ -183,13 +189,13 @@
         {{-- ── Product Image Section ── --}}
         <div class="space-y-4">
             <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">Product Images</h3>
-            
+
             <div class="p-5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 rounded-xl space-y-4">
                 <p class="text-xs text-slate-500 dark:text-slate-400">Add product images below. Choose a default image using the radio button on the image card.</p>
-                
+
                 <div id="imageGallery" class="flex flex-wrap gap-4">
                     <!-- Dynamic Preview Cards will be inserted here -->
-                    
+
                     <!-- Add Image Button Card -->
                     <div id="addImageCard" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-xl w-32 h-32 flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-slate-100/50 dark:hover:bg-slate-800/30 gap-1.5 group select-none" onclick="triggerAddImage()">
                         <i class="fa-solid fa-circle-plus text-2xl text-slate-400 dark:text-slate-600 group-hover:text-blue-500 transition-colors"></i>
@@ -197,16 +203,19 @@
                     </div>
                 </div>
             </div>
-            
+
             <div id="hiddenInputsContainer" class="hidden"></div>
         </div>
-        </div> {{-- Close detailsTabContent --}}
+
+            <div id="hiddenInputsContainer" class="hidden"></div>
+        </div>
+        {{-- Close detailsTabContent --}}
 
         <div id="seoTabContent" class="tab-content hidden space-y-8">
             {{-- ── SEO Metadata Section ── --}}
             <div class="space-y-4">
                 <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">SEO Metadata</h3>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label for="meta_title" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Meta Title</label>
@@ -250,6 +259,40 @@
             </div>
         </div>
 
+        @if(class_exists(\SGCart\RelatedProducts\Models\RelatedProduct::class))
+        {{-- ── Related Products Tab Content ── --}}
+        <div id="relatedTabContent" class="tab-content hidden">
+            <div class="space-y-4">
+                <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">Related Products</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Search and select products below to link them as related products. They will appear as cards in the grid below.</p>
+
+                <div>
+                    <label for="related_product_search" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Search Products</label>
+                    <select id="related_product_search" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3 text-sm text-slate-700 dark:text-slate-300 outline-none">
+                        <option value="">— Search & Select Product —</option>
+                        @foreach(\App\Models\Product::where('status', 'active')->get() as $p)
+                            <option value="{{ $p->id }}" data-name="{{ $p->name }}" data-sku="{{ $p->sku }}" data-price="{{ $p->price }}" data-cat="{{ $p->category ? $p->category->name : 'Uncategorized' }}" data-img="{{ $p->image ? Storage::url($p->image) : asset('images/no-image.svg') }}">
+                                {{ $p->name }} ({{ $p->sku }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Hidden select containing actual selected values to be submitted --}}
+                <select name="related_product_ids[]" id="related_product_ids" class="hidden" multiple></select>
+
+                {{-- Selected products grid matching storefront style --}}
+                <div class="space-y-2 mt-6">
+                    <h4 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Selected Related Products</h4>
+                    <p id="noRelatedPlaceholder" class="text-sm text-slate-500 dark:text-slate-400">No related products added.</p>
+                    <div id="relatedProductsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 hidden">
+                        {{-- Product cards will be dynamically appended here --}}
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <!-- Form Actions -->
         <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 w-full">
             <a href="{{ route('admin.products.index') }}" class="w-full sm:w-auto text-center px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium transition-colors text-slate-700 dark:text-slate-300 no-underline">
@@ -269,7 +312,7 @@ let uniqueIdCounter = 0;
 function triggerAddImage() {
     uniqueIdCounter++;
     const id = 'img_' + uniqueIdCounter;
-    
+
     // Create dynamic file input
     const input = document.createElement('input');
     input.type = 'file';
@@ -277,14 +320,14 @@ function triggerAddImage() {
     input.accept = 'image/*';
     input.id = 'input_' + id;
     input.className = 'hidden';
-    
+
     input.addEventListener('change', function() {
         if (this.files && this.files[0]) {
             const reader = new FileReader();
             reader.onload = e => {
                 const gallery = document.getElementById('imageGallery');
                 const addCard = document.getElementById('addImageCard');
-                
+
                 const cardHtml = `
                     <div class="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm w-32 h-32 bg-slate-950 flex flex-col justify-between group" id="preview_card_${id}">
                         <img src="${e.target.result}" class="w-full h-full object-cover absolute inset-0">
@@ -300,7 +343,7 @@ function triggerAddImage() {
                     </div>
                 `;
                 addCard.insertAdjacentHTML('beforebegin', cardHtml);
-                
+
                 // Automatically check if it's the first one added
                 const checkedRadio = document.querySelector('input[name="default_image"]:checked');
                 if (!checkedRadio) {
@@ -312,7 +355,7 @@ function triggerAddImage() {
             input.remove();
         }
     });
-    
+
     document.getElementById('hiddenInputsContainer').appendChild(input);
     input.click();
 }
@@ -320,7 +363,7 @@ function triggerAddImage() {
 function removeNewImage(id) {
     document.getElementById('preview_card_' + id).remove();
     document.getElementById('input_' + id).remove();
-    
+
     const checkedRadio = document.querySelector('input[name="default_image"]:checked');
     if (!checkedRadio) {
         const firstRadio = document.querySelector('input[name="default_image"]');
@@ -333,6 +376,9 @@ function removeNewImage(id) {
 <script>
     window.switchTab = function(tab) {
         const tabs = ['details', 'seo'];
+        if (document.getElementById('tabBtn_related')) {
+            tabs.push('related');
+        }
         const cardTitle = document.getElementById('cardTitle');
 
         tabs.forEach(t => {
@@ -359,6 +405,8 @@ function removeNewImage(id) {
                 } else {
                     cardTitle.textContent = "Add SEO Metadata";
                 }
+            } else if (tab === 'related') {
+                cardTitle.textContent = "Configure Related Products";
             }
         }
     };
@@ -378,6 +426,116 @@ function removeNewImage(id) {
             minimumResultsForSearch: -1,
             width: '100%'
         });
+
+        if ($('#related_product_search').length) {
+            $('#related_product_search').select2({
+                placeholder: "— Search & Select Product —",
+                allowClear: true,
+                width: '100%',
+                templateResult: formatProductOption,
+                templateSelection: formatProductSelection
+            });
+
+            function formatProductOption(state) {
+                if (!state.id) {
+                    return state.text;
+                }
+                const img = $(state.element).data('img');
+                const sku = $(state.element).data('sku');
+                const cat = $(state.element).data('cat');
+
+                const $state = $(
+                    `<div class="flex items-center gap-3">
+                        <img src="${img}" class="w-8 h-8 rounded object-cover" />
+                        <div>
+                            <div class="font-semibold text-sm">${state.text}</div>
+                            <div class="text-[10px] text-slate-400 font-mono">${sku} | ${cat}</div>
+                        </div>
+                    </div>`
+                );
+                return $state;
+            }
+
+            function formatProductSelection(state) {
+                return state.text;
+            }
+
+            const selectedRelatedIds = new Set();
+
+            $('#related_product_search').on('select2:select', function (e) {
+                const data = e.params.data;
+                const element = data.element;
+                if (!element) return;
+
+                const id = parseInt(data.id);
+                const name = $(element).data('name');
+                const sku = $(element).data('sku');
+                const price = $(element).data('price');
+                const cat = $(element).data('cat');
+                const img = $(element).data('img');
+
+                addRelatedProduct(id, { name, sku, price, cat, img });
+
+                $(this).val('').trigger('change');
+            });
+
+            window.addRelatedProduct = function(id, data) {
+                if (selectedRelatedIds.has(id)) return;
+                selectedRelatedIds.add(id);
+
+                updateHiddenRelatedSelect();
+
+                const cardHtml = `
+                    <div class="relative group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300" id="related_card_${id}">
+                        <div class="aspect-square bg-slate-50 dark:bg-slate-900/50 relative overflow-hidden flex items-center justify-center">
+                            <img src="${data.img}" alt="${data.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                            <button type="button" onclick="removeRelatedProduct(${id})" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 hover:bg-rose-500 hover:text-white dark:bg-slate-800/90 dark:hover:bg-rose-600 flex items-center justify-center text-slate-500 dark:text-slate-400 shadow-sm cursor-pointer transition-colors z-10 border-none" title="Remove Related Product">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                        <div class="p-3.5 space-y-1">
+                            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">${data.cat}</p>
+                            <h3 class="font-display font-semibold text-sm text-slate-800 dark:text-slate-100 line-clamp-1">${data.name}</h3>
+                            <div class="flex items-center gap-1.5 mt-1">
+                                <span class="font-bold text-sm text-slate-900 dark:text-slate-100">₹${parseFloat(data.price).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $('#relatedProductsGrid').append(cardHtml);
+                checkPlaceholder();
+            }
+
+            window.removeRelatedProduct = function(id) {
+                selectedRelatedIds.delete(id);
+                $(`#related_card_${id}`).remove();
+                updateHiddenRelatedSelect();
+                checkPlaceholder();
+            }
+
+            function updateHiddenRelatedSelect() {
+                const $select = $('#related_product_ids');
+                $select.empty();
+                selectedRelatedIds.forEach(id => {
+                    $select.append(`<option value="${id}" selected>${id}</option>`);
+                });
+            }
+
+            function checkPlaceholder() {
+                const $grid = $('#relatedProductsGrid');
+                const $placeholder = $('#noRelatedPlaceholder');
+                if (selectedRelatedIds.size === 0) {
+                    $placeholder.removeClass('hidden');
+                    $grid.addClass('hidden');
+                } else {
+                    $placeholder.addClass('hidden');
+                    $grid.removeClass('hidden');
+                }
+            }
+
+            // Init placeholder check
+            checkPlaceholder();
+        }
 
         // Auto-populate slug from product name in real-time
         $('#name').on('input', function() {
@@ -401,7 +559,7 @@ function removeNewImage(id) {
 
             // Set Title Preview
             $('#seo-preview-title').text(metaTitle ? metaTitle : name);
-            
+
             // Set Slug/URL Preview
             $('#seo-preview-slug-text').text(slug);
 
@@ -433,7 +591,7 @@ function removeNewImage(id) {
         $('#name, #slug, #meta_title, #meta_description, #short_description, #description').on('input change', function() {
             updateSeoPreview();
         });
-        
+
         // Initialize SEO Preview
         updateSeoPreview();
 
@@ -441,6 +599,9 @@ function removeNewImage(id) {
         const urlParams = new URLSearchParams(window.location.search);
         const activeTab = urlParams.get('tab') || 'details';
         const allowedTabs = ['details', 'seo'];
+        if (document.getElementById('tabBtn_related')) {
+            allowedTabs.push('related');
+        }
         if (allowedTabs.includes(activeTab)) {
             switchTab(activeTab);
         } else {

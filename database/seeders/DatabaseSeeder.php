@@ -89,7 +89,7 @@ class DatabaseSeeder extends Seeder
         }
 
         // Call child seeders
-        $this->call([
+        $seeders = [
             CategorySeeder::class,
             ManufacturerSeeder::class,
             ProductSeeder::class,
@@ -100,5 +100,12 @@ class DatabaseSeeder extends Seeder
         if (class_exists(\SGCart\Blog\Database\Seeders\BlogDatabaseSeeder::class)) {
             $this->call(\SGCart\Blog\Database\Seeders\BlogDatabaseSeeder::class);
         }
+        ];
+
+        if (class_exists(\SGCart\Reviews\Database\Seeders\ReviewStatusSeeder::class)) {
+            $seeders[] = \SGCart\Reviews\Database\Seeders\ReviewStatusSeeder::class;
+        }
+
+        $this->call($seeders);
     }
 }

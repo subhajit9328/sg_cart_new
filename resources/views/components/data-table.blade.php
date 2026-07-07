@@ -23,7 +23,7 @@
     </div>
 
     <!-- Table Loading Overlay (Blurred backdrop + spinner) -->
-    <div id="{{ $tableId }}_overlay" class="absolute inset-0 bg-white/60 dark:bg-slate-950/65 backdrop-blur-[0.5px] flex items-center justify-center hidden z-20 transition-all duration-300">
+    <div id="{{ $tableId }}_overlay" class="absolute inset-0 bg-white/60 dark:bg-slate-950/65 backdrop-blur-[0.5px] flex items-center justify-center hidden z-15 transition-all duration-300">
         <div class="flex items-center gap-2.5 px-4.5 py-3 rounded-xl bg-white dark:bg-slate-800 shadow-2xl border border-slate-200/80 dark:border-slate-700/90">
             <svg class="animate-spin h-4 w-4 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
