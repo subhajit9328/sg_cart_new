@@ -104,7 +104,10 @@
                 </form>
 
                 <!-- Save Settings Button -->
-                <button type="submit" form="search-settings-form" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center justify-center gap-1.5">
+                <button type="submit" form="search-settings-form"
+                    @if($errors->any()) disabled @endif
+                    class="flex-1 text-white py-2.5 rounded-xl text-xs font-semibold transition-all shadow-sm flex items-center justify-center gap-1.5
+                    @if($errors->any()) bg-slate-300 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed @else bg-blue-600 hover:bg-blue-700 @endif">
                     <i class="fa-solid fa-cloud-arrow-up text-xs"></i> Save Settings
                 </button>
             </div>
@@ -116,18 +119,59 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('search-settings-form');
+        const saveBtn = document.querySelector('button[form="search-settings-form"]');
+        const providerInput = document.getElementById('provider');
+        const modelInput = document.getElementById('model');
+        const apiKeyInput = document.getElementById('api_key');
+
+        function checkValidity() {
+            const isProviderValid = providerInput.value.trim() !== '';
+            const isModelValid = modelInput.value.trim() !== '';
+            const isApiKeyValid = apiKeyInput.value.trim() !== '';
+            
+            const isValid = isProviderValid && isModelValid && isApiKeyValid;
+            
+            if (isValid) {
+                saveBtn.removeAttribute('disabled');
+                saveBtn.classList.remove('bg-slate-300', 'dark:bg-slate-800', 'text-slate-400', 'dark:text-slate-500', 'cursor-not-allowed');
+                saveBtn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'text-white');
+            } else {
+                saveBtn.setAttribute('disabled', 'disabled');
+                saveBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'text-white');
+                saveBtn.classList.add('bg-slate-300', 'dark:bg-slate-800', 'text-slate-400', 'dark:text-slate-500', 'cursor-not-allowed');
+            }
+        }
+
+        if (providerInput && modelInput && apiKeyInput && saveBtn) {
+            [providerInput, modelInput, apiKeyInput].forEach(input => {
+                input.addEventListener('input', function() {
+                    // Clear error styling and messages on user input
+                    input.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                    input.classList.add('border-slate-200', 'dark:border-slate-700');
+                    const errorMsg = input.parentNode.querySelector('.text-rose-500');
+                    if (errorMsg) {
+                        errorMsg.style.display = 'none';
+                    }
+                    checkValidity();
+                });
+            });
+            // Initial check
+            checkValidity();
+        }
+
         const forms = document.querySelectorAll('form');
-        forms.forEach(form => {
-            form.addEventListener('submit', function () {
+        forms.forEach(f => {
+            f.addEventListener('submit', function () {
                 let submitBtn = null;
-                if (form.id) {
-                    submitBtn = document.querySelector(`button[form="${form.id}"]`);
+                if (f.id) {
+                    submitBtn = document.querySelector(`button[form="${f.id}"]`);
                 }
                 if (!submitBtn) {
-                    submitBtn = form.querySelector('button[type="submit"]');
+                    submitBtn = f.querySelector('button[type="submit"]');
                 }
 
-                if (submitBtn) {
+                if (submitBtn && !submitBtn.disabled) {
                     submitBtn.disabled = true;
                     submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
 

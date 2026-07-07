@@ -3,9 +3,14 @@
 namespace App\Observers;
 
 use App\Actions\LogActivity;
+use App\Enums\OrderStatus;
+use App\Mail\OrderCancelledMail;
+use App\Mail\OrderCreatedMail;
+use App\Mail\OrderStatusUpdatedMail;
 use App\Models\Order;
 use BackedEnum;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
+use Illuminate\Support\Facades\Mail;
 
 class OrderObserver implements ShouldHandleEventsAfterCommit
 {
@@ -14,6 +19,10 @@ class OrderObserver implements ShouldHandleEventsAfterCommit
      */
     public function created(Order $order): void
     {
+        if ($order->email) {
+            Mail::to($order->email)->send(new OrderCreatedMail($order));
+        }
+
         if (class_exists(LogActivity::class)) {
             app(LogActivity::class)->capture(
                 description: 'Order created with reference: '.$order->order_number,
@@ -30,6 +39,14 @@ class OrderObserver implements ShouldHandleEventsAfterCommit
     public function updated(Order $order): void
     {
         if ($order->wasChanged('status')) {
+            if ($order->email) {
+                if ($order->status === OrderStatus::CANCELLED) {
+                    Mail::to($order->email)->send(new OrderCancelledMail($order));
+                } else {
+                    Mail::to($order->email)->send(new OrderStatusUpdatedMail($order));
+                }
+            }
+
             if (class_exists(LogActivity::class)) {
                 $oldStatus = $order->getOriginal('status');
                 $newStatus = $order->status;

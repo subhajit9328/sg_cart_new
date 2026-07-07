@@ -18,7 +18,7 @@
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMobileFilters()"></div>
 
     <div class="shop-layout">
-        
+
         <!-- SIDEBAR FILTERS -->
         <aside class="sidebar" id="shopSidebar">
             <div class="sidebar-header lg:hidden">
@@ -32,14 +32,14 @@
                 @if($searchQuery)
                     <input type="hidden" name="search" value="{{ $searchQuery }}"/>
                 @endif
-                
+
                 <!-- Category Filter -->
                 <div class="sidebar-section">
                     <h4 class="sidebar-title">Categories</h4>
                     @foreach($allCategories as $cat)
                         <label class="cb-label">
                             <div class="custom-cb">
-                                <input type="checkbox" name="category[]" value="{{ $cat }}" 
+                                <input type="checkbox" name="category[]" value="{{ $cat }}"
                                     {{ in_array($cat, $selectedCategories) ? 'checked' : '' }}
                                     onchange="document.getElementById('filterForm').submit()"/>
                                 <span class="cb-box"><i class="fa-solid fa-check text-[9px] text-white opacity-0 transition-opacity"></i></span>
@@ -64,7 +64,7 @@
                 </div>
 
 
-                
+
                 <a href="{{ route('store.shop') }}" class="btn btn-outline btn-sm w-full text-center mt-4 h-10 flex items-center justify-center uppercase tracking-wider font-bold text-[11px]">Reset Filters</a>
             </form>
         </aside>
@@ -93,7 +93,7 @@
 
                 <div class="filter-actions">
                     <div class="filter-controls">
-                        <button type="button" class="btn btn-outline btn-sm filter-toggle-btn lg:hidden" onclick="toggleMobileFilters()">
+                        <button type="button" class="btn btn-outline border-border! btn-sm filter-toggle-btn lg:hidden" onclick="toggleMobileFilters()">
                             <i class="fa-solid fa-sliders"></i> Filters
                             @if($activeFilterCount > 0)
                                 <span class="filter-indicator-dot"></span>
@@ -101,7 +101,7 @@
                         </button>
 
                         <!-- Sorting Dropdown -->
-                        <select class="filter-select" onchange="applySort(this.value)">
+                        <select class="filter-select py-2.5!" onchange="applySort(this.value)">
                             <option value="default" {{ $selectedSort == 'default' ? 'selected' : '' }}>Featured</option>
                             <option value="price_asc" {{ $selectedSort == 'price_asc' ? 'selected' : '' }}>Price: Low to High</option>
                             <option value="price_desc" {{ $selectedSort == 'price_desc' ? 'selected' : '' }}>Price: High to Low</option>
@@ -122,7 +122,7 @@
                             @php
                                 $inWishlist = in_array($product['id'], session('wishlist', []));
                             @endphp
-                            <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}" 
+                            <button type="button" class="wishlist-btn {{ $inWishlist ? 'active' : '' }}"
                                 data-product-id="{{ $product['id'] }}"
                                 onclick="event.stopPropagation(); toggleWishlist(this)"
                                 title="{{ $inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' }}">

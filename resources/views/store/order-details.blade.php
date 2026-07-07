@@ -177,6 +177,7 @@
                                             @endif
                                         </span>
                                     </div>
+                                </div>
                             @endif
 
                         <!-- Event: Out for Delivery -->
@@ -409,7 +410,6 @@
                                     </div>
                                 </div>
                             @endif
-
                         </div>
                     @endforeach
                 </div>
