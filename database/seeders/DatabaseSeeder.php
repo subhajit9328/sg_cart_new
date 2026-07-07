@@ -95,12 +95,11 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             SearchTermSeeder::class,
             ShippingCourierSeeder::class,
-        ]);
+        ];
 
         if (class_exists(\SGCart\Blog\Database\Seeders\BlogDatabaseSeeder::class)) {
             $this->call(\SGCart\Blog\Database\Seeders\BlogDatabaseSeeder::class);
         }
-        ];
 
         if (class_exists(\SGCart\Reviews\Database\Seeders\ReviewStatusSeeder::class)) {
             $seeders[] = \SGCart\Reviews\Database\Seeders\ReviewStatusSeeder::class;

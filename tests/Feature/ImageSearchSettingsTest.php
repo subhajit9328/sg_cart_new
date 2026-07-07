@@ -51,4 +51,34 @@ class ImageSearchSettingsTest extends TestCase
             'api_key' => 'API Key required.'
         ]);
     }
+
+    /**
+     * Test save settings button is disabled on validation errors.
+     */
+    public function test_save_button_disabled_on_validation_error(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        // Request update with invalid parameters to trigger validation redirect
+        $response = $this->actingAs($admin)
+            ->from(route('admin.image-search.settings'))
+            ->post(route('admin.image-search.settings.update'), [
+                'provider' => '',
+                'model' => '',
+                'api_key' => '',
+            ]);
+
+        $response->assertRedirect(route('admin.image-search.settings'));
+
+        // Visit settings page with validation errors in session
+        $followResponse = $this->actingAs($admin)
+            ->get(route('admin.image-search.settings'));
+
+        $followResponse->assertStatus(200);
+        $followResponse->assertSee('disabled');
+    }
 }

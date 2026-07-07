@@ -17,6 +17,7 @@ class ProductSeeder extends Seeder
                 'name' => 'H&M MEN Relaxed Fit Linen-blend shirt',
                 'sku' => '1307417003',
                 'category_name' => 'Shirts',
+                'parent_category' => "Men's Clothing",
                 'manufacturer_name' => 'H&M',
                 'short_description' => 'Premium linen shirt for formal and semi-formal wear.',
                 'description' => <<<'DESC'
@@ -68,6 +69,7 @@ class ProductSeeder extends Seeder
                 'name' => "Men's 511 Navy Blue Slim Fit Mid Rise Jeans",
                 'sku' => 'LEV-511-DM-002',
                 'category_name' => 'Jeans & Trousers',
+                'parent_category' => "Men's Clothing",
                 'manufacturer_name' => 'Levi\'s',
                 'short_description' => 'Classic Levi\'s slim fit denim jeans. 99%Cotton, 1%Elastane',
                 'description' => <<<'DESC'
@@ -92,6 +94,7 @@ class ProductSeeder extends Seeder
                 'name' => 'Nike Air Max 95 Big Bubble SE',
                 'sku' => 'NKE-AM-RUN-003',
                 'category_name' => 'Men\'s Footwear',
+                'parent_category' => 'Footwear',
                 'manufacturer_name' => 'Nike',
                 'short_description' => <<<'DESC'
                     The Air Max 95 originally takes inspiration from the human anatomy and '90s athletics aesthetics, leading to its distinctive wavy design. This version pairs mixed materials and visible cushioning for a layered look with unbelievable comfort.
@@ -210,6 +213,7 @@ class ProductSeeder extends Seeder
                 'name' => 'Men White Slim Fit Solid Full Sleeves Casual Shirt',
                 'sku' => 'LP-OXF-SH-007',
                 'category_name' => 'Shirts',
+                'parent_category' => "Men's Clothing",
                 'manufacturer_name' => 'Louis Philippe',
                 'short_description' => 'Radiating effortless style, this white slim-fit shirt by Louis Philippe Sport is a wardrobe essential for the modern man. Skillfully made from premium cotton, it promises all-day comfort and breathability, making it ideal for casual outings. The solid pattern adds a touch of sophistication, effortlessly transitioning from day to evening wear. Infuse confidence in your look, perfectly suited for both leisurely weekends and social gatherings. A smart choice for the discerning gentleman.',
                 'description' => <<<'DESC'
@@ -255,6 +259,7 @@ class ProductSeeder extends Seeder
                 'name' => "PUMA Train All Day Men's Breathable Training Tee",
                 'sku' => 'PUM-DF-TE-008',
                 'category_name' => 'Activewear',
+                'parent_category' => "Men's Clothing",
                 'manufacturer_name' => 'Puma',
                 'short_description' => 'Designed for active comfort, this training tee is built with breathable fabric and moisture-wicking technology to keep you dry and focused. Its casual yet performance-ready design makes it perfect for both workouts and everyday wear.',
                 'description' => <<<'DESC'
@@ -292,6 +297,7 @@ class ProductSeeder extends Seeder
                 'name' => "Men's Graphic Print Regular Fit Overdyed T-Shirt",
                 'sku' => 'LEV-GRP-TE-009',
                 'category_name' => 'T-Shirts & Polos',
+                'parent_category' => "Men's Clothing",
                 'manufacturer_name' => 'Levi\'s',
                 'short_description' => 'Classic cotton tee with signature graphic.',
                 'description' => <<<'DESC'
@@ -455,6 +461,7 @@ class ProductSeeder extends Seeder
             [
                 'name' => 'Raymond Men Black Regular Fit Solid Formal Blazer',
                 'sku' => 'RAY-PRM-BL-015',
+                'parent_category' => "Men's Clothing",
                 'category_name' => 'Jackets & Coats',
                 'manufacturer_name' => 'Raymond',
                 'short_description' => 'Premium wool-blend slim fit blazer.',
@@ -488,7 +495,15 @@ class ProductSeeder extends Seeder
         }
 
         foreach ($products as $p) {
-            $catId = Category::where('name', $p['category_name'])->value('id');
+            $catQuery = Category::where('name', $p['category_name']);
+            if (!empty($p['parent_category'])) {
+                $parentCat = Category::where('name', $p['parent_category'])->first();
+                if ($parentCat) {
+                    $catQuery->where('parent_id', $parentCat->id);
+                }
+            }
+            $catId = $catQuery->value('id');
+
             $manId = Manufacturer::where('name', $p['manufacturer_name'])->value('id');
 
             // Download default image file from URL and save to products folder
@@ -514,7 +529,7 @@ class ProductSeeder extends Seeder
 
             $extraImageUrls = $p['extra_image_urls'] ?? [];
 
-            unset($p['category_name'], $p['manufacturer_name'], $p['image_url'], $p['extra_image_urls']);
+            unset($p['category_name'], $p['manufacturer_name'], $p['image_url'], $p['extra_image_urls'], $p['parent_category']);
 
             $productModel = Product::query()->updateOrCreate(
                 ['sku' => $p['sku']],

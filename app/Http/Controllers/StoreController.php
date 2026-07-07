@@ -296,9 +296,9 @@ class StoreController extends Controller
 
         // Apply filtration based on the captured URL param
         if ($filter === 'positive') {
-            $query->where('rating', '>=', 4);
+            $query->where('rating', '>=', 3);
         } elseif ($filter === 'negative') {
-            $query->where('rating', '<=', 3);
+            $query->where('rating', '<=', 2);
         }
 
         // Sorting
