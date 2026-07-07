@@ -191,7 +191,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left border-collapse" id="pendingCommissionsTable">
                         <thead>
-                            <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/50 text-xs font-semibold uppercase tracking-wider text-slate-450 dark:text-slate-500">
+                            <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                                 <th class="px-5 py-3.5 w-8 text-center">
                                     <input type="checkbox" id="select-all-desktop" onclick="toggleSelectAll(this)" class="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer">
                                 </th>
@@ -373,7 +373,7 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/50 text-xs font-semibold uppercase tracking-wider text-slate-455 dark:text-slate-500">
+                        <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                             <th class="px-5 py-3.5">Date</th>
                             <th class="px-5 py-3.5">Payout Reference</th>
                             <th class="px-5 py-3.5">Seller (Shop)</th>
