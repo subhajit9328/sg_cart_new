@@ -1,7 +1,4 @@
 @can('manage blog')
-    @if(!Gate::allows('manage coupons'))
-        <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Marketing</p>
-    @endif
 
     <div class="nav-item-dropdown group-[.icon-only]:bg-blue-100/10 rounded-lg {{ (Request::is('admin/blog-posts*') || Request::is('admin/blog-categories*')) ? 'open' : '' }}">
         <button type="button" class="nav-link w-full text-left justify-between flex items-center dropdown-toggle" data-tooltip="Blog" style="background: transparent; border: none;">

@@ -152,7 +152,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-800/50">
+                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800">
                         @foreach($headers as $header)
                             @php
                                 $isSortable = $header['sortable'] ?? false;
