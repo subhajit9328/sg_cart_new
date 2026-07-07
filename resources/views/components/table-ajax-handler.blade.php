@@ -74,6 +74,25 @@
                     }
                 }
 
+                // Swap active filters button content wrapper
+                const toggleContentId = '{{ $tableId }}_filter_toggle_btn_content';
+                const newToggleContent = doc.getElementById(toggleContentId);
+                const currentToggleContent = document.getElementById(toggleContentId);
+                if (newToggleContent && currentToggleContent) {
+                    currentToggleContent.innerHTML = newToggleContent.innerHTML;
+                    
+                    // Keep caret rotation state aligned with wrapper's hidden state
+                    const caret = currentToggleContent.querySelector('#{{ $tableId }}_filter_caret');
+                    const wrapper = document.getElementById('{{ $tableId }}_advanced_filters_wrapper');
+                    if (caret && wrapper) {
+                        if (wrapper.classList.contains('hidden')) {
+                            caret.classList.remove('rotate-180');
+                        } else {
+                            caret.classList.add('rotate-180');
+                        }
+                    }
+                }
+
                 // Update history
                 if (push) {
                     history.pushState(null, '', url);

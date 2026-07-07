@@ -128,12 +128,13 @@
     clearBtnWrapperId="ordersClearBtnWrapper"
     :items="$orders"
     :headers="$headers"
-    :filterKeys="['status', 'payment_status']"
+    :filterKeys="['status', 'payment_status', 'date_range']"
     refreshBtn="true"
 >
-    <x-slot name="filters">
+    <x-slot name="advancedFilters">
         <!-- Order Status Filter -->
-        <div class="min-w-[170px]">
+        <div class="flex flex-col gap-1.5 w-full">
+            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Order Status</span>
             <x-select2 
                 name="status" 
                 id="order_status_filter"
@@ -153,7 +154,8 @@
         </div>
 
         <!-- Payment Status Filter -->
-        <div class="min-w-[185px]">
+        <div class="flex flex-col gap-1.5 w-full">
+            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Payment Status</span>
             <x-select2 
                 name="payment_status" 
                 id="payment_status_filter"
@@ -167,6 +169,19 @@
                 <option value="Paid" {{ request('payment_status') === 'Paid' ? 'selected' : '' }}>Paid</option>
                 <option value="Failed" {{ request('payment_status') === 'Failed' ? 'selected' : '' }}>Failed</option>
             </x-select2>
+        </div>
+
+        <!-- Date Range Filter -->
+        <div class="flex flex-col gap-1.5 w-full col-span-1 sm:col-span-2">
+            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Date Range</span>
+            <x-date-picker 
+                id="orderDateRangePicker" 
+                name="date_range" 
+                enableTime="false" 
+                dateFormat="d-m-Y" 
+                placeholder="Filter by date range…" 
+                width="w-full" 
+            />
         </div>
     </x-slot>
 

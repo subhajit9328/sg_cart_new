@@ -39,6 +39,34 @@ class OrderController extends Controller
             });
         }
 
+        // Date Range filter
+        if ($request->filled('date_range')) {
+            $dateRange = $request->input('date_range');
+            $parts = explode(' - ', $dateRange);
+            $startPart = isset($parts[0]) ? trim($parts[0]) : null;
+            $endPart = isset($parts[1]) ? trim($parts[1]) : $startPart;
+
+            try {
+                $startDate = $startPart ? \Carbon\Carbon::createFromFormat('d-m-Y', $startPart)->startOfDay() : null;
+                $endDate = $endPart ? \Carbon\Carbon::createFromFormat('d-m-Y', $endPart)->endOfDay() : null;
+            } catch (\Exception $e) {
+                try {
+                    $startDate = $startPart ? \Carbon\Carbon::parse($startPart)->startOfDay() : null;
+                    $endDate = $endPart ? \Carbon\Carbon::parse($endPart)->endOfDay() : null;
+                } catch (\Exception $ex) {
+                    $startDate = null;
+                    $endDate = null;
+                }
+            }
+
+            if ($startDate) {
+                $query->where('created_at', '>=', $startDate);
+            }
+            if ($endDate) {
+                $query->where('created_at', '<=', $endDate);
+            }
+        }
+
         // Calculate KPI Metrics (overall database state)
         $totalOrders = Order::count();
         $processingOrdersCount = Order::whereIn('status', ['New Order', 'Processed', 'Shipped', 'Out for Delivery', 'Processing'])->count();

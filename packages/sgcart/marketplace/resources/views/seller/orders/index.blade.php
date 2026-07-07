@@ -34,10 +34,44 @@
     clearBtnWrapperId="ordersClearBtnWrapper"
     :items="$orders"
     :headers="$headers"
-    :filterKeys="['date_range']"
+    :filterKeys="['status', 'date_range']"
+    refreshBtn="true"
 >
-    <x-slot name="filters">
-        <x-date-picker id="orderDateRangePicker" name="date_range" enableTime="true" time_24hr="false" dateFormat="d-m-Y h:i K" placeholder="Filter by date & time…" width="w-72" />
+    <x-slot name="advancedFilters">
+        <!-- Order Status Filter -->
+        <div class="flex flex-col gap-1.5 w-full">
+            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Order Status</span>
+            <x-select2 
+                name="status" 
+                id="order_status_filter"
+                placeholder="All Order Statuses"
+                :selected="request('status')"
+                :compact="true"
+                :allowClear="false"
+                :searchable="false"
+            >
+                <option value="New Order" {{ request('status') === 'New Order' ? 'selected' : '' }}>New Order</option>
+                <option value="Processed" {{ request('status') === 'Processed' ? 'selected' : '' }}>Processed</option>
+                <option value="Shipped" {{ request('status') === 'Shipped' ? 'selected' : '' }}>Shipped</option>
+                <option value="Out for Delivery" {{ request('status') === 'Out for Delivery' ? 'selected' : '' }}>Out for Delivery</option>
+                <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
+                <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+            </x-select2>
+        </div>
+
+        <!-- Date Range Filter -->
+        <div class="flex flex-col gap-1.5 w-full col-span-1 sm:col-span-2 md:col-span-3">
+            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Date Range</span>
+            <x-date-picker 
+                id="orderDateRangePicker" 
+                name="date_range" 
+                enableTime="true" 
+                time_24hr="false" 
+                dateFormat="d-m-Y h:i K" 
+                placeholder="Filter by date & time…" 
+                width="w-full" 
+            />
+        </div>
     </x-slot>
     @forelse($orders as $order)
         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/15 transition-colors">
