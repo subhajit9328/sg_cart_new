@@ -176,7 +176,7 @@
                     <input type="text" name="search" id="navSearchInput"
                            placeholder="Search products, brands and more…"
                            autocomplete="off"
-                           value="{{ request('search') }}"
+                           value="{{ old('search', request('search')) }}"
                            class="header-search-input"/>
                     @if(request()->filled('category'))
                         @foreach((array)request('category') as $cat)
@@ -646,17 +646,30 @@
             }
 
             debounceTimer = setTimeout(() => {
+                debugger;
+                let responseStatus;
                 fetch(`/search-live?q=${encodeURIComponent(query)}`, {
                     headers: {
+                        'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    responseStatus = response.status;
+                    return response.json();
+                })
                 .then(data => {
                     if (searchButton) {
                         searchButton.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
                     }
-                    if (data.length === 0) {
+                    if (responseStatus === 422) {
+                        searchDropdown.innerHTML = `
+                            <div class="search-no-results">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500 mb-1"></i>
+                                <span>${data.message || 'Search query is too long.'}</span>
+                            </div>
+                        `;
+                    } else if (responseStatus !== 200 || !data || data.length === 0) {
                         searchDropdown.innerHTML = `
                             <div class="search-no-results">
                                 <i class="fa-solid fa-magnifying-glass mb-1"></i>

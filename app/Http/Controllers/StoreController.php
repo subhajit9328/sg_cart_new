@@ -142,6 +142,13 @@ class StoreController extends Controller
      */
     public function shop(Request $request)
     {
+        try {
+            $request->validate(['search' => 'nullable|string|max:150']);
+        } catch (ValidationException $e) {
+            session()->flash('error', $e->getMessage());
+            return redirect()->back()->withInput();
+        }
+
         $baseProducts = collect(self::getProducts());
 
         // Apply Search filter first (since it is global)
@@ -157,12 +164,12 @@ class StoreController extends Controller
         }
 
 
-            $allCategories = Category::parents()
-                ->active()
-                ->orderBy('sort_order')
-                ->take(5)
-                ->pluck('name')
-                ->toArray();
+        $allCategories = Category::parents()
+            ->active()
+            ->orderBy('sort_order')
+            ->take(5)
+            ->pluck('name')
+            ->toArray();
 
         // Calculate counts based on search and price filters (before category filter is applied)
         $categoryCounts = [];
@@ -1469,6 +1476,15 @@ class StoreController extends Controller
      */
     public function searchLive(Request $request)
     {
+        try {
+            $request->validate(['q' => 'max:150']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Search query is too long (maximum 150 characters).',
+                'errors' => $e->errors()
+            ], 422);
+        }
         $query = strtolower($request->input('q', ''));
         if (empty($query)) {
             return response()->json([]);
