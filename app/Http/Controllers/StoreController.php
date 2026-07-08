@@ -39,9 +39,9 @@ class StoreController extends Controller
         if (class_exists(\SGCart\Marketplace\Models\Seller::class)) {
             $query->where(function ($q) {
                 $q->whereNull('seller_id')
-                  ->orWhereHas('seller', function ($sub) {
-                      $sub->where('status', 'approved');
-                  });
+                    ->orWhereHas('seller', function ($sub) {
+                        $sub->where('status', 'approved');
+                    });
             });
         }
 
@@ -59,14 +59,17 @@ class StoreController extends Controller
             $sizes = [];
             $colors = [];
             if ($p->variants && $p->variants->isNotEmpty()) {
-                $colors = $p->variants->where('is_active', true)->map(fn ($v) => $v->color?->hex_code)->filter()->unique()->values()->toArray();
-                $sizes = $p->variants->where('is_active', true)->map(fn ($v) => $v->size?->code)->filter()->unique()->values()->toArray();
+                $colors = $p->variants->where('is_active', true)->map(fn($v
+                ) => $v->color?->hex_code)->filter()->unique()->values()->toArray();
+                $sizes = $p->variants->where('is_active', true)->map(fn($v
+                ) => $v->size?->code)->filter()->unique()->values()->toArray();
             } else {
-                if (isset($p->sizes) && ! empty($p->sizes)) {
+                if (isset($p->sizes) && !empty($p->sizes)) {
                     $sizes = is_array($p->sizes) ? $p->sizes : array_filter(array_map('trim', explode(',', $p->sizes)));
                 }
-                if (isset($p->colors) && ! empty($p->colors)) {
-                    $colors = is_array($p->colors) ? $p->colors : array_filter(array_map('trim', explode(',', $p->colors)));
+                if (isset($p->colors) && !empty($p->colors)) {
+                    $colors = is_array($p->colors) ? $p->colors : array_filter(array_map('trim',
+                        explode(',', $p->colors)));
                 }
             }
 
@@ -100,7 +103,8 @@ class StoreController extends Controller
                 'manufacturer' => $p->manufacturer ? $p->manufacturer->name : null,
                 'img' => $p->image ? Storage::url($p->image) : asset('images/no-image.svg'),
                 'images' => $p->images->isNotEmpty()
-                    ? $p->images->sortByDesc('is_default')->map(fn ($img) => Storage::url($img->image_path))->values()->toArray()
+                    ? $p->images->sortByDesc('is_default')->map(fn($img
+                    ) => Storage::url($img->image_path))->values()->toArray()
                     : [asset('images/no-image.svg')],
                 'meta_title' => $p->meta_title,
                 'meta_description' => $p->meta_description,
@@ -118,7 +122,9 @@ class StoreController extends Controller
         $products = collect(self::getProducts())->take(4);
         $categories = Category::parents()->active()->orderBy('sort_order')->take(5)->get();
         if ($categories->isEmpty()) {
-            $categories = collect(["Women's Clothing", "Men's Clothing", "Kids' Clothing", 'Accessories', 'Footwear'])->map(function($name, $index) {
+            $categories = collect([
+                "Women's Clothing", "Men's Clothing", "Kids' Clothing", 'Accessories', 'Footwear'
+            ])->map(function ($name, $index) {
                 return new Category([
                     'name' => $name,
                     'slug' => \Illuminate\Support\Str::slug($name),
@@ -150,11 +156,13 @@ class StoreController extends Controller
             $baseProducts = $baseProducts->filter(fn($p) => $p['price'] <= $maxPrice);
         }
 
-        // Get all category names from all products
-        $allCategories = collect(self::getProducts())->pluck('cat')->unique()->values()->toArray();
-        if (empty($allCategories)) {
-            $allCategories = ["Women's Clothing", "Men's Clothing", "Kids' Clothing", 'Accessories', 'Footwear', 'Sportswear', 'Winter Wear'];
-        }
+
+            $allCategories = Category::parents()
+                ->active()
+                ->orderBy('sort_order')
+                ->take(5)
+                ->pluck('name')
+                ->toArray();
 
         // Calculate counts based on search and price filters (before category filter is applied)
         $categoryCounts = [];
@@ -197,7 +205,7 @@ class StoreController extends Controller
             'allCategories' => $allCategories,
             'categoryCounts' => $categoryCounts,
             'selectedCategories' => (array) $request->input('category', []),
-            'selectedPriceMax' => $request->input('price_max', 10000),
+            'selectedPriceMax' => $request->input('price_max', 100000),
             'selectedSort' => $sort,
             'searchQuery' => $request->input('search'),
         ]);
@@ -211,7 +219,7 @@ class StoreController extends Controller
         $products = collect(self::getProducts());
         $product = $products->firstWhere('slug', $slug);
 
-        if (! $product) {
+        if (!$product) {
             abort(404);
         }
 
@@ -245,8 +253,16 @@ class StoreController extends Controller
         $approvedReviews = collect();
         $avgProductRating = 0;
         $totalReviewsCount = 0;
-        $count5 = 0; $count4 = 0; $count3 = 0; $count2 = 0; $count1 = 0;
-        $pct5 = 0; $pct4 = 0; $pct3 = 0; $pct2 = 0; $pct1 = 0;
+        $count5 = 0;
+        $count4 = 0;
+        $count3 = 0;
+        $count2 = 0;
+        $count1 = 0;
+        $pct5 = 0;
+        $pct4 = 0;
+        $pct3 = 0;
+        $pct2 = 0;
+        $pct1 = 0;
 
         if (class_exists(\SGCart\Reviews\Models\Review::class)) {
             $approvedReviews = \SGCart\Reviews\Models\Review::where('product_id', $product['id'])
@@ -362,7 +378,9 @@ class StoreController extends Controller
         $effectiveShippingCost = ($selectionMode === 'user_choice') ? 0.0 : $shippingCost;
         $total = max(0, $subtotal + $tax - $discount + $effectiveShippingCost);
 
-        return view('store.cart', compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'shippingCost', 'selectionMode', 'hasShippingPackage'));
+        return view('store.cart',
+            compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'shippingCost', 'selectionMode',
+                'hasShippingPackage'));
     }
 
     /**
@@ -383,7 +401,7 @@ class StoreController extends Controller
         $color = $request->color;
 
         $product = Product::find($productId);
-        if (! $product || $product->status !== \App\Enums\ProductStatus::ACTIVE) {
+        if (!$product || $product->status !== \App\Enums\ProductStatus::ACTIVE) {
             return redirect()->back()->with('error', 'Product not found.');
         }
 
@@ -412,7 +430,8 @@ class StoreController extends Controller
         $allowableAdd = $currentStock - $existingQty;
 
         if ($allowableAdd <= 0) {
-            return redirect()->route('store.cart')->with('warning', "Your cart already contains the maximum available stock ({$currentStock} items) for this product.");
+            return redirect()->route('store.cart')->with('warning',
+                "Your cart already contains the maximum available stock ({$currentStock} items) for this product.");
         }
 
         if ($quantity > $allowableAdd) {
@@ -436,7 +455,8 @@ class StoreController extends Controller
         }
 
         if ($wasCapped) {
-            return redirect()->route('store.cart')->with('warning', "Only {$currentStock} items are available in stock. We added {$qtyToAdd} items to your cart (bringing it to maximum available stock).");
+            return redirect()->route('store.cart')->with('warning',
+                "Only {$currentStock} items are available in stock. We added {$qtyToAdd} items to your cart (bringing it to maximum available stock).");
         }
 
         return redirect()->route('store.cart')->with('success', 'Product added to cart!');
@@ -491,7 +511,8 @@ class StoreController extends Controller
         }
 
         if ($wasLimited) {
-            return redirect()->route('store.cart')->with('warning', 'Some items were limited to the maximum available stock.');
+            return redirect()->route('store.cart')->with('warning',
+                'Some items were limited to the maximum available stock.');
         }
 
         return redirect()->route('store.cart')->with('success', 'Cart updated successfully.');
@@ -530,7 +551,7 @@ class StoreController extends Controller
      */
     public function checkout()
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to proceed to checkout.');
         }
 
@@ -595,7 +616,9 @@ class StoreController extends Controller
             $activeGateways = app('payment.manager')->getActiveGateways();
         }
 
-        return view('store.checkout', compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'addresses', 'shippingRates', 'shippingCost', 'selectionMode', 'hasShippingPackage', 'activeGateways'));
+        return view('store.checkout',
+            compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'addresses', 'shippingRates',
+                'shippingCost', 'selectionMode', 'hasShippingPackage', 'activeGateways'));
     }
 
     /**
@@ -603,7 +626,7 @@ class StoreController extends Controller
      */
     public function placeOrder(Request $request)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to proceed to checkout.');
         }
 
@@ -661,7 +684,7 @@ class StoreController extends Controller
 
         if ($request->filled('address_id')) {
             $savedAddress = auth('customer')->user()->addresses()->find($request->address_id);
-            if (! $savedAddress) {
+            if (!$savedAddress) {
                 return redirect()->back()->withErrors(['address_id' => 'Selected address is invalid.']);
             }
             $firstName = $savedAddress->first_name;
@@ -756,7 +779,8 @@ class StoreController extends Controller
         if (class_exists(\SGCart\Shipping\Models\ShippingRate::class)) {
             $selectionMode = 'user_choice';
             if (class_exists(\SGCart\Shipping\Models\ShippingSetting::class)) {
-                $selectionMode = \SGCart\Shipping\Models\ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
+                $selectionMode = \SGCart\Shipping\Models\ShippingSetting::getVal('shipping_selection_mode',
+                    'user_choice');
             }
 
             if ($selectionMode === 'user_choice' && $request->filled('shipping_rate_id')) {
@@ -786,7 +810,7 @@ class StoreController extends Controller
 
         $total = max(0, $subtotal + $tax - $discount + $shippingCost);
         // Generate dynamic unique order number
-        $orderNumber = 'SG' . date('ymd') . strtoupper(Str::random(4));
+        $orderNumber = 'SG'.date('ymd').strtoupper(Str::random(4));
 
         $paymentMethodName = 'Card';
         $gateway = null;
@@ -815,7 +839,7 @@ class StoreController extends Controller
 
                 // Check if cart matches
                 $cartMatches = false;
-                if ((float)$order->total === (float)$total && $order->items->count() === $cartModel->items->count()) {
+                if ((float) $order->total === (float) $total && $order->items->count() === $cartModel->items->count()) {
                     $cartMatches = true;
                     foreach ($cartModel->items as $cartItem) {
                         $orderItem = $order->items->where('product_id', $cartItem->product_id)
@@ -923,7 +947,7 @@ class StoreController extends Controller
                 'amount' => $total,
                 'status' => \App\Enums\PaymentStatus::PAID,
                 'card_name' => $request->card_name,
-                'card_number_masked' => '**** **** **** ' . substr(str_replace(' ', '', $request->card_num), -4),
+                'card_number_masked' => '**** **** **** '.substr(str_replace(' ', '', $request->card_num), -4),
             ]);
         } else {
             try {
@@ -939,7 +963,7 @@ class StoreController extends Controller
                 $order->items()->delete();
                 $order->delete();
                 session()->forget('pending_checkout_order_id');
-                return redirect()->back()->withInput()->with('error', 'Payment failed: ' . $e->getMessage());
+                return redirect()->back()->withInput()->with('error', 'Payment failed: '.$e->getMessage());
             }
 
             if (!$paymentResult['success']) {
@@ -953,7 +977,8 @@ class StoreController extends Controller
                 $order->items()->delete();
                 $order->delete();
                 session()->forget('pending_checkout_order_id');
-                return redirect()->back()->withInput()->with('error', $paymentResult['message'] ?? 'Payment transaction failed.');
+                return redirect()->back()->withInput()->with('error',
+                    $paymentResult['message'] ?? 'Payment transaction failed.');
             }
         }
 
@@ -1028,7 +1053,7 @@ class StoreController extends Controller
      */
     public function account(Request $request, $tab = 'orders')
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to access your account.');
         }
 
@@ -1060,7 +1085,7 @@ class StoreController extends Controller
 
         $wishlistIds = session()->get('wishlist', []);
         $allProducts = self::getProducts();
-        $wishlist = array_filter($allProducts, fn ($p) => in_array($p['id'], $wishlistIds));
+        $wishlist = array_filter($allProducts, fn($p) => in_array($p['id'], $wishlistIds));
 
         $addresses = auth('customer')->user()->addresses;
 
@@ -1077,26 +1102,26 @@ class StoreController extends Controller
      */
     public function getNotificationsJson(Request $request)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return response()->json(['error' => 'Unauthenticated'], 401);
         }
 
         $customer = auth('customer')->user();
         $notifications = $customer->notifications()->latest()->take(10)->get()->map(function ($notification) {
             return [
-                'id'         => $notification->id,
-                'title'      => $notification->data['title'] ?? 'Notification',
-                'message'    => $notification->data['message'] ?? '',
-                'url'        => $notification->data['url'] ?? '#',
-                'type'       => $notification->data['type'] ?? 'info',
-                'icon'       => $notification->data['icon'] ?? 'fa-circle-info',
+                'id' => $notification->id,
+                'title' => $notification->data['title'] ?? 'Notification',
+                'message' => $notification->data['message'] ?? '',
+                'url' => $notification->data['url'] ?? '#',
+                'type' => $notification->data['type'] ?? 'info',
+                'icon' => $notification->data['icon'] ?? 'fa-circle-info',
                 'created_at' => $notification->created_at->diffForHumans(),
-                'read_at'    => $notification->read_at,
+                'read_at' => $notification->read_at,
             ];
         });
 
         return response()->json([
-            'unread_count'  => $customer->unreadNotifications()->count(),
+            'unread_count' => $customer->unreadNotifications()->count(),
             'notifications' => $notifications,
         ]);
     }
@@ -1106,7 +1131,7 @@ class StoreController extends Controller
      */
     public function markNotificationRead(Request $request, $id)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return $request->ajax()
                 ? response()->json(['error' => 'Unauthenticated'], 401)
                 : redirect()->route('store.login');
@@ -1129,7 +1154,7 @@ class StoreController extends Controller
      */
     public function markAllNotificationsRead(Request $request)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return $request->ajax()
                 ? response()->json(['error' => 'Unauthenticated'], 401)
                 : redirect()->route('store.login');
@@ -1149,7 +1174,7 @@ class StoreController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to update your profile.');
         }
 
@@ -1182,8 +1207,8 @@ class StoreController extends Controller
         ];
         $messages = [];
 
-        $addingEmail = ! $customer->email;
-        $addingPhone = ! $customer->phone_no;
+        $addingEmail = !$customer->email;
+        $addingPhone = !$customer->phone_no;
 
         if ($addingEmail) {
             $rules['email'] = ['nullable', 'string', 'email', 'max:255', 'unique:customers,email'];
@@ -1264,7 +1289,7 @@ class StoreController extends Controller
             $changes['phone_no'] = $customer->phone_no;
         }
 
-        if (! empty($changes)) {
+        if (!empty($changes)) {
             app(LogActivity::class)->capture(
                 description: 'Customer profile updated',
                 event: 'profile.update',
@@ -1276,11 +1301,13 @@ class StoreController extends Controller
         app(ManageOtp::class)->generate($customer, ManageOtp::REASON_PROFILE_UPDATE);
 
         if ($emailAdded) {
-            return redirect()->route('store.otp.verify')->with('success', 'Profile updated. Please verify your new email address.');
+            return redirect()->route('store.otp.verify')->with('success',
+                'Profile updated. Please verify your new email address.');
         }
 
         if ($phoneAdded) {
-            return redirect()->route('store.otp.verify')->with('success', 'Profile updated. Please verify your new phone number.');
+            return redirect()->route('store.otp.verify')->with('success',
+                'Profile updated. Please verify your new phone number.');
         }
 
         return redirect()->route('store.account', 'profile')->with('success', 'Profile details updated successfully!');
@@ -1408,24 +1435,21 @@ class StoreController extends Controller
                 }
             } elseif ($allWordsInName) {
                 $score = 75;
-            }
-            // 2. Check SKU
+            } // 2. Check SKU
             elseif (str_contains($sku, $query) || $allWordsInSku) {
                 if ($sku === $query) {
                     $score = 60;
                 } else {
                     $score = 50;
                 }
-            }
-            // 3. Check Category
+            } // 3. Check Category
             elseif (str_contains($cat, $query) || $allWordsInCat) {
                 if ($cat === $query) {
                     $score = 40;
                 } else {
                     $score = 30;
                 }
-            }
-            // 4. Check Search Terms / Tags
+            } // 4. Check Search Terms / Tags
             elseif ($tagMatch) {
                 $score = 20;
             } elseif ($allWordsInTags) {
@@ -1435,9 +1459,9 @@ class StoreController extends Controller
             $p['_search_score'] = $score;
             return $p;
         })
-        ->filter(fn($p) => $p['_search_score'] > 0)
-        ->sortByDesc('_search_score')
-        ->values();
+            ->filter(fn($p) => $p['_search_score'] > 0)
+            ->sortByDesc('_search_score')
+            ->values();
     }
 
     /**
@@ -1452,7 +1476,7 @@ class StoreController extends Controller
 
         $products = collect(self::getProducts());
         $results = self::prioritizeSearch($products, $query)
-            ->map(fn ($p) => [
+            ->map(fn($p) => [
                 'id' => $p['id'],
                 'name' => $p['name'],
                 'price' => (float) $p['price'],
@@ -1469,7 +1493,7 @@ class StoreController extends Controller
      */
     public function addAddress(Request $request)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to manage your addresses.');
         }
 
@@ -1545,7 +1569,7 @@ class StoreController extends Controller
      */
     public function deleteAddress(Request $request, $id)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to manage your addresses.');
         }
 
@@ -1578,7 +1602,7 @@ class StoreController extends Controller
      */
     public function updateAddress(Request $request, $id)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to manage your addresses.');
         }
 
@@ -1613,7 +1637,7 @@ class StoreController extends Controller
         $request->validate($rules);
 
         $address = auth('customer')->user()->addresses()->find($id);
-        if (! $address) {
+        if (!$address) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Address not found.'], 404);
             }
@@ -1660,7 +1684,7 @@ class StoreController extends Controller
      */
     public function viewOrder($ulid)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to view order details.');
         }
 
@@ -1674,7 +1698,7 @@ class StoreController extends Controller
             ->where('ulid', $ulid)
             ->first();
 
-        if (! $order) {
+        if (!$order) {
             return redirect()->route('store.account', 'orders')->with('error', 'Order not found.');
         }
 
@@ -1686,7 +1710,7 @@ class StoreController extends Controller
      */
     public function downloadInvoice($ulid)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to view/download invoices.');
         }
 
@@ -1695,7 +1719,7 @@ class StoreController extends Controller
             ->where('ulid', $ulid)
             ->first();
 
-        if (! $order) {
+        if (!$order) {
             return redirect()->route('store.account', 'orders')->with('error', 'Order not found.');
         }
 

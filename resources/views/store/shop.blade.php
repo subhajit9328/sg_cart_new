@@ -57,7 +57,7 @@
                         <span class="text-xs text-slate-400">₹0</span>
                         <span class="text-xs font-bold" id="priceLabel">₹{{ $selectedPriceMax }}</span>
                     </div>
-                    <input type="range" name="price_max" min="100" max="10000" step="100" value="{{ $selectedPriceMax }}"
+                    <input type="range" name="price_max" min="100" max="100000" step="100" value="{{ $selectedPriceMax }}"
                         class="w-full price-slider cursor-pointer"
                         onchange="document.getElementById('filterForm').submit()"
                         oninput="document.getElementById('priceLabel').textContent = '₹' + this.value"/>
