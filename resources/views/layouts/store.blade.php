@@ -152,7 +152,7 @@
 
 <header id="siteHeader">
     <!-- ROW 1: Main Header -->
-    <div class="header-main bg-[#0a0a0d] transition-all duration-300" id="headerMain">
+    <div class="header-main z-50 bg-[#0a0a0d] transition-all duration-300" id="headerMain">
         <div class="header-main-inner">
 
             <!-- Hamburger Menu Button (Mobile only) -->
@@ -211,6 +211,11 @@
                     <i class="fa-solid fa-moon header-theme-icon" id="themeIcon"></i>
                 </button>
 
+                <!-- Notifications -->
+                @auth('customer')
+                <x-notification-dropdown :user="true" />
+                @endauth
+
                 <!-- Wishlist -->
                 <a href="{{ Auth::guard('customer')->check() ? route('store.account', 'wishlist') : route('store.wishlist') }}" class="header-wishlist-btn" title="Wishlist">
                     <i class="fa-solid fa-heart header-wishlist-icon"></i>
@@ -250,7 +255,7 @@
     </div>
 
     <!-- ROW 2: Sub Navigation Bar -->
-    <div class="header-sub bg-[#0e0c12] transition-all duration-300" id="headerSub">
+    <div class="header-sub z-40 bg-[#0e0c12] transition-all duration-300" id="headerSub">
         <div class="header-sub-inner">
 
             <!-- Navigation Links -->

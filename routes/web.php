@@ -61,6 +61,12 @@ Route::middleware('auth:customer')->group(function () {
         Route::post('/checkout/order', [StoreController::class, 'placeOrder'])->name('store.checkout.order');
         Route::get('/account/order/{ulid}', [StoreController::class, 'viewOrder'])->name('store.account.order.view');
         Route::get('/account/order/{ulid}/invoice', [StoreController::class, 'downloadInvoice'])->name('store.account.order.invoice');
+        
+        // Customer notifications endpoints
+        Route::get('/account/notifications-api', [StoreController::class, 'getNotificationsJson'])->name('store.account.notifications.json');
+        Route::post('/account/notifications-api/read-all', [StoreController::class, 'markAllNotificationsRead'])->name('store.account.notifications.read-all');
+        Route::post('/account/notifications-api/{id}/read', [StoreController::class, 'markNotificationRead'])->name('store.account.notifications.read');
+
         Route::get('/account/{tab?}', [StoreController::class, 'account'])->name('store.account');
         Route::post('/account/profile/update', [StoreController::class, 'updateProfile'])->name('store.account.profile.update');
         Route::post('/account/profile-picture', [ProfilePictureController::class, 'update'])->name('store.account.profile-picture.update');
@@ -68,7 +74,6 @@ Route::middleware('auth:customer')->group(function () {
         Route::post('/account/address/add', [StoreController::class, 'addAddress'])->name('store.account.address.add');
         Route::post('/account/address/update/{id}', [StoreController::class, 'updateAddress'])->name('store.account.address.update');
         Route::get('/account/address/delete/{id}', [StoreController::class, 'deleteAddress'])->name('store.account.address.delete');
-        Route::get('/account/order/{ulid}/json', [StoreController::class, 'getOrderDetail'])->name('store.account.order.detail');
     });
 });
 

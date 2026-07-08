@@ -9,7 +9,7 @@
 
     <!-- Account Wrap -->
     <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
-        
+
         <!-- Tab Selectors (Left Sidebar / Top Navigation Card) -->
         <div class="bg-white dark:bg-[#151411] border border-[#e8e4df] dark:border-[#2e2c28] rounded-2xl p-4 lg:p-6">
             <!-- User Info Summary Header -->
@@ -65,6 +65,15 @@
                 <a href="{{ route('store.account', 'wishlist') }}" class="acc-nav-item px-3.5 py-2 lg:px-4 lg:py-3 rounded-lg text-xs lg:text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all flex items-center gap-2 lg:gap-3 shrink-0 {{ $activeTab === 'wishlist' ? 'active' : '' }}" style="text-decoration:none" id="btn-wishlist">
                     <i class="fa-regular fa-heart text-center w-4 text-xs lg:text-sm"></i> Wishlist
                 </a>
+                <a href="{{ route('store.account', 'notifications') }}" class="acc-nav-item px-3.5 py-2 lg:px-4 lg:py-3 rounded-lg text-xs lg:text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all flex items-center gap-2 lg:gap-3 shrink-0 {{ $activeTab === 'notifications' ? 'active' : '' }}" style="text-decoration:none" id="btn-notifications">
+                    <i class="fa-regular fa-bell text-center w-4 text-xs lg:text-sm"></i> Notifications
+                    @php
+                        $unreadNotificationsCount = auth('customer')->user()->unreadNotifications()->count();
+                    @endphp
+                    @if($unreadNotificationsCount > 0)
+                        <span class="ml-auto min-w-[18px] h-[18px] bg-rose-500 text-white rounded-full font-bold text-[9px] flex items-center justify-center px-1.5 py-0.5 leading-none" id="notificationsUnreadBadge">{{ $unreadNotificationsCount }}</span>
+                    @endif
+                </a>
                 <!-- Desktop Logout Button -->
                 <div class="hidden lg:block">
                     <form action="{{ route('store.logout') }}" method="POST" id="storeLogoutForm" class="contents">
@@ -79,7 +88,7 @@
 
         <!-- Tab Content Box (Right Card) -->
         <div class="bg-white border border-[#e8e4df] rounded-2xl p-5 md:p-6">
-            
+
             <!-- Orders List Tab -->
             <div id="tab-orders" class="acc-content {{ $activeTab === 'orders' ? 'active' : '' }}">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-100">
@@ -171,7 +180,7 @@
             <!-- Profile Details Tab -->
             <div id="tab-profile" class="acc-content {{ $activeTab === 'profile' ? 'active' : '' }}">
                 <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-regular fa-user text-accent text-sm"></i> Profile Details</h2>
-                
+
                 <form action="{{ route('store.account.profile.update') }}" method="POST" class="w-full flex flex-col gap-4">
                     @csrf
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -216,7 +225,7 @@
             <!-- Addresses Tab -->
             <div id="tab-address" class="acc-content {{ $activeTab === 'address' ? 'active' : '' }}">
                 <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-solid fa-map-location-dot text-accent text-sm"></i> Manage Addresses</h2>
-                
+
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                     @foreach($addresses as $addr)
                         <div class="border border-[#e8e4df] dark:border-[#2e2c28] rounded-xl p-5 relative transition-all hover:border-slate-400 dark:hover:border-slate-600 {{ $addr->is_default ? 'border-slate-900 dark:border-accent bg-slate-50/10 dark:bg-[#c8a97e]/5' : '' }}">
@@ -253,7 +262,7 @@
             <!-- Wishlist Tab -->
             <div id="tab-wishlist" class="acc-content {{ $activeTab === 'wishlist' ? 'active' : '' }}">
                 <h2 class="font-display font-bold text-base text-slate-900 mb-4 border-b border-slate-100 pb-2 flex items-center gap-2.5"><i class="fa-regular fa-heart text-accent text-sm"></i> My Wishlist</h2>
-                
+
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     @forelse($wishlist as $wl)
                         <div class="product-card" onclick="window.location.href='{{ route('store.product', $wl['slug']) }}'">
@@ -279,6 +288,95 @@
                         </div>
                     @endforelse
                 </div>
+            </div>
+
+            <!-- Notifications Tab -->
+            <div id="tab-notifications" class="acc-content {{ $activeTab === 'notifications' ? 'active' : '' }}">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-100">
+                    <h2 class="font-display font-bold text-base text-slate-900 flex items-center gap-2.5 mb-0" style="margin-bottom:0">
+                        <i class="fa-regular fa-bell text-accent text-sm"></i> Notifications
+                    </h2>
+                    @if(auth('customer')->user()->unreadNotifications()->exists())
+                        <form action="{{ route('store.account.notifications.read-all') }}" method="POST" id="markAllReadForm" class="inline">
+                            @csrf
+                            <button type="submit" class="btn btn-secondary btn-sm px-4" style="height: 33px; font-size: 11px; display: inline-flex; items-center; justify-content: center; border-radius: 10px;">
+                                Mark all as read
+                            </button>
+                        </form>
+                    @endif
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    @forelse($notifications as $notif)
+                        @php
+                            $isUnread = is_null($notif->read_at);
+                            $notifData = $notif->data;
+                            $notifUrl = $notifData['url'] ?? '#';
+                            $notifIcon = $notifData['icon'] ?? 'fa-circle-info';
+                            $notifType = $notifData['type'] ?? 'info';
+
+                            $typeClasses = [
+                                'success' => 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-450 border-emerald-100 dark:border-emerald-900/30',
+                                'danger' => 'bg-rose-50 text-rose-600 dark:bg-rose-955/20 dark:text-rose-455 border-rose-100 dark:border-rose-900/30',
+                                'warning' => 'bg-amber-50 text-amber-600 dark:bg-amber-955/20 dark:text-amber-455 border-amber-100 dark:border-amber-900/30',
+                                'info' => 'bg-blue-50 text-blue-600 dark:bg-blue-955/20 dark:text-blue-455 border-blue-100 dark:border-blue-900/30',
+                            ];
+                            $iconClass = $typeClasses[$notifType] ?? $typeClasses['info'];
+                        @endphp
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border border-[#e8e4df] dark:border-[#2e2c28] rounded-xl p-5 bg-white dark:bg-[#151411] transition-all hover:shadow-[0_4px_15px_rgba(0,0,0,0.03)] gap-4" id="notification-{{ $notif->id }}">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border {{ $isUnread ? 'bg-accent/15 text-accent border-accent/30' : 'bg-[#f8f7f5] dark:bg-[#1d1b18] text-slate-400 dark:text-slate-500 border-[#e8e4df] dark:border-[#2e2c28]' }}">
+                                    <i class="fa-solid {{ $notifIcon }} text-lg"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-800 dark:text-slate-200">
+                                        @if($notifUrl && $notifUrl !== '#')
+                                            <a href="{{ $notifUrl }}" class="hover:text-accent transition-colors" style="text-decoration:none;">{{ $notifData['title'] ?? 'Notification' }}</a>
+                                        @else
+                                            {{ $notifData['title'] ?? 'Notification' }}
+                                        @endif
+                                    </p>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ $notifData['message'] ?? '' }}</p>
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{{ $notif->created_at->diffForHumans() }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-5 w-full sm:w-auto justify-between sm:justify-end">
+                                <div class="text-left sm:text-right">
+                                    @if($isUnread)
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-accent/10 text-accent border border-accent/20">New</span>
+                                    @else
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-900/50 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-800">Read</span>
+                                    @endif
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{{ $notif->created_at->format('M d, Y · H:i') }}</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    @if($notifUrl && $notifUrl !== '#')
+                                        <a href="{{ $notifUrl }}" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-[#1d1b18] flex items-center justify-center transition-colors text-slate-400 hover:text-slate-800 dark:hover:text-slate-200" title="View Details">
+                                            <i class="fa-solid fa-eye text-sm"></i>
+                                        </a>
+                                    @endif
+                                    @if($isUnread)
+                                        <form action="{{ route('store.account.notifications.read', $notif->id) }}" method="POST" class="mark-read-form inline">
+                                            @csrf
+                                            <button type="submit" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-[#1d1b18] flex items-center justify-center transition-colors text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer" title="Mark as read">
+                                                <i class="fa-solid fa-check text-sm"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center py-12 text-slate-400">
+                            <i class="fa-regular fa-bell text-4xl mb-3 opacity-20 block"></i>
+                            <p class="text-sm">You have no notifications.</p>
+                        </div>
+                    @endforelse
+                </div>
+
+                @if($notifications instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                    <x-custom_pagination :paginator="$notifications" :show-info="true" label="notifications" size="sm" class="mt-8 pt-4 border-t border-border" />
+                @endif
             </div>
         </div>
 
@@ -513,7 +611,7 @@
                         if (headerAvatarContainer) {
                             headerAvatarContainer.innerHTML = `<img src="${data.url}" alt="Profile Picture">`;
                         }
-                        
+
                         // Update mobile navigation avatar
                         const mobileAvatarContainer = document.getElementById('mobile-nav-avatar-container');
                         if (mobileAvatarContainer) {
@@ -572,11 +670,11 @@
                             if (!initials) {
                                 initials = document.createElement('span');
                                 initials.id = 'profile-picture-initials';
-                                
+
                                 // Fetch the user's name from the header h3 element
                                 const userNameEl = container.closest('.flex').querySelector('h3');
                                 const userName = userNameEl ? userNameEl.textContent.trim() : 'Test User';
-                                
+
                                 // Get initials helper matching PHP strtoupper(substr($name, 0, 2))
                                 const getInitials = (name) => {
                                     if (!name) return 'TE';
@@ -621,6 +719,18 @@
                 }, 'Remove Photo');
             });
         }
+
+        // Notification Mark-Read Loader
+        document.querySelectorAll('.mark-read-form').forEach(form => {
+            form.addEventListener('submit', function() {
+                const btn = this.querySelector('button[type="submit"]');
+                if (btn) {
+                    btn.disabled = true;
+                    const tick = btn.querySelector('.fa-check');
+                    if (tick) tick.classList.add('hidden!');
+                }
+            });
+        });
 
         @if ($errors->any())
         if (typeof openAddressModal === 'function') {

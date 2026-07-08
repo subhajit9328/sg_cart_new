@@ -31,6 +31,17 @@ class OrderObserver implements ShouldHandleEventsAfterCommit
                 logName: 'order'
             );
         }
+
+        if ($order->customer_id && class_exists(\App\Helpers\NotificationHelper::class)) {
+            \App\Helpers\NotificationHelper::sendToCustomer(
+                $order->customer_id,
+                'Order Placed',
+                "Your order #{$order->order_number} has been successfully placed.",
+                route('store.account.order.view', $order->ulid),
+                'info',
+                'fa-shopping-bag'
+            );
+        }
     }
 
     /**
@@ -68,6 +79,60 @@ class OrderObserver implements ShouldHandleEventsAfterCommit
                     ],
                     logName: 'order'
                 );
+            }
+
+            // User side notifications for all order status changes
+            if ($order->customer_id && class_exists(\App\Helpers\NotificationHelper::class)) {
+                [$title, $message, $type, $icon] = match ($order->status) {
+                    OrderStatus::NEW_ORDER => [
+                        'Order Placed',
+                        "Your order #{$order->order_number} has been successfully placed.",
+                        'info',
+                        'fa-shopping-bag'
+                    ],
+                    OrderStatus::PROCESSING, OrderStatus::PROCESSED => [
+                        'Order Processing',
+                        "Your order #{$order->order_number} is now being processed.",
+                        'info',
+                        'fa-box-open'
+                    ],
+                    OrderStatus::SHIPPED => [
+                        'Order Shipped',
+                        "Your order #{$order->order_number} has been shipped and is in transit.",
+                        'info',
+                        'fa-truck'
+                    ],
+                    OrderStatus::OUT_FOR_DELIVERY => [
+                        'Out for Delivery',
+                        "Your order #{$order->order_number} is out for delivery and will reach you shortly.",
+                        'warning',
+                        'fa-truck-ramp-box'
+                    ],
+                    OrderStatus::DELIVERED => [
+                        'Order Delivered',
+                        "Your order #{$order->order_number} has been successfully delivered.",
+                        'success',
+                        'fa-circle-check'
+                    ],
+                    OrderStatus::CANCELLED => [
+                        'Order Cancelled',
+                        "Your order #{$order->order_number} has been cancelled.",
+                        'danger',
+                        'fa-ban'
+                    ],
+                    default => [null, null, null, null],
+                };
+
+                if ($title !== null) {
+                    \App\Helpers\NotificationHelper::sendToCustomer(
+                        $order->customer_id,
+                        $title,
+                        $message,
+                        route('store.account.order.view', $order->ulid),
+                        $type,
+                        $icon
+                    );
+                }
             }
         }
     }

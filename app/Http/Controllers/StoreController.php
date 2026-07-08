@@ -1032,7 +1032,7 @@ class StoreController extends Controller
             return redirect()->route('store.login')->with('error', 'Please log in to access your account.');
         }
 
-        $validTabs = ['orders', 'profile', 'address', 'wishlist'];
+        $validTabs = ['orders', 'profile', 'address', 'wishlist', 'notifications'];
         $activeTab = in_array($tab, $validTabs) ? $tab : 'orders';
 
         // Load real orders from the database
@@ -1064,7 +1064,84 @@ class StoreController extends Controller
 
         $addresses = auth('customer')->user()->addresses;
 
-        return view('store.account', compact('orders', 'wishlist', 'activeTab', 'addresses'));
+        $notifications = [];
+        if ($activeTab === 'notifications') {
+            $notifications = auth('customer')->user()->notifications()->paginate(10)->withQueryString();
+        }
+
+        return view('store.account', compact('orders', 'wishlist', 'activeTab', 'addresses', 'notifications'));
+    }
+
+    /**
+     * Fetch latest notifications for the dropdown (JSON).
+     */
+    public function getNotificationsJson(Request $request)
+    {
+        if (! auth('customer')->check()) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
+        $customer = auth('customer')->user();
+        $notifications = $customer->notifications()->latest()->take(10)->get()->map(function ($notification) {
+            return [
+                'id'         => $notification->id,
+                'title'      => $notification->data['title'] ?? 'Notification',
+                'message'    => $notification->data['message'] ?? '',
+                'url'        => $notification->data['url'] ?? '#',
+                'type'       => $notification->data['type'] ?? 'info',
+                'icon'       => $notification->data['icon'] ?? 'fa-circle-info',
+                'created_at' => $notification->created_at->diffForHumans(),
+                'read_at'    => $notification->read_at,
+            ];
+        });
+
+        return response()->json([
+            'unread_count'  => $customer->unreadNotifications()->count(),
+            'notifications' => $notifications,
+        ]);
+    }
+
+    /**
+     * Mark a customer notification as read.
+     */
+    public function markNotificationRead(Request $request, $id)
+    {
+        if (! auth('customer')->check()) {
+            return $request->ajax()
+                ? response()->json(['error' => 'Unauthenticated'], 401)
+                : redirect()->route('store.login');
+        }
+
+        $notification = auth('customer')->user()->unreadNotifications()->where('id', $id)->first();
+        if ($notification) {
+            $notification->markAsRead();
+        }
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->back()->with('success', 'Notification marked as read.');
+    }
+
+    /**
+     * Mark all customer notifications as read.
+     */
+    public function markAllNotificationsRead(Request $request)
+    {
+        if (! auth('customer')->check()) {
+            return $request->ajax()
+                ? response()->json(['error' => 'Unauthenticated'], 401)
+                : redirect()->route('store.login');
+        }
+
+        auth('customer')->user()->unreadNotifications->markAsRead();
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->back()->with('success', 'All notifications marked as read.');
     }
 
     /**
@@ -1576,64 +1653,6 @@ class StoreController extends Controller
         }
 
         return redirect()->route('store.account', 'address')->with('success', 'Address updated successfully!');
-    }
-
-    /**
-     * Get order details for modal view.
-     */
-    public function getOrderDetail($ulid)
-    {
-        if (! auth('customer')->check()) {
-            return response()->json(['success' => false, 'message' => 'Please log in to view order details.'], 401);
-        }
-
-        $order = auth('customer')->user()->orders()
-            ->with(['items.product'])
-            ->where('ulid', $ulid)
-            ->first();
-
-        if (! $order) {
-            return response()->json(['success' => false, 'message' => 'Order not found.'], 404);
-        }
-
-        // Format for JSON response
-        $items = [];
-        foreach ($order->items as $item) {
-            $items[] = [
-                'name' => $item->product_name,
-                'sku' => $item->product_sku,
-                'price' => (float) $item->price,
-                'quantity' => (int) $item->quantity,
-                'size' => $item->size,
-                'color' => $item->color,
-                'img' => $item->product && $item->product->image
-                    ? Storage::url($item->product->image)
-                    : asset('images/no-image.svg'),
-            ];
-        }
-
-        return response()->json([
-            'success' => true,
-            'order' => [
-                'order_number' => $order->order_number,
-                'date' => $order->created_at->format('M d, Y h:i A'),
-                'status' => $order->status->value ?? $order->status,
-                'payment_status' => $order->payment_status->value ?? $order->payment_status,
-                'payment_method' => $order->payment_method,
-                'card_number_masked' => $order->card_number_masked,
-                'recipient_name' => $order->first_name.' '.$order->last_name,
-                'address' => $order->address,
-                'city' => $order->city,
-                'state' => $order->state,
-                'zip' => $order->zip,
-                'country' => $order->country,
-                'subtotal' => (float) $order->subtotal,
-                'discount' => (float) $order->discount,
-                'tax' => (float) $order->tax,
-                'total' => (float) $order->total,
-                'items' => $items,
-            ],
-        ]);
     }
 
     /**

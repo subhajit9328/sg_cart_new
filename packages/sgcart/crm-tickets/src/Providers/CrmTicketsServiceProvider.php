@@ -39,6 +39,14 @@ class CrmTicketsServiceProvider extends ServiceProvider
 
         // Automate Installation (Migrations & Permissions) inside boot phase
         $this->autoInstall();
+
+        // Register Ticket & TicketComment Observers
+        if (class_exists(\SGCart\CrmTickets\Models\TicketComment::class)) {
+            \SGCart\CrmTickets\Models\TicketComment::observe(\SGCart\CrmTickets\Observers\TicketCommentObserver::class);
+        }
+        if (class_exists(\SGCart\CrmTickets\Models\Ticket::class)) {
+            \SGCart\CrmTickets\Models\Ticket::observe(\SGCart\CrmTickets\Observers\TicketObserver::class);
+        }
     }
 
     /**
