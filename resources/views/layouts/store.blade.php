@@ -31,7 +31,11 @@
 <body class="storefront">
 
 @php
-    $navCategories = collect(App\Http\Controllers\StoreController::getProducts())->pluck('cat')->unique()->values();
+    $navCategories = \App\Models\Category::parents()
+                ->active()
+                ->orderBy('sort_order')
+                ->take(5)
+                ->pluck('name');
     $cartCount = \App\Models\Cart::getActiveCart()->items->sum('quantity');
 @endphp
 

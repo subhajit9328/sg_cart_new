@@ -10,10 +10,9 @@
 
         <form action="{{ route('store.login.submit') }}" method="POST" class="flex flex-col gap-4" novalidate>
             @csrf
-
             <div class="flex flex-col gap-1">
                 <label class="label">Email or Phone Number</label>
-                <x-email-or-phone name="email_or_phone" id="email_or_phone" required="true" placeholder="email@example.com or phone number" value="{{ old('email_or_phone') }}"/>
+                <x-email-or-phone name="email_or_phone" id="email_or_phone" required="true" placeholder="email@example.com or phone number" value="{{ old('email_or_phone', $rememberedIdentifier ?? '') }}"/>
             </div>
 
             <div class="flex flex-col gap-1">
@@ -25,7 +24,7 @@
 
             <div class="flex items-center justify-between text-xs text-stone mt-1">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
-                    <input type="checkbox" name="remember" class="accent-ink w-4 h-4"/>
+                    <input type="checkbox" name="remember" class="accent-ink w-4 h-4" {{ old('remember') || isset($rememberedIdentifier) ? 'checked' : '' }}/>
                     <span>Remember me</span>
                 </label>
                 <a href="{{ route('store.forgot-password') }}" class="text-accent hover:text-ink font-semibold no-underline transition-colors">Forgot password?</a>

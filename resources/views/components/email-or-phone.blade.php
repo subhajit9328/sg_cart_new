@@ -418,13 +418,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 mainInput.classList.add('border-rose-500');
                 toggleCcError(false);
                 return false;
-            } else {
+            }
+            if(mainVal.length > 254){
+                errorMsg.textContent = 'Email address cannot be this long.';
+                errorMsg.classList.remove('hidden');
+                mainInput.classList.add('border-rose-500');
+                toggleCcError(false);
+                return false;
+            }
                 errorMsg.classList.add('hidden');
                 errorMsg.textContent = '';
                 mainInput.classList.remove('border-rose-500');
                 toggleCcError(false);
                 return true;
-            }
+
         }
 
         const cleanCc = ccVal.replace(/\D/g, '');

@@ -13,6 +13,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -125,13 +126,15 @@ class AuthController extends Controller
     /**
      * Show storefront login form.
      */
-    public function showStorefrontLogin()
+    public function showStorefrontLogin(Request $request)
     {
         if (Auth::guard('customer')->check()) {
             return redirect()->route('store.account');
         }
 
-        return view('store.auth.login');
+        $rememberedIdentifier = $request->cookie('remember_customer_identifier');
+
+        return view('store.auth.login', compact('rememberedIdentifier'));
     }
 
     /**
@@ -191,6 +194,12 @@ class AuthController extends Controller
             );
 
             $this->clearAdminIntendedUrl($request);
+
+            if ($remember) {
+                Cookie::queue('remember_customer_identifier', $loginInput, 14 * 24 * 60, null, null, null, true, false, 'lax');
+            } else {
+                Cookie::queue(Cookie::forget('remember_customer_identifier'));
+            }
 
             return redirect()->intended(route('store.account'))->with('success', 'Logged in successfully!');
         }
