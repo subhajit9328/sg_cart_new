@@ -155,6 +155,49 @@ body.storefront {
 .header-search-form:focus-within {
     border-color: var(--color-accent);
 }
+.header-search-form.search-error {
+    border-color: #ef4444 !important;
+}
+.header-search-form.shake {
+    animation: shake 0.5s ease-in-out;
+}
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+    20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+.search-tooltip {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: linear-gradient(135deg, #e11d48, #be123c);
+    color: #ffffff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(190, 18, 60, 0.2);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    pointer-events: none;
+    border: 1px solid rgba(253, 244, 245, 0.15);
+}
+.search-tooltip.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.search-tooltip .tooltip-arrow {
+    position: absolute;
+    bottom: 100%;
+    right: 18px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent transparent #e11d48 transparent;
+}
 .header-search-input {
     flex: 1;
     min-width: 0;

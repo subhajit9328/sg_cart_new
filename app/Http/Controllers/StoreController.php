@@ -47,7 +47,9 @@ class StoreController extends Controller
 
         return $query->get()->map(function ($p) {
             $catName = 'Fashion';
+            $subcatName = null;
             if ($p->category) {
+                $subcatName = $p->category->name;
                 $topParent = $p->category;
                 while ($topParent->parent) {
                     $topParent = $topParent->parent;
@@ -88,6 +90,8 @@ class StoreController extends Controller
                 'slug' => $p->slug,
                 'name' => $p->name,
                 'cat' => $catName,
+                'subcat' => $subcatName,
+                'category_id' => $p->category_id,
                 'price' => $p->sale_price ?? $p->price,
                 'old' => $p->sale_price ? $p->price : null,
                 'rating' => $rating,
@@ -149,6 +153,23 @@ class StoreController extends Controller
             return redirect()->back()->withInput();
         }
 
+        $search = $request->input('search');
+        $lastSearch = session('last_search');
+
+        $currentSearchNormalized = $search !== null ? trim($search) : '';
+        $lastSearchNormalized = $lastSearch !== null ? trim($lastSearch) : '';
+
+        if ($currentSearchNormalized !== $lastSearchNormalized) {
+            $request->merge([
+                'category' => null,
+                'sub_category' => null,
+                'price_max' => 100000,
+            ]);
+            $request->replace($request->all());
+        }
+
+        session(['last_search' => $currentSearchNormalized]);
+
         $baseProducts = collect(self::getProducts());
 
         // Apply Search filter first (since it is global)
@@ -164,24 +185,79 @@ class StoreController extends Controller
         }
 
 
-        $allCategories = Category::parents()
-            ->active()
-            ->orderBy('sort_order')
-            ->take(5)
-            ->pluck('name')
-            ->toArray();
+        // Build the hierarchical sidebar categories list
+        if ($request->filled('search')) {
+            $matchedCategoryIds = $baseProducts->pluck('category_id')->unique()->filter()->toArray();
+
+            $categories = Category::with('parent')->whereIn('id', $matchedCategoryIds)->get();
+
+            $sidebarCategoriesMap = [];
+            foreach ($categories as $cat) {
+                $topParent = $cat;
+                while ($topParent->parent_id && $topParent->parent) {
+                    $topParent = $topParent->parent;
+                }
+
+                $parentName = $topParent->name;
+                $parentId = $topParent->id;
+
+                if (!isset($sidebarCategoriesMap[$parentName])) {
+                    $sidebarCategoriesMap[$parentName] = [
+                        'name' => $parentName,
+                        'id' => $parentId,
+                        'children' => []
+                    ];
+                }
+
+                if ($cat->id !== $parentId) {
+                    $sidebarCategoriesMap[$parentName]['children'][$cat->name] = [
+                        'name' => $cat->name,
+                        'id' => $cat->id
+                    ];
+                }
+            }
+
+            foreach ($sidebarCategoriesMap as &$pCat) {
+                $pCat['children'] = array_values($pCat['children']);
+            }
+            $sidebarCategories = array_values($sidebarCategoriesMap);
+        } else {
+            $parents = Category::parents()->active()->take(5)->orderBy('sort_order')->get();
+            $sidebarCategories = [];
+            foreach ($parents as $parent) {
+                $children = $parent->children()->active()->orderBy('sort_order')->get();
+                $sidebarCategories[] = [
+                    'name' => $parent->name,
+                    'id' => $parent->id,
+                    'children' => $children->map(fn($c) => ['name' => $c->name, 'id' => $c->id])->toArray()
+                ];
+            }
+        }
 
         // Calculate counts based on search and price filters (before category filter is applied)
         $categoryCounts = [];
-        foreach ($allCategories as $cat) {
-            $categoryCounts[$cat] = $baseProducts->where('cat', $cat)->count();
+        foreach ($baseProducts as $p) {
+            $cat = $p['cat'];
+            $subcat = $p['subcat'];
+
+            if ($cat) {
+                $categoryCounts[$cat] = ($categoryCounts[$cat] ?? 0) + 1;
+            }
+            if ($subcat) {
+                $categoryCounts[$subcat] = ($categoryCounts[$subcat] ?? 0) + 1;
+            }
         }
 
         // Now apply Category filter for actual product listing
         $products = $baseProducts;
-        if ($request->filled('category')) {
-            $categories = (array) $request->input('category');
-            $products = $products->filter(fn($p) => in_array($p['cat'], $categories));
+        if ($request->filled('category') || $request->filled('sub_category')) {
+            $selectedCategories = (array) $request->input('category', []);
+            $selectedSubCategories = (array) $request->input('sub_category', []);
+
+            $products = $products->filter(fn($p) =>
+                in_array($p['cat'], $selectedCategories) ||
+                ($p['subcat'] && in_array($p['subcat'], $selectedSubCategories))
+            );
         }
 
         // Sorting
@@ -209,9 +285,10 @@ class StoreController extends Controller
 
         return view('store.shop', [
             'products' => $paginatedProducts,
-            'allCategories' => $allCategories,
+            'sidebarCategories' => $sidebarCategories,
             'categoryCounts' => $categoryCounts,
             'selectedCategories' => (array) $request->input('category', []),
+            'selectedSubCategories' => (array) $request->input('sub_category', []),
             'selectedPriceMax' => $request->input('price_max', 100000),
             'selectedSort' => $sort,
             'searchQuery' => $request->input('search'),

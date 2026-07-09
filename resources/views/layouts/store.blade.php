@@ -206,6 +206,10 @@
                     </button>
                 </form>
                 <div class="nav-search-dropdown" id="navSearchDropdown"></div>
+                <div class="search-tooltip" id="searchTooltip">
+                    Please enter a search term
+                    <div class="tooltip-arrow"></div>
+                </div>
             </div>
 
             <!-- Right Actions -->
@@ -913,6 +917,49 @@
                     window.location.search = urlParams.toString();
                 } else {
                     searchInput.focus();
+                }
+            });
+        }
+    })();
+
+    // Search Form Submit Validation Feature
+    (function() {
+        const searchForm = document.getElementById('navSearchForm');
+        const searchInput = document.getElementById('navSearchInput');
+        const searchTooltip = document.getElementById('searchTooltip');
+
+        if (searchForm && searchInput) {
+            searchForm.addEventListener('submit', function(e) {
+                if (searchInput.value.trim() === '') {
+                    e.preventDefault();
+                    searchForm.classList.add('search-error');
+                    
+                    // Trigger shake animation
+                    searchForm.classList.remove('shake');
+                    void searchForm.offsetWidth; // Force reflow to reset CSS animation
+                    searchForm.classList.add('shake');
+                    
+                    if (searchTooltip) {
+                        searchTooltip.classList.add('show');
+                    }
+                    
+                    searchInput.focus();
+                }
+            });
+
+            const hideError = function() {
+                searchForm.classList.remove('search-error', 'shake');
+                if (searchTooltip) {
+                    searchTooltip.classList.remove('show');
+                }
+            };
+
+            searchInput.addEventListener('input', hideError);
+
+            document.addEventListener('click', function(e) {
+                const searchContainer = document.querySelector('.header-search-wrap');
+                if (searchContainer && !searchContainer.contains(e.target)) {
+                    hideError();
                 }
             });
         }

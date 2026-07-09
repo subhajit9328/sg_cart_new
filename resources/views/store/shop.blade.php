@@ -9,6 +9,9 @@
     if (!empty($selectedCategories)) {
         $activeFilterCount += count($selectedCategories);
     }
+    if (!empty($selectedSubCategories)) {
+        $activeFilterCount += count($selectedSubCategories);
+    }
     if (request()->filled('price_max') && request('price_max') < 10000) {
         $activeFilterCount += 1;
     }
@@ -36,18 +39,70 @@
                 <!-- Category Filter -->
                 <div class="sidebar-section">
                     <h4 class="sidebar-title">Categories</h4>
-                    @foreach($allCategories as $cat)
-                        <label class="cb-label">
-                            <div class="custom-cb">
-                                <input type="checkbox" name="category[]" value="{{ $cat }}"
-                                    {{ in_array($cat, $selectedCategories) ? 'checked' : '' }}
-                                    onchange="document.getElementById('filterForm').submit()"/>
-                                <span class="cb-box"><i class="fa-solid fa-check text-[9px] text-white opacity-0 transition-opacity"></i></span>
+                    <div class="sidebar-category-accordion flex flex-col gap-2.5">
+                        @foreach($sidebarCategories as $index => $parentCat)
+                            @php
+                                $parentName = $parentCat['name'];
+                                $parentCount = $categoryCounts[$parentName] ?? 0;
+                                $hasChildren = !empty($parentCat['children']);
+                                $isParentSelected = in_array($parentName, $selectedCategories);
+                                $hasChildSelected = false;
+                                if ($hasChildren) {
+                                    foreach ($parentCat['children'] as $child) {
+                                        if (in_array($child['name'], $selectedSubCategories)) {
+                                            $hasChildSelected = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                $isOpen = $isParentSelected || $hasChildSelected;
+                            @endphp
+                            <div class="accordion-item group border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden {{ $isOpen ? 'is-open' : '' }}" id="accordion-{{ $index }}">
+                                <div class="flex items-center justify-between py-2.5 px-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors duration-250 ease rounded-lg group-[.is-open]:rounded-b-none">
+                                    <label class="cb-label flex items-center justify-between cursor-pointer py-0! select-none">
+                                        <div class="flex items-center">
+                                            <input type="checkbox" name="category[]" class="hidden" value="{{ $parentName }}"
+                                                {{ $isParentSelected ? 'checked' : '' }}
+                                                onchange="document.getElementById('filterForm').submit()"/>
+                                            <span class="cb-box"><i @class(['fa-solid fa-check text-[9px] dark:text-white transition-opacity','opacity-0' => !$isParentSelected ])></i></span>
+                                            <span class="cb-text font-bold text-xs text-slate-850 dark:text-slate-200 ml-2">{{ $parentName }}</span>
+                                        </div>
+                                        <span class="cb-count text-[10px] bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded-full font-bold text-slate-500 dark:text-slate-400">{{ $parentCount }}</span>
+                                    </label>
+
+                                    @if($hasChildren)
+                                        <button type="button" class="flex items-center justify-center w-6 h-6 border-none bg-transparent cursor-pointer outline-none text-slate-450 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-350" onclick="toggleAccordion('accordion-{{ $index }}')">
+                                            <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-250 ease {{ $isOpen ? 'rotate-180' : '' }}"></i>
+                                        </button>
+                                    @endif
+                                </div>
+
+                                @if($hasChildren)
+                                    <div class="accordion-content pt-1.5 pb-2.5 px-3 pl-6 transition-all duration-250 ease bg-white dark:bg-slate-900 border-t border-slate-50 dark:border-slate-800 {{ $isOpen ? '' : 'hidden' }}">
+                                        <div class="flex flex-col gap-2 pt-1.5">
+                                            @foreach($parentCat['children'] as $child)
+                                                @php
+                                                    $childName = $child['name'];
+                                                    $childCount = $categoryCounts[$childName] ?? 0;
+                                                    $isChildSelected = in_array($childName, $selectedSubCategories);
+                                                @endphp
+                                                <label class="cb-label flex items-center justify-between cursor-pointer py-1 text-[13px] text-stone hover:text-ink transition-colors w-full select-none">
+                                                    <div class="flex items-center">
+                                                        <input type="checkbox" name="sub_category[]" class="hidden" value="{{ $childName }}"
+                                                            {{ $isChildSelected ? 'checked' : '' }}
+                                                            onchange="document.getElementById('filterForm').submit()"/>
+                                                        <span class="cb-box"><i @class(['fa-solid fa-check text-[9px] dark:text-white transition-opacity','opacity-0' => !$isChildSelected ])></i></span>
+                                                        <span class="cb-text text-[13px] text-slate-650 dark:text-slate-300 ml-2">{{ $childName }}</span>
+                                                    </div>
+                                                    <span class="cb-count text-[11px] text-slate-400 font-medium">{{ $childCount }}</span>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
-                            <span class="cb-text">{{ $cat }}</span>
-                            <span class="cb-count">{{ $categoryCounts[$cat] ?? 0 }}</span>
-                        </label>
-                    @endforeach
+                        @endforeach
+                    </div>
                 </div>
 
                 <!-- Price Range Filter -->
@@ -173,6 +228,21 @@
         if (sidebar && overlay) {
             sidebar.classList.toggle('open');
             overlay.classList.toggle('open');
+        }
+    }
+
+    function toggleAccordion(id) {
+        const item = document.getElementById(id);
+        if (item) {
+            item.classList.toggle('is-open');
+            const content = item.querySelector('.accordion-content');
+            const icon = item.querySelector('.accordion-toggle-btn i');
+            if (content) {
+                content.classList.toggle('hidden');
+            }
+            if (icon) {
+                icon.classList.toggle('rotate-180');
+            }
         }
     }
 </script>
