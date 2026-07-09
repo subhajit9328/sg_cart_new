@@ -108,7 +108,7 @@
                             $isActive = $currentStepIndex === $index;
                             $isUpcoming = $currentStepIndex < $index;
                         @endphp
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all border 
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all border
                             @if($isCompleted)
                                 bg-emerald-600 dark:bg-emerald-500 text-white border-transparent shadow-md
                             @elseif($isActive)
@@ -234,7 +234,7 @@
                                 ];
                                 $icon = $typeIcons[strtolower($order->address_type)] ?? 'fa-location-dot';
                             @endphp
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">
+                            <span class="inline-flex mr-6 items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">
                                 <i class="fa-solid {{ $icon }}"></i> {{ $order->address_type }}
                             </span>
                         @endif
@@ -518,7 +518,6 @@
                         </div>
                         <p class="text-xs text-slate-400 mt-0.5">Assigned Order Reference: {{ $order->order_number }}</p>
                     </li>
-                </ol>
             </div>
         </div>
     </div>
@@ -538,15 +537,15 @@
 
                     <div>
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Order Status</label>
-                        <x-select2 
-                            name="status" 
+                        <x-select2
+                            name="status"
                             id="order_status_update"
                             placeholder=""
                             :selected="$statusVal"
                             :allowClear="false"
                             :searchable="false"
-                        >   
-                        
+                        >
+
                             <option value="New Order" {{ $statusVal === 'New Order' ? 'selected' : '' }}>New Order</option>
                             <option value="Processed" {{ $statusVal === 'Processed' ? 'selected' : '' }}>Processed</option>
                             <option value="Shipped" {{ $statusVal === 'Shipped' ? 'selected' : '' }}>Shipped</option>
@@ -558,8 +557,8 @@
 
                     <div>
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Payment Status</label>
-                        <x-select2 
-                            name="payment_status" 
+                        <x-select2
+                            name="payment_status"
                             id="order_payment_status_update"
                             placeholder=""
                             :selected="$order->payment_status->value ?? $order->payment_status"

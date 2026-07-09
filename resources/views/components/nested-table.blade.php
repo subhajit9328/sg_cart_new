@@ -56,8 +56,8 @@
             <td class="px-5 py-3.5 font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap text-sm">
                 <div class="flex items-center gap-3">
                     @if($hasChildren)
-                        <button type="button" 
-                                onclick="toggleNestedTableChildren('{{ $item->{$idKey} }}','{{ $tableId }}')" 
+                        <button type="button"
+                                onclick="toggleNestedTableChildren('{{ $item->{$idKey} }}','{{ $tableId }}')"
                                 class="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-850 dark:text-slate-400 dark:hover:text-slate-200 transition-colors focus:outline-none cursor-pointer"
                                 aria-expanded="{{ $isExpanded ? 'true' : 'false' }}"
                                 id="btn-toggle-{{ $item->{$idKey} }}">
@@ -68,7 +68,7 @@
                             <span class="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700"></span>
                         </div>
                     @endif
-                    
+
                     @if($item->{$imageKey})
                         <img src="{{ Storage::url($item->{$imageKey}) }}" class="w-8 h-8 object-cover rounded-lg border border-slate-200 dark:border-slate-800 bg-white">
                     @else
@@ -83,7 +83,7 @@
                 {{ $item->{$parentField}?->{$parentLabelKey} ?? '—' }}
             </td>
             <td class="px-5 py-3.5 whitespace-nowrap w-32">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold 
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold
                     {{ $item->{$statusKey} ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/20' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200/20' }}">
                     {{ $item->{$statusKey} ? 'Active' : 'Inactive' }}
                 </span>
@@ -109,8 +109,8 @@
                 @php
                     $isLastChild = $index === $itemChildren->count() - 1;
                 @endphp
-                <tr class="{{ $isExpanded ? 'table-row' : 'hidden' }} bg-slate-50/10 dark:bg-slate-900/5 hover:bg-slate-100/30 dark:hover:bg-slate-850/20 transition-colors border-b border-slate-200 dark:border-slate-800 child-row-of-{{ $item->{$idKey} }}" data-child-of="{{ $item->{$idKey} }}" data-id="{{ $child->{$idKey} }}">
-                    <td class="px-5 py-2.5 text-center text-slate-350 dark:text-slate-700 w-12 drag-handle cursor-grab active:cursor-grabbing select-none">
+                <tr class="{{ $isExpanded ? 'table-row' : 'hidden' }} px-5 py-3.5 text-center text-slate-400 dark:text-slate-200 w-12 drag-handle cursor-grab active:cursor-grabbing bg-slate-50/70 hover:bg-slate-100/70 dark:bg-slate-950 dark:hover:bg-slate-950/20 select-none child-row-of-{{ $item->{$idKey} }}" data-child-of="{{ $item->{$idKey} }}" data-id="{{ $child->{$idKey} }}">
+                    <td class="px-5 py-2.5 text-center text-slate-350 dark:text-slate-800 dark:hover:text-slate-700 w-12 drag-handle cursor-grab active:cursor-grabbing select-none">
                         <i class="fa-solid fa-grip-vertical"></i>
                     </td>
                     <td class="pl-[58px] pr-5 py-2.5 text-slate-700 dark:text-slate-200 whitespace-nowrap text-sm relative">
@@ -125,7 +125,7 @@
                                 <div class="absolute left-[32px] top-[20px] w-[18px] h-[2px] bg-slate-200/60 dark:bg-slate-800/80"></div>
                             @endif
                         </div>
-                        
+
                         <div class="flex items-center gap-3">
                             @if($child->{$imageKey})
                                 <img src="{{ Storage::url($child->{$imageKey}) }}" class="w-7 h-7 object-cover rounded-lg border border-slate-200 dark:border-slate-800 bg-white">
@@ -134,14 +134,14 @@
                                     {{ \App\Helpers\AvatarHelper::getInitials($child->{$nameKey}) }}
                                 </div>
                             @endif
-                            <span class="font-medium text-slate-700 dark:text-slate-350">{{ $child->{$nameKey} }}</span>
+                            <span class="font-medium text-slate-700 dark:text-slate-300">{{ $child->{$nameKey} }}</span>
                         </div>
                     </td>
-                    <td class="px-5 py-2.5 text-xs text-slate-655 dark:text-slate-400 whitespace-nowrap w-48">
+                    <td class="px-5 py-2.5 text-xs text-slate-655 dark:text-slate-200 whitespace-nowrap w-48">
                         {{ $item->{$nameKey} }}
                     </td>
                     <td class="px-5 py-2.5 whitespace-nowrap w-32">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold 
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold
                             {{ $child->{$statusKey} ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/20' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200/20' }}">
                             {{ $child->{$statusKey} ? 'Active' : 'Inactive' }}
                         </span>
@@ -178,11 +178,11 @@
             const rows = document.querySelectorAll(`#${tableId} .child-row-of-${parentId}`);
             const icon = document.getElementById(`icon-${parentId}`);
             const btn = document.getElementById(`btn-toggle-${parentId}`);
-            
+
             if (rows.length === 0) return;
-            
+
             const isCollapsed = rows[0].classList.contains('hidden');
-            
+
             rows.forEach(row => {
                 if (isCollapsed) {
                     row.classList.remove('hidden');
@@ -192,7 +192,7 @@
                     row.classList.add('hidden');
                 }
             });
-            
+
             if (isCollapsed) {
                 if (icon) icon.classList.add('rotate-90');
                 if (btn) btn.setAttribute('aria-expanded', 'true');
@@ -233,9 +233,9 @@
             if (!wrapper) return;
             const tbody = wrapper.querySelector('tbody');
             if (!tbody || tbody.dataset.sortableInitialized) return;
-            
+
             tbody.dataset.sortableInitialized = 'true';
-            
+
             if (typeof Sortable === 'undefined') {
                 const script = document.createElement('script');
                 script.src = "https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js";
@@ -261,7 +261,7 @@
                     document.body.classList.add('cursor-grabbing-active');
                     const draggedEl = evt.item;
                     const childOfId = draggedEl.getAttribute('data-child-of');
-                    
+
                     if (!childOfId) {
                         const expandedButtons = document.querySelectorAll('button[aria-expanded="true"]');
                         expandedButtons.forEach(btn => {
@@ -275,7 +275,7 @@
                 onMove: function(evt) {
                     const dragged = evt.dragged;
                     const related = evt.related;
-                    
+
                     if (dragged.hasAttribute('data-child-of')) {
                         return related.getAttribute('data-child-of') === dragged.getAttribute('data-child-of');
                     }
@@ -284,7 +284,7 @@
                 onChange: function(evt) {
                     const draggedEl = evt.item;
                     const childOfId = draggedEl.getAttribute('data-child-of');
-                    
+
                     if (childOfId) {
                         const childRows = document.querySelectorAll(`tr[data-child-of="${childOfId}"]`);
                         childRows.forEach((row, idx) => {
@@ -308,9 +308,9 @@
                     document.body.classList.remove('cursor-grabbing-active');
                     const draggedEl = evt.item;
                     const childOfId = draggedEl.getAttribute('data-child-of');
-                    
+
                     let ids = [];
-                    
+
                     if (childOfId) {
                         const childRows = document.querySelectorAll(`tr[data-child-of="${childOfId}"]`);
                         const parentRow = document.querySelector(`tr[data-parent-row="${childOfId}"]`);
@@ -323,7 +323,7 @@
                                 childRow.classList.add('table-row');
                             }
                         });
-                        
+
                         childRows.forEach((row, idx) => {
                             ids.push(row.getAttribute('data-id'));
                             const orderDisplay = row.querySelector('.sort-order-display');
@@ -344,7 +344,7 @@
                                 childRow.classList.add('table-row');
                             }
                         });
-                        
+
                         const parentRows = document.querySelectorAll('tr[data-parent-row]');
                         parentRows.forEach((row, idx) => {
                             ids.push(row.getAttribute('data-id'));
@@ -379,16 +379,16 @@
     (function() {
         const tableId = "{{ $tableId }}";
         const reorderUrl = "{{ route($reorderRoute) }}";
-        
+
         const observer = new MutationObserver(() => {
             window.initCategorySortable(tableId, reorderUrl);
         });
-        
+
         const wrapper = document.getElementById(tableId);
         if (wrapper) {
             observer.observe(wrapper, { childList: true, subtree: true });
         }
-        
+
         window.initCategorySortable(tableId, reorderUrl);
     })();
 </script>
@@ -402,20 +402,20 @@
         height: 0 !important;
         overflow: hidden !important;
     }
-    
+
     .drag-chosen-class {
         background-color: rgb(239 246 255 / 0.7) !important;
     }
     .dark .drag-chosen-class {
         background-color: rgb(30 41 59 / 0.5) !important;
     }
-    
+
     .drag-ghost-class {
         opacity: 0.4;
         background-color: rgb(219 234 254 / 0.5) !important;
         border: 2px dashed #3b82f6 !important;
     }
-    
+
     .cursor-grabbing-active,
     .cursor-grabbing-active * {
         cursor: grabbing !important;
