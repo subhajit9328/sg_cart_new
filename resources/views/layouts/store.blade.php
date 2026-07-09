@@ -196,7 +196,7 @@
                         <i class="fa-solid fa-microphone"></i>
                     </button>
                     @if(class_exists(\SGCart\ImageSearch\ImageSearchServiceProvider::class) && config('image-search.is_active', true))
-                    <button type="button" class="header-search-camera-btn" id="cameraSearchBtn" title="Search by Image">
+                    <button type="button" class="header-search-camera-btn " id="cameraSearchBtn" title="Search by Image">
                         <i class="fa-solid fa-camera"></i>
                     </button>
                     <input type="file" id="cameraSearchInput" accept="image/*" style="display:none;" />
