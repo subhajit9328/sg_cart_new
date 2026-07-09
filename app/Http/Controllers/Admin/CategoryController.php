@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
@@ -65,13 +66,13 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'        => 'required|string|max:255',
+            'name'        => 'required|string|max:255|unique:categories,name',
             // parent_id is the integer FK — still resolved by integer id internally
             'parent_id'   => 'nullable|exists:categories,id',
             'description' => 'nullable|string',
             'image'       => 'nullable|image|max:2048',
             'is_active'   => 'boolean',
-            'sort_order'  => 'integer',
+            'sort_order'  => 'integer|min:0',
         ]);
 
         $data['slug'] = Str::slug($data['name']);
@@ -97,12 +98,12 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $data = $request->validate([
-            'name'        => 'required|string|max:255',
+            'name'        => 'required|string|max:255|unique:categories,name,'. $category->id,
             'parent_id'   => 'nullable|exists:categories,id',
             'description' => 'nullable|string',
             'image'       => 'nullable|image|max:2048',
             'is_active'   => 'boolean',
-            'sort_order'  => 'integer',
+            'sort_order'  => 'integer|min:0',
         ]);
 
         $data['slug'] = Str::slug($data['name']);
@@ -111,8 +112,10 @@ class CategoryController extends Controller
             if ($category->image) Storage::disk('public')->delete($category->image);
             $data['image'] = $request->file('image')->store('categories', 'public');
         }
-
-        $category->update($data);
+        DB::transaction(function () use ($category, $request, $data) {
+            $category->update($data);
+            $category->children()->update(['is_active' => $request->boolean('is_active')]);
+        });
 
         return redirect()->route('admin.categories.edit', $category)->with('success', 'Category is updated successfully.');
     }

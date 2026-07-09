@@ -40,9 +40,9 @@
 
         <!-- Parent Category -->
         <div>
-            <x-select2 
-                name="parent_id" 
-                id="parent_id" 
+            <x-select2
+                name="parent_id"
+                id="parent_id"
                 label="Parent Category"
                 placeholder="— None (Top-level) —"
                 :options="$parents"
@@ -63,7 +63,7 @@
         <!-- Image Upload and Thumbnail Display -->
         <div class="space-y-3">
             <label class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Category Image</label>
-            
+
             @if($category->image)
                 <div class="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl w-fit">
                     <img src="{{ Storage::url($category->image) }}" class="w-16 h-16 object-cover rounded-lg border border-slate-200 dark:border-slate-800">
@@ -82,13 +82,14 @@
             <!-- Sort Order -->
             <div>
                 <label for="sort_order" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Sort Order</label>
-                <input type="number" name="sort_order" id="sort_order" value="{{ old('sort_order', $category->sort_order) }}"
+                <input type="number" min="0" name="sort_order" id="sort_order" value="{{ old('sort_order', $category->sort_order) }}"
                     class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
             </div>
 
             <!-- Status Checkbox -->
             <div class="flex items-end pb-3">
                 <label class="flex items-center gap-3 cursor-pointer select-none">
+                    <input type="hidden" name="is_active" value="0">
                     <input type="checkbox" name="is_active" value="1" {{ old('is_active', $category->is_active) ? 'checked' : '' }}
                         class="w-4 h-4 rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 cursor-pointer">
                     <div>

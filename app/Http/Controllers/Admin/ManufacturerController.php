@@ -45,7 +45,7 @@ class ManufacturerController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'        => 'required|string|max:255',
+            'name'        => 'required|string|max:255|unique:manufacturers,name',
             'website'     => 'nullable|url',
             'email'       => 'nullable|email',
             'phone'       => 'nullable|string|max:30',
@@ -74,7 +74,7 @@ class ManufacturerController extends Controller
     public function update(Request $request, Manufacturer $manufacturer)
     {
         $data = $request->validate([
-            'name'        => 'required|string|max:255',
+            'name'        => 'required|string|max:255|unique:manufacturers,name,'. $manufacturer->id,
             'website'     => 'nullable|url',
             'email'       => 'nullable|email',
             'phone'       => 'nullable|string|max:30',
