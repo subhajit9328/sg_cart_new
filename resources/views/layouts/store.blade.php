@@ -646,7 +646,6 @@
             }
 
             debounceTimer = setTimeout(() => {
-                debugger;
                 let responseStatus;
                 fetch(`/search-live?q=${encodeURIComponent(query)}`, {
                     headers: {
