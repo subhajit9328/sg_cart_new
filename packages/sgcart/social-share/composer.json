@@ -1,0 +1,25 @@
+{
+    "name": "sgcart/social-share",
+    "description": "Allows storefront customer social sharing of reels/images with order/product verification and follow/influencer system",
+    "autoload": {
+        "psr-4": {
+            "SGCart\\SocialShare\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "SGCart Team",
+            "email": "support@sgcart.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2|^8.3"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SGCart\\SocialShare\\Providers\\SocialShareServiceProvider"
+            ]
+        }
+    }
+}

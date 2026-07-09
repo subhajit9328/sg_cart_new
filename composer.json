@@ -27,6 +27,7 @@
         "sgcart/shipping": "@dev",
         "sgcart/marketplace": "@dev",
         "sgcart/tax": "@dev",
+        "sgcart/social-share": "@dev",
         "spatie/laravel-permission": "^8.0"
     },
     "require-dev": {
@@ -39,6 +40,13 @@
         "phpunit/phpunit": "^12.5.12"
     },
     "repositories": [
+        {
+            "type": "path",
+            "url": "packages/sgcart/social-share",
+            "options": {
+                "symlink": true
+            }
+        },
         {
             "type": "path",
             "url": "packages/sgcart/inventory",

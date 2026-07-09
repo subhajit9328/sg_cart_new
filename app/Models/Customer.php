@@ -57,6 +57,30 @@ class Customer extends Authenticatable implements JWTSubject
     }
 
     /**
+     * Get social posts created by the customer.
+     */
+    public function socialPosts()
+    {
+        return $this->hasMany(\SGCart\SocialShare\Models\SocialPost::class, 'customer_id');
+    }
+
+    /**
+     * Get the followers of this customer.
+     */
+    public function followers()
+    {
+        return $this->belongsToMany(Customer::class, 'social_follows', 'influencer_id', 'follower_id')->withTimestamps();
+    }
+
+    /**
+     * Get the influencers followed by this customer.
+     */
+    public function following()
+    {
+        return $this->belongsToMany(Customer::class, 'social_follows', 'follower_id', 'influencer_id')->withTimestamps();
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

@@ -65,6 +65,9 @@
                 <a href="{{ route('store.account', 'wishlist') }}" class="acc-nav-item px-3.5 py-2 lg:px-4 lg:py-3 rounded-lg text-xs lg:text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all flex items-center gap-2 lg:gap-3 shrink-0 {{ $activeTab === 'wishlist' ? 'active' : '' }}" style="text-decoration:none" id="btn-wishlist">
                     <i class="fa-regular fa-heart text-center w-4 text-xs lg:text-sm"></i> Wishlist
                 </a>
+                <a href="{{ route('store.account', 'social-share') }}" class="acc-nav-item px-3.5 py-2 lg:px-4 lg:py-3 rounded-lg text-xs lg:text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all flex items-center gap-2 lg:gap-3 shrink-0 {{ $activeTab === 'social-share' ? 'active' : '' }}" style="text-decoration:none" id="btn-social-share">
+                    <i class="fa-solid fa-share-nodes text-center w-4 text-xs lg:text-sm"></i> Social Share
+                </a>
                 <!-- Desktop Logout Button -->
                 <div class="hidden lg:block">
                     <form action="{{ route('store.logout') }}" method="POST" id="storeLogoutForm" class="contents">
@@ -279,6 +282,226 @@
                         </div>
                     @endforelse
                 </div>
+            </div>
+            
+            <!-- Social Share / Influencer Hub Tab -->
+            <div id="tab-social-share" class="acc-content {{ $activeTab === 'social-share' ? 'active' : '' }}">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <h2 class="font-display font-bold text-base text-slate-900 dark:text-white mb-0 flex items-center gap-2.5" style="margin-bottom:0">
+                        <i class="fa-solid fa-share-nodes text-accent text-sm"></i> Social Share & Influencer Hub
+                    </h2>
+                    <!-- Mini Stats -->
+                    <div class="flex gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#f8f7f5] dark:bg-[#1a1916] text-slate-655 dark:text-slate-400 border border-slate-200 dark:border-slate-800">
+                            <strong>{{ count($socialPosts) }}</strong> Posts
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-955/20 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50">
+                            <strong>{{ count($followers) }}</strong> Followers
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#f8f7f5] dark:bg-[#1a1916] text-slate-655 dark:text-slate-400 border border-slate-200 dark:border-slate-800">
+                            <strong>{{ count($following) }}</strong> Following
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Sub Tab Selectors -->
+                <div class="flex gap-2 mb-6 border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <button type="button" onclick="switchSocialSubTab('social-upload')" id="subbtn-social-upload" class="social-sub-tab-btn active px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-900 text-white dark:bg-accent dark:text-slate-950 border-none cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Share a Look
+                    </button>
+                    <button type="button" onclick="switchSocialSubTab('social-posts')" id="subbtn-social-posts" class="social-sub-tab-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-[#f8f7f5] dark:bg-[#1a1916] text-slate-650 hover:text-slate-900 border-none cursor-pointer">
+                        <i class="fa-solid fa-images mr-1.5"></i> My Posts ({{ count($socialPosts) }})
+                    </button>
+                    <button type="button" onclick="switchSocialSubTab('social-network')" id="subbtn-social-network" class="social-sub-tab-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-[#f8f7f5] dark:bg-[#1a1916] text-slate-650 hover:text-slate-900 border-none cursor-pointer">
+                        <i class="fa-solid fa-user-group mr-1.5"></i> Social Circle
+                    </button>
+                </div>
+
+                <!-- Sub Tab 1: Upload Look -->
+                <div id="subtab-social-upload" class="social-sub-content active">
+                    <form action="{{ route('store.social-share.store') }}" method="POST" enctype="multipart/form-data" class="w-full flex flex-col gap-5 max-w-xl">
+                        @csrf
+                        
+                        <!-- Drag-and-drop media input -->
+                        <div class="flex flex-col gap-1.5">
+                            <label class="font-sans text-[11px] font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider">Upload Video Reel or Image <span class="text-rose-600">*</span></label>
+                            <div class="border-2 border-dashed border-[#e8e4df] dark:border-[#2e2c28] hover:border-slate-400 dark:hover:border-slate-600 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer gap-2 transition-all relative min-h-[120px]" onclick="document.getElementById('social_media_input').click()">
+                                <i class="fa-solid fa-photo-film text-3xl text-slate-300 dark:text-slate-700"></i>
+                                <span class="text-xs font-bold text-slate-500">Choose Image or MP4 Video Reel</span>
+                                <span class="text-[10px] text-slate-400">Files up to 20 MB supported</span>
+                                <input type="file" name="media" id="social_media_input" required class="hidden" accept="image/*,video/mp4,video/x-m4v,video/*" onchange="previewSocialMedia(this)"/>
+                                
+                                <!-- Preview container -->
+                                <div id="social_media_preview" class="absolute inset-0 bg-white dark:bg-[#151411] rounded-2xl hidden items-center justify-center p-2 border border-slate-350 dark:border-slate-800">
+                                    <!-- Injected media -->
+                                </div>
+                            </div>
+                            @error('media') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <!-- Order ID OR Product SKU -->
+                        <div class="bg-[#f8f7f5]/80 dark:bg-[#1a1916]/40 border border-[#e8e4df] dark:border-[#2e2c28] rounded-2xl p-4 mt-2">
+                            <h4 class="text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1 flex items-center gap-1.5" style="margin-bottom: 4px;"><i class="fa-solid fa-circle-info text-accent"></i> Linking Verification</h4>
+                            <p class="text-[10px] text-slate-450 dark:text-slate-500 leading-normal mb-4">To share your style post, you must provide either a valid Order ID/Number (visible in My Orders) or a Product SKU code (visible on the product page).</p>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="flex flex-col gap-1">
+                                    <label class="font-sans text-[10px] font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider">Order ID / Number</label>
+                                    <input name="order_number" id="social_order_number" class="w-full px-3 py-2 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all" placeholder="e.g. ORD-1001" value="{{ old('order_number') }}"/>
+                                    @error('order_number') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <label class="font-sans text-[10px] font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider">Product SKU</label>
+                                    <input name="product_sku" id="social_product_sku" class="w-full px-3 py-2 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all" placeholder="e.g. TSHIRT-BLK-M" value="{{ old('product_sku') }}"/>
+                                    @error('product_sku') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Caption -->
+                        <div class="flex flex-col gap-1">
+                            <label class="font-sans text-[11px] font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider">Caption / Style Notes</label>
+                            <textarea name="caption" rows="3" class="w-full px-3.5 py-2.5 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:dark:border-accent" placeholder="Write a short description to inspire your followers...">{{ old('caption') }}</textarea>
+                            @error('caption') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <!-- Shop Link -->
+                        <div class="flex flex-col gap-1">
+                            <label class="font-sans text-[11px] font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider">Shop Link (Optional)</label>
+                            <input name="shop_link" type="url" class="w-full px-3.5 py-2.5 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all focus:border-slate-900 focus:dark:border-accent" placeholder="e.g. {{ url('/product/relaxed-fit-shirt') }}" value="{{ old('shop_link') }}"/>
+                            <span class="text-[10px] text-slate-400">Must be a URL from this website (base URL must match).</span>
+                            @error('shop_link') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="pt-2 flex gap-3">
+                            <button type="submit" class="btn btn-primary btn-sm px-6">Publish Look</button>
+                            <button type="button" onclick="resetSocialUploadForm()" class="btn btn-secondary btn-sm px-6">Reset</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Sub Tab 2: My Posts -->
+                <div id="subtab-social-posts" class="social-sub-content hidden">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                        @forelse($socialPosts as $post)
+                            <div class="border border-[#e8e4df] dark:border-[#2e2c28] rounded-2xl overflow-hidden bg-white dark:bg-[#151411] flex flex-col h-full">
+                                <div class="relative aspect-[3/4] bg-slate-950 flex items-center justify-center">
+                                    @if($post->media_type === 'video')
+                                        <video src="{{ Storage::url($post->media_path) }}" muted class="w-full h-full object-cover"></video>
+                                        <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+                                            <i class="fa-solid fa-play text-white text-lg"></i>
+                                        </div>
+                                    @else
+                                        <img src="{{ Storage::url($post->media_path) }}" alt="Look" class="w-full h-full object-cover">
+                                    @endif
+
+                                    <!-- Status Overlay -->
+                                    <div class="absolute top-3 right-3">
+                                        @if($post->status === 'approved')
+                                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-emerald-555 text-white border border-emerald-400">Approved</span>
+                                        @elseif($post->status === 'rejected')
+                                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-rose-600 text-white border border-rose-500">Rejected</span>
+                                        @else
+                                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-amber-500 text-white border border-amber-400">Pending</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="p-4 flex flex-col gap-2.5 flex-1 bg-white dark:bg-[#151411]">
+                                    <p class="text-xs font-semibold text-slate-700 dark:text-slate-350 line-clamp-2 leading-relaxed">
+                                        {{ $post->caption ?? 'No caption.' }}
+                                    </p>
+                                    
+                                    <div class="flex flex-wrap gap-1 mt-auto">
+                                        @if($post->order_number)
+                                            <span class="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-mono">Order #{{ $post->order_number }}</span>
+                                        @endif
+                                        @if($post->product_sku)
+                                            <span class="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-mono">SKU: {{ $post->product_sku }}</span>
+                                        @endif
+                                        @if($post->product)
+                                            <span class="text-[9px] bg-purple-50 dark:bg-purple-955/20 text-purple-700 dark:text-purple-400 px-2 py-0.5 rounded border border-purple-100 dark:border-purple-900/50 truncate max-w-[150px]">{{ $post->product->name }}</span>
+                                        @endif
+                                    </div>
+
+                                    @if($post->status === 'rejected' && $post->rejection_reason)
+                                        <div class="mt-2 p-2.5 bg-rose-50 dark:bg-rose-955/10 border border-rose-100 dark:border-rose-900/40 rounded-xl text-[10px] text-rose-700 dark:text-rose-400 leading-normal">
+                                            <strong>Moderator Note:</strong> {{ $post->rejection_reason }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @empty
+                            <div class="col-span-full py-12 text-center text-slate-400 dark:text-slate-500">
+                                <i class="fa-solid fa-photo-film text-4xl mb-3 opacity-20 block"></i>
+                                <p class="text-sm">You haven't submitted any looks yet.</p>
+                            </div>
+                        @endforelse
+                       </div>
+                   </div>
+
+                   <!-- Sub Tab 3: Social Circle -->
+                   <div id="subtab-social-network" class="social-sub-content hidden">
+                       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                           <!-- Followers -->
+                           <div>
+                               <h3 class="font-display font-bold text-sm text-slate-850 dark:text-slate-200 mb-4 flex items-center gap-2">
+                                   <i class="fa-solid fa-user-group text-slate-400"></i> My Followers <span class="bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-400 px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-200 dark:border-slate-700">{{ count($followers) }}</span>
+                               </h3>
+                               <div class="flex flex-col gap-3">
+                                   @forelse($followers as $f)
+                                       <div class="flex items-center gap-3 p-3 border border-slate-100 dark:border-slate-800 rounded-xl bg-[#f8f7f5]/40 dark:bg-[#1a1916]/10">
+                                           <div class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-850 flex items-center justify-center font-bold text-xs text-slate-650 overflow-hidden border border-slate-300 dark:border-slate-700">
+                                               @if($f->profile_picture)
+                                                   <img src="{{ Storage::url($f->profile_picture) }}" alt="Avatar" class="w-full h-full object-cover">
+                                               @else
+                                                   {{ strtoupper(substr($f->name, 0, 2)) }}
+                                               @endif
+                                           </div>
+                                           <div>
+                                               <h4 class="font-bold text-xs text-slate-850 dark:text-slate-200">{{ $f->name }}</h4>
+                                               <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Follower since {{ $f->pivot->created_at ? $f->pivot->created_at->format('M d, Y') : 'recently' }}</p>
+                                           </div>
+                                       </div>
+                                   @empty
+                                       <p class="text-xs text-slate-400 dark:text-slate-500 italic">No followers yet. Publish stylish approved looks to get followed!</p>
+                                   @endforelse
+                               </div>
+                           </div>
+
+                           <!-- Following -->
+                           <div>
+                               <h3 class="font-display font-bold text-sm text-slate-850 dark:text-slate-200 mb-4 flex items-center gap-2">
+                                   <i class="fa-solid fa-user-plus text-slate-450"></i> Influencers I Follow <span class="bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-400 px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-200 dark:border-slate-700">{{ count($following) }}</span>
+                               </h3>
+                               <div class="flex flex-col gap-3">
+                                   @forelse($following as $f)
+                                       <div class="flex items-center justify-between p-3 border border-slate-100 dark:border-slate-800 rounded-xl bg-[#f8f7f5]/40 dark:bg-[#1a1916]/10">
+                                           <div class="flex items-center gap-3">
+                                               <div class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-850 flex items-center justify-center font-bold text-xs text-slate-650 overflow-hidden border border-slate-300 dark:border-slate-700">
+                                                   @if($f->profile_picture)
+                                                       <img src="{{ Storage::url($f->profile_picture) }}" alt="Avatar" class="w-full h-full object-cover">
+                                                   @else
+                                                       {{ strtoupper(substr($f->name, 0, 2)) }}
+                                                   @endif
+                                               </div>
+                                               <div>
+                                                   <h4 class="font-bold text-xs text-slate-850 dark:text-slate-200">{{ $f->name }}</h4>
+                                                   <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Following</p>
+                                               </div>
+                                           </div>
+                                           <button type="button" onclick="toggleFollow(this, '{{ $f->id }}')" class="px-2.5 py-1 border border-rose-200 hover:bg-rose-50 dark:border-rose-900/30 dark:hover:bg-rose-955/20 text-rose-600 rounded-lg text-[10px] font-bold uppercase transition-colors cursor-pointer select-none">
+                                               Unfollow
+                                           </button>
+                                       </div>
+                                   @empty
+                                       <p class="text-xs text-slate-400 dark:text-slate-500 italic">You aren't following any style influencers yet. Explore the Studio Feed to find trends!</p>
+                                   @endforelse
+                               </div>
+                           </div>
+                       </div>
+                   </div>
+
+               </div>
             </div>
         </div>
 
@@ -627,6 +850,141 @@
             openAddressModal();
         }
         @endif
+
+        // Redirect to active tab from errors if present
+        @if ($errors->has('media') || $errors->has('order_number') || $errors->has('product_sku') || $errors->has('caption'))
+            const socialBtn = document.getElementById('btn-social-share');
+            if (socialBtn) {
+                // Switch window location parameter to social-share or trigger tab manually if required
+            }
+        @endif
     });
+
+    // Social Share Sub-Tab Switcher
+    function switchSocialSubTab(subTabId) {
+        document.querySelectorAll('.social-sub-content').forEach(el => {
+            el.classList.add('hidden');
+            el.classList.remove('active');
+        });
+        const targetTab = document.getElementById('subtab-' + subTabId);
+        if (targetTab) {
+            targetTab.classList.remove('hidden');
+            targetTab.classList.add('active');
+        }
+
+        document.querySelectorAll('.social-sub-tab-btn').forEach(btn => {
+            btn.classList.remove('active', 'bg-slate-900', 'text-white', 'dark:bg-accent', 'dark:text-slate-950');
+            btn.classList.add('bg-[#f8f7f5]', 'dark:bg-[#1a1916]', 'text-slate-650');
+        });
+        const activeBtn = document.getElementById('subbtn-' + subTabId);
+        if (activeBtn) {
+            activeBtn.classList.add('active', 'bg-slate-900', 'text-white', 'dark:bg-accent', 'dark:text-slate-950');
+            activeBtn.classList.remove('bg-[#f8f7f5]', 'dark:bg-[#1a1916]', 'text-slate-650');
+        }
+    }
+
+    // Media Preview
+    function previewSocialMedia(input) {
+        const preview = document.getElementById('social_media_preview');
+        if (!preview) return;
+        preview.innerHTML = '';
+        
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                let el;
+                if (file.type.startsWith('video/')) {
+                    el = document.createElement('video');
+                    el.src = e.target.result;
+                    el.controls = true;
+                    el.autoplay = true;
+                    el.muted = true;
+                    el.className = 'max-w-full max-h-[140px] rounded-xl';
+                    el.style.outline = 'none';
+                } else {
+                    el = document.createElement('img');
+                    el.src = e.target.result;
+                    el.className = 'max-w-full max-h-[140px] rounded-xl object-contain';
+                }
+                
+                // Add cancel button overlay
+                const cancelBtn = document.createElement('span');
+                cancelBtn.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+                cancelBtn.className = 'absolute top-2 right-2 text-rose-500 bg-white dark:bg-[#151411] rounded-full hover:scale-110 cursor-pointer text-base shadow z-10';
+                cancelBtn.onclick = function(event) {
+                    event.stopPropagation();
+                    resetSocialUploadForm();
+                };
+                
+                preview.appendChild(el);
+                preview.appendChild(cancelBtn);
+                preview.className = 'absolute inset-0 bg-white dark:bg-[#151411] rounded-2xl flex items-center justify-center p-2 border border-slate-350 dark:border-slate-800 z-10';
+            }
+            
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Reset Upload form
+    function resetSocialUploadForm() {
+        const input = document.getElementById('social_media_input');
+        if (input) input.value = '';
+        
+        const preview = document.getElementById('social_media_preview');
+        if (preview) {
+            preview.innerHTML = '';
+            preview.className = 'absolute inset-0 bg-white dark:bg-[#151411] rounded-2xl hidden';
+        }
+        
+        const orderNumInput = document.getElementById('social_order_number');
+        if (orderNumInput) orderNumInput.value = '';
+        
+        const skuInput = document.getElementById('social_product_sku');
+        if (skuInput) skuInput.value = '';
+        
+        const capArea = document.querySelector('#tab-social-upload textarea');
+        if (capArea) capArea.value = '';
+
+        const shopLinkInput = document.querySelector('input[name="shop_link"]');
+        if (shopLinkInput) shopLinkInput.value = '';
+    }
+
+    // Follow/Unfollow Helper inside account page
+    function toggleFollow(btn, influencerId) {
+        if (!btn) return;
+        btn.disabled = true;
+
+        fetch("{{ route('store.social-share.follow', ':id') }}".replace(':id', influencerId), {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Network response not ok');
+            return res.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                // Reload page to update followers/following arrays dynamically
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            } else {
+                showToast(data.message || 'Follow toggle failed.', 'error');
+            }
+        })
+        .catch(err => {
+            showToast('Something went wrong.', 'error');
+        })
+        .finally(() => {
+            btn.disabled = false;
+        });
+    }
 </script>
 @endsection
