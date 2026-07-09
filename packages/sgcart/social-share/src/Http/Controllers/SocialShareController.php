@@ -39,7 +39,32 @@ class SocialShareController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'media' => 'required|file|mimes:jpg,jpeg,png,mp4,mov,avi|max:20480', // max 20MB for reels
+            'media' => [
+                'required',
+                'file',
+                'max:102400', // max 100MB for reels
+                function ($attribute, $value, $fail) {
+                    if (!$value->isValid()) {
+                        $fail('The uploaded file is not valid.');
+                        return;
+                    }
+                    
+                    $extension = strtolower($value->getClientOriginalExtension());
+                    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'm4v', 'webm', '3gp'];
+                    
+                    // Check MIME type
+                    $mimeType = $value->getMimeType();
+                    $allowedMimes = [
+                        'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+                        'video/mp4', 'video/quicktime', 'video/x-m4v', 'video/webm', 'video/3gpp', 
+                        'video/avi', 'video/msvideo', 'video/x-msvideo', 'application/octet-stream'
+                    ];
+
+                    if (!in_array($extension, $allowedExtensions) && !in_array($mimeType, $allowedMimes)) {
+                        $fail('The media must be a valid image or video file (jpg, jpeg, png, gif, webp, mp4, mov, avi, webm, m4v).');
+                    }
+                }
+            ],
             'caption' => 'nullable|string|max:1000',
             'order_number' => 'required_without:product_sku|nullable|string',
             'product_sku' => 'required_without:order_number|nullable|string',
@@ -60,7 +85,7 @@ class SocialShareController extends Controller
             'order_number.required_without' => 'Please provide either an Order ID or a Product SKU.',
             'product_sku.required_without' => 'Please provide either an Order ID or a Product SKU.',
             'media.required' => 'Please upload an image or video.',
-            'media.max' => 'The file size must not exceed 20MB.',
+            'media.max' => 'The file size must not exceed 100MB.',
             'shop_link.url' => 'Please provide a valid URL for the shop link.',
         ]);
 
@@ -115,7 +140,10 @@ class SocialShareController extends Controller
         if ($request->hasFile('media')) {
             $file = $request->file('media');
             $mime = $file->getClientMimeType();
-            $mediaType = str_contains($mime, 'video') ? 'video' : 'image';
+            $extension = strtolower($file->getClientOriginalExtension());
+            $videoExtensions = ['mp4', 'mov', 'avi', 'm4v', 'webm', '3gp'];
+            
+            $mediaType = (str_contains($mime, 'video') || in_array($extension, $videoExtensions)) ? 'video' : 'image';
             
             $path = $file->store('social_shares', 'public');
         } else {
