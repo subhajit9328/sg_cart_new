@@ -65,12 +65,63 @@
                                 <input type="checkbox" name="bulk_ids[]" value="{{ $img->id }}" class="slide-checkbox w-4 h-4 rounded border-slate-350 dark:border-slate-700 bg-white/90 backdrop-blur-xs text-blue-600 focus:ring-blue-500 shadow-sm cursor-pointer transition-all hover:scale-105" draggable="false">
                             </div>
 
-                            <!-- Thumbnail -->
-                            <div class="w-full aspect-video rounded-lg overflow-hidden border border-slate-150 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 relative cursor-default" id="thumb-wrap-{{ $img->id }}" onclick="handleThumbClick({{ $img->id }})">
-                                <img src="{{ Storage::url($img->image_path) }}" class="w-full h-full object-cover pointer-events-none" id="img-{{ $img->id }}">
-                                <!-- Pencil overlay on image (edit mode) -->
-                                <div class="absolute inset-0 bg-black/20 flex items-center justify-center cursor-pointer hidden edit-overlay" id="overlay-{{ $img->id }}">
-                                    <i class="fa-solid fa-pencil text-white text-lg"></i>
+                            <!-- Three Responsive Thumbnails -->
+                            <div class="grid grid-cols-3 gap-2" id="thumb-wrap-{{ $img->id }}">
+                                <!-- Desktop Image Slot -->
+                                <div class="flex flex-col gap-1">
+                                    <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-center">Desktop</span>
+                                    <div class="w-full h-20 rounded-lg overflow-hidden border border-slate-150 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 relative cursor-default device-thumb-container" onclick="handleDeviceThumbClick({{ $img->id }}, 'desktop')">
+                                        @if($img->image_desktop)
+                                            <img src="{{ Storage::url($img->image_desktop) }}" class="w-full h-full object-cover pointer-events-none" id="img-desktop-{{ $img->id }}">
+                                        @else
+                                            <div class="flex items-center justify-center h-full text-slate-350 dark:text-slate-600 text-xs">
+                                                <i class="fa-solid fa-image"></i>
+                                            </div>
+                                        @endif
+                                        <!-- Edit Overlay -->
+                                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer hidden edit-overlay" id="overlay-desktop-{{ $img->id }}">
+                                            <i class="fa-solid fa-pencil text-white text-xs"></i>
+                                        </div>
+                                    </div>
+                                    <input type="file" name="replace_desktop[{{ $img->id }}]" id="replace-desktop-input-{{ $img->id }}" class="hidden replace-device-input" accept="image/*" onchange="previewReplacementDeviceImage(this, {{ $img->id }}, 'desktop')">
+                                </div>
+
+                                <!-- Tablet Image Slot -->
+                                <div class="flex flex-col gap-1">
+                                    <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-center">Tablet</span>
+                                    <div class="w-full h-20 rounded-lg overflow-hidden border border-slate-150 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 relative cursor-default device-thumb-container" onclick="handleDeviceThumbClick({{ $img->id }}, 'tablet')">
+                                        @if($img->image_tablet)
+                                            <img src="{{ Storage::url($img->image_tablet) }}" class="w-full h-full object-cover pointer-events-none" id="img-tablet-{{ $img->id }}">
+                                        @else
+                                            <div class="flex items-center justify-center h-full text-slate-350 dark:text-slate-600 text-xs">
+                                                <i class="fa-solid fa-image"></i>
+                                            </div>
+                                        @endif
+                                        <!-- Edit Overlay -->
+                                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer hidden edit-overlay" id="overlay-tablet-{{ $img->id }}">
+                                            <i class="fa-solid fa-pencil text-white text-xs"></i>
+                                        </div>
+                                    </div>
+                                    <input type="file" name="replace_tablet[{{ $img->id }}]" id="replace-tablet-input-{{ $img->id }}" class="hidden replace-device-input" accept="image/*" onchange="previewReplacementDeviceImage(this, {{ $img->id }}, 'tablet')">
+                                </div>
+
+                                <!-- Mobile Image Slot -->
+                                <div class="flex flex-col gap-1">
+                                    <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-center">Mobile</span>
+                                    <div class="w-full h-20 rounded-lg overflow-hidden border border-slate-150 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 relative cursor-default device-thumb-container" onclick="handleDeviceThumbClick({{ $img->id }}, 'mobile')">
+                                        @if($img->image_mobile)
+                                            <img src="{{ Storage::url($img->image_mobile) }}" class="w-full h-full object-cover pointer-events-none" id="img-mobile-{{ $img->id }}">
+                                        @else
+                                            <div class="flex items-center justify-center h-full text-slate-350 dark:text-slate-600 text-xs">
+                                                <i class="fa-solid fa-image"></i>
+                                            </div>
+                                        @endif
+                                        <!-- Edit Overlay -->
+                                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer hidden edit-overlay" id="overlay-mobile-{{ $img->id }}">
+                                            <i class="fa-solid fa-pencil text-white text-xs"></i>
+                                        </div>
+                                    </div>
+                                    <input type="file" name="replace_mobile[{{ $img->id }}]" id="replace-mobile-input-{{ $img->id }}" class="hidden replace-device-input" accept="image/*" onchange="previewReplacementDeviceImage(this, {{ $img->id }}, 'mobile')">
                                 </div>
                             </div>
 
@@ -86,13 +137,11 @@
                                     <i class="fa-solid fa-grip-lines text-xs"></i>
                                     <span class="text-[10px] font-bold uppercase tracking-wider">Drag to reorder</span>
                                     <input type="hidden" name="sort_order[{{ $img->id }}]" class="slide-sort-order" value="{{ $img->sort_order }}">
-                                    <!-- Hidden Replacement File Input -->
-                                    <input type="file" name="replace_images[{{ $img->id }}]" id="replace-image-input-{{ $img->id }}" class="hidden replace-image-input" accept="image/*" onchange="previewReplacementImage(this, {{ $img->id }})">
                                 </div>
 
                                 <div class="flex items-center gap-1.5 shrink-0">
                                     <!-- Toggle Edit / Save Button -->
-                                    <button type="button" id="btn-edit-toggle-{{ $img->id }}" onclick="toggleEditSlide({{ $img->id }})" class="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700/80 dark:text-slate-350 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors" title="Edit Slide">
+                                    <button type="button" id="btn-edit-toggle-{{ $img->id }}" onclick="toggleEditSlide({{ $img->id }})" class="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-650 dark:bg-slate-800 dark:hover:bg-slate-700/80 dark:text-slate-350 border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors" title="Edit Slide">
                                         <i class="fa-solid fa-pencil text-xs" id="btn-icon-{{ $img->id }}"></i>
                                     </button>
 
@@ -106,10 +155,9 @@
                     @endforeach
 
                     <!-- Dynamic Plus Add Slide Card -->
-                    <div id="btn-add-slide" class="relative border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all hover:bg-slate-50/50 dark:hover:bg-slate-800/10 min-h-[280px] shadow-2xs">
-                        <i class="fa-solid fa-plus text-xl text-slate-400 dark:text-slate-600"></i>
+                    <div id="btn-add-slide" onclick="addNewSlideCard()" class="relative border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all hover:bg-slate-50/50 dark:hover:bg-slate-800/10 min-h-[280px] shadow-2xs">
+                        <i class="fa-solid fa-plus text-xl text-slate-400 dark:text-slate-650"></i>
                         <span class="add-slide-text text-xs font-bold text-slate-400 dark:text-slate-650">Add Slide</span>
-                        <input type="file" name="images[]" id="images-input" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*">
                     </div>
                 </div>
             </div>
@@ -150,11 +198,17 @@
     function toggleEditSlide(id) {
         const card = document.getElementById(`slide-card-${id}`);
         const urlInput = document.getElementById(`url-input-${id}`);
-        const overlay = document.getElementById(`overlay-${id}`);
-        const thumbWrap = document.getElementById(`thumb-wrap-${id}`);
+        
+        const overlayDesktop = document.getElementById(`overlay-desktop-${id}`);
+        const overlayTablet = document.getElementById(`overlay-tablet-${id}`);
+        const overlayMobile = document.getElementById(`overlay-mobile-${id}`);
+
         const btnToggle = document.getElementById(`btn-edit-toggle-${id}`);
         const btnIcon = document.getElementById(`btn-icon-${id}`);
-        const fileInput = document.getElementById(`replace-image-input-${id}`);
+        
+        const fileDesktop = document.getElementById(`replace-desktop-input-${id}`);
+        const fileTablet = document.getElementById(`replace-tablet-input-${id}`);
+        const fileMobile = document.getElementById(`replace-mobile-input-${id}`);
 
         if (!card) return;
 
@@ -170,10 +224,17 @@
             urlInput.classList.add('bg-white', 'dark:bg-slate-850', 'text-slate-800', 'dark:text-slate-100');
             urlInput.focus();
 
-            // Show overlay on image
-            overlay.classList.remove('hidden');
-            thumbWrap.classList.remove('cursor-default');
-            thumbWrap.classList.add('cursor-pointer');
+            // Show overlays on image
+            [overlayDesktop, overlayTablet, overlayMobile].forEach(overlay => {
+                if (overlay) {
+                    overlay.classList.remove('hidden');
+                    const parent = overlay.parentElement;
+                    if (parent) {
+                        parent.classList.remove('cursor-default');
+                        parent.classList.add('cursor-pointer');
+                    }
+                }
+            });
 
             // Change button icon to check icon
             btnIcon.className = 'fa-solid fa-circle-check text-xs';
@@ -182,9 +243,12 @@
             btnToggle.title = 'Save Slide';
         } else {
             // Save Slide changes
-            if (fileInput.files && fileInput.files[0] && fileInput.files[0].size > 4 * 1024 * 1024) {
-                showToast('Selected image exceeds the 4MB limit.', 'error');
-                return;
+            const files = [fileDesktop, fileTablet, fileMobile];
+            for (let f of files) {
+                if (f && f.files && f.files[0] && f.files[0].size > 4 * 1024 * 1024) {
+                    showToast('Selected image exceeds the 4MB limit.', 'error');
+                    return;
+                }
             }
 
             btnToggle.disabled = true;
@@ -201,8 +265,14 @@
                 formData.append(`sort_order[${id}]`, sortOrderInput.value);
             }
 
-            if (fileInput.files && fileInput.files[0]) {
-                formData.append(`replace_images[${id}]`, fileInput.files[0]);
+            if (fileDesktop && fileDesktop.files && fileDesktop.files[0]) {
+                formData.append(`replace_desktop[${id}]`, fileDesktop.files[0]);
+            }
+            if (fileTablet && fileTablet.files && fileTablet.files[0]) {
+                formData.append(`replace_tablet[${id}]`, fileTablet.files[0]);
+            }
+            if (fileMobile && fileMobile.files && fileMobile.files[0]) {
+                formData.append(`replace_mobile[${id}]`, fileMobile.files[0]);
             }
 
             fetch("{{ route('admin.hero.settings.update') }}", {
@@ -225,20 +295,34 @@
 
                     card.classList.remove('in-edit-mode');
                     card.classList.remove('border-amber-400', 'ring-2', 'ring-amber-500/10');
-                    fileInput.value = '';
+                    
+                    files.forEach(f => {
+                        if (f) f.value = '';
+                    });
 
                     urlInput.setAttribute('readonly', 'readonly');
                     urlInput.classList.remove('bg-white', 'dark:bg-slate-850', 'text-slate-800', 'dark:text-slate-100');
                     urlInput.classList.add('bg-slate-100/60', 'dark:bg-slate-900', 'text-slate-500', 'dark:text-slate-400', 'cursor-not-allowed');
 
-                    overlay.classList.add('hidden');
-                    thumbWrap.classList.remove('cursor-pointer');
-                    thumbWrap.classList.add('cursor-default');
+                    [overlayDesktop, overlayTablet, overlayMobile].forEach(overlay => {
+                        if (overlay) {
+                            overlay.classList.add('hidden');
+                            const parent = overlay.parentElement;
+                            if (parent) {
+                                parent.classList.remove('cursor-pointer');
+                                parent.classList.add('cursor-default');
+                            }
+                        }
+                    });
 
                     btnIcon.className = 'fa-solid fa-pencil text-xs';
                     btnToggle.classList.remove('text-emerald-600', 'dark:text-emerald-400', 'bg-emerald-50', 'dark:bg-emerald-950/20', 'border-emerald-250');
                     btnToggle.classList.add('text-slate-600', 'dark:text-slate-350');
                     btnToggle.title = 'Edit Slide';
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
                 } else {
                     showToast(data.message || 'Error updating slide.', 'error');
                     restoreBtn();
@@ -259,17 +343,17 @@
         }
     }
 
-    function handleThumbClick(id) {
+    window.handleDeviceThumbClick = function(id, device) {
         const card = document.getElementById(`slide-card-${id}`);
         if (card && card.classList.contains('in-edit-mode')) {
-            const fileInput = document.getElementById(`replace-image-input-${id}`);
+            const fileInput = document.getElementById(`replace-${device}-input-${id}`);
             if (fileInput) {
                 fileInput.click();
             }
         }
-    }
+    };
 
-    function previewReplacementImage(input, id) {
+    window.previewReplacementDeviceImage = function(input, id, device) {
         if (input.files && input.files[0]) {
             const file = input.files[0];
             if (file.size > 4 * 1024 * 1024) {
@@ -279,19 +363,34 @@
             }
             const reader = new FileReader();
             reader.onload = function (e) {
+                const img = document.getElementById(`img-${device}-${id}`);
                 const card = input.closest('.slide-card');
-                const img = card ? card.querySelector('img') : null;
                 if (img) {
                     img.src = e.target.result;
+                } else {
+                    const parent = input.closest('.device-thumb-container');
+                    if (parent) {
+                        const overlay = document.getElementById(`overlay-${device}-${id}`);
+                        parent.innerHTML = '';
+                        const newImg = document.createElement('img');
+                        newImg.id = `img-${device}-${id}`;
+                        newImg.src = e.target.result;
+                        newImg.className = 'w-full h-full object-cover pointer-events-none';
+                        parent.appendChild(newImg);
+                        if (overlay) {
+                            parent.appendChild(overlay);
+                        }
+                    }
+                }
+                if (card) {
                     card.classList.add('border-amber-400', 'ring-2', 'ring-amber-500/10');
                 }
             };
             reader.readAsDataURL(file);
         }
-    }
+    };
 
     document.addEventListener('DOMContentLoaded', function () {
-        const input = document.getElementById('images-input');
         const previewContainer = document.getElementById('slides-container');
         const btnAddSlide = document.getElementById('btn-add-slide');
         const uploadBtn = document.getElementById('btn-upload-images');
@@ -299,66 +398,180 @@
         const MAX_IMAGES = {{ config('hero.max_images', 5) }};
         const CURRENT_IMAGES_COUNT = {{ $images->count() }};
 
-        let selectedFiles = [];
+        let newSlideIndex = 0;
 
-        function syncInputFiles() {
-            const dataTransfer = new DataTransfer();
-            selectedFiles.forEach(file => {
-                dataTransfer.items.add(file);
+        window.addNewSlideCard = function() {
+            const totalCount = CURRENT_IMAGES_COUNT + getNewSlidesCount();
+            if (totalCount >= MAX_IMAGES) {
+                showToast(`You cannot upload more than ${MAX_IMAGES} slide images in total.`, 'error');
+                return;
+            }
+
+            const card = document.createElement('div');
+            const currentIndex = newSlideIndex;
+            card.className = `new-slide-preview relative bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 flex flex-col justify-between min-h-[280px]`;
+            card.id = `new-slide-card-${currentIndex}`;
+            card.setAttribute('data-index', currentIndex);
+
+            const crossBtn = document.createElement('button');
+            crossBtn.type = 'button';
+            crossBtn.className = 'absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center border-none shadow-md cursor-pointer transition-colors z-20';
+            crossBtn.innerHTML = '<i class="fa-solid fa-xmark text-[10px]"></i>';
+            crossBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                removeNewSlideCard(currentIndex);
             });
-            input.files = dataTransfer.files;
-        }
+            card.appendChild(crossBtn);
 
-        window.removeSelectedFile = function(index) {
-            selectedFiles.splice(index, 1);
-            syncInputFiles();
-            renderPreviews();
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-3 gap-2';
+
+            const devices = ['desktop', 'tablet', 'mobile'];
+            devices.forEach(device => {
+                const col = document.createElement('div');
+                col.className = 'flex flex-col gap-1';
+
+                const label = document.createElement('span');
+                label.className = 'text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-center';
+                label.innerText = device.charAt(0).toUpperCase() + device.slice(1);
+                col.appendChild(label);
+
+                const slot = document.createElement('div');
+                slot.id = `new-slot-${device}-${currentIndex}`;
+                slot.className = 'w-full h-20 rounded-lg border border-dashed border-slate-350 dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all hover:bg-slate-50 dark:hover:bg-slate-800 relative';
+                slot.setAttribute('onclick', `triggerNewFileInput(${currentIndex}, '${device}')`);
+                slot.innerHTML = `
+                    <i class="fa-solid fa-cloud-arrow-up text-xs text-slate-400 dark:text-slate-600 pointer-events-none"></i>
+                    <span class="text-[8px] font-bold text-slate-400 dark:text-slate-500 text-center pointer-events-none">${device.charAt(0).toUpperCase() + device.slice(1)}</span>
+                `;
+                col.appendChild(slot);
+
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.name = `new_${device}[${currentIndex}]`;
+                fileInput.id = `new-${device}-input-${currentIndex}`;
+                fileInput.className = `hidden new-${device}-input`;
+                fileInput.accept = 'image/*';
+                fileInput.setAttribute('onchange', `previewNewDeviceImage(this, ${currentIndex}, '${device}')`);
+                col.appendChild(fileInput);
+
+                grid.appendChild(col);
+            });
+            card.appendChild(grid);
+
+            const urlDiv = document.createElement('div');
+            urlDiv.className = 'mt-3.5';
+            urlDiv.innerHTML = `
+                <label class="block text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Link URL (Optional)</label>
+                <input type="text" name="new_urls[${currentIndex}]" class="new-url-field w-full bg-white dark:bg-slate-855 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 transition-all shadow-2xs" placeholder="https://example.com/collection">
+            `;
+            card.appendChild(urlDiv);
+
+            const footerDiv = document.createElement('div');
+            footerDiv.className = 'mt-4 flex items-center justify-between text-[9px] text-slate-450 pt-3 border-t border-slate-100 dark:border-slate-800';
+            footerDiv.innerHTML = `<span class="truncate font-semibold text-amber-600 dark:text-amber-500 status-text"><i class="fa-solid fa-circle-exclamation mr-1"></i>Image required</span>`;
+            card.appendChild(footerDiv);
+
+            previewContainer.insertBefore(card, btnAddSlide);
+            newSlideIndex++;
+
+            updateAddSlideState();
+
+            // Prevent drag events when clicking inputs or buttons in new card
+            card.querySelectorAll('input, button').forEach(el => {
+                el.addEventListener('dragstart', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            });
         };
 
-        if (input && previewContainer) {
-            input.addEventListener('change', function () {
-                if (this.files && this.files.length > 0) {
-                    const incomingCount = this.files.length;
-                    if (CURRENT_IMAGES_COUNT + selectedFiles.length + incomingCount > MAX_IMAGES) {
-                        showToast(`You cannot upload more than ${MAX_IMAGES} slide images in total. (Current: ${CURRENT_IMAGES_COUNT}, Selected: ${selectedFiles.length}, Trying to add: ${incomingCount})`, 'error');
-                        this.value = '';
-                        return;
+        window.removeNewSlideCard = function(index) {
+            const card = document.getElementById(`new-slide-card-${index}`);
+            if (card) {
+                card.remove();
+            }
+            updateAddSlideState();
+        };
+
+        window.triggerNewFileInput = function(index, device) {
+            const fileInput = document.getElementById(`new-${device}-input-${index}`);
+            if (fileInput) {
+                fileInput.click();
+            }
+        };
+
+        window.previewNewDeviceImage = function(input, index, device) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                if (file.size > 4 * 1024 * 1024) {
+                    showToast('Image size exceeds the 4MB limit.', 'error');
+                    input.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const slot = document.getElementById(`new-slot-${device}-${index}`);
+                    if (slot) {
+                        slot.innerHTML = `
+                            <img src="${e.target.result}" class="w-full h-full object-cover rounded-lg pointer-events-none">
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-lg">
+                                <i class="fa-solid fa-pencil text-white text-xs"></i>
+                            </div>
+                        `;
+                        slot.classList.remove('border-dashed', 'border-slate-350', 'dark:border-slate-700');
+                        slot.classList.add('border-solid', 'border-slate-150', 'dark:border-slate-700');
                     }
+                    updateSlideStatusText(index);
+                };
+                reader.readAsDataURL(file);
+            }
+        };
 
-                    Array.from(this.files).forEach(file => {
-                        const hasError = file.size > 4 * 1024 * 1024; // 4MB
-                        file.hasError = hasError;
-                        selectedFiles.push(file);
-                    });
+        function updateSlideStatusText(index) {
+            const card = document.getElementById(`new-slide-card-${index}`);
+            if (!card) return;
 
-                    syncInputFiles();
-                    renderPreviews();
+            const desktop = document.getElementById(`new-${idPlaceholder(index, 'desktop')}`);
+            const tablet = document.getElementById(`new-${idPlaceholder(index, 'tablet')}`);
+            const mobile = document.getElementById(`new-${idPlaceholder(index, 'mobile')}`);
+
+            function idPlaceholder(idx, dev) {
+                return `${dev}-input-${idx}`;
+            }
+
+            const hasDesktop = desktop && desktop.files && desktop.files.length > 0;
+            const hasTablet = tablet && tablet.files && tablet.files.length > 0;
+            const hasMobile = mobile && mobile.files && mobile.files.length > 0;
+
+            const statusText = card.querySelector('.status-text');
+            if (statusText) {
+                if (hasDesktop || hasTablet || hasMobile) {
+                    const parts = [];
+                    if (hasDesktop) parts.push('Desktop');
+                    if (hasTablet) parts.push('Tablet');
+                    if (hasMobile) parts.push('Mobile');
+                    statusText.innerHTML = `<span class="text-emerald-600 dark:text-emerald-500 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i>${parts.join(', ')} added</span>`;
+                    card.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/20');
+                } else {
+                    statusText.innerHTML = `<span class="text-amber-600 dark:text-amber-500 font-semibold"><i class="fa-solid fa-circle-exclamation mr-1"></i>Image required</span>`;
                 }
-            });
+            }
         }
 
-        // Standard Form Submit Guardian
-        const form = document.getElementById('hero-settings-form');
-        if (form) {
-            form.addEventListener('submit', function (e) {
-                const hasErrors = selectedFiles.some(file => file.hasError);
-                if (hasErrors) {
-                    e.preventDefault();
-                    showToast('Please remove files that exceed the 4MB limit before saving.', 'error');
-                    return false;
-                }
-            });
+        function getNewSlidesCount() {
+            return document.querySelectorAll('.new-slide-preview').length;
         }
 
-        function renderPreviews() {
-            // Remove previous new slide preview elements
-            previewContainer.querySelectorAll('.new-slide-preview').forEach(c => c.remove());
+        function updateAddSlideState() {
+            const totalCount = CURRENT_IMAGES_COUNT + getNewSlidesCount();
+            const newCount = getNewSlidesCount();
 
-            const totalCount = CURRENT_IMAGES_COUNT + selectedFiles.length;
-
-            if (selectedFiles.length > 0) {
+            if (newCount > 0) {
                 uploadBtn.classList.remove('hidden');
-                uploadBtn.querySelector('.upload-btn-count').innerText = `(${selectedFiles.length})`;
+                uploadBtn.querySelector('.upload-btn-count').innerText = `(${newCount})`;
             } else {
                 uploadBtn.classList.add('hidden');
             }
@@ -367,7 +580,6 @@
                 btnAddSlide.classList.add('hidden');
             } else {
                 btnAddSlide.classList.remove('hidden');
-
                 if (totalCount === 0) {
                     btnAddSlide.className = 'relative col-span-full border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 rounded-2xl aspect-[21/9] min-h-[250px] flex flex-col items-center justify-center gap-3.5 cursor-pointer transition-all hover:bg-slate-50/50 dark:hover:bg-slate-800/10 shadow-2xs';
                     btnAddSlide.querySelector('.add-slide-text').innerText = 'Add Your First Slide';
@@ -375,98 +587,57 @@
                 } else {
                     btnAddSlide.className = 'relative border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-all hover:bg-slate-50/50 dark:hover:bg-slate-800/10 min-h-[280px] shadow-2xs';
                     btnAddSlide.querySelector('.add-slide-text').innerText = 'Add Slide';
-                    btnAddSlide.querySelector('i').className = 'fa-solid fa-plus text-xl text-slate-400 dark:text-slate-600';
+                    btnAddSlide.querySelector('i').className = 'fa-solid fa-plus text-xl text-slate-400 dark:text-slate-650';
                 }
             }
-
-            selectedFiles.forEach((file, index) => {
-                const reader = new FileReader();
-
-                const card = document.createElement('div');
-                const cardBorderClass = file.hasError
-                    ? 'border-rose-500 ring-2 ring-rose-500/20'
-                    : 'border-slate-200 dark:border-slate-800';
-                card.className = `new-slide-preview relative bg-slate-50/50 dark:bg-slate-800/20 border ${cardBorderClass} rounded-xl p-3.5 flex flex-col justify-between min-h-[280px]`;
-
-                const thumbWrap = document.createElement('div');
-                thumbWrap.className = 'w-full aspect-[16/9] rounded-lg overflow-hidden border border-slate-150 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 relative';
-
-                const img = document.createElement('img');
-                img.className = 'w-full h-full object-cover';
-                thumbWrap.appendChild(img);
-
-                const crossBtn = document.createElement('button');
-                crossBtn.type = 'button';
-                crossBtn.className = 'absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center border-none shadow-md cursor-pointer transition-colors z-20';
-                crossBtn.innerHTML = '<i class="fa-solid fa-xmark text-[10px]"></i>';
-                crossBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    window.removeSelectedFile(index);
-                });
-                card.appendChild(crossBtn);
-                card.appendChild(thumbWrap);
-
-                const urlDiv = document.createElement('div');
-                urlDiv.className = 'mt-3.5';
-                urlDiv.innerHTML = `
-                    <label class="block text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Link URL (Optional)</label>
-                    <input type="text" name="new_urls[]" data-index="${index}" class="new-url-input w-full bg-white dark:bg-slate-855 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-[11px] outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 transition-all shadow-2xs" placeholder="https://example.com/collection">
-                `;
-                card.appendChild(urlDiv);
-
-                const footerDiv = document.createElement('div');
-                footerDiv.className = 'mt-4 flex items-center justify-between text-[9px] text-slate-400 pt-3 border-t border-slate-100 dark:border-slate-800';
-                footerDiv.innerHTML = `<span class="truncate pr-2 font-semibold">${file.name}</span>`;
-
-                if (file.hasError) {
-                    const errSpan = document.createElement('span');
-                    errSpan.className = 'font-bold text-rose-500 shrink-0';
-                    errSpan.innerText = 'Exceeds 4MB';
-                    footerDiv.appendChild(errSpan);
-                } else {
-                    const sizeSpan = document.createElement('span');
-                    sizeSpan.className = 'shrink-0';
-                    sizeSpan.innerText = `${(file.size / 1024 / 1024).toFixed(1)}MB`;
-                    footerDiv.appendChild(sizeSpan);
-                }
-                card.appendChild(footerDiv);
-
-                previewContainer.insertBefore(card, btnAddSlide);
-
-                reader.onload = function (e) {
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-
-            // Prevent drag events when clicking inputs or buttons in cards
-            const allCards = previewContainer.querySelectorAll('.slide-card, .new-slide-preview');
-            allCards.forEach(c => {
-                c.querySelectorAll('input, button').forEach(el => {
-                    el.addEventListener('dragstart', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                    });
-                });
-            });
         }
 
-        // Initialize empty state size configurations on boot
-        renderPreviews();
+        function validateNewSlides() {
+            let isValid = true;
+            document.querySelectorAll('.new-slide-preview').forEach(card => {
+                const index = card.getAttribute('data-index');
+                const desktop = document.getElementById(`new-desktop-input-${index}`);
+                const tablet = document.getElementById(`new-tablet-input-${index}`);
+                const mobile = document.getElementById(`new-mobile-input-${index}`);
+
+                const hasDesktop = desktop && desktop.files && desktop.files.length > 0;
+                const hasTablet = tablet && tablet.files && tablet.files.length > 0;
+                const hasMobile = mobile && mobile.files && mobile.files.length > 0;
+
+                if (!hasDesktop && !hasTablet && !hasMobile) {
+                    card.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/20');
+                    isValid = false;
+                } else {
+                    card.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/20');
+                }
+            });
+
+            if (!isValid) {
+                showToast('Please add at least one image (Desktop, Tablet, or Mobile) for each new slide.', 'error');
+            }
+            return isValid;
+        }
+
+        // Standard Form Submit Guardian
+        const form = document.getElementById('hero-settings-form');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                if (!validateNewSlides()) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
 
         // AJAX uploader trigger
         if (uploadBtn) {
             uploadBtn.addEventListener('click', function (e) {
                 e.preventDefault();
 
-                if (selectedFiles.length === 0) return;
+                if (!validateNewSlides()) return;
 
-                const hasErrors = selectedFiles.some(file => file.hasError);
-                if (hasErrors) {
-                    showToast('Please remove files that exceed the 4MB limit before uploading.', 'error');
-                    return;
-                }
+                const newCards = document.querySelectorAll('.new-slide-preview');
+                if (newCards.length === 0) return;
 
                 uploadBtn.disabled = true;
                 uploadBtn.classList.add('opacity-75', 'cursor-not-allowed');
@@ -481,11 +652,25 @@
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                 formData.append('_token', csrfToken);
 
-                selectedFiles.forEach((file, index) => {
-                    formData.append('images[]', file);
-                    const urlInput = document.querySelector(`.new-url-input[data-index="${index}"]`);
-                    const urlValue = urlInput ? urlInput.value : '';
-                    formData.append('new_urls[]', urlValue);
+                newCards.forEach((card) => {
+                    const index = card.getAttribute('data-index');
+                    const desktop = document.getElementById(`new-desktop-input-${index}`);
+                    const tablet = document.getElementById(`new-tablet-input-${index}`);
+                    const mobile = document.getElementById(`new-mobile-input-${index}`);
+                    const urlInput = card.querySelector('.new-url-field');
+
+                    if (desktop && desktop.files && desktop.files[0]) {
+                        formData.append(`new_desktop[${index}]`, desktop.files[0]);
+                    }
+                    if (tablet && tablet.files && tablet.files[0]) {
+                        formData.append(`new_tablet[${index}]`, tablet.files[0]);
+                    }
+                    if (mobile && mobile.files && mobile.files[0]) {
+                        formData.append(`new_mobile[${index}]`, mobile.files[0]);
+                    }
+                    if (urlInput) {
+                        formData.append(`new_urls[${index}]`, urlInput.value);
+                    }
                 });
 
                 fetch("{{ route('admin.hero.settings.update') }}", {
@@ -523,6 +708,9 @@
                 }
             });
         }
+
+        // Initialize state on boot
+        updateAddSlideState();
 
         // Draggable Slide Management
         const slidesContainer = document.getElementById('slides-container');
