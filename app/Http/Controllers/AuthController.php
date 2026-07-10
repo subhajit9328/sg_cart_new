@@ -40,8 +40,8 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
+            'email' => ['required', 'email', 'max:255'],
+            'password' => ['required', 'max:255'],
         ]);
 
         $remember = $request->boolean('remember');
@@ -143,8 +143,8 @@ class AuthController extends Controller
     public function storefrontLogin(Request $request)
     {
         $request->validate([
-            'email_or_phone' => ['required', 'string'],
-            'password' => ['required'],
+            'email_or_phone' => ['required', 'string','max:255'],
+            'password' => ['required','max:255'],
         ]);
 
         $loginInput = $request->input('email_or_phone');
