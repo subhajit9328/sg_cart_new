@@ -11,6 +11,20 @@ class ImageSearchSettingsTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Clear Spatie's permission cache
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        // Create the permission
+        \Spatie\Permission\Models\Permission::firstOrCreate([
+            'name' => 'manage image search config',
+            'guard_name' => 'web'
+        ]);
+    }
+
     /**
      * Test admin can view image search settings.
      */
@@ -21,12 +35,30 @@ class ImageSearchSettingsTest extends TestCase
             'email' => 'admin@example.com',
             'password' => bcrypt('password123'),
         ]);
+        $admin->givePermissionTo('manage image search config');
 
         $response = $this->actingAs($admin)
             ->get(route('admin.image-search.settings'));
 
         $response->assertStatus(200);
         $response->assertSee('Search Settings');
+    }
+
+    /**
+     * Test unauthorized user cannot view image search settings.
+     */
+    public function test_unauthorized_user_cannot_view_image_search_settings(): void
+    {
+        $user = User::create([
+            'name' => 'Regular User',
+            'email' => 'user@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        $response = $this->actingAs($user)
+            ->get(route('admin.image-search.settings'));
+
+        $response->assertStatus(403);
     }
 
     /**
@@ -39,6 +71,7 @@ class ImageSearchSettingsTest extends TestCase
             'email' => 'admin@example.com',
             'password' => bcrypt('password123'),
         ]);
+        $admin->givePermissionTo('manage image search config');
 
         $response = $this->actingAs($admin)
             ->post(route('admin.image-search.settings.update'), [
@@ -62,6 +95,7 @@ class ImageSearchSettingsTest extends TestCase
             'email' => 'admin@example.com',
             'password' => bcrypt('password123'),
         ]);
+        $admin->givePermissionTo('manage image search config');
 
         // Request update with invalid parameters to trigger validation redirect
         $response = $this->actingAs($admin)
