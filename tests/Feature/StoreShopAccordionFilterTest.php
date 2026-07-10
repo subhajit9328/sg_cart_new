@@ -70,7 +70,7 @@ class StoreShopAccordionFilterTest extends TestCase
         ]);
 
         // Search for 'shirt'
-        $response = $this->get(route('store.shop', ['search' => 'shirt']));
+        $response = $this->followingRedirects()->get(route('store.shop', ['search' => 'shirt']));
         $response->assertStatus(200);
 
         $sidebarCategories = $response->viewData('sidebarCategories');
@@ -135,6 +135,7 @@ class StoreShopAccordionFilterTest extends TestCase
     {
         // 1. Initial search for 'shirt' with filters applied
         $response = $this->withSession(['last_search' => 'shirt'])
+            ->followingRedirects()
             ->get(route('store.shop', [
                 'search' => 'shirt',
                 'category' => ["Men's Clothing"],
@@ -148,6 +149,7 @@ class StoreShopAccordionFilterTest extends TestCase
 
         // 2. Perform a different search 'shoes' with the same query params in URL
         $response = $this->withSession(['last_search' => 'shirt'])
+            ->followingRedirects()
             ->get(route('store.shop', [
                 'search' => 'shoes',
                 'category' => ["Men's Clothing"],
@@ -169,5 +171,44 @@ class StoreShopAccordionFilterTest extends TestCase
         $this->assertStringContainsString('price_max=100000', $paginatorUrl);
         $this->assertStringNotContainsString('category', $paginatorUrl);
         $this->assertStringNotContainsString('sub_category', $paginatorUrl);
+    }
+
+    public function test_store_shop_filter_by_parent_and_subcategory_hierarchical(): void
+    {
+        // Create Categories
+        $parent = Category::create(['name' => "Men's Clothing", 'slug' => 'mens-clothing', 'is_active' => true]);
+        $child1 = Category::create(['name' => "Shirts", 'slug' => 'shirts', 'parent_id' => $parent->id, 'is_active' => true]);
+        $child2 = Category::create(['name' => "Polos", 'slug' => 'polos', 'parent_id' => $parent->id, 'is_active' => true]);
+
+        // Create Products
+        Product::create([
+            'name' => 'Linen-blend shirt',
+            'sku' => 'HM-SHIRT-001',
+            'category_id' => $child1->id,
+            'price' => 2299.00,
+            'stock' => 50,
+            'status' => 'active',
+        ]);
+
+        Product::create([
+            'name' => 'Casual Polo Tee',
+            'sku' => 'HM-POLO-001',
+            'category_id' => $child2->id,
+            'price' => 1299.00,
+            'stock' => 30,
+            'status' => 'active',
+        ]);
+
+        // Filter by parent category "Men's Clothing" AND child category "Shirts"
+        $response = $this->get(route('store.shop', [
+            'category' => ["Men's Clothing"],
+            'sub_category' => ["Shirts"]
+        ]));
+        $response->assertStatus(200);
+
+        $products = $response->viewData('products');
+        // It should ONLY return the "Linen-blend shirt" since "Shirts" is selected under "Men's Clothing"
+        $this->assertCount(1, $products);
+        $this->assertEquals('Linen-blend shirt', $products[0]['name']);
     }
 }

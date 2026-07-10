@@ -40,7 +40,7 @@
                 <div class="sidebar-section">
                     <h4 class="sidebar-title">Categories</h4>
                     <div class="sidebar-category-accordion flex flex-col gap-2.5">
-                        @foreach($sidebarCategories as $index => $parentCat)
+                        @forelse($sidebarCategories as $index => $parentCat)
                             @php
                                 $parentName = $parentCat['name'];
                                 $parentCount = $categoryCounts[$parentName] ?? 0;
@@ -61,9 +61,9 @@
                                 <div class="flex items-center justify-between py-2.5 px-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors duration-250 ease rounded-lg group-[.is-open]:rounded-b-none">
                                     <label class="cb-label flex items-center justify-between cursor-pointer py-0! select-none">
                                         <div class="flex items-center">
-                                            <input type="checkbox" name="category[]" class="hidden" value="{{ $parentName }}"
+                                            <input type="checkbox" name="category[]" class="hidden parent-category-cb" value="{{ $parentName }}"
                                                 {{ $isParentSelected ? 'checked' : '' }}
-                                                onchange="document.getElementById('filterForm').submit()"/>
+                                                onchange="onParentCategoryChange(this)"/>
                                             <span class="cb-box"><i @class(['fa-solid fa-check text-[9px] dark:text-white transition-opacity','opacity-0' => !$isParentSelected ])></i></span>
                                             <span class="cb-text font-bold text-xs text-slate-850 dark:text-slate-200 ml-2">{{ $parentName }}</span>
                                         </div>
@@ -84,14 +84,15 @@
                                                 @php
                                                     $childName = $child['name'];
                                                     $childCount = $categoryCounts[$childName] ?? 0;
-                                                    $isChildSelected = in_array($childName, $selectedSubCategories);
+                                                    $isChildChecked = $isParentSelected || in_array($childName, $selectedSubCategories);
                                                 @endphp
                                                 <label class="cb-label flex items-center justify-between cursor-pointer py-1 text-[13px] text-stone hover:text-ink transition-colors w-full select-none">
                                                     <div class="flex items-center">
-                                                        <input type="checkbox" name="sub_category[]" class="hidden" value="{{ $childName }}"
-                                                            {{ $isChildSelected ? 'checked' : '' }}
-                                                            onchange="document.getElementById('filterForm').submit()"/>
-                                                        <span class="cb-box"><i @class(['fa-solid fa-check text-[9px] dark:text-white transition-opacity','opacity-0' => !$isChildSelected ])></i></span>
+                                                        <input type="checkbox" class="hidden child-category-cb" value="{{ $childName }}"
+                                                            {{ $isChildChecked ? 'checked' : '' }}
+                                                            @if(!$isParentSelected) name="sub_category[]" @endif
+                                                            onchange="onChildCategoryChange(this)"/>
+                                                        <span class="cb-box"><i @class(['fa-solid fa-check text-[9px] dark:text-white transition-opacity','opacity-0' => !$isChildChecked ])></i></span>
                                                         <span class="cb-text text-[13px] text-slate-650 dark:text-slate-300 ml-2">{{ $childName }}</span>
                                                     </div>
                                                     <span class="cb-count text-[11px] text-slate-400 font-medium">{{ $childCount }}</span>
@@ -101,7 +102,9 @@
                                     </div>
                                 @endif
                             </div>
-                        @endforeach
+                        @empty
+                            <div class="text-xs text-center text-slate-400">No Categories</div>
+                        @endforelse
                     </div>
                 </div>
 
@@ -214,7 +217,67 @@
 
 @section('scripts')
 <script>
+    function onParentCategoryChange(parentCb) {
+        const accordionItem = parentCb.closest('.accordion-item');
+        const childCbs = accordionItem.querySelectorAll('.child-category-cb');
 
+        // Toggle parent check icon visibility
+        const parentIcon = parentCb.closest('label').querySelector('.cb-box i');
+        if (parentIcon) {
+            if (parentCb.checked) {
+                parentIcon.classList.remove('opacity-0');
+            } else {
+                parentIcon.classList.add('opacity-0');
+            }
+        }
+
+        childCbs.forEach(cb => {
+            cb.checked = parentCb.checked;
+            const icon = cb.closest('label').querySelector('.cb-box i');
+            if (icon) {
+                if (parentCb.checked) {
+                    icon.classList.remove('opacity-0');
+                    cb.removeAttribute('name');
+                } else {
+                    icon.classList.add('opacity-0');
+                    cb.setAttribute('name', 'sub_category[]');
+                }
+            }
+        });
+
+        document.getElementById('filterForm').submit();
+    }
+
+    function onChildCategoryChange(childCb) {
+        const accordionItem = childCb.closest('.accordion-item');
+        const parentCb = accordionItem.querySelector('.parent-category-cb');
+        const childCbs = accordionItem.querySelectorAll('.child-category-cb');
+
+        // Toggle child check icon visibility
+        const childIcon = childCb.closest('label').querySelector('.cb-box i');
+        if (childIcon) {
+            if (childCb.checked) {
+                childIcon.classList.remove('opacity-0');
+            } else {
+                childIcon.classList.add('opacity-0');
+            }
+        }
+
+        const allChecked = Array.from(childCbs).every(cb => cb.checked);
+        if (allChecked && childCbs.length > 0) {
+            parentCb.checked = true;
+            const parentIcon = parentCb.closest('label').querySelector('.cb-box i');
+            if (parentIcon) parentIcon.classList.remove('opacity-0');
+            childCbs.forEach(cb => cb.removeAttribute('name'));
+        } else {
+            parentCb.checked = false;
+            const parentIcon = parentCb.closest('label').querySelector('.cb-box i');
+            if (parentIcon) parentIcon.classList.add('opacity-0');
+            childCbs.forEach(cb => cb.setAttribute('name', 'sub_category[]'));
+        }
+
+        document.getElementById('filterForm').submit();
+    }
 
     function applySort(val) {
         const urlParams = new URLSearchParams(window.location.search);

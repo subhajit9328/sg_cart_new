@@ -2,24 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use Illuminate\Http\Request;
 use App\Actions\LogActivity;
 use App\Actions\ManageOtp;
 use App\Actions\ResolveRelatedProducts;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\ProductStatus;
 use App\Models\Cart;
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\ValidationException;
+use SGCart\CrmTickets\Models\Ticket;
+use SGCart\Marketplace\Models\Seller;
 use SGCart\ProductVariants\Models\ProductVariant;
+use SGCart\RelatedProducts\Models\RelatedProduct;
+use SGCart\Reviews\Models\Review;
+use SGCart\Shipping\Models\ShippingRate;
+use SGCart\Shipping\Models\ShippingSetting;
 
 class StoreController extends Controller
 {
@@ -28,15 +36,23 @@ class StoreController extends Controller
      */
     public static function getProducts()
     {
-        $relations = ['category.parent', 'images', 'searchTerms'];
+        $relations = [
+            'category.parent.parent', 'category.children' => function ($query) {
+                $query->active();
+            }, 'images', 'searchTerms'
+        ];
         if (class_exists(ProductVariant::class)) {
             $relations[] = 'variants.color';
             $relations[] = 'variants.size';
         }
 
-        $query = Product::with($relations)->where('status', 'active');
+        $query = Product::with($relations)
+            ->where('status', 'active')
+            ->whereHas('category', function ($q) {
+                $q->active();
+        });
 
-        if (class_exists(\SGCart\Marketplace\Models\Seller::class)) {
+        if (class_exists(Seller::class)) {
             $query->where(function ($q) {
                 $q->whereNull('seller_id')
                     ->orWhereHas('seller', function ($sub) {
@@ -76,8 +92,8 @@ class StoreController extends Controller
             }
 
             $rating = 4.5;
-            if (class_exists(\SGCart\Reviews\Models\Review::class)) {
-                $avgRating = \SGCart\Reviews\Models\Review::where('product_id', $p->id)
+            if (class_exists(Review::class)) {
+                $avgRating = Review::where('product_id', $p->id)
                     ->where('status_id', 2)
                     ->avg('rating');
                 if (!is_null($avgRating)) {
@@ -127,13 +143,13 @@ class StoreController extends Controller
         $categories = Category::parents()->active()->orderBy('sort_order')->take(5)->get();
         if ($categories->isEmpty()) {
             $categories = collect([
-                "Women's Clothing", "Men's Clothing", "Kids' Clothing", 'Accessories', 'Footwear'
+                "Women's Clothing", "Men's Clothing", "Kids' Clothing", 'Accessories', 'Footwear',
             ])->map(function ($name, $index) {
                 return new Category([
                     'name' => $name,
-                    'slug' => \Illuminate\Support\Str::slug($name),
+                    'slug' => Str::slug($name),
                     'is_active' => true,
-                    'sort_order' => $index
+                    'sort_order' => $index,
                 ]);
             });
         }
@@ -150,6 +166,7 @@ class StoreController extends Controller
             $request->validate(['search' => 'nullable|string|max:150']);
         } catch (ValidationException $e) {
             session()->flash('error', $e->getMessage());
+
             return redirect()->back()->withInput();
         }
 
@@ -181,14 +198,13 @@ class StoreController extends Controller
             $baseProducts = $baseProducts->filter(fn($p) => $p['price'] <= $maxPrice);
         }
 
-
         // Build the hierarchical sidebar categories list
+        $sidebarCategoriesMap = [];
         if ($request->filled('search')) {
             $matchedCategoryIds = $baseProducts->pluck('category_id')->unique()->filter()->toArray();
 
             $categories = Category::with('parent')->whereIn('id', $matchedCategoryIds)->get();
 
-            $sidebarCategoriesMap = [];
             foreach ($categories as $cat) {
                 $topParent = $cat;
                 while ($topParent->parent_id && $topParent->parent) {
@@ -202,14 +218,14 @@ class StoreController extends Controller
                     $sidebarCategoriesMap[$parentName] = [
                         'name' => $parentName,
                         'id' => $parentId,
-                        'children' => []
+                        'children' => [],
                     ];
                 }
 
                 if ($cat->id !== $parentId) {
                     $sidebarCategoriesMap[$parentName]['children'][$cat->name] = [
                         'name' => $cat->name,
-                        'id' => $cat->id
+                        'id' => $cat->id,
                     ];
                 }
             }
@@ -217,20 +233,18 @@ class StoreController extends Controller
             foreach ($sidebarCategoriesMap as &$pCat) {
                 $pCat['children'] = array_values($pCat['children']);
             }
-            $sidebarCategories = array_values($sidebarCategoriesMap);
         } else {
             $parents = Category::parents()->active()->take(5)->orderBy('sort_order')->get();
-            $sidebarCategories = [];
             foreach ($parents as $parent) {
                 $children = $parent->children()->active()->orderBy('sort_order')->get();
-                $sidebarCategories[] = [
+                $sidebarCategoriesMap[$parent->name] = [
                     'name' => $parent->name,
                     'id' => $parent->id,
-                    'children' => $children->map(fn($c) => ['name' => $c->name, 'id' => $c->id])->toArray()
+                    'children' => $children->map(fn($c) => ['name' => $c->name, 'id' => $c->id])->toArray(),
                 ];
             }
         }
-
+        $sidebarCategories = array_values($sidebarCategoriesMap);
         // Calculate counts based on search and price filters (before category filter is applied)
         $categoryCounts = [];
         foreach ($baseProducts as $p) {
@@ -251,10 +265,17 @@ class StoreController extends Controller
             $selectedCategories = (array) $request->input('category', []);
             $selectedSubCategories = (array) $request->input('sub_category', []);
 
-            $products = $products->filter(fn($p) =>
-                in_array($p['cat'], $selectedCategories) ||
-                ($p['subcat'] && in_array($p['subcat'], $selectedSubCategories))
-            );
+            $products = $baseProducts->filter(function ($p) use ($selectedCategories, $selectedSubCategories) {
+                if (!empty($selectedCategories)) {
+                    return in_array($p['cat'], $selectedCategories);
+                }
+
+                if (!empty($selectedSubCategories)) {
+                    return in_array($p['subcat'], $selectedSubCategories);
+                }
+
+                return true;
+            });
         }
 
         // Sorting
@@ -276,7 +297,7 @@ class StoreController extends Controller
             $page,
             [
                 'path' => LengthAwarePaginator::resolveCurrentPath(),
-                'query' => $request->query()
+                'query' => $request->query(),
             ]
         );
 
@@ -308,7 +329,7 @@ class StoreController extends Controller
         $productModel = Product::find($product['id']);
         $relatedIds = [];
 
-        if (class_exists(\SGCart\RelatedProducts\Models\RelatedProduct::class) && $productModel) {
+        if (class_exists(RelatedProduct::class) && $productModel) {
             // Package is installed: Fetch products related via the relationship
             $relatedIds = $productModel->relatedProducts()->where('status', 'active')->pluck('products.id')->toArray();
         }
@@ -326,6 +347,7 @@ class StoreController extends Controller
 
         if ($request->ajax() || $request->has('ajax')) {
             $reviewsData = $this->getProductReviews($product['id'], $request);
+
             return view('store.partials.reviews', compact('reviewsData'))->render();
         }
 
@@ -345,8 +367,8 @@ class StoreController extends Controller
         $pct2 = 0;
         $pct1 = 0;
 
-        if (class_exists(\SGCart\Reviews\Models\Review::class)) {
-            $approvedReviews = \SGCart\Reviews\Models\Review::where('product_id', $product['id'])
+        if (class_exists(Review::class)) {
+            $approvedReviews = Review::where('product_id', $product['id'])
                 ->where('status_id', 2)
                 ->latest()
                 ->get();
@@ -380,14 +402,14 @@ class StoreController extends Controller
      */
     public function getProductReviews($productId, Request $request)
     {
-        if (!class_exists(\SGCart\Reviews\Models\Review::class)) {
+        if (!class_exists(Review::class)) {
             return [];
         }
 
         $filter = $request->input('review_filter', 'helpful');
         $page = (int) $request->input('review_page', 1);
 
-        $query = \SGCart\Reviews\Models\Review::with(['customer', 'images'])
+        $query = Review::with(['customer', 'images'])
             ->where('product_id', $productId)
             ->where('status_id', 2);
 
@@ -408,7 +430,6 @@ class StoreController extends Controller
 
         return $query->paginate(5, ['*'], 'review_page', $page);
     }
-
 
     /**
      * View cart page.
@@ -436,14 +457,15 @@ class StoreController extends Controller
         }
 
         $shippingCost = 0.0;
-        $hasShippingPackage = class_exists(\SGCart\Shipping\Models\ShippingRate::class);
+        $hasShippingPackage = class_exists(ShippingRate::class);
         if ($hasShippingPackage) {
-            $shippingRates = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+            $shippingRates = ShippingRate::where('is_active', true)
                 ->where('min_order_amount', '<=', $subtotal)
                 ->get();
 
             $cheapestRate = $shippingRates->map(function ($rate) use ($subtotal) {
                 $rate->calculated_cost = $rate->calculateCost($subtotal);
+
                 return $rate;
             })->sortBy('calculated_cost')->first();
 
@@ -451,8 +473,8 @@ class StoreController extends Controller
         }
 
         $selectionMode = 'user_choice';
-        if (class_exists(\SGCart\Shipping\Models\ShippingSetting::class)) {
-            $selectionMode = \SGCart\Shipping\Models\ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
+        if (class_exists(ShippingSetting::class)) {
+            $selectionMode = ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
         }
 
         // Only add shipping cost to cart total if not in user choice mode
@@ -482,11 +504,11 @@ class StoreController extends Controller
         $color = $request->color;
 
         $product = Product::find($productId);
-        if (!$product || $product->status !== \App\Enums\ProductStatus::ACTIVE) {
+        if (!$product || $product->status !== ProductStatus::ACTIVE) {
             return redirect()->back()->with('error', 'Product not found.');
         }
 
-        if (class_exists(\SGCart\Marketplace\Models\Seller::class)) {
+        if (class_exists(Seller::class)) {
             $seller = $product->seller;
             if ($seller && $seller->status->value !== 'approved') {
                 return redirect()->back()->with('error', 'Product not found.');
@@ -673,19 +695,20 @@ class StoreController extends Controller
 
         $shippingRates = collect();
         $selectionMode = 'user_choice';
-        $hasShippingPackage = class_exists(\SGCart\Shipping\Models\ShippingRate::class);
+        $hasShippingPackage = class_exists(ShippingRate::class);
         if ($hasShippingPackage) {
-            $shippingRates = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+            $shippingRates = ShippingRate::where('is_active', true)
                 ->where('min_order_amount', '<=', $subtotal)
                 ->get();
         }
-        if (class_exists(\SGCart\Shipping\Models\ShippingSetting::class)) {
-            $selectionMode = \SGCart\Shipping\Models\ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
+        if (class_exists(ShippingSetting::class)) {
+            $selectionMode = ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
         }
 
         // Map and compute dynamically based on rate type
         $shippingRates = $shippingRates->map(function ($rate) use ($subtotal) {
             $rate->calculated_cost = (float) $rate->calculateCost($subtotal);
+
             return $rate;
         })->sortBy('calculated_cost');
 
@@ -857,15 +880,15 @@ class StoreController extends Controller
         // Calculate shipping cost
         $shippingCost = 0.0;
         $shippingMethodName = null;
-        if (class_exists(\SGCart\Shipping\Models\ShippingRate::class)) {
+        if (class_exists(ShippingRate::class)) {
             $selectionMode = 'user_choice';
-            if (class_exists(\SGCart\Shipping\Models\ShippingSetting::class)) {
-                $selectionMode = \SGCart\Shipping\Models\ShippingSetting::getVal('shipping_selection_mode',
+            if (class_exists(ShippingSetting::class)) {
+                $selectionMode = ShippingSetting::getVal('shipping_selection_mode',
                     'user_choice');
             }
 
             if ($selectionMode === 'user_choice' && $request->filled('shipping_rate_id')) {
-                $shippingRate = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+                $shippingRate = ShippingRate::where('is_active', true)
                     ->where('min_order_amount', '<=', $subtotal)
                     ->find($request->shipping_rate_id);
                 if ($shippingRate) {
@@ -874,11 +897,12 @@ class StoreController extends Controller
                 }
             } else {
                 // Auto-select cheapest eligible rate
-                $eligibleRates = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+                $eligibleRates = ShippingRate::where('is_active', true)
                     ->where('min_order_amount', '<=', $subtotal)
                     ->get();
                 $cheapestRate = $eligibleRates->map(function ($rate) use ($subtotal) {
                     $rate->calculated_cost = (float) $rate->calculateCost($subtotal);
+
                     return $rate;
                 })->sortBy('calculated_cost')->first();
 
@@ -908,13 +932,14 @@ class StoreController extends Controller
         $order = null;
 
         if ($pendingOrderUlid) {
-            $order = \App\Models\Order::with('items')->where('ulid', $pendingOrderUlid)->first();
+            $order = Order::with('items')->where('ulid', $pendingOrderUlid)->first();
             if ($order) {
-                if ($order->payment_status === \App\Enums\PaymentStatus::PAID) {
+                if ($order->payment_status === PaymentStatus::PAID) {
                     $cartModel->items()->delete();
                     session()->forget('pending_checkout_order_id');
                     session()->forget('coupon_code');
                     session()->forget('coupon_discount');
+
                     return redirect()->route('store.success', ['order_id' => $order->order_number]);
                 }
 
@@ -970,7 +995,7 @@ class StoreController extends Controller
                 } else {
                     // Restock old order
                     foreach ($order->items as $oldItem) {
-                        $prod = \App\Models\Product::find($oldItem->product_id);
+                        $prod = Product::find($oldItem->product_id);
                         if ($prod) {
                             $prod->increment('stock', $oldItem->quantity);
                         }
@@ -986,7 +1011,7 @@ class StoreController extends Controller
         if (!$order) {
             $isNewOrder = true;
             // Create Order in Database
-            $order = \App\Models\Order::create([
+            $order = Order::create([
                 'order_number' => $orderNumber,
                 'customer_id' => auth('customer')->id(),
                 'session_id' => request()->session()->getId(),
@@ -1018,7 +1043,7 @@ class StoreController extends Controller
                 'shipping_method' => $shippingMethodName,
                 'discount' => $discount,
                 'total' => $total,
-                'status' => \App\Enums\OrderStatus::NEW_ORDER,
+                'status' => OrderStatus::NEW_ORDER,
             ]);
         }
 
@@ -1026,7 +1051,7 @@ class StoreController extends Controller
             $order->payments()->create([
                 'payment_method' => $paymentMethodName,
                 'amount' => $total,
-                'status' => \App\Enums\PaymentStatus::PAID,
+                'status' => PaymentStatus::PAID,
                 'card_name' => $request->card_name,
                 'card_number_masked' => '**** **** **** '.substr(str_replace(' ', '', $request->card_num), -4),
             ]);
@@ -1036,7 +1061,7 @@ class StoreController extends Controller
             } catch (\Exception $e) {
                 // Restock items and delete the order
                 foreach ($order->items as $item) {
-                    $product = \App\Models\Product::find($item->product_id);
+                    $product = Product::find($item->product_id);
                     if ($product) {
                         $product->increment('stock', $item->quantity);
                     }
@@ -1044,13 +1069,14 @@ class StoreController extends Controller
                 $order->items()->delete();
                 $order->delete();
                 session()->forget('pending_checkout_order_id');
+
                 return redirect()->back()->withInput()->with('error', 'Payment failed: '.$e->getMessage());
             }
 
             if (!$paymentResult['success']) {
                 // Restock items and delete the order
                 foreach ($order->items as $item) {
-                    $product = \App\Models\Product::find($item->product_id);
+                    $product = Product::find($item->product_id);
                     if ($product) {
                         $product->increment('stock', $item->quantity);
                     }
@@ -1058,6 +1084,7 @@ class StoreController extends Controller
                 $order->items()->delete();
                 $order->delete();
                 session()->forget('pending_checkout_order_id');
+
                 return redirect()->back()->withInput()->with('error',
                     $paymentResult['message'] ?? 'Payment transaction failed.');
             }
@@ -1066,9 +1093,9 @@ class StoreController extends Controller
         if ($isNewOrder) {
             // Create OrderItems in Database
             foreach ($cartModel->items as $cartItem) {
-                $product = \App\Models\Product::find($cartItem->product_id);
+                $product = Product::find($cartItem->product_id);
 
-                \App\Models\OrderItem::create([
+                OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $cartItem->product_id,
                     'product_name' => $product ? $product->name : 'Unknown Product',
@@ -1102,6 +1129,7 @@ class StoreController extends Controller
         }
 
         $redirectUrl = $redirectUrl ?? route('store.success', ['order_id' => $order->order_number]);
+
         return redirect($redirectUrl);
     }
 
@@ -1112,11 +1140,11 @@ class StoreController extends Controller
     {
         $orderId = $request->input('order_id', 'SGMOCKORDER');
 
-        $order = \App\Models\Order::where('order_number', $orderId)->first();
+        $order = Order::where('order_number', $orderId)->first();
         if ($order && $order->customer_id === auth('customer')->id()) {
-            if ($order->payment_status === \App\Enums\PaymentStatus::PAID) {
+            if ($order->payment_status === PaymentStatus::PAID) {
                 // Clear active cart since payment succeeded
-                $cartModel = \App\Models\Cart::getActiveCart();
+                $cartModel = Cart::getActiveCart();
                 if ($cartModel) {
                     $cartModel->items()->delete();
                 }
@@ -1307,11 +1335,13 @@ class StoreController extends Controller
                     }
                     if (!str_starts_with($value, '+')) {
                         $fail('The phone number must include a country code starting with +.');
+
                         return;
                     }
                     $digits = substr($value, 1);
                     if (!ctype_digit($digits)) {
                         $fail('The phone number must contain only digits after the + country code.');
+
                         return;
                     }
                     if (strlen($digits) < 7 || strlen($digits) > 15) {
@@ -1320,6 +1350,7 @@ class StoreController extends Controller
                         } else {
                             $fail('The phone number must be at least 7 digits.');
                         }
+
                         return;
                     }
                 },
@@ -1424,7 +1455,7 @@ class StoreController extends Controller
      */
     public function guestWishlist()
     {
-        if (\Illuminate\Support\Facades\Auth::guard('customer')->check()) {
+        if (Auth::guard('customer')->check()) {
             return redirect()->route('store.account', 'wishlist');
         }
 
@@ -1538,6 +1569,7 @@ class StoreController extends Controller
             }
 
             $p['_search_score'] = $score;
+
             return $p;
         })
             ->filter(fn($p) => $p['_search_score'] > 0)
@@ -1552,11 +1584,11 @@ class StoreController extends Controller
     {
         try {
             $request->validate(['q' => 'max:150']);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Search query is too long (maximum 150 characters).',
-                'errors' => $e->errors()
+                'errors' => $e->errors(),
             ], 422);
         }
         $query = strtolower($request->input('q', ''));
@@ -1779,7 +1811,7 @@ class StoreController extends Controller
         }
 
         $relations = ['items.product'];
-        if (class_exists(\SGCart\CrmTickets\Models\Ticket::class)) {
+        if (class_exists(Ticket::class)) {
             $relations[] = 'tickets.status';
         }
 
