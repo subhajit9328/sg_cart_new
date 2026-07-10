@@ -645,7 +645,7 @@ body.storefront {
         flex-wrap: wrap;
         height: auto;
         padding: 10px 14px 12px 14px;
-        gap: 8px 12px;
+        gap: 8px 6px;
     }
     .header-logo-text {
         font-size: 18px;

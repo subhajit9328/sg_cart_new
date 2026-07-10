@@ -274,7 +274,7 @@
                 <a href="{{ route('store.shop') }}" class="header-sub-link {{ (Route::is('store.shop') && !request('category')) ? 'active' : '' }}">
                     <i class="fa-solid fa-store"></i> Shop All
                 </a>
-                @foreach($navCategories->take(6) as $cat)
+                @foreach($navCategories as $cat)
                     <a href="{{ route('store.shop', ['category' => $cat]) }}"
                        class="header-sub-link {{ request('category') === $cat ? 'active' : '' }}">
                         {{ $cat }}
@@ -933,16 +933,16 @@
                 if (searchInput.value.trim() === '') {
                     e.preventDefault();
                     searchForm.classList.add('search-error');
-                    
+
                     // Trigger shake animation
                     searchForm.classList.remove('shake');
                     void searchForm.offsetWidth; // Force reflow to reset CSS animation
                     searchForm.classList.add('shake');
-                    
+
                     if (searchTooltip) {
                         searchTooltip.classList.add('show');
                     }
-                    
+
                     searchInput.focus();
                 }
             });

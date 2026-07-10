@@ -83,7 +83,7 @@
         <!-- Logo Upload and Display -->
         <div class="space-y-3">
             <label class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Manufacturer Logo</label>
-            
+
             @if($manufacturer->logo)
                 <div class="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl w-fit">
                     <img src="{{ Storage::url($manufacturer->logo) }}" class="w-16 h-16 object-cover rounded-lg border border-slate-200 dark:border-slate-800 bg-white">
@@ -101,6 +101,7 @@
         <!-- Status Checkbox -->
         <div class="pt-2">
             <label class="flex items-center gap-3 cursor-pointer select-none">
+                <input type="hidden" name="is_active" value="0">
                 <input type="checkbox" name="is_active" value="1" {{ old('is_active', $manufacturer->is_active) ? 'checked' : '' }}
                     class="w-4 h-4 rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500 cursor-pointer">
                 <div>

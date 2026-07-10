@@ -161,5 +161,13 @@ class StoreShopAccordionFilterTest extends TestCase
         $response->assertViewHas('selectedSubCategories', []);
         $response->assertViewHas('selectedPriceMax', 100000);
         $this->assertEquals('shoes', session('last_search'));
+
+        // Verify paginator query parameters are reset
+        $products = $response->viewData('products');
+        $paginatorUrl = $products->url(2);
+        $this->assertStringContainsString('search=shoes', $paginatorUrl);
+        $this->assertStringContainsString('price_max=100000', $paginatorUrl);
+        $this->assertStringNotContainsString('category', $paginatorUrl);
+        $this->assertStringNotContainsString('sub_category', $paginatorUrl);
     }
 }

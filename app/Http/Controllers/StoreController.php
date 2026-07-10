@@ -156,19 +156,16 @@ class StoreController extends Controller
         $search = $request->input('search');
         $lastSearch = session('last_search');
 
-        $currentSearchNormalized = $search !== null ? trim($search) : '';
-        $lastSearchNormalized = $lastSearch !== null ? trim($lastSearch) : '';
+        $currentSearch = $search !== null ? trim($search) : '';
+        $lastSearch = $lastSearch !== null ? trim($lastSearch) : '';
 
-        if ($currentSearchNormalized !== $lastSearchNormalized) {
-            $request->merge([
-                'category' => null,
-                'sub_category' => null,
+        session(['last_search' => $currentSearch]);
+        if ($currentSearch !== $lastSearch) {
+            return redirect()->route('store.shop', [
+                'search' => $currentSearch,
                 'price_max' => 100000,
             ]);
-            $request->replace($request->all());
         }
-
-        session(['last_search' => $currentSearchNormalized]);
 
         $baseProducts = collect(self::getProducts());
 
