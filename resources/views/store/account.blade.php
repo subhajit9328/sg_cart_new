@@ -65,6 +65,9 @@
                 <a href="{{ route('store.account', 'wishlist') }}" class="acc-nav-item px-3.5 py-2 lg:px-4 lg:py-3 rounded-lg text-xs lg:text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all flex items-center gap-2 lg:gap-3 shrink-0 {{ $activeTab === 'wishlist' ? 'active' : '' }}" style="text-decoration:none" id="btn-wishlist">
                     <i class="fa-regular fa-heart text-center w-4 text-xs lg:text-sm"></i> Wishlist
                 </a>
+                <a href="{{ route('store.account', 'social-share') }}" class="acc-nav-item px-3.5 py-2 lg:px-4 lg:py-3 rounded-lg text-xs lg:text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all flex items-center gap-2 lg:gap-3 shrink-0 {{ $activeTab === 'social-share' ? 'active' : '' }}" style="text-decoration:none" id="btn-social-share">
+                    <i class="fa-solid fa-share-nodes text-center w-4 text-xs lg:text-sm"></i> Social Share
+                </a>
                 <!-- Desktop Logout Button -->
                 <div class="hidden lg:block">
                     <form action="{{ route('store.logout') }}" method="POST" id="storeLogoutForm" class="contents">
@@ -280,6 +283,304 @@
                     @endforelse
                 </div>
             </div>
+            
+                <!-- Social Share / Influencer Hub Tab -->
+            <div id="tab-social-share" class="acc-content {{ $activeTab === 'social-share' ? 'active' : '' }}">
+                
+                <!-- Instagram-style Influencer Profile Header -->
+                <div class="bg-[#fcfbf9] dark:bg-[#191815] border border-[#e8e4df] dark:border-[#2e2c28] rounded-3xl p-6 md:p-8 mb-6 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 relative overflow-hidden">
+                    <div class="absolute w-64 h-64 rounded-full bg-rose-500/5 blur-3xl -top-10 -right-10 pointer-events-none"></div>
+                    
+                    <!-- Avatar with Instagram Story-style border -->
+                    <div class="relative shrink-0 select-none">
+                        <div class="w-20 h-20 md:w-24 md:h-24 rounded-full p-[3px] bg-gradient-to-tr from-yellow-500 via-rose-500 to-purple-650 dark:from-yellow-400 dark:via-rose-500 dark:to-purple-500 shadow-md">
+                            <div class="w-full h-full rounded-full bg-white dark:bg-[#191815] p-[2px]">
+                                <div class="w-full h-full rounded-full bg-slate-900 dark:bg-slate-800 flex items-center justify-center font-display text-2xl font-extrabold text-white overflow-hidden relative">
+                                    @if(auth('customer')->user()?->profile_picture)
+                                        <img src="{{ Storage::url(auth('customer')->user()->profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover">
+                                    @else
+                                        <span>{{ strtoupper(substr(auth('customer')->user()?->name ?? 'IP', 0, 2)) }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Info and Stats -->
+                    <div class="flex-1 text-center md:text-left min-w-0">
+                        <div class="flex flex-col md:flex-row md:items-center gap-3.5 mb-3.5">
+                            <h2 class="font-display font-extrabold text-lg md:text-xl text-slate-850 dark:text-slate-100 m-0 leading-tight truncate">
+                                {{ auth('customer')->user()?->name ?? 'Style Partner' }}
+                            </h2>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-955/20 dark:text-rose-400 dark:border-rose-900/30 self-center">
+                                <i class="fa-solid fa-circle-check text-[8px]"></i> Style Partner
+                            </span>
+                        </div>
+
+                        <!-- Stats Row (Instagram style, clickable followers/following) -->
+                        <div class="flex items-center justify-center md:justify-start gap-8 mb-4 border-y md:border-y-0 py-2.5 md:py-0 border-slate-100 dark:border-slate-800/65">
+                            <div class="text-center md:text-left select-none">
+                                <span class="block md:inline font-extrabold text-slate-850 dark:text-slate-100 text-sm md:text-base">{{ count($socialPosts) }}</span>
+                                <span class="text-xs text-slate-450 dark:text-slate-500 font-semibold tracking-wide">posts</span>
+                            </div>
+                            <button type="button" onclick="openFollowersModal()" class="text-center md:text-left bg-transparent border-none p-0 cursor-pointer hover:opacity-85 transition-opacity focus:outline-none select-none">
+                                <span class="block md:inline font-extrabold text-slate-850 dark:text-slate-100 text-sm md:text-base" id="stat-followers-count">{{ count($followers) }}</span>
+                                <span class="text-xs text-slate-450 dark:text-slate-500 font-semibold tracking-wide">followers</span>
+                            </button>
+                            <button type="button" onclick="openFollowingModal()" class="text-center md:text-left bg-transparent border-none p-0 cursor-pointer hover:opacity-85 transition-opacity focus:outline-none select-none">
+                                <span class="block md:inline font-extrabold text-slate-850 dark:text-slate-100 text-sm md:text-base" id="stat-following-count">{{ count($following) }}</span>
+                                <span class="text-xs text-slate-450 dark:text-slate-500 font-semibold tracking-wide">following</span>
+                            </button>
+                        </div>
+
+                        <!-- Bio info -->
+                        <div class="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-lg select-none">
+                            <p class="font-bold text-slate-850 dark:text-slate-350">Fashion & lifestyle inspiration hub.</p>
+                            <p class="mt-0.5 opacity-90">Sharing my curated looks, reels, and trends. Discover the linked products and shop directly from my gallery!</p>
+                        </div>
+                    </div>
+                </div>
+
+                @php
+                    $hasSocialErrors = $errors->has('media') || $errors->has('order_number') || $errors->has('product_sku') || $errors->has('shop_link') || $errors->has('caption');
+                @endphp
+
+                <!-- Sub Tab Navigation -->
+                <div class="flex gap-2 mb-6 border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <button type="button" onclick="switchSocialSubTab('social-posts')" id="subbtn-social-posts" class="social-sub-tab-btn {{ !$hasSocialErrors ? 'active bg-slate-900 text-white dark:bg-accent dark:text-slate-950' : 'bg-[#f8f7f5] dark:bg-[#1a1916] text-slate-655 hover:text-slate-900' }} px-4 py-2 rounded-xl text-xs font-bold transition-all border-none cursor-pointer">
+                        <i class="fa-solid fa-images mr-1.5"></i> My Gallery ({{ count($socialPosts) }})
+                    </button>
+                    <button type="button" onclick="switchSocialSubTab('social-upload')" id="subbtn-social-upload" class="social-sub-tab-btn {{ $hasSocialErrors ? 'active bg-slate-900 text-white dark:bg-accent dark:text-slate-950' : 'bg-[#f8f7f5] dark:bg-[#1a1916] text-slate-655 hover:text-slate-900' }} px-4 py-2 rounded-xl text-xs font-semibold transition-all border-none cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Share a Look
+                    </button>
+                </div>
+
+                <!-- Sub Tab 1: My Gallery (Square Grid) -->
+                <div id="subtab-social-posts" class="social-sub-content {{ !$hasSocialErrors ? 'active' : 'hidden' }}">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
+                        @forelse($socialPosts as $post)
+                            <div class="group relative aspect-square rounded-2xl overflow-hidden bg-slate-950 border border-slate-100 dark:border-slate-800 cursor-pointer" onclick="openCustomerPostModal({{ json_encode($post) }}, '{{ $post->product ? addslashes($post->product->name) : '' }}')">
+                                @if($post->media_type === 'video')
+                                    <video src="{{ Storage::url($post->media_path) }}" class="w-full h-full object-cover"></video>
+                                    <div class="absolute inset-0 flex items-center justify-center bg-black/10">
+                                        <span class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white text-xs">
+                                            <i class="fa-solid fa-play ml-0.5"></i>
+                                        </span>
+                                    </div>
+                                @else
+                                    <img src="{{ Storage::url($post->media_path) }}" alt="Look" class="w-full h-full object-cover">
+                                @endif
+                                
+                                <!-- Hover status overlay -->
+                                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-between p-3.5 text-white">
+                                    <div class="flex justify-between items-start">
+                                        @if($post->status === 'approved')
+                                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-emerald-500/95 border border-emerald-400/35 text-white">Approved</span>
+                                        @elseif($post->status === 'rejected')
+                                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-rose-500/95 border border-rose-400/35 text-white">Rejected</span>
+                                        @else
+                                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-amber-500/95 border border-amber-400/35 text-white">Pending</span>
+                                        @endif
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-xs font-semibold truncate leading-tight mb-0.5">{{ $post->caption ?? 'No caption' }}</p>
+                                        @if($post->product)
+                                            <p class="text-[9px] text-slate-300 truncate"><i class="fa-solid fa-bag-shopping text-[8px] mr-1"></i>{{ $post->product->name }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="col-span-full py-16 text-center text-slate-400 dark:text-slate-500">
+                                <i class="fa-solid fa-photo-film text-4xl mb-3 opacity-20 block"></i>
+                                <p class="text-sm">You haven't submitted any looks yet.</p>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- Sub Tab 2: Share a Look Form -->
+                <div id="subtab-social-upload" class="social-sub-content {{ $hasSocialErrors ? 'active' : 'hidden' }}">
+                    <form action="{{ route('store.social-share.store') }}" method="POST" enctype="multipart/form-data" class="w-full flex flex-col gap-5 max-w-xl">
+                        @csrf
+                        
+                        <!-- Drag-and-drop media input -->
+                        <div class="flex flex-col gap-1.5">
+                            <label class="font-sans text-[11px] font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider">Upload Video Reel or Image <span class="text-rose-600">*</span></label>
+                            <div class="border-2 border-dashed border-[#e8e4df] dark:border-[#2e2c28] hover:border-slate-455 dark:hover:border-slate-655 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer gap-2 transition-all relative min-h-[140px]" onclick="document.getElementById('social_media_input').click()">
+                                <i class="fa-solid fa-photo-film text-3xl text-slate-300 dark:text-slate-700"></i>
+                                <span class="text-xs font-bold text-slate-500">Choose Image or MP4 Video Reel</span>
+                                <span class="text-[10px] text-slate-400">Files up to 100 MB supported</span>
+                                <input type="file" name="media" id="social_media_input" required class="hidden" accept="image/*,video/mp4,video/x-m4v,video/*" onchange="previewSocialMedia(this)"/>
+                                
+                                <!-- Preview container -->
+                                <div id="social_media_preview" class="absolute inset-0 bg-white dark:bg-[#151411] rounded-2xl hidden items-center justify-center p-2 border border-slate-350 dark:border-slate-800">
+                                    <!-- Injected media -->
+                                </div>
+                            </div>
+                            @error('media') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <!-- Order ID OR Product SKU -->
+                        <div class="bg-[#f8f7f5]/80 dark:bg-[#1a1916]/40 border border-[#e8e4df] dark:border-[#2e2c28] rounded-2xl p-4 mt-2">
+                            <h4 class="text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1 flex items-center gap-1.5" style="margin-bottom: 4px;"><i class="fa-solid fa-circle-info text-accent"></i> Linking Verification</h4>
+                            <p class="text-[10px] text-slate-455 dark:text-slate-500 leading-normal mb-4">To share your style post, you must provide either a valid Order ID/Number (visible in My Orders) or a Product SKU code (visible on the product page).</p>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="flex flex-col gap-1">
+                                    <label class="font-sans text-[10px] font-bold text-slate-500 dark:text-slate-455 uppercase tracking-wider">Order ID / Number</label>
+                                    <input name="order_number" id="social_order_number" class="w-full px-3 py-2 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all focus:border-slate-800 focus:dark:border-accent" placeholder="e.g. ORD-1001" value="{{ old('order_number') }}"/>
+                                    @error('order_number') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                
+                            </div>
+                        </div>
+
+                        <!-- Caption -->
+                        <div class="flex flex-col gap-1">
+                            <label class="font-sans text-[11px] font-bold text-slate-500 dark:text-slate-455 uppercase tracking-wider">Caption / Style Notes</label>
+                            <textarea name="caption" rows="3" class="w-full px-3.5 py-2.5 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:dark:border-accent" placeholder="Write a short description to inspire your followers...">{{ old('caption') }}</textarea>
+                            @error('caption') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <!-- Shop Link -->
+                        <div class="flex flex-col gap-1">
+                            <label class="font-sans text-[11px] font-bold text-slate-500 dark:text-slate-455 uppercase tracking-wider">Shop Link (Optional)</label>
+                            <input name="shop_link" type="url" class="w-full px-3.5 py-2.5 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all focus:border-slate-900 focus:dark:border-accent" placeholder="e.g. {{ url('/product/relaxed-fit-shirt') }}" value="{{ old('shop_link') }}"/>
+                            <span class="text-[10px] text-slate-400">Must be a URL from this website (base URL must match).</span>
+                            @error('shop_link') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="pt-2 flex gap-3">
+                            <button type="submit" class="btn btn-primary btn-sm px-6">Publish Look</button>
+                            <button type="button" onclick="resetSocialUploadForm()" class="btn btn-secondary btn-sm px-6">Reset</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Modals Area -->
+                <!-- Followers Modal Overlay -->
+                <div id="followersModal" class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+                    <div id="followersModalContent" class="bg-white dark:bg-[#12110e] border border-slate-200 dark:border-slate-800 rounded-3xl max-w-sm w-full max-h-[60vh] overflow-hidden shadow-2xl flex flex-col transition-all duration-300 scale-95">
+                        <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <h3 class="font-display font-extrabold text-sm text-slate-900 dark:text-white mb-0">Followers</h3>
+                            <button onclick="closeFollowersModal()" class="text-slate-400 hover:text-slate-655 bg-transparent border-none p-0 cursor-pointer">
+                                <i class="fa-solid fa-xmark text-sm"></i>
+                            </button>
+                        </div>
+                        <div class="p-4 overflow-y-auto flex-1 flex flex-col gap-3.5">
+                            @forelse($followers as $f)
+                                <div class="flex items-center justify-between gap-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-850 flex items-center justify-center font-bold text-xs text-slate-650 overflow-hidden border border-slate-350 dark:border-slate-700 shrink-0">
+                                            @if($f->profile_picture)
+                                                <img src="{{ Storage::url($f->profile_picture) }}" alt="Avatar" class="w-full h-full object-cover">
+                                            @else
+                                                {{ strtoupper(substr($f->name, 0, 2)) }}
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xs text-slate-850 dark:text-slate-200 leading-snug">{{ $f->name }}</h4>
+                                            <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">follower</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-center py-10 text-slate-400 dark:text-slate-500">
+                                    <i class="fa-solid fa-user-group text-3xl mb-2 opacity-20 block"></i>
+                                    <p class="text-xs">No followers yet.</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Following Modal Overlay -->
+                <div id="followingModal" class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+                    <div id="followingModalContent" class="bg-white dark:bg-[#12110e] border border-slate-200 dark:border-slate-800 rounded-3xl max-w-sm w-full max-h-[60vh] overflow-hidden shadow-2xl flex flex-col transition-all duration-300 scale-95">
+                        <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <h3 class="font-display font-extrabold text-sm text-slate-900 dark:text-white mb-0">Following</h3>
+                            <button onclick="closeFollowingModal()" class="text-slate-400 hover:text-slate-655 bg-transparent border-none p-0 cursor-pointer">
+                                <i class="fa-solid fa-xmark text-sm"></i>
+                            </button>
+                        </div>
+                        <div class="p-4 overflow-y-auto flex-1 flex flex-col gap-3.5" id="following-list-container">
+                            @forelse($following as $f)
+                                <div class="flex items-center justify-between gap-3 following-row-{{ $f->id }}">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-850 flex items-center justify-center font-bold text-xs text-slate-655 overflow-hidden border border-slate-355 dark:border-slate-700 shrink-0">
+                                            @if($f->profile_picture)
+                                                <img src="{{ Storage::url($f->profile_picture) }}" alt="Avatar" class="w-full h-full object-cover">
+                                            @else
+                                                {{ strtoupper(substr($f->name, 0, 2)) }}
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-xs text-slate-850 dark:text-slate-200 leading-snug">{{ $f->name }}</h4>
+                                            <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">following</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="unfollowFromModal(this, '{{ $f->id }}')" class="px-3 py-1 border border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-305 rounded-xl text-[10px] font-bold uppercase transition-colors cursor-pointer select-none">
+                                        Unfollow
+                                    </button>
+                                </div>
+                            @empty
+                                <div class="text-center py-10 text-slate-400 dark:text-slate-500" id="following-empty-state">
+                                    <i class="fa-solid fa-user-plus text-3xl mb-2 opacity-20 block"></i>
+                                    <p class="text-xs">You aren't following anyone yet.</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Post Details Modal Overlay -->
+                <div id="customerPostModal" class="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+                    <div class="relative bg-slate-900 dark:bg-slate-950 rounded-3xl max-w-3xl w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col md:flex-row border border-slate-800">
+                        <button type="button" onclick="closeCustomerPostModal()" class="absolute right-4 top-4 z-20 w-9 h-9 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center border-none cursor-pointer">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                        <div class="w-full md:w-3/5 bg-black flex items-center justify-center aspect-square md:aspect-auto md:h-[70vh]">
+                            <div id="custPostModalMedia" class="w-full h-full flex items-center justify-center relative"></div>
+                        </div>
+                        <div class="w-full md:w-2/5 p-6 flex flex-col justify-between bg-white dark:bg-[#12110e] border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-800 overflow-y-auto">
+                            <div>
+                                <div class="pb-4 border-b border-slate-100 dark:border-slate-800">
+                                    <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Status</p>
+                                    <span id="custPostModalStatus" class="inline-flex px-3 py-1 rounded-full text-xs font-bold uppercase border"></span>
+                                </div>
+                                <div class="py-4 border-b border-slate-100 dark:border-slate-800">
+                                    <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Caption</p>
+                                    <p id="custPostModalCaption" class="text-xs text-slate-750 dark:text-slate-350 leading-relaxed font-medium"></p>
+                                </div>
+                                <div class="py-4">
+                                    <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5">Verification Details</p>
+                                    <div class="flex flex-col gap-2">
+                                        <div class="flex justify-between items-center text-[11px]">
+                                            <span class="text-slate-455 dark:text-slate-500 font-semibold">Order Number</span>
+                                            <span id="custPostModalOrder" class="font-mono text-slate-800 dark:text-slate-200 font-bold"></span>
+                                        </div>
+                                        <div class="flex justify-between items-center text-[11px]">
+                                            <span class="text-slate-455 dark:text-slate-500 font-semibold">Product SKU</span>
+                                            <span id="custPostModalSku" class="font-mono text-slate-800 dark:text-slate-200 font-bold"></span>
+                                        </div>
+                                        <div id="custPostModalProductRow" class="flex flex-col gap-1 mt-2 p-2.5 border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-900/10">
+                                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Linked Product</span>
+                                            <span id="custPostModalProductName" class="text-xs font-bold text-slate-800 dark:text-slate-200"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="custPostModalRejectionCard" class="mt-4 p-3 bg-rose-50 dark:bg-rose-955/15 border border-rose-100 dark:border-rose-900/30 rounded-2xl">
+                                <span class="text-[10px] font-extrabold uppercase text-rose-600 tracking-wider block mb-1">Moderator Note</span>
+                                <p id="custPostModalRejectionReason" class="text-xs text-rose-700 dark:text-rose-455 leading-normal"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>         </div>
+            </div>
         </div>
 
     </div>
@@ -326,7 +627,7 @@
         form.querySelector('input[name="phone"]').value = address.phone || '';
         form.querySelector('input[name="alternate_phone"]').value = address.alternate_phone || '';
         form.querySelector('input[name="landmark"]').value = address.landmark || '';
-
+  
         // Address type radio selection
         const addrTypeRadio = form.querySelector(`input[name="address_type"][value="${address.address_type || 'work'}"]`);
         if (addrTypeRadio) addrTypeRadio.checked = true;
@@ -627,6 +928,344 @@
             openAddressModal();
         }
         @endif
+
+        // Redirect to active tab from errors if present
+        @if ($errors->has('media') || $errors->has('order_number') || $errors->has('product_sku') || $errors->has('caption'))
+            const socialBtn = document.getElementById('btn-social-share');
+            if (socialBtn) {
+                // Switch window location parameter to social-share or trigger tab manually if required
+            }
+        @endif
+    });
+
+    // Social Share Sub-Tab Switcher
+    function switchSocialSubTab(subTabId) {
+        document.querySelectorAll('.social-sub-content').forEach(el => {
+            el.classList.add('hidden');
+            el.classList.remove('active');
+        });
+        const targetTab = document.getElementById('subtab-' + subTabId);
+        if (targetTab) {
+            targetTab.classList.remove('hidden');
+            targetTab.classList.add('active');
+        }
+
+        document.querySelectorAll('.social-sub-tab-btn').forEach(btn => {
+            btn.classList.remove('active', 'bg-slate-900', 'text-white', 'dark:bg-accent', 'dark:text-slate-950');
+            btn.classList.add('bg-[#f8f7f5]', 'dark:bg-[#1a1916]', 'text-slate-650');
+        });
+        const activeBtn = document.getElementById('subbtn-' + subTabId);
+        if (activeBtn) {
+            activeBtn.classList.add('active', 'bg-slate-900', 'text-white', 'dark:bg-accent', 'dark:text-slate-950');
+            activeBtn.classList.remove('bg-[#f8f7f5]', 'dark:bg-[#1a1916]', 'text-slate-650');
+        }
+    }
+
+    // Media Preview
+    function previewSocialMedia(input) {
+        const preview = document.getElementById('social_media_preview');
+        if (!preview) return;
+        preview.innerHTML = '';
+        
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                let el;
+                const extension = file.name.split('.').pop().toLowerCase();
+                const videoExtensions = ['mp4', 'mov', 'avi', 'm4v', 'webm', '3gp'];
+                
+                if (file.type.startsWith('video/') || videoExtensions.includes(extension)) {
+                    el = document.createElement('video');
+                    el.src = e.target.result;
+                    el.controls = true;
+                    el.autoplay = true;
+                    el.muted = true;
+                    el.className = 'max-w-full max-h-[140px] rounded-xl';
+                    el.style.outline = 'none';
+                } else {
+                    el = document.createElement('img');
+                    el.src = e.target.result;
+                    el.className = 'max-w-full max-h-[140px] rounded-xl object-contain';
+                }
+                
+                // Add cancel button overlay
+                const cancelBtn = document.createElement('span');
+                cancelBtn.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+                cancelBtn.className = 'absolute top-2 right-2 text-rose-500 bg-white dark:bg-[#151411] rounded-full hover:scale-110 cursor-pointer text-base shadow z-10';
+                cancelBtn.onclick = function(event) {
+                    event.stopPropagation();
+                    resetSocialUploadForm();
+                };
+                
+                preview.appendChild(el);
+                preview.appendChild(cancelBtn);
+                preview.className = 'absolute inset-0 bg-white dark:bg-[#151411] rounded-2xl flex items-center justify-center p-2 border border-slate-350 dark:border-slate-800 z-10';
+            }
+            
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Reset Upload form
+    function resetSocialUploadForm() {
+        const input = document.getElementById('social_media_input');
+        if (input) input.value = '';
+        
+        const preview = document.getElementById('social_media_preview');
+        if (preview) {
+            preview.innerHTML = '';
+            preview.className = 'absolute inset-0 bg-white dark:bg-[#151411] rounded-2xl hidden';
+        }
+        
+        const orderNumInput = document.getElementById('social_order_number');
+        if (orderNumInput) orderNumInput.value = '';
+        
+        const skuInput = document.getElementById('social_product_sku');
+        if (skuInput) skuInput.value = '';
+        
+        const capArea = document.querySelector('#tab-social-upload textarea');
+        if (capArea) capArea.value = '';
+
+        const shopLinkInput = document.querySelector('input[name="shop_link"]');
+        if (shopLinkInput) shopLinkInput.value = '';
+    }
+
+    // Follow/Unfollow Helper inside account page
+    function toggleFollow(btn, influencerId) {
+        if (!btn) return;
+        btn.disabled = true;
+
+        fetch("{{ route('store.social-share.follow', ':id') }}".replace(':id', influencerId), {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Network response not ok');
+            return res.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            } else {
+                showToast(data.message || 'Follow toggle failed.', 'error');
+            }
+        })
+        .catch(err => {
+            showToast('Something went wrong.', 'error');
+        })
+        .finally(() => {
+            btn.disabled = false;
+        });
+    }
+
+    // Unfollow from the following modal
+    function unfollowFromModal(btn, influencerId) {
+        if (!btn) return;
+        btn.disabled = true;
+
+        fetch("{{ route('store.social-share.follow', ':id') }}".replace(':id', influencerId), {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Network response not ok');
+            return res.json();
+        })
+        .then(data => {
+            if (data.success && !data.is_following) {
+                showToast(data.message, 'success');
+                
+                // Remove row from modal
+                const row = document.querySelector(`.following-row-${influencerId}`);
+                if (row) {
+                    row.remove();
+                }
+                
+                // Update following count stat
+                const followingStat = document.getElementById('stat-following-count');
+                if (followingStat) {
+                    let currentCount = parseInt(followingStat.textContent) || 0;
+                    followingStat.textContent = Math.max(0, currentCount - 1);
+                }
+                
+                // Check if list is now empty
+                const container = document.getElementById('following-list-container');
+                const remainingRows = container.querySelectorAll('[class^="following-row-"]');
+                if (remainingRows.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-10 text-slate-400 dark:text-slate-500" id="following-empty-state">
+                            <i class="fa-solid fa-user-plus text-3xl mb-2 opacity-20 block"></i>
+                            <p class="text-xs">You aren't following anyone yet.</p>
+                        </div>
+                    `;
+                }
+            } else {
+                showToast(data.message || 'Action failed.', 'error');
+            }
+        })
+        .catch(err => {
+            showToast('Something went wrong.', 'error');
+        })
+        .finally(() => {
+            btn.disabled = false;
+        });
+    }
+
+    // Modal helpers for followers / following
+    function openFollowersModal() {
+        const modal = document.getElementById('followersModal');
+        const content = document.getElementById('followersModalContent');
+        if (!modal || !content) return;
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100');
+        content.classList.remove('scale-95');
+        content.classList.add('scale-100');
+    }
+
+    function closeFollowersModal() {
+        const modal = document.getElementById('followersModal');
+        const content = document.getElementById('followersModalContent');
+        if (!modal || !content) return;
+        content.classList.add('scale-95');
+        content.classList.remove('scale-100');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modal.classList.remove('opacity-100');
+    }
+
+    // Modal helpers for following
+    function openFollowingModal() {
+        const modal = document.getElementById('followingModal');
+        const content = document.getElementById('followingModalContent');
+        if (!modal || !content) return;
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100');
+        content.classList.remove('scale-95');
+        content.classList.add('scale-100');
+    }
+
+    function closeFollowingModal() {
+        const modal = document.getElementById('followingModal');
+        const content = document.getElementById('followingModalContent');
+        if (!modal || !content) return;
+        content.classList.add('scale-95');
+        content.classList.remove('scale-100');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modal.classList.remove('opacity-100');
+    }
+
+    // Customer Post modal helpers
+    function openCustomerPostModal(post, productName) {
+        const modal = document.getElementById('customerPostModal');
+        const mediaContainer = document.getElementById('custPostModalMedia');
+        const statusSpan = document.getElementById('custPostModalStatus');
+        const captionP = document.getElementById('custPostModalCaption');
+        const orderSpan = document.getElementById('custPostModalOrder');
+        const skuSpan = document.getElementById('custPostModalSku');
+        const productCard = document.getElementById('custPostModalProductRow');
+        const productNameSpan = document.getElementById('custPostModalProductName');
+        const rejectionCard = document.getElementById('custPostModalRejectionCard');
+        const rejectionReasonP = document.getElementById('custPostModalRejectionReason');
+
+        // Set media
+        const mediaUrl = "{{ Storage::url(':path') }}".replace(':path', post.media_path);
+        if (post.media_type === 'video') {
+            mediaContainer.innerHTML = `<video src="${mediaUrl}" controls autoplay loop class="max-w-full max-h-[68vh] rounded-2xl" style="outline:none;"></video>`;
+        } else {
+            mediaContainer.innerHTML = `<img src="${mediaUrl}" alt="Look" class="max-w-full max-h-[68vh] rounded-2xl object-contain" />`;
+        }
+
+        // Set Status
+        statusSpan.textContent = post.status.toUpperCase();
+        if (post.status === 'approved') {
+            statusSpan.className = 'inline-flex px-3 py-1 rounded-full text-xs font-bold uppercase bg-emerald-555 text-emerald-700 border-emerald-250 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30';
+        } else if (post.status === 'rejected') {
+            statusSpan.className = 'inline-flex px-3 py-1 rounded-full text-xs font-bold uppercase bg-rose-50 text-rose-700 border-rose-250 dark:bg-rose-955/20 dark:text-rose-400 dark:border-rose-900/30';
+        } else {
+            statusSpan.className = 'inline-flex px-3 py-1 rounded-full text-xs font-bold uppercase bg-amber-50 text-amber-700 border-amber-250 dark:bg-amber-955/20 dark:text-amber-400 dark:border-amber-900/30';
+        }
+
+        // Caption
+        captionP.textContent = post.caption || 'No caption provided.';
+
+        // Order & SKU
+        orderSpan.textContent = post.order_number || 'N/A';
+        skuSpan.textContent = post.product_sku || 'N/A';
+
+        // Product
+        if (post.product) {
+            productCard.style.display = 'block';
+            productNameSpan.textContent = productName || post.product.name;
+        } else {
+            productCard.style.display = 'none';
+        }
+
+        // Rejection card
+        if (post.status === 'rejected' && post.rejection_reason) {
+            rejectionCard.style.display = 'block';
+            rejectionReasonP.textContent = post.rejection_reason;
+        } else {
+            rejectionCard.style.display = 'none';
+        }
+
+        // Show Modal
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100');
+    }
+
+    // Close customer post details modal
+    function closeCustomerPostModal() {
+        const modal = document.getElementById('customerPostModal');
+        const mediaContainer = document.getElementById('custPostModalMedia');
+        if (mediaContainer) mediaContainer.innerHTML = ''; // stop playback
+        if (modal) {
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        }
+    }
+
+    // Document events for modal close/backdrop
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeCustomerPostModal();
+            closeFollowersModal();
+            closeFollowingModal();
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const custModal = document.getElementById('customerPostModal');
+        if (custModal) {
+            custModal.addEventListener('click', function(e) {
+                if (e.target === this) closeCustomerPostModal();
+            });
+        }
+
+        const followersModal = document.getElementById('followersModal');
+        if (followersModal) {
+            followersModal.addEventListener('click', function(e) {
+                if (e.target === this) closeFollowersModal();
+            });
+        }
+
+        const followingModal = document.getElementById('followingModal');
+        if (followingModal) {
+            followingModal.addEventListener('click', function(e) {
+                if (e.target === this) closeFollowingModal();
+            });
+        }
     });
 </script>
 @endsection

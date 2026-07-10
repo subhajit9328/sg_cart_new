@@ -96,6 +96,10 @@
                         <i class="fa-solid fa-store"></i>
                         <span>Shop All</span>
                     </a>
+                    <a href="{{ route('store.social-share.index') }}" class="mobile-nav-link {{ Route::is('store.social-share.*') ? 'active' : '' }}" onclick="closeMobileNav()">
+                        <i class="fa-solid fa-hashtag text-rose-500"></i>
+                        <span>Studio Feed</span>
+                    </a>
                     <a href="{{ route('store.cart') }}" class="mobile-nav-link {{ Route::is('store.cart') ? 'active' : '' }}" onclick="closeMobileNav()">
                         <i class="fa-solid fa-cart-shopping"></i>
                         <span>Cart</span>
@@ -260,6 +264,9 @@
                 </a>
                 <a href="{{ route('store.shop') }}" class="header-sub-link {{ (Route::is('store.shop') && !request('category')) ? 'active' : '' }}">
                     <i class="fa-solid fa-store"></i> Shop All
+                </a>
+                <a href="{{ route('store.social-share.index') }}" class="header-sub-link {{ Route::is('store.social-share.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-hashtag text-rose-500"></i> Studio Feed
                 </a>
                 @foreach($navCategories->take(6) as $cat)
                     <a href="{{ route('store.shop', ['category' => $cat]) }}"
