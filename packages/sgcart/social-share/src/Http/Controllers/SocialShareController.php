@@ -42,7 +42,7 @@ class SocialShareController extends Controller
             'media' => [
                 'required',
                 'file',
-                'max:102400', // max 100MB for reels
+                'max:5120', // max 5MB
                 function ($attribute, $value, $fail) {
                     if (!$value->isValid()) {
                         $fail('The uploaded file is not valid.');
@@ -85,7 +85,7 @@ class SocialShareController extends Controller
             'order_number.required_without' => 'Please provide either an Order ID or a Product SKU.',
             'product_sku.required_without' => 'Please provide either an Order ID or a Product SKU.',
             'media.required' => 'Please upload an image or video.',
-            'media.max' => 'The file size must not exceed 100MB.',
+            'media.max' => 'The file size must not exceed 5MB.',
             'shop_link.url' => 'Please provide a valid URL for the shop link.',
         ]);
 
