@@ -410,7 +410,7 @@
                             <div class="border-2 border-dashed border-[#e8e4df] dark:border-[#2e2c28] hover:border-slate-455 dark:hover:border-slate-655 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer gap-2 transition-all relative min-h-[140px]" onclick="document.getElementById('social_media_input').click()">
                                 <i class="fa-solid fa-photo-film text-3xl text-slate-300 dark:text-slate-700"></i>
                                 <span class="text-xs font-bold text-slate-500">Choose Image or MP4 Video Reel</span>
-                                <span class="text-[10px] text-slate-400">Files up to 100 MB supported</span>
+                                <span class="text-[10px] text-slate-400">Files up to 5 MB supported</span>
                                 <input type="file" name="media" id="social_media_input" required class="hidden" accept="image/*,video/mp4,video/x-m4v,video/*" onchange="previewSocialMedia(this)"/>
                                 
                                 <!-- Preview container -->
@@ -969,6 +969,11 @@
         
         if (input.files && input.files[0]) {
             const file = input.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                alert("The file size must not exceed 5MB.");
+                resetSocialUploadForm();
+                return;
+            }
             const reader = new FileReader();
             
             reader.onload = function(e) {
