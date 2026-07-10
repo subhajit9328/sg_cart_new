@@ -186,11 +186,15 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1">
                             <label class="font-sans text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">First Name <span class="text-rose-600">*</span></label>
-                            <input name="first_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:dark:border-accent focus:ring-3 focus:ring-slate-900/5 focus:dark:ring-accent/10" value="{{ auth('customer')->user() ? explode(' ', auth('customer')->user()->name)[0] : 'John' }}"/>
+                            <input name="first_name" id="first_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:dark:border-accent focus:ring-3 focus:ring-slate-900/5 focus:dark:ring-accent/10" value="{{ auth('customer')->user() ? explode(' ', auth('customer')->user()->name)[0] : 'John' }}"/>
+                            <p class="error-first-name text-rose-500 text-xs mt-1 hidden"></p>
+                            @error('first_name') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div class="flex flex-col gap-1">
                             <label class="font-sans text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Last Name <span class="text-rose-600">*</span></label>
-                            <input name="last_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:dark:border-accent focus:ring-3 focus:ring-slate-900/5 focus:dark:ring-accent/10" value="{{ auth('customer')->user() ? (explode(' ', auth('customer')->user()->name)[1] ?? '') : 'Doe' }}"/>
+                            <input name="last_name" id="last_name" required class="w-full px-3.5 py-2.5 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] focus:border-slate-900 focus:dark:border-accent focus:ring-3 focus:ring-slate-900/5 focus:dark:ring-accent/10" value="{{ auth('customer')->user() ? (explode(' ', auth('customer')->user()->name)[1] ?? '') : 'Doe' }}"/>
+                            <p class="error-last-name text-rose-500 text-xs mt-1 hidden"></p>
+                            @error('last_name') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -496,10 +500,65 @@
         // Validate profile details form (missing fields)
         const profileForm = document.querySelector('#tab-profile form');
         if (profileForm) {
+            const firstNameInput = document.getElementById('first_name');
+            const lastNameInput = document.getElementById('last_name');
+            const errFirstName = document.querySelector('.error-first-name');
+            const errLastName = document.querySelector('.error-last-name');
+
+            function validateFirstName() {
+                if (!firstNameInput) return true;
+                const val = firstNameInput.value.trim();
+                if (!val) {
+                    if (errFirstName) {
+                        errFirstName.textContent = 'First name is required.';
+                        errFirstName.classList.remove('hidden');
+                    }
+                    firstNameInput.classList.add('border-rose-500');
+                    return false;
+                } else {
+                    if (errFirstName) errFirstName.classList.add('hidden');
+                    firstNameInput.classList.remove('border-rose-500');
+                    return true;
+                }
+            }
+
+            function validateLastName() {
+                if (!lastNameInput) return true;
+                const val = lastNameInput.value.trim();
+                if (!val) {
+                    if (errLastName) {
+                        errLastName.textContent = 'Last name is required.';
+                        errLastName.classList.remove('hidden');
+                    }
+                    lastNameInput.classList.add('border-rose-500');
+                    return false;
+                } else {
+                    if (errLastName) errLastName.classList.add('hidden');
+                    lastNameInput.classList.remove('border-rose-500');
+                    return true;
+                }
+            }
+
+            if (firstNameInput) {
+                firstNameInput.addEventListener('blur', validateFirstName);
+                firstNameInput.addEventListener('input', validateFirstName);
+            }
+
+            if (lastNameInput) {
+                lastNameInput.addEventListener('blur', validateLastName);
+                lastNameInput.addEventListener('input', validateLastName);
+            }
+
             profileForm.addEventListener('submit', function(e) {
                 const emailInput = document.getElementById('email');
                 const phoneInput = document.getElementById('phone_no');
                 let isValid = true;
+
+                const isFirstNameValid = validateFirstName();
+                const isLastNameValid = validateLastName();
+                if (!isFirstNameValid || !isLastNameValid) {
+                    isValid = false;
+                }
 
                 if (emailInput && emailInput.value.trim()) {
                     const val = emailInput.value.trim();
