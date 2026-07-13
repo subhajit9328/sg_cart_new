@@ -86,10 +86,75 @@ class Cart extends Model
         $products = StoreController::getProducts();
         $productsCol = collect($products);
 
+        $hasVariants = class_exists(\SGCart\ProductVariants\Models\ProductVariant::class);
+        $colorEnabled = $hasVariants ? config('product-variants.features.color', true) : false;
+        $sizeEnabled = $hasVariants ? config('product-variants.features.size', true) : false;
+
         foreach ($this->items as $item) {
             $product = $productsCol->firstWhere('id', $item->product_id);
             if (!$product) {
                 continue;
+            }
+
+            $price = $product['price'];
+            $img = $product['img'];
+            $sku = $product['sku'] ?? null;
+            $stock = $product['stock'] ?? 0;
+
+            if ($hasVariants) {
+                $colorId = null;
+                if ($colorEnabled && !empty($item->color)) {
+                    $colorId = \SGCart\ProductVariants\Models\Color::where('hex_code', $item->color)->value('id');
+                }
+
+                $sizeId = null;
+                if ($sizeEnabled && !empty($item->size)) {
+                    $sizeId = \SGCart\ProductVariants\Models\Size::where('code', $item->size)->value('id');
+                }
+
+                $variantQuery = \SGCart\ProductVariants\Models\ProductVariant::where('product_id', $item->product_id)
+                    ->where('is_active', true);
+
+                if ($colorEnabled) {
+                    if ($colorId) {
+                        $variantQuery->where('color_id', $colorId);
+                    } else {
+                        $variantQuery->whereNull('color_id');
+                    }
+                }
+
+                if ($sizeEnabled) {
+                    if ($sizeId) {
+                        $variantQuery->where('size_id', $sizeId);
+                    } else {
+                        $variantQuery->whereNull('size_id');
+                    }
+                }
+
+                $variant = $variantQuery->first();
+
+                if (!$variant) {
+                    // Fallback to partial match if exact match fails
+                    $variant = \SGCart\ProductVariants\Models\ProductVariant::where('product_id', $item->product_id)
+                        ->where('is_active', true)
+                        ->when($colorEnabled && $colorId, fn($q) => $q->where('color_id', $colorId))
+                        ->when($sizeEnabled && $sizeId, fn($q) => $q->where('size_id', $sizeId))
+                        ->first();
+                }
+
+                if ($variant) {
+                    $variantPrice = $variant->sale_price ?: $variant->price;
+                    if ($variantPrice !== null) {
+                        $price = (float) $variantPrice;
+                    }
+                    if ($variant->image) {
+                        $img = \Storage::url($variant->image);
+                    }
+                    if ($variant->sku) {
+                        $sku = $variant->sku;
+                    }
+                    $stock = (int) $variant->stock;
+                }
             }
 
             // Cart key: productId_size_color
@@ -99,13 +164,14 @@ class Cart extends Model
                 'id' => $product['id'],
                 'slug' => $product['slug'],
                 'name' => $product['name'],
-                'price' => $product['price'],
-                'img' => $product['img'],
+                'price' => $price,
+                'img' => $img,
+                'sku' => $sku,
                 'quantity' => $item->quantity,
                 'size' => $item->size,
                 'color' => $item->color,
                 'cat' => $product['cat'],
-                'stock' => $product['stock'] ?? 0,
+                'stock' => $stock,
                 'cart_item_id' => $item->id,
             ];
         }

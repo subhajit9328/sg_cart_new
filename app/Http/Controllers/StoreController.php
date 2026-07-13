@@ -1092,23 +1092,23 @@ class StoreController extends Controller
 
         if ($isNewOrder) {
             // Create OrderItems in Database
-            foreach ($cartModel->items as $cartItem) {
-                $product = Product::find($cartItem->product_id);
+            foreach ($cart as $item) {
+                $product = Product::find($item['id']);
 
                 OrderItem::create([
                     'order_id' => $order->id,
-                    'product_id' => $cartItem->product_id,
-                    'product_name' => $product ? $product->name : 'Unknown Product',
-                    'product_sku' => $product ? $product->sku : null,
-                    'price' => $product ? ($product->sale_price ?? $product->price) : 0,
-                    'quantity' => $cartItem->quantity,
-                    'size' => $cartItem->size,
-                    'color' => $cartItem->color,
+                    'product_id' => $item['id'],
+                    'product_name' => $item['name'] ?? ($product ? $product->name : 'Unknown Product'),
+                    'product_sku' => $item['sku'] ?? ($product ? $product->sku : null),
+                    'price' => $item['price'],
+                    'quantity' => $item['quantity'],
+                    'size' => $item['size'],
+                    'color' => $item['color'],
                 ]);
 
                 // Optional: decrement product stock
                 if ($product) {
-                    $product->decrement('stock', $cartItem->quantity);
+                    $product->decrement('stock', $item['quantity']);
                 }
             }
         }
