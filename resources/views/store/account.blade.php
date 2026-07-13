@@ -74,6 +74,9 @@
                         <span class="ml-auto min-w-[18px] h-[18px] bg-rose-500 text-white rounded-full font-bold text-[9px] flex items-center justify-center px-1.5 py-0.5 leading-none" id="notificationsUnreadBadge">{{ $unreadNotificationsCount }}</span>
                     @endif
                 </a>
+                <a href="{{ route('store.account', 'social-share') }}" class="acc-nav-item px-3.5 py-2 lg:px-4 lg:py-3 rounded-lg text-xs lg:text-sm font-semibold text-slate-500 hover:bg-[#f8f7f5] hover:text-slate-900 transition-all flex items-center gap-2 lg:gap-3 shrink-0 {{ $activeTab === 'social-share' ? 'active' : '' }}" style="text-decoration:none" id="btn-social-share">
+                    <i class="fa-solid fa-share-nodes text-center w-4 text-xs lg:text-sm"></i> Social Share
+                </a>
                 <!-- Desktop Logout Button -->
                 <div class="hidden lg:block">
                     <form action="{{ route('store.logout') }}" method="POST" id="storeLogoutForm" class="contents">
@@ -106,7 +109,7 @@
                                 </a>
                             @endif
                         </div>
-                        <button type="submit" class="btn btn-primary btn-sm px-4" style="height: 33px; font-size: 11px; display: inline-flex; items-center; justify-content: center; border-radius: 10px;">
+                        <button type="submit" class="btn btn-primary btn-sm px-4" style="height: 33px; font-size: 11px; display: inline-flex; justify-content: center; border-radius: 10px;">
                             Search
                         </button>
                     </form>
@@ -293,23 +296,6 @@
                     @endforelse
                 </div>
             </div>
-            
-                <!-- Social Share / Influencer Hub Tab -->
-            <div id="tab-social-share" class="acc-content {{ $activeTab === 'social-share' ? 'active' : '' }}">
-                
-                <!-- Instagram-style Influencer Profile Header -->
-                <div class="bg-[#fcfbf9] dark:bg-[#191815] border border-[#e8e4df] dark:border-[#2e2c28] rounded-3xl p-6 md:p-8 mb-6 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 relative overflow-hidden">
-                    <div class="absolute w-64 h-64 rounded-full bg-rose-500/5 blur-3xl -top-10 -right-10 pointer-events-none"></div>
-                    
-                    <!-- Avatar with Instagram Story-style border -->
-                    <div class="relative shrink-0 select-none">
-                        <div class="w-20 h-20 md:w-24 md:h-24 rounded-full p-[3px] bg-gradient-to-tr from-yellow-500 via-rose-500 to-purple-650 dark:from-yellow-400 dark:via-rose-500 dark:to-purple-500 shadow-md">
-                            <div class="w-full h-full rounded-full bg-white dark:bg-[#191815] p-[2px]">
-                                <div class="w-full h-full rounded-full bg-slate-900 dark:bg-slate-800 flex items-center justify-center font-display text-2xl font-extrabold text-white overflow-hidden relative">
-                                    @if(auth('customer')->user()?->profile_picture)
-                                        <img src="{{ Storage::url(auth('customer')->user()->profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover">
-                                    @else
-                                        <span>{{ strtoupper(substr(auth('customer')->user()?->name ?? 'IP', 0, 2)) }}</span>
 
             <!-- Notifications Tab -->
             <div id="tab-notifications" class="acc-content {{ $activeTab === 'notifications' ? 'active' : '' }}">
@@ -320,7 +306,7 @@
                     @if(auth('customer')->user()->unreadNotifications()->exists())
                         <form action="{{ route('store.account.notifications.read-all') }}" method="POST" id="markAllReadForm" class="inline">
                             @csrf
-                            <button type="submit" class="btn btn-secondary btn-sm px-4" style="height: 33px; font-size: 11px; display: inline-flex; items-center; justify-content: center; border-radius: 10px;">
+                            <button type="submit" class="btn btn-secondary btn-sm px-4" style="height: 33px; font-size: 11px; display: inline-flex; justify-content: center; border-radius: 10px;">
                                 Mark all as read
                             </button>
                         </form>
@@ -383,6 +369,35 @@
                                                 <i class="fa-solid fa-check text-sm"></i>
                                             </button>
                                         </form>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center py-12 text-slate-400">
+                            <i class="fa-regular fa-bell text-4xl mb-3 opacity-20 block"></i>
+                            <p class="text-sm">No notifications found.</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Social Share / Influencer Hub Tab -->
+            <div id="tab-social-share" class="acc-content {{ $activeTab === 'social-share' ? 'active' : '' }}">
+
+                <!-- Instagram-style Influencer Profile Header -->
+                <div class="bg-[#fcfbf9] dark:bg-[#191815] border border-border dark:border-[#2e2c28] rounded-3xl p-6 md:p-8 mb-6 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 relative overflow-hidden">
+                    <div class="absolute w-64 h-64 rounded-full bg-rose-500/5 blur-3xl -top-10 -right-10 pointer-events-none"></div>
+
+                    <!-- Avatar with Instagram Story-style border -->
+                    <div class="relative shrink-0 select-none">
+                        <div class="w-20 h-20 md:w-24 md:h-24 rounded-full p-0.75 bg-linear-to-tr from-yellow-500 via-rose-500 to-purple-650 dark:from-yellow-400 dark:via-rose-500 dark:to-purple-500 shadow-md">
+                            <div class="w-full h-full rounded-full bg-white dark:bg-[#191815] p-0.5">
+                                <div class="w-full h-full rounded-full bg-slate-900 dark:bg-slate-800 flex items-center justify-center font-display text-2xl font-extrabold text-white overflow-hidden relative">
+                                    @if(auth('customer')->user()?->profile_picture)
+                                        <img src="{{ Storage::url(auth('customer')->user()->profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover">
+                                    @else
+                                        <span>{{ strtoupper(substr(auth('customer')->user()?->name ?? 'IP', 0, 2)) }}</span>
                                     @endif
                                 </div>
                             </div>
@@ -453,7 +468,7 @@
                                 @else
                                     <img src="{{ Storage::url($post->media_path) }}" alt="Look" class="w-full h-full object-cover">
                                 @endif
-                                
+
                                 <!-- Hover status overlay -->
                                 <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-between p-3.5 text-white">
                                     <div class="flex justify-between items-start">
@@ -486,16 +501,15 @@
                 <div id="subtab-social-upload" class="social-sub-content {{ $hasSocialErrors ? 'active' : 'hidden' }}">
                     <form action="{{ route('store.social-share.store') }}" method="POST" enctype="multipart/form-data" class="w-full flex flex-col gap-5 max-w-xl">
                         @csrf
-                        
                         <!-- Drag-and-drop media input -->
                         <div class="flex flex-col gap-1.5">
                             <label class="font-sans text-[11px] font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider">Upload Video Reel or Image <span class="text-rose-600">*</span></label>
-                            <div class="border-2 border-dashed border-[#e8e4df] dark:border-[#2e2c28] hover:border-slate-455 dark:hover:border-slate-655 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer gap-2 transition-all relative min-h-[140px]" onclick="document.getElementById('social_media_input').click()">
+                            <div class="border-2 border-dashed border-border dark:border-[#2e2c28] hover:border-slate-455 dark:hover:border-slate-655 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer gap-2 transition-all relative min-h-[140px]" onclick="document.getElementById('social_media_input').click()">
                                 <i class="fa-solid fa-photo-film text-3xl text-slate-300 dark:text-slate-700"></i>
                                 <span class="text-xs font-bold text-slate-500">Choose Image or MP4 Video Reel</span>
                                 <span class="text-[10px] text-slate-400">Files up to 5 MB supported</span>
                                 <input type="file" name="media" id="social_media_input" required class="hidden" accept="image/*,video/mp4,video/x-m4v,video/*" onchange="previewSocialMedia(this)"/>
-                                
+
                                 <!-- Preview container -->
                                 <div id="social_media_preview" class="absolute inset-0 bg-white dark:bg-[#151411] rounded-2xl hidden items-center justify-center p-2 border border-slate-350 dark:border-slate-800">
                                     <!-- Injected media -->
@@ -508,14 +522,14 @@
                         <div class="bg-[#f8f7f5]/80 dark:bg-[#1a1916]/40 border border-[#e8e4df] dark:border-[#2e2c28] rounded-2xl p-4 mt-2">
                             <h4 class="text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1 flex items-center gap-1.5" style="margin-bottom: 4px;"><i class="fa-solid fa-circle-info text-accent"></i> Linking Verification</h4>
                             <p class="text-[10px] text-slate-455 dark:text-slate-500 leading-normal mb-4">To share your style post, you must provide either a valid Order ID/Number (visible in My Orders) or a Product SKU code (visible on the product page).</p>
-                            
+
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div class="flex flex-col gap-1">
                                     <label class="font-sans text-[10px] font-bold text-slate-500 dark:text-slate-455 uppercase tracking-wider">Order ID / Number</label>
                                     <input name="order_number" id="social_order_number" class="w-full px-3 py-2 border border-[#e8e4df] dark:border-[#2e2c28] rounded-lg text-xs text-slate-900 dark:text-slate-100 bg-white dark:bg-[#1a1916] outline-none transition-all focus:border-slate-800 focus:dark:border-accent" placeholder="e.g. ORD-1001" value="{{ old('order_number') }}"/>
                                     @error('order_number') <p class="text-rose-500 text-xs mt-1">{{ $message }}</p> @enderror
                                 </div>
-                                
+
                             </div>
                         </div>
 
@@ -660,27 +674,11 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-            </div>         </div>
-                    @empty
-                        <div class="text-center py-12 text-slate-400">
-                            <i class="fa-regular fa-bell text-4xl mb-3 opacity-20 block"></i>
-                            <p class="text-sm">You have no notifications.</p>
-                        </div>
-                    @endforelse
-                </div>
-
-                @if($notifications instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                    <x-custom_pagination :paginator="$notifications" :show-info="true" label="notifications" size="sm" class="mt-8 pt-4 border-t border-border" />
-                @endif
+            </div>
             </div>
         </div>
-
     </div>
-
 </div>
-
 @endsection
 
 @section('scripts')
@@ -721,7 +719,7 @@
         form.querySelector('input[name="phone"]').value = address.phone || '';
         form.querySelector('input[name="alternate_phone"]').value = address.alternate_phone || '';
         form.querySelector('input[name="landmark"]').value = address.landmark || '';
-  
+
         // Address type radio selection
         const addrTypeRadio = form.querySelector(`input[name="address_type"][value="${address.address_type || 'work'}"]`);
         if (addrTypeRadio) addrTypeRadio.checked = true;
@@ -1127,7 +1125,7 @@
         const preview = document.getElementById('social_media_preview');
         if (!preview) return;
         preview.innerHTML = '';
-        
+
         if (input.files && input.files[0]) {
             const file = input.files[0];
             if (file.size > 5 * 1024 * 1024) {
@@ -1136,12 +1134,12 @@
                 return;
             }
             const reader = new FileReader();
-            
+
             reader.onload = function(e) {
                 let el;
                 const extension = file.name.split('.').pop().toLowerCase();
                 const videoExtensions = ['mp4', 'mov', 'avi', 'm4v', 'webm', '3gp'];
-                
+
                 if (file.type.startsWith('video/') || videoExtensions.includes(extension)) {
                     el = document.createElement('video');
                     el.src = e.target.result;
@@ -1155,7 +1153,7 @@
                     el.src = e.target.result;
                     el.className = 'max-w-full max-h-[140px] rounded-xl object-contain';
                 }
-                
+
                 // Add cancel button overlay
                 const cancelBtn = document.createElement('span');
                 cancelBtn.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
@@ -1164,12 +1162,12 @@
                     event.stopPropagation();
                     resetSocialUploadForm();
                 };
-                
+
                 preview.appendChild(el);
                 preview.appendChild(cancelBtn);
                 preview.className = 'absolute inset-0 bg-white dark:bg-[#151411] rounded-2xl flex items-center justify-center p-2 border border-slate-350 dark:border-slate-800 z-10';
             }
-            
+
             reader.readAsDataURL(file);
         }
     }
@@ -1178,19 +1176,19 @@
     function resetSocialUploadForm() {
         const input = document.getElementById('social_media_input');
         if (input) input.value = '';
-        
+
         const preview = document.getElementById('social_media_preview');
         if (preview) {
             preview.innerHTML = '';
             preview.className = 'absolute inset-0 bg-white dark:bg-[#151411] rounded-2xl hidden';
         }
-        
+
         const orderNumInput = document.getElementById('social_order_number');
         if (orderNumInput) orderNumInput.value = '';
-        
+
         const skuInput = document.getElementById('social_product_sku');
         if (skuInput) skuInput.value = '';
-        
+
         const capArea = document.querySelector('#tab-social-upload textarea');
         if (capArea) capArea.value = '';
 
@@ -1253,20 +1251,20 @@
         .then(data => {
             if (data.success && !data.is_following) {
                 showToast(data.message, 'success');
-                
+
                 // Remove row from modal
                 const row = document.querySelector(`.following-row-${influencerId}`);
                 if (row) {
                     row.remove();
                 }
-                
+
                 // Update following count stat
                 const followingStat = document.getElementById('stat-following-count');
                 if (followingStat) {
                     let currentCount = parseInt(followingStat.textContent) || 0;
                     followingStat.textContent = Math.max(0, currentCount - 1);
                 }
-                
+
                 // Check if list is now empty
                 const container = document.getElementById('following-list-container');
                 const remainingRows = container.querySelectorAll('[class^="following-row-"]');

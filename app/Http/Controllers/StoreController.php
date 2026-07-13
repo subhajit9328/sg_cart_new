@@ -1174,7 +1174,7 @@ class StoreController extends Controller
             return redirect()->route('store.login')->with('error', 'Please log in to access your account.');
         }
 
-        $validTabs = ['orders', 'profile', 'address', 'wishlist', 'social-share',notifications];
+        $validTabs = ['orders', 'profile', 'address', 'wishlist', 'social-share','notifications'];
         $activeTab = in_array($tab, $validTabs) ? $tab : 'orders';
 
         // Load real orders from the database
@@ -1203,7 +1203,6 @@ class StoreController extends Controller
         $wishlistIds = session()->get('wishlist', []);
         $allProducts = self::getProducts();
         $wishlist = array_filter($allProducts, fn($p) => in_array($p['id'], $wishlistIds));
-
         $addresses = auth('customer')->user()->addresses;
 
         $socialPosts = [];
@@ -1219,13 +1218,12 @@ class StoreController extends Controller
             $following = $customer->following()->latest()->get();
         }
 
-        return view('store.account', compact('orders', 'wishlist', 'activeTab', 'addresses', 'socialPosts', 'followers', 'following'));
         $notifications = [];
         if ($activeTab === 'notifications') {
             $notifications = auth('customer')->user()->notifications()->paginate(10)->withQueryString();
         }
 
-        return view('store.account', compact('orders', 'wishlist', 'activeTab', 'addresses', 'notifications'));
+        return view('store.account', compact('orders', 'wishlist', 'activeTab', 'addresses', 'notifications',  'socialPosts', 'followers', 'following'));
     }
 
     /**
