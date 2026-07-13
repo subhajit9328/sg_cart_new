@@ -59,9 +59,12 @@
             <div>
                 <label for="phone" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Phone Number</label>
                 <input type="text" name="phone" id="phone" value="{{ old('phone') }}"
-                    class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100"
-                    placeholder="+1 555 1234">
-                @error('phone') <p class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
+                    pattern="\+?\d{7,15}"
+                    title="Phone number must be numeric, optionally start with a + for country code, and contain between 7 and 15 digits"
+                    class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('phone') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror"
+                    placeholder="e.g. +919876543210">
+                <p id="phone-error" class="text-rose-500 text-xs mt-1.5 font-medium hidden"></p>
+                @error('phone') <p id="phone-server-error" class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
             </div>
         </div>
 
@@ -114,3 +117,43 @@
     </form>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        const phoneInput = document.getElementById('phone');
+        const phoneError = document.getElementById('phone-error');
+        const phoneServerError = document.getElementById('phone-server-error');
+
+        if (phoneInput && phoneError) {
+            const validatePhone = () => {
+                if (phoneServerError) phoneServerError.classList.add('hidden');
+                const val = phoneInput.value.trim();
+                if (val === '') {
+                    phoneError.classList.add('hidden');
+                    phoneInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                    return;
+                }
+                const regex = /^\+?\d{7,15}$/;
+                if (!regex.test(val)) {
+                    phoneError.textContent = 'Phone number must be numeric, optionally start with a + for country code, and contain between 7 and 15 digits.';
+                    phoneError.classList.remove('hidden');
+                    phoneInput.classList.add('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                } else {
+                    phoneError.classList.add('hidden');
+                    phoneInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                }
+            };
+            phoneInput.addEventListener('input', debounce(validatePhone, 300));
+        }
+    });
+</script>
+@endpush

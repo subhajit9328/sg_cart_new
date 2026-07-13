@@ -165,15 +165,15 @@ class CategorySeeder extends Seeder
 
                 Category::query()->updateOrCreate(
                     [
-                        'name' => $childData['name'],
-                        'parent_id' => $parent->id,
+                        'slug'        => Str::slug($parentData['name']) . '-' . Str::slug($childData['name']),
                     ],
                     [
-                        'slug'        => Str::slug($parentData['name']) . '-' . Str::slug($childData['name']),
+                        'name' => $childData['name'],
                         'description' => $childData['description'],
                         'image'       => $childImagePath,
                         'is_active'   => true,
                         'sort_order'  => $childOrder,
+                        'parent_id' => $parent->id,
                     ]
                 );
             }

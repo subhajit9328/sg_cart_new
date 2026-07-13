@@ -23,51 +23,6 @@
 
 </div>
 
-<!-- Standard Dashboard Summary Cards -->
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
-    <!-- Total Users -->
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm p-5 flex items-center justify-between">
-        <div>
-            <p class="text-sm text-slate-400 font-medium">Total Users</p>
-            <p class="font-display text-3xl font-extrabold mt-1">{{ $totalUsers }}</p>
-            <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 mt-2">
-                <i class="fa-solid fa-arrow-up"></i> Active
-            </span>
-        </div>
-        <div class="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-2xl">
-            <i class="fa-solid fa-users"></i>
-        </div>
-    </div>
-
-    <!-- Total Roles -->
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm p-5 flex items-center justify-between">
-        <div>
-            <p class="text-sm text-slate-400 font-medium">Active Roles</p>
-            <p class="font-display text-3xl font-extrabold mt-1">{{ $totalRoles }}</p>
-            <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 mt-2">
-                <i class="fa-solid fa-check"></i> Configured
-            </span>
-        </div>
-        <div class="w-14 h-14 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl">
-            <i class="fa-solid fa-shield-halved"></i>
-        </div>
-    </div>
-
-    <!-- Total Permissions -->
-    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm p-5 flex items-center justify-between">
-        <div>
-            <p class="text-sm text-slate-400 font-medium">Spatie Permissions</p>
-            <p class="font-display text-3xl font-extrabold mt-1">{{ $totalPermissions }}</p>
-            <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 mt-2">
-                <i class="fa-solid fa-lock"></i> Secured
-            </span>
-        </div>
-        <div class="w-14 h-14 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-2xl">
-            <i class="fa-solid fa-key"></i>
-        </div>
-    </div>
-</div>
-
 <!-- Role-Based Analytics Section -->
 @if($showAnalytics)
 <div class="border-t border-slate-200 dark:border-slate-800 pt-8 mb-8">
@@ -345,78 +300,6 @@
                         @endforelse
                     </tbody>
                 </table>
-            </div>
-        </div>
-    </div>
-</div>
-@else
-<!-- Original Mock Overview for non-admin users who do not have Spatie view analytics -->
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-6">
-    <div class="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">
-        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-            <div>
-                <h2 class="font-semibold text-sm">System Access Summary</h2>
-                <p class="text-xs text-slate-400 mt-0.5">Mock analytics of weekly operations</p>
-            </div>
-            <span class="text-xs font-medium text-blue-500 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 rounded-lg">Online</span>
-        </div>
-        <div class="p-5">
-            <div class="flex items-end gap-3 h-44">
-                <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                    <div class="w-full max-w-[28px] rounded-t-md bg-blue-600/20" style="height:35%"></div>
-                    <span class="text-xs text-slate-400">Mon</span>
-                </div>
-                <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                    <div class="w-full max-w-[28px] rounded-t-md bg-blue-600/40" style="height:55%"></div>
-                    <span class="text-xs text-slate-400">Tue</span>
-                </div>
-                <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                    <div class="w-full max-w-[28px] rounded-t-md bg-blue-600/30" style="height:45%"></div>
-                    <span class="text-xs text-slate-400">Wed</span>
-                </div>
-                <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                    <div class="w-full max-w-[28px] rounded-t-md bg-blue-600/70" style="height:75%"></div>
-                    <span class="text-xs text-slate-400">Thu</span>
-                </div>
-                <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                    <div class="w-full max-w-[28px] rounded-t-md bg-blue-600/60" style="height:65%"></div>
-                    <span class="text-xs text-slate-400">Fri</span>
-                </div>
-                <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                    <div class="w-full max-w-[28px] rounded-t-md bg-blue-600" style="height:95%"></div>
-                    <span class="text-xs text-slate-400">Sat</span>
-                </div>
-                <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                    <div class="w-full max-w-[28px] rounded-t-md bg-blue-600/50" style="height:50%"></div>
-                    <span class="text-xs text-slate-400">Sun</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">
-        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800"><h2 class="font-semibold text-sm">Security Log Highlights</h2></div>
-        <div class="p-5 space-y-4">
-            <div class="flex gap-3">
-                <div class="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs flex-shrink-0"><i class="fa-solid fa-check"></i></div>
-                <div>
-                    <p class="text-sm">Database successfully seeded and ready.</p>
-                    <p class="text-xs text-slate-400">Just now</p>
-                </div>
-            </div>
-            <div class="flex gap-3">
-                <div class="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs flex-shrink-0"><i class="fa-solid fa-user-plus"></i></div>
-                <div>
-                    <p class="text-sm">Admin user session initialized successfully.</p>
-                    <p class="text-xs text-slate-400">2 minutes ago</p>
-                </div>
-            </div>
-            <div class="flex gap-3">
-                <div class="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs flex-shrink-0"><i class="fa-solid fa-shield-halved"></i></div>
-                <div>
-                    <p class="text-sm">Spatie standard policies registered.</p>
-                    <p class="text-xs text-slate-400">1 hour ago</p>
-                </div>
             </div>
         </div>
     </div>

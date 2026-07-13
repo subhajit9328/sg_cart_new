@@ -1,3 +1,4 @@
+@role('Super Admin|Admin|super-admin|admin')
 <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Marketplace Portal</p>
 
 <a href="{{ route('admin.sellers.index') }}" class="nav-link {{ Request::is('admin/sellers*') ? 'active' : '' }}" data-tooltip="Sellers">
@@ -41,3 +42,4 @@
     }
 </style>
 @endpushOnce
+@endrole

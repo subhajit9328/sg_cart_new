@@ -50,7 +50,7 @@ class ProductController extends Controller
             ->withQueryString();
 
         $categories = Category::all();
-        
+
         $sellers = [];
         if (class_exists(\SGCart\Marketplace\Models\Seller::class)) {
             $sellers = \SGCart\Marketplace\Models\Seller::where('status', 'approved')->get();
@@ -70,18 +70,18 @@ class ProductController extends Controller
     {
         $data = $request->validate([
             'name'              => 'required|string|max:255',
-            'sku'               => 'required|string|unique:products,sku',
+            'sku'               => 'required|string|unique:products,sku|max:255',
             'category_id'       => 'nullable|exists:categories,id',
             'manufacturer_id'   => 'nullable|exists:manufacturers,id',
-            'short_description' => 'nullable|string',
-            'description'       => 'nullable|string',
+            'short_description' => 'nullable|string|max:255',
+            'description'       => 'nullable|string|max:1000',
             'price'             => 'required|numeric|gt:0',
             'sale_price'        => 'nullable|numeric|min:0|lte:price',
             'stock'             => 'required|integer|min:0',
             'min_stock'         => 'nullable|integer|min:0',
             'status'            => 'required|in:draft,active,inactive',
-            'weight'            => 'nullable|string',
-            'dimensions'        => 'nullable|string',
+            'weight'            => ['nullable', 'string', 'regex:/^\d+(?:\.\d+)?\s*[a-zA-Z]+$/'],
+            'dimensions'        => ['nullable', 'string', 'regex:/^\d+(?:\.\d+)?\s*[xX×]\s*\d+(?:\.\d+)?\s*[xX×]\s*\d+(?:\.\d+)?(?:\s*[a-zA-Z]+)?$/'],
             'product_images'    => 'nullable|array',
             'product_images.*'  => 'image|max:4096',
             'meta_title'        => 'nullable|string|max:255',
@@ -89,6 +89,8 @@ class ProductController extends Controller
             'meta_keywords'     => 'nullable|string|max:1000',
         ], [
             'sale_price.lte'    => 'Invalid Pricing: The sale price must be equal to or lower than the regular price.',
+            'weight.regex'      => 'The weight must be in the format of a number followed by a unit (e.g., 500g, 1.5kg).',
+            'dimensions.regex'  => 'The dimensions must be in the format LxWxH, optionally followed by a unit (e.g., 10x5x3 cm).',
         ]);
 
         $product = DB::transaction(function () use ($data, $request) {
@@ -98,7 +100,7 @@ class ProductController extends Controller
 
             if ($request->hasFile('product_images')) {
                 $files = $request->file('product_images');
-                
+
                 $defaultKey = null;
                 if ($defaultImageValue && str_starts_with($defaultImageValue, 'new_')) {
                     $defaultKey = substr($defaultImageValue, 4);
@@ -143,18 +145,18 @@ class ProductController extends Controller
     {
         $data = $request->validate([
             'name'              => 'required|string|max:255',
-            'sku'               => ['required', 'string', \Illuminate\Validation\Rule::unique('products', 'sku')->ignore($product->id)],
+            'sku'               => ['required', 'string', 'max:255', \Illuminate\Validation\Rule::unique('products', 'sku')->ignore($product->id)],
             'category_id'       => 'nullable|exists:categories,id',
             'manufacturer_id'   => 'nullable|exists:manufacturers,id',
-            'short_description' => 'nullable|string',
-            'description'       => 'nullable|string',
+            'short_description' => 'nullable|string|max:255',
+            'description'       => 'nullable|string|max:1000',
             'price'             => 'required|numeric|gt:0',
             'sale_price'        => 'nullable|numeric|min:0|lte:price',
             'stock'             => 'required|integer|min:0',
             'min_stock'         => 'nullable|integer|min:0',
             'status'            => 'required|in:draft,active,inactive',
-            'weight'            => 'nullable|string',
-            'dimensions'        => 'nullable|string',
+            'weight'            => ['nullable', 'string', 'regex:/^\d+(?:\.\d+)?\s*[a-zA-Z]+$/'],
+            'dimensions'        => ['nullable', 'string', 'regex:/^\d+(?:\.\d+)?\s*[xX×]\s*\d+(?:\.\d+)?\s*[xX×]\s*\d+(?:\.\d+)?(?:\s*[a-zA-Z]+)?$/'],
             'product_images'    => 'nullable|array',
             'product_images.*'  => 'image|max:4096',
             'meta_title'        => 'nullable|string|max:255',
@@ -162,6 +164,8 @@ class ProductController extends Controller
             'meta_keywords'     => 'nullable|string|max:1000',
         ], [
             'sale_price.lte'    => 'Invalid Pricing: The sale price must be equal to or lower than the regular price.',
+            'weight.regex'      => 'The weight must be in the format of a number followed by a unit (e.g., 500g, 1.5kg).',
+            'dimensions.regex'  => 'The dimensions must be in the format LxWxH, optionally followed by a unit (e.g., 10x5x3 cm).',
         ]);
 
         DB::transaction(function () use ($data, $request, $product) {
@@ -184,7 +188,7 @@ class ProductController extends Controller
             // Handle new uploads
             if ($request->hasFile('product_images')) {
                 $files = $request->file('product_images');
-                
+
                 $defaultKey = null;
                 if ($defaultImageValue && str_starts_with($defaultImageValue, 'new_')) {
                     $defaultKey = substr($defaultImageValue, 4);
@@ -201,7 +205,7 @@ class ProductController extends Controller
 
             // Sync/re-evaluate the default image flag
             $product->load('images');
-            
+
             $targetDefaultImage = null;
             if ($defaultImageValue) {
                 if (str_starts_with($defaultImageValue, 'existing_')) {

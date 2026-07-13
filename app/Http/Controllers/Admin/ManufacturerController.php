@@ -48,11 +48,13 @@ class ManufacturerController extends Controller
             'name'        => 'required|string|max:255|unique:manufacturers,name',
             'website'     => 'nullable|url',
             'email'       => 'nullable|email',
-            'phone'       => 'nullable|string|max:30',
+            'phone'       => ['nullable', 'string', 'regex:/^\+?\d{7,15}$/'],
             'address'     => 'nullable|string',
             'description' => 'nullable|string',
             'logo'        => 'nullable|image|max:2048',
             'is_active'   => 'boolean',
+        ], [
+            'phone.regex' => 'The phone number must be numeric, optionally start with a + for country code, and contain between 7 and 15 digits.',
         ]);
 
         $data['slug'] = Str::slug($data['name']);
@@ -77,11 +79,13 @@ class ManufacturerController extends Controller
             'name'        => 'required|string|max:255|unique:manufacturers,name,'. $manufacturer->id,
             'website'     => 'nullable|url',
             'email'       => 'nullable|email',
-            'phone'       => 'nullable|string|max:30',
+            'phone'       => ['nullable', 'string', 'regex:/^\+?\d{7,15}$/'],
             'address'     => 'nullable|string',
             'description' => 'nullable|string',
             'logo'        => 'nullable|image|max:2048',
             'is_active'   => 'boolean',
+        ], [
+            'phone.regex' => 'The phone number must be numeric, optionally start with a + for country code, and contain between 7 and 15 digits.',
         ]);
 
         $data['slug'] = Str::slug($data['name']);

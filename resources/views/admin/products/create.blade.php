@@ -174,12 +174,20 @@
                 <div>
                     <label for="weight" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Weight</label>
                     <input type="text" name="weight" id="weight" value="{{ old('weight') }}" placeholder="e.g. 500g"
-                        class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100">
+                        pattern="\d+(\.\d+)?\s*[a-zA-Z]+"
+                        title="Weight must be a number followed by a unit (e.g., 500g, 1.5kg)"
+                        class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('weight') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror">
+                    <p id="weight-error" class="text-rose-500 text-xs mt-1.5 font-medium hidden"></p>
+                    @error('weight') <p id="weight-server-error" class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label for="dimensions" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Dimensions (L×W×H)</label>
                     <input type="text" name="dimensions" id="dimensions" value="{{ old('dimensions') }}" placeholder="e.g. 10x5x3 cm"
-                        class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100">
+                        pattern="\d+(\.\d+)?\s*[xX×]\s*\d+(\.\d+)?\s*[xX×]\s*\d+(\.\d+)?(\s*[a-zA-Z]+)?"
+                        title="Dimensions must be in the format LxWxH, optionally followed by a unit (e.g., 10x5x3 cm)"
+                        class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('dimensions') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror">
+                    <p id="dimensions-error" class="text-rose-500 text-xs mt-1.5 font-medium hidden"></p>
+                    @error('dimensions') <p id="dimensions-server-error" class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
                 </div>
             </div>
 
@@ -606,6 +614,66 @@ function removeNewImage(id) {
             switchTab(activeTab);
         } else {
             switchTab('details');
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        const weightInput = document.getElementById('weight');
+        const weightError = document.getElementById('weight-error');
+        const weightServerError = document.getElementById('weight-server-error');
+
+        if (weightInput && weightError) {
+            const validateWeight = () => {
+                if (weightServerError) weightServerError.classList.add('hidden');
+                const val = weightInput.value.trim();
+                if (val === '') {
+                    weightError.classList.add('hidden');
+                    weightInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                    return;
+                }
+                const regex = /^\d+(?:\.\d+)?\s*[a-zA-Z]+$/;
+                if (!regex.test(val)) {
+                    weightError.textContent = 'Weight must be a number followed by a unit (e.g., 500g, 1.5kg).';
+                    weightError.classList.remove('hidden');
+                    weightInput.classList.add('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                } else {
+                    weightError.classList.add('hidden');
+                    weightInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                }
+            };
+            weightInput.addEventListener('input', debounce(validateWeight, 300));
+        }
+
+        const dimensionsInput = document.getElementById('dimensions');
+        const dimensionsError = document.getElementById('dimensions-error');
+        const dimensionsServerError = document.getElementById('dimensions-server-error');
+
+        if (dimensionsInput && dimensionsError) {
+            const validateDimensions = () => {
+                if (dimensionsServerError) dimensionsServerError.classList.add('hidden');
+                const val = dimensionsInput.value.trim();
+                if (val === '') {
+                    dimensionsError.classList.add('hidden');
+                    dimensionsInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                    return;
+                }
+                const regex = /^\d+(?:\.\d+)?\s*[xX×]\s*\d+(?:\.\d+)?\s*[xX×]\s*\d+(?:\.\d+)?(?:\s*[a-zA-Z]+)?$/;
+                if (!regex.test(val)) {
+                    dimensionsError.textContent = 'Dimensions must be in the format LxWxH, optionally followed by a unit (e.g., 10x5x3 cm).';
+                    dimensionsError.classList.remove('hidden');
+                    dimensionsInput.classList.add('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                } else {
+                    dimensionsError.classList.add('hidden');
+                    dimensionsInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
+                }
+            };
+            dimensionsInput.addEventListener('input', debounce(validateDimensions, 300));
         }
     });
 </script>
