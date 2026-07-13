@@ -106,5 +106,9 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call($seeders);
+
+        if (class_exists(\SGCart\Blog\Database\Seeders\BlogDatabaseSeeder::class)) {
+            $this->call(\SGCart\Blog\Database\Seeders\BlogDatabaseSeeder::class);
+        }
     }
 }

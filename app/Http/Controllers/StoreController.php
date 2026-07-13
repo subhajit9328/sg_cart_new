@@ -154,7 +154,15 @@ class StoreController extends Controller
             });
         }
 
-        return view('welcome', compact('products', 'categories'));
+        $socialPosts = collect();
+        if (class_exists(\SGCart\SocialShare\Models\SocialPost::class)) {
+            $socialPosts = \SGCart\SocialShare\Models\SocialPost::with(['customer', 'product'])
+                ->approved()
+                ->latest()
+                ->get();
+        }
+
+        return view('welcome', compact('products', 'categories', 'socialPosts'));
     }
 
     /**
@@ -1166,7 +1174,7 @@ class StoreController extends Controller
             return redirect()->route('store.login')->with('error', 'Please log in to access your account.');
         }
 
-        $validTabs = ['orders', 'profile', 'address', 'wishlist', 'notifications'];
+        $validTabs = ['orders', 'profile', 'address', 'wishlist', 'social-share',notifications];
         $activeTab = in_array($tab, $validTabs) ? $tab : 'orders';
 
         // Load real orders from the database
@@ -1198,6 +1206,20 @@ class StoreController extends Controller
 
         $addresses = auth('customer')->user()->addresses;
 
+        $socialPosts = [];
+        $followers = [];
+        $following = [];
+        if ($activeTab === 'social-share' && class_exists(\SGCart\SocialShare\Models\SocialPost::class)) {
+            $customer = auth('customer')->user();
+            $socialPosts = \SGCart\SocialShare\Models\SocialPost::with('product')
+                ->where('customer_id', $customer->id)
+                ->latest()
+                ->get();
+            $followers = $customer->followers()->latest()->get();
+            $following = $customer->following()->latest()->get();
+        }
+
+        return view('store.account', compact('orders', 'wishlist', 'activeTab', 'addresses', 'socialPosts', 'followers', 'following'));
         $notifications = [];
         if ($activeTab === 'notifications') {
             $notifications = auth('customer')->user()->notifications()->paginate(10)->withQueryString();

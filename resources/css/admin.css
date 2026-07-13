@@ -270,3 +270,8 @@ select.select2-select:not(.select2-hidden-accessible) {
     background-position: right 8px center !important;
     background-size: 8px !important;
 }
+
+/* Sidebar Search styling */
+#sidebar.icon-only .sidebar-search-container {
+    display: none !important;
+}

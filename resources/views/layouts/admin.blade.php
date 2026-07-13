@@ -52,14 +52,29 @@
             </button>
         </div>
 
+        <!-- Sidebar Search -->
+        <div class="px-4 py-3 border-b border-white/10 sidebar-search-container">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+                <input type="text" id="sidebarSearch" placeholder="Search menu..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-800/40 border border-slate-700/60 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:bg-slate-800/80 focus:border-blue-500/80 focus:ring-1 focus:ring-blue-500/30 transition-all" autocomplete="off">
+                <button type="button" id="clearSidebarSearch" class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-300 hidden border-none bg-transparent cursor-pointer">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+        </div>
+
         <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1" style="scroll-padding-block: 40px;">
+            <!-- ============ 1. Overview ============ -->
             <p class="px-3 pt-1 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Main</p>
             <a href="{{ route('admin.dashboard') }}" class="nav-link {{ Route::is('admin.dashboard') ? 'active' : '' }}" data-tooltip="Dashboard">
                 <i class="fa-solid fa-gauge-high"></i>
                 <span class="sidebar-text">Dashboard</span>
             </a>
 
-            @canany(['manage products', 'manage categories', 'manage manufacturers'])
+            <!-- ============ 2. Catalogue ============ -->
+            @canany(['manage products', 'manage categories', 'manage manufacturers', 'manage variants'])
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Catalogue</p>
 
             @can('manage products')
@@ -82,8 +97,11 @@
                 <span class="sidebar-text">Manufacturers</span>
             </a>
             @endcan
+
+            @includeIf('product-variants::admin-menu')
             @endcanany
 
+            <!-- ============ 4. Sales & Inventory ============ -->
             @can('manage products')
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Sales</p>
             <a href="{{ route('admin.orders.index') }}" class="nav-link {{ Request::is('admin/orders*') ? 'active' : '' }}" data-tooltip="Orders">
@@ -93,21 +111,50 @@
             @endcan
 
             @includeIf('inventory::admin-menu')
-            @includeIf('coupons::admin-menu')
-            @includeIf('blog::admin-menu')
-            @includeIf('dashboard-analytics::admin-menu')
-            @includeIf('product-variants::admin-menu')
-            @includeIf('marketplace::admin-menu')
+
+            <!-- ============ 5. Logistics ============ -->
             @includeIf('shipping::admin-menu')
+            @includeIf('logistic-tracking::admin-menu')
+
+            <!-- ============ 6. Finance ============ -->
             @includeIf('tax::admin-menu')
             @can('manage payments')
-            <a href="{{ route('admin.payments.settings') }}" class="nav-link {{ Request::is('admin/payments*') ? 'active' : '' }}" data-tooltip="Payment Gateways">
-                <i class="fa-solid fa-credit-card"></i>
-                <span class="sidebar-text">Payment Gateways</span>
-            </a>
+                @if(!class_exists(\SGCart\Tax\Providers\TaxServiceProvider::class))
+                    <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Finance</p>
+                @endif
+                <a href="{{ route('admin.payments.settings') }}" class="nav-link {{ Request::is('admin/payments*') ? 'active' : '' }}" data-tooltip="Payment Gateways">
+                    <i class="fa-solid fa-credit-card"></i>
+                    <span class="sidebar-text">Payment Gateways</span>
+                </a>
             @endcan
 
+            <!-- ============ 7. Multi-vendor Marketplace ============ -->
+            @includeIf('marketplace::admin-menu')
+
+            <!-- ============ 8. Marketing ============ -->
+            @canany(['manage hero section', 'manage coupons', 'manage blog'])
+            <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Marketing</p>
+            @includeIf('hero::admin-menu')
+            @includeIf('coupons::admin-menu')
+            @includeIf('blog::admin-menu')
+            @endcanany
+
+            <!-- ============ 9. Support & Reviews ============ -->
+            @includeIf('crm-tickets::admin-menu')
+            @can('manage reviews')
+                @if(!class_exists(\SGCart\CrmTickets\Providers\CrmTicketsServiceProvider::class))
+                    <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Support</p>
+                @endif
+                @includeIf('reviews::admin-menu')
+            @endcan
+
+            <!-- ============ 9.5. Analytics & Reports ============ -->
+            @includeIf('dashboard-analytics::admin-menu')
+            @includeIf('reporting::admin-menu')
+
+            <!-- ============ 10. Access Control ============ -->
             @includeIf('reviews::admin-menu')
+            @includeIf('social-share::admin-menu')
             @canany(['manage users', 'manage roles'])
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Access Control</p>
 
@@ -126,14 +173,14 @@
             @endcan
             @endcanany
 
-            @includeIf('coupons::admin-menu')
-            @includeIf('hero::admin-menu')
-            @includeIf('reporting::admin-menu')
-            @includeIf('product-variants::admin-menu')
-            @includeIf('shipping::admin-menu')
-            @includeIf('logistic-tracking::admin-menu')
+            <!-- ============ 11. Configuration ============ -->
             @includeIf('image-search::admin-menu')
-            @includeIf('crm-tickets::admin-menu')
+
+            <!-- Sidebar Search No Results -->
+            <div id="sidebarNoResults" class="hidden px-3 py-6 text-center text-slate-500 text-xs">
+                <i class="fa-solid fa-magnifying-glass text-slate-600 text-base mb-1.5 block"></i>
+                <span>No menu links found</span>
+            </div>
         </nav>
 
 
@@ -900,6 +947,108 @@
             if (!$(e.target).closest('[data-tooltip]').length) {
                 $tooltip.css({ opacity: 0 }).addClass('hidden');
             }
+        });
+
+        // Store original open states of dropdowns
+        $('#sidebar .nav-item-dropdown').each(function() {
+            $(this).attr('data-originally-open', $(this).hasClass('open') ? 'true' : 'false');
+        });
+
+        // Sidebar Search filtering logic
+        $(document).on('input', '#sidebarSearch', function() {
+            const query = $(this).val().trim().toLowerCase();
+            const $clearBtn = $('#clearSidebarSearch');
+
+            if (query.length > 0) {
+                $clearBtn.removeClass('hidden');
+
+                // 1. Filter single nav links (that are NOT inside sub-menus)
+                $('#sidebar nav > a.nav-link').each(function() {
+                    const text = $(this).find('.sidebar-text').text().toLowerCase();
+                    if (text.includes(query)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                // 2. Filter dropdowns and their sub-links
+                $('#sidebar .nav-item-dropdown').each(function() {
+                    const $dropdown = $(this);
+                    const dropdownTitleText = $dropdown.find('.dropdown-toggle .sidebar-text').text().toLowerCase();
+                    let hasMatchingSubLink = false;
+
+                    // Filter each sub-link inside this dropdown
+                    $dropdown.find('.dropdown-menu-items a.nav-link').each(function() {
+                        const subText = $(this).find('.sidebar-text').text().toLowerCase();
+                        if (subText.includes(query)) {
+                            $(this).show();
+                            hasMatchingSubLink = true;
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+
+                    // If the parent dropdown title itself matches the query, show all sub-links and expand
+                    if (dropdownTitleText.includes(query)) {
+                        $dropdown.find('.dropdown-menu-items a.nav-link').show();
+                        $dropdown.show();
+                        $dropdown.addClass('open');
+                        $dropdown.find('.dropdown-menu-items').removeClass('hidden');
+                        $dropdown.find('.arrow-icon').addClass('rotate-180');
+                    } else if (hasMatchingSubLink) {
+                        // If parent doesn't match but sub-links do, show dropdown and expand it
+                        $dropdown.show();
+                        $dropdown.addClass('open');
+                        $dropdown.find('.dropdown-menu-items').removeClass('hidden');
+                        $dropdown.find('.arrow-icon').addClass('rotate-180');
+                    } else {
+                        // No match at all
+                        $dropdown.hide();
+                    }
+                });
+            } else {
+                $clearBtn.addClass('hidden');
+
+                // Restore everything to default state
+                $('#sidebar nav > a.nav-link').show();
+
+                $('#sidebar .nav-item-dropdown').each(function() {
+                    const $dropdown = $(this);
+                    $dropdown.show();
+                    $dropdown.find('.dropdown-menu-items a.nav-link').show();
+
+                    // Revert open/close state to original
+                    const originallyOpen = $dropdown.attr('data-originally-open') === 'true';
+                    $dropdown.toggleClass('open', originallyOpen);
+                    $dropdown.find('.dropdown-menu-items').toggleClass('hidden', !originallyOpen);
+                    $dropdown.find('.arrow-icon').toggleClass('rotate-180', originallyOpen);
+                });
+            }
+
+            // 3. Filter section labels
+            $('#sidebar .section-label').each(function() {
+                let nextEl = $(this).next();
+                let hasVisibleItems = false;
+                while (nextEl.length && !nextEl.hasClass('section-label') && nextEl.attr('id') !== 'sidebarNoResults') {
+                    if (nextEl.is(':visible')) {
+                        hasVisibleItems = true;
+                        break;
+                    }
+                    nextEl = nextEl.next();
+                }
+                $(this).toggle(hasVisibleItems);
+            });
+
+            // 4. Toggle No Results placeholder
+            const hasVisibleItems = $('#sidebar nav > a.nav-link:visible').length > 0 || 
+                                   $('#sidebar .nav-item-dropdown:visible').length > 0;
+            $('#sidebarNoResults').toggleClass('hidden', hasVisibleItems);
+        });
+
+        // Clear button click handler
+        $(document).on('click', '#clearSidebarSearch', function() {
+            $('#sidebarSearch').val('').trigger('input').focus();
         });
     });
 </script>

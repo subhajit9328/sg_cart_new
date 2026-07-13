@@ -617,6 +617,19 @@
             </button>
         </div>
 
+        <!-- Sidebar Search -->
+        <div class="px-4 py-3 border-b border-white/10 sidebar-search-container">
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-500">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+                <input type="text" id="sidebarSearch" placeholder="Search menu..." class="w-full pl-9 pr-8 py-2 text-xs bg-slate-800/40 border border-slate-700/60 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:bg-slate-800/80 focus:border-blue-500/80 focus:ring-1 focus:ring-blue-500/30 transition-all" autocomplete="off">
+                <button type="button" id="clearSidebarSearch" class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-300 hidden border-none bg-transparent cursor-pointer">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+        </div>
+
         <!-- Sidebar Navigation -->
         <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1" style="scroll-padding-block: 40px;">
             <p class="px-3 pt-1 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Main</p>
@@ -634,12 +647,36 @@
             @endif
 
             @if(auth('seller')->user()->status->value === 'approved')
+            <!-- ============ Sales ============ -->
             <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Sales</p>
 
             <a href="{{ route('seller.orders.index') }}" class="nav-link {{ Request::is('seller/orders*') ? 'active' : '' }}" data-tooltip="Orders">
                 <i class="fa-solid fa-receipt"></i>
                 <span class="sidebar-text">Orders</span>
             </a>
+
+            <!-- ============ Catalogue ============ -->
+            <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Catalogue</p>
+
+            <a href="{{ route('seller.products.index') }}" class="nav-link {{ Request::is('seller/products*') ? 'active' : '' }}" data-tooltip="Products">
+                <i class="fa-solid fa-box-open"></i>
+                <span class="sidebar-text">My Products</span>
+            </a>
+
+            @if(class_exists(\SGCart\ProductVariants\Http\Controllers\VariantController::class))
+            <a href="{{ route('seller.colors.index') }}" class="nav-link {{ Request::is('seller/colors*') ? 'active' : '' }}" data-tooltip="Colors">
+                <i class="fa-solid fa-palette"></i>
+                <span class="sidebar-text">Colors</span>
+            </a>
+
+            <a href="{{ route('seller.sizes.index') }}" class="nav-link {{ Request::is('seller/sizes*') ? 'active' : '' }}" data-tooltip="Sizes">
+                <i class="fa-solid fa-ruler-combined"></i>
+                <span class="sidebar-text">Sizes</span>
+            </a>
+            @endif
+
+            <!-- ============ Finance ============ -->
+            <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Finance</p>
 
             <a href="{{ route('seller.commissions') }}" class="nav-link {{ Request::is('seller/commissions*') ? 'active' : '' }}" data-tooltip="Earnings">
                 <i class="fa-solid fa-wallet"></i>
@@ -663,26 +700,13 @@
                     @endif
                 </span>
             </a>
-
-            <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Catalogue</p>
-
-            <a href="{{ route('seller.products.index') }}" class="nav-link {{ Request::is('seller/products*') ? 'active' : '' }}" data-tooltip="Products">
-                <i class="fa-solid fa-box-open"></i>
-                <span class="sidebar-text">My Products</span>
-            </a>
-
-            @if(class_exists(\SGCart\ProductVariants\Http\Controllers\VariantController::class))
-            <a href="{{ route('seller.colors.index') }}" class="nav-link {{ Request::is('seller/colors*') ? 'active' : '' }}" data-tooltip="Colors">
-                <i class="fa-solid fa-palette"></i>
-                <span class="sidebar-text">Colors</span>
-            </a>
-
-            <a href="{{ route('seller.sizes.index') }}" class="nav-link {{ Request::is('seller/sizes*') ? 'active' : '' }}" data-tooltip="Sizes">
-                <i class="fa-solid fa-ruler-combined"></i>
-                <span class="sidebar-text">Sizes</span>
-            </a>
             @endif
-            @endif
+
+            <!-- Sidebar Search No Results -->
+            <div id="sidebarNoResults" class="hidden px-3 py-6 text-center text-slate-500 text-xs">
+                <i class="fa-solid fa-magnifying-glass text-slate-600 text-base mb-1.5 block"></i>
+                <span>No menu links found</span>
+            </div>
         </nav>
     </aside>
 
@@ -1412,6 +1436,108 @@
             @if($errors->any())
                 showToast("{!! addslashes($errors->first()) !!}", 'error');
             @endif
+
+            // Store original open states of dropdowns (for future extensibility)
+            $('#sidebar .nav-item-dropdown').each(function() {
+                $(this).attr('data-originally-open', $(this).hasClass('open') ? 'true' : 'false');
+            });
+
+            // Sidebar Search filtering logic
+            $(document).on('input', '#sidebarSearch', function() {
+                const query = $(this).val().trim().toLowerCase();
+                const $clearBtn = $('#clearSidebarSearch');
+
+                if (query.length > 0) {
+                    $clearBtn.removeClass('hidden');
+
+                    // 1. Filter single nav links (that are NOT inside sub-menus)
+                    $('#sidebar nav > a.nav-link').each(function() {
+                        const text = $(this).find('.sidebar-text').text().toLowerCase();
+                        if (text.includes(query)) {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+
+                    // 2. Filter dropdowns and their sub-links
+                    $('#sidebar .nav-item-dropdown').each(function() {
+                        const $dropdown = $(this);
+                        const dropdownTitleText = $dropdown.find('.dropdown-toggle .sidebar-text').text().toLowerCase();
+                        let hasMatchingSubLink = false;
+
+                        // Filter each sub-link inside this dropdown
+                        $dropdown.find('.dropdown-menu-items a.nav-link').each(function() {
+                            const subText = $(this).find('.sidebar-text').text().toLowerCase();
+                            if (subText.includes(query)) {
+                                $(this).show();
+                                hasMatchingSubLink = true;
+                            } else {
+                                $(this).hide();
+                            }
+                        });
+
+                        // If the parent dropdown title itself matches the query, show all sub-links and expand
+                        if (dropdownTitleText.includes(query)) {
+                            $dropdown.find('.dropdown-menu-items a.nav-link').show();
+                            $dropdown.show();
+                            $dropdown.addClass('open');
+                            $dropdown.find('.dropdown-menu-items').removeClass('hidden');
+                            $dropdown.find('.arrow-icon').addClass('rotate-180');
+                        } else if (hasMatchingSubLink) {
+                            // If parent doesn't match but sub-links do, show dropdown and expand it
+                            $dropdown.show();
+                            $dropdown.addClass('open');
+                            $dropdown.find('.dropdown-menu-items').removeClass('hidden');
+                            $dropdown.find('.arrow-icon').addClass('rotate-180');
+                        } else {
+                            // No match at all
+                            $dropdown.hide();
+                        }
+                    });
+                } else {
+                    $clearBtn.addClass('hidden');
+
+                    // Restore everything to default state
+                    $('#sidebar nav > a.nav-link').show();
+
+                    $('#sidebar .nav-item-dropdown').each(function() {
+                        const $dropdown = $(this);
+                        $dropdown.show();
+                        $dropdown.find('.dropdown-menu-items a.nav-link').show();
+
+                        // Revert open/close state to original
+                        const originallyOpen = $dropdown.attr('data-originally-open') === 'true';
+                        $dropdown.toggleClass('open', originallyOpen);
+                        $dropdown.find('.dropdown-menu-items').toggleClass('hidden', !originallyOpen);
+                        $dropdown.find('.arrow-icon').toggleClass('rotate-180', originallyOpen);
+                    });
+                }
+
+                // 3. Filter section labels
+                $('#sidebar .section-label').each(function() {
+                    let nextEl = $(this).next();
+                    let hasVisibleItems = false;
+                    while (nextEl.length && !nextEl.hasClass('section-label') && nextEl.attr('id') !== 'sidebarNoResults') {
+                        if (nextEl.is(':visible')) {
+                            hasVisibleItems = true;
+                            break;
+                        }
+                        nextEl = nextEl.next();
+                    }
+                    $(this).toggle(hasVisibleItems);
+                });
+
+                // 4. Toggle No Results placeholder
+                const hasVisibleItems = $('#sidebar nav > a.nav-link:visible').length > 0 || 
+                                       $('#sidebar .nav-item-dropdown:visible').length > 0;
+                $('#sidebarNoResults').toggleClass('hidden', hasVisibleItems);
+            });
+
+            // Clear button click handler
+            $(document).on('click', '#clearSidebarSearch', function() {
+                $('#sidebarSearch').val('').trigger('input').focus();
+            });
         });
     </script>
     <div class="toast-wrap" id="toastWrap"></div>
