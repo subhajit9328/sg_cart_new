@@ -20,14 +20,7 @@
         <h1 class="font-display text-2xl font-bold">Dashboard</h1>
         <p class="text-sm text-slate-400 mt-0.5">Welcome back, <span class="font-semibold text-slate-700 dark:text-slate-300">{{ auth()->user()->name }}</span>!</p>
     </div>
-    <div class="flex gap-2">
-        <button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">
-            <i class="fa-solid fa-calendar-days"></i> Last 7 days
-        </button>
-        <button class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium">
-            <i class="fa-solid fa-download"></i> Export Reports
-        </button>
-    </div>
+
 </div>
 
 <!-- Standard Dashboard Summary Cards -->
@@ -45,7 +38,7 @@
             <i class="fa-solid fa-users"></i>
         </div>
     </div>
-    
+
     <!-- Total Roles -->
     <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm p-5 flex items-center justify-between">
         <div>
@@ -91,33 +84,33 @@
             <form action="{{ route('admin.dashboard') }}" method="GET" id="filterForm" class="flex flex-col gap-2.5 sm:flex-row sm:items-center">
                 <div class="flex flex-wrap gap-1.5 items-center">
                     <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mr-1">Range:</span>
-                    
+
                     <label class="relative cursor-pointer">
                         <input type="radio" name="date_preset" value="7days" class="peer sr-only" {{ $preset === '7days' ? 'checked' : '' }}>
                         <span class="px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-[10px] font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all block">1 W</span>
                     </label>
-                    
+
                     <label class="relative cursor-pointer">
                         <input type="radio" name="date_preset" value="15days" class="peer sr-only" {{ $preset === '15days' ? 'checked' : '' }}>
                         <span class="px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-[10px] font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all block">15 D</span>
                     </label>
-                    
+
                     <label class="relative cursor-pointer">
                         <input type="radio" name="date_preset" value="30days" class="peer sr-only" {{ $preset === '30days' ? 'checked' : '' }}>
                         <span class="px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-[10px] font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all block">1 M</span>
                     </label>
-                    
+
                     <label class="relative cursor-pointer">
                         <input type="radio" name="date_preset" value="6months" class="peer sr-only" {{ $preset === '6months' ? 'checked' : '' }}>
                         <span class="px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-[10px] font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all block">6 M</span>
                     </label>
-                    
+
                     <label class="relative cursor-pointer">
                         <input type="radio" name="date_preset" value="custom" id="presetCustom" class="peer sr-only" {{ $preset === 'custom' ? 'checked' : '' }}>
                         <span class="px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-[10px] font-medium text-slate-600 dark:text-slate-400 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all block">Custom</span>
                     </label>
                 </div>
-                
+
                 <div id="customDateRange" class="{{ $preset === 'custom' ? 'flex' : 'hidden' }} flex-wrap gap-1.5 items-center">
                     <input type="date" name="start_date" id="start_date" value="{{ $start ? $start->format('Y-m-d') : '' }}" class="px-2 py-1 text-xs rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 focus:outline-none">
                     <span class="text-[10px] text-slate-400">to</span>
@@ -496,7 +489,7 @@
             endDateInput.addEventListener('change', function() {
                 startDateInput.setAttribute('max', this.value);
             });
-            
+
             form.addEventListener('submit', function(e) {
                 const presetSelect = document.querySelector('input[name="date_preset"]:checked');
                 if (presetSelect && presetSelect.value === 'custom') {
@@ -505,11 +498,11 @@
                         e.preventDefault();
                         return false;
                     }
-                    
+
                     const start = new Date(startDateInput.value + 'T00:00:00');
                     const end = new Date(endDateInput.value + 'T23:59:59');
                     const todayDate = new Date();
-                    
+
                     if (start > todayDate) {
                         alert('Start date cannot be in the future.');
                         e.preventDefault();
@@ -530,7 +523,7 @@
                         e.preventDefault();
                         return false;
                     }
-                    
+
                     const diffTime = Math.abs(end - start);
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     if (diffDays > 180) {
@@ -541,11 +534,11 @@
                 }
             });
         }
-        
+
         // Toggle custom date picker panel
         const presets = document.querySelectorAll('input[name="date_preset"]');
         const customDateRangeEl = document.getElementById('customDateRange');
-        
+
         presets.forEach(preset => {
             preset.addEventListener('change', function() {
                 if (this.value === 'custom') {

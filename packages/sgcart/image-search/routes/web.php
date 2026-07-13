@@ -9,7 +9,7 @@ Route::middleware(['web'])->group(function () {
     Route::post('/image-search/search', [ImageSearchController::class, 'search'])->name('image-search.search');
 });
 
-Route::middleware(['web', 'auth'])->prefix('admin')->group(function () {
+Route::middleware(['web', 'auth', 'permission:manage image search config'])->prefix('admin')->group(function () {
     Route::get('/image-search/settings', [ImageSearchSettingsController::class, 'index'])->name('admin.image-search.settings');
     Route::post('/image-search/settings', [ImageSearchSettingsController::class, 'update'])->name('admin.image-search.settings.update');
 });

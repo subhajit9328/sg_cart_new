@@ -18,10 +18,26 @@
                             <div class="carousel-slide">
                                 @if($img->url)
                                     <a href="{{ $img->url }}" target="_blank" class="w-full h-full block">
-                                        <img src="{{ \Illuminate\Support\Facades\Storage::url($img->image_path) }}" alt="Hero Collection Slide"/>
+                                        <picture class="w-full h-full block">
+                                            @if($img->image_mobile)
+                                                <source media="(max-width: 640px)" srcset="{{ \Illuminate\Support\Facades\Storage::url($img->image_mobile) }}">
+                                            @endif
+                                            @if($img->image_tablet)
+                                                <source media="(max-width: 1024px)" srcset="{{ \Illuminate\Support\Facades\Storage::url($img->image_tablet) }}">
+                                            @endif
+                                            <img src="{{ \Illuminate\Support\Facades\Storage::url($img->image_desktop ?: $img->image_path) }}" alt="Hero Collection Slide"/>
+                                        </picture>
                                     </a>
                                 @else
-                                    <img src="{{ \Illuminate\Support\Facades\Storage::url($img->image_path) }}" alt="Hero Collection Slide"/>
+                                    <picture class="w-full h-full block">
+                                        @if($img->image_mobile)
+                                            <source media="(max-width: 640px)" srcset="{{ \Illuminate\Support\Facades\Storage::url($img->image_mobile) }}">
+                                        @endif
+                                        @if($img->image_tablet)
+                                            <source media="(max-width: 1024px)" srcset="{{ \Illuminate\Support\Facades\Storage::url($img->image_tablet) }}">
+                                        @endif
+                                        <img src="{{ \Illuminate\Support\Facades\Storage::url($img->image_desktop ?: $img->image_path) }}" alt="Hero Collection Slide"/>
+                                    </picture>
                                 @endif
                             </div>
                         @endforeach
@@ -42,10 +58,26 @@
                 <div class="hero-single-image">
                     @if($firstImg->url)
                         <a href="{{ $firstImg->url }}" target="_blank" class="w-full h-full block">
-                            <img src="{{ \Illuminate\Support\Facades\Storage::url($firstImg->image_path) }}" alt="Hero Collection Slide"/>
+                            <picture class="w-full h-full block">
+                                @if($firstImg->image_mobile)
+                                    <source media="(max-width: 640px)" srcset="{{ \Illuminate\Support\Facades\Storage::url($firstImg->image_mobile) }}">
+                                @endif
+                                @if($firstImg->image_tablet)
+                                    <source media="(max-width: 1024px)" srcset="{{ \Illuminate\Support\Facades\Storage::url($firstImg->image_tablet) }}">
+                                @endif
+                                <img src="{{ \Illuminate\Support\Facades\Storage::url($firstImg->image_desktop ?: $firstImg->image_path) }}" alt="Hero Collection Slide"/>
+                            </picture>
                         </a>
                     @else
-                        <img src="{{ \Illuminate\Support\Facades\Storage::url($firstImg->image_path) }}" alt="Hero Collection Slide"/>
+                        <picture class="w-full h-full block">
+                            @if($firstImg->image_mobile)
+                                <source media="(max-width: 640px)" srcset="{{ \Illuminate\Support\Facades\Storage::url($firstImg->image_mobile) }}">
+                            @endif
+                            @if($firstImg->image_tablet)
+                                <source media="(max-width: 1024px)" srcset="{{ \Illuminate\Support\Facades\Storage::url($firstImg->image_tablet) }}">
+                            @endif
+                            <img src="{{ \Illuminate\Support\Facades\Storage::url($firstImg->image_desktop ?: $firstImg->image_path) }}" alt="Hero Collection Slide"/>
+                        </picture>
                     @endif
                 </div>
             @endif
@@ -358,6 +390,12 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+    }
+    .carousel-slide picture,
+    .hero-single-image picture {
+        width: 100%;
+        height: 100%;
+        display: block;
     }
     
     /* Navigation dots */

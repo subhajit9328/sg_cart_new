@@ -34,7 +34,10 @@ class ProductController extends Controller
         $products = $query
             ->when($request->search, fn ($q) => $q->where(fn($sq) => $sq->where('name', 'like', "%{$request->search}%")
                                                                          ->orWhere('sku', 'like', "%{$request->search}%")))
-            ->when($request->category_id, fn ($q) => $q->where('category_id', $request->category_id))
+            ->when($request->category_id, function ($q) use ($request) {
+                $categoryIds = Category::childrens($request->category_id)->pluck('id');
+                return $q->whereIn('category_id', $categoryIds);
+            })
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
             ->when($request->seller_id, function ($q) use ($request) {
                 if ($request->seller_id === 'admin') {

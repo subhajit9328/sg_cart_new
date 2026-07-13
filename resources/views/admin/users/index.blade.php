@@ -86,9 +86,9 @@
                     <a href="{{ route('admin.users.edit', $user->ulid) }}" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors" title="Edit User">
                         <i class="fa-solid fa-pen text-slate-500 dark:text-slate-400 text-xs"></i>
                     </a>
-                    
+
                     @if($user->id !== auth()->id())
-                        <button onclick="openDeleteModal('{{ $user->ulid }}', '{{ $user->name }}')" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center transition-colors cursor-pointer animate-fadeIn" title="Delete User">
+                        <button onclick='openDeleteModal(@json($user->ulid), @json($user->name))' class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center transition-colors cursor-pointer animate-fadeIn" title="Delete User">
                             <i class="fa-solid fa-trash text-rose-500 text-xs"></i>
                         </button>
                     @else

@@ -28,8 +28,23 @@ class HeroController extends Controller
         $request->validate([
             'images' => 'nullable|array',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+            'new_desktop' => 'nullable|array',
+            'new_desktop.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+            'new_tablet' => 'nullable|array',
+            'new_tablet.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+            'new_mobile' => 'nullable|array',
+            'new_mobile.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+            'new_urls' => 'nullable|array',
+            
             'replace_images' => 'nullable|array',
             'replace_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+            'replace_desktop' => 'nullable|array',
+            'replace_desktop.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+            'replace_tablet' => 'nullable|array',
+            'replace_tablet.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+            'replace_mobile' => 'nullable|array',
+            'replace_mobile.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+
             'urls' => 'nullable|array',
             'sort_order' => 'nullable|array',
             'sort_order.*' => 'required|integer',
@@ -37,7 +52,17 @@ class HeroController extends Controller
 
         $maxImages = config('hero.max_images', 5);
         $currentCount = HeroImage::count();
-        $newCount = $request->hasFile('images') ? count($request->file('images')) : 0;
+
+        $newIndices = array_unique(array_merge(
+            $request->hasFile('new_desktop') ? array_keys($request->file('new_desktop')) : [],
+            $request->hasFile('new_tablet') ? array_keys($request->file('new_tablet')) : [],
+            $request->hasFile('new_mobile') ? array_keys($request->file('new_mobile')) : []
+        ));
+
+        $newCount = count($newIndices);
+        if ($request->hasFile('images')) {
+            $newCount += count($request->file('images'));
+        }
 
         if ($currentCount + $newCount > $maxImages) {
             $message = "You cannot have more than {$maxImages} slide images in total. Current count is {$currentCount}.";
@@ -50,7 +75,25 @@ class HeroController extends Controller
             return redirect()->back()->withErrors(['images' => $message]);
         }
 
-        // 1. Handle image slide uploads
+        // Validate that each new slide index has at least one of desktop, tablet, or mobile images
+        foreach ($newIndices as $index) {
+            $hasDesktop = $request->hasFile("new_desktop.{$index}");
+            $hasTablet = $request->hasFile("new_tablet.{$index}");
+            $hasMobile = $request->hasFile("new_mobile.{$index}");
+
+            if (!$hasDesktop && !$hasTablet && !$hasMobile) {
+                $message = "At least one image (Desktop, Tablet, or Mobile) is required for each new slide.";
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $message,
+                    ], 422);
+                }
+                return redirect()->back()->withErrors(['new_desktop' => $message]);
+            }
+        }
+
+        // 1. Handle old image slide uploads (backward compatibility)
         if ($request->hasFile('images')) {
             $newUrls = $request->input('new_urls', []);
             $maxSortOrder = HeroImage::max('sort_order') ?? 0;
@@ -61,27 +104,88 @@ class HeroController extends Controller
                 $maxSortOrder++;
                 HeroImage::create([
                     'image_path' => $path,
+                    'image_desktop' => $path,
+                    'image_tablet' => $path,
+                    'image_mobile' => $path,
                     'url' => $url,
                     'sort_order' => $maxSortOrder,
                 ]);
             }
         }
 
-        // 2. Handle specific slide image replacements
+        // 2. Handle new device-specific image slide uploads
+        if (!empty($newIndices)) {
+            $newUrls = $request->input('new_urls', []);
+            $maxSortOrder = HeroImage::max('sort_order') ?? 0;
+            
+            foreach ($newIndices as $index) {
+                $desktopPath = $request->hasFile("new_desktop.{$index}") 
+                    ? $request->file("new_desktop.{$index}")->store('hero', 'public') 
+                    : null;
+                $tabletPath = $request->hasFile("new_tablet.{$index}") 
+                    ? $request->file("new_tablet.{$index}")->store('hero', 'public') 
+                    : null;
+                $mobilePath = $request->hasFile("new_mobile.{$index}") 
+                    ? $request->file("new_mobile.{$index}")->store('hero', 'public') 
+                    : null;
+
+                $url = isset($newUrls[$index]) ? $newUrls[$index] : null;
+                $maxSortOrder++;
+
+                HeroImage::create([
+                    'image_desktop' => $desktopPath,
+                    'image_tablet' => $tabletPath,
+                    'image_mobile' => $mobilePath,
+                    'image_path' => $desktopPath ?: $tabletPath ?: $mobilePath,
+                    'url' => $url,
+                    'sort_order' => $maxSortOrder,
+                ]);
+            }
+        }
+
+        // 3. Handle old style specific slide image replacements
         if ($request->hasFile('replace_images')) {
             foreach ($request->file('replace_images') as $id => $file) {
                 $image = HeroImage::findOrFail($id);
-                if (Storage::disk('public')->exists($image->image_path)) {
+                if ($image->image_path && Storage::disk('public')->exists($image->image_path)) {
                     Storage::disk('public')->delete($image->image_path);
                 }
                 $path = $file->store('hero', 'public');
                 $image->update([
                     'image_path' => $path,
+                    'image_desktop' => $path,
                 ]);
             }
         }
 
-        // 3. Update existing slide sorting orders and URLs
+        // 4. Handle new device-specific slide image replacements
+        $replaceFields = [
+            'replace_desktop' => 'image_desktop',
+            'replace_tablet' => 'image_tablet',
+            'replace_mobile' => 'image_mobile',
+        ];
+
+        foreach ($replaceFields as $inputKey => $dbField) {
+            if ($request->hasFile($inputKey)) {
+                foreach ($request->file($inputKey) as $id => $file) {
+                    $image = HeroImage::findOrFail($id);
+                    if ($image->$dbField && Storage::disk('public')->exists($image->$dbField)) {
+                        Storage::disk('public')->delete($image->$dbField);
+                    }
+                    $path = $file->store('hero', 'public');
+                    $image->update([
+                        $dbField => $path,
+                    ]);
+
+                    // Keep image_path synchronized with a valid image path fallback
+                    $image->update([
+                        'image_path' => $image->image_desktop ?: $image->image_tablet ?: $image->image_mobile
+                    ]);
+                }
+            }
+        }
+
+        // 5. Update existing slide sorting orders and URLs
         if ($request->has('sort_order')) {
             $existingUrls = $request->input('urls', []);
             foreach ($request->input('sort_order') as $id => $order) {
@@ -110,8 +214,10 @@ class HeroController extends Controller
     {
         $image = HeroImage::findOrFail($id);
 
-        if (Storage::disk('public')->exists($image->image_path)) {
-            Storage::disk('public')->delete($image->image_path);
+        foreach (['image_desktop', 'image_tablet', 'image_mobile', 'image_path'] as $field) {
+            if ($image->$field && Storage::disk('public')->exists($image->$field)) {
+                Storage::disk('public')->delete($image->$field);
+            }
         }
 
         $image->delete();
@@ -132,8 +238,10 @@ class HeroController extends Controller
         $images = HeroImage::whereIn('id', $request->input('ids'))->get();
 
         foreach ($images as $image) {
-            if (Storage::disk('public')->exists($image->image_path)) {
-                Storage::disk('public')->delete($image->image_path);
+            foreach (['image_desktop', 'image_tablet', 'image_mobile', 'image_path'] as $field) {
+                if ($image->$field && Storage::disk('public')->exists($image->$field)) {
+                    Storage::disk('public')->delete($image->$field);
+                }
             }
             $image->delete();
         }

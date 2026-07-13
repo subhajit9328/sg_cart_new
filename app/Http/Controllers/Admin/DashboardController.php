@@ -17,11 +17,11 @@ class DashboardController extends Controller
         $totalUsers = User::count();
         $totalRoles = Role::count();
         $totalPermissions = Permission::count();
-        
+
         // Recently created users with their roles
         $recentUsers = User::with('roles')
             ->latest()
-            ->take(5)
+            ->take(10)
             ->get();
 
         return view('admin.dashboard', compact('totalUsers', 'totalRoles', 'totalPermissions', 'recentUsers'));

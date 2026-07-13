@@ -70,9 +70,9 @@
                     <a href="{{ route('admin.roles.edit', $role->ulid) }}" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors" title="Edit Role">
                         <i class="fa-solid fa-pen text-slate-500 dark:text-slate-400 text-xs"></i>
                     </a>
-                    
+
                     @if($role->name !== 'Super Admin' && $role->name !== 'super-admin')
-                        <button onclick="openDeleteModal('{{ $role->ulid }}', '{{ $role->name }}')" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center transition-colors cursor-pointer animate-fadeIn" title="Delete Role">
+                        <button onclick='openDeleteModal(@json($role->ulid), @json($role->name))' class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center transition-colors cursor-pointer animate-fadeIn" title="Delete Role">
                             <i class="fa-solid fa-trash text-rose-500 text-xs"></i>
                         </button>
                     @else

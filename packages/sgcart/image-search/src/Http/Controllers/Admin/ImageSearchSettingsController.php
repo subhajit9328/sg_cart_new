@@ -68,6 +68,8 @@ class ImageSearchSettingsController extends Controller
             'provider' => 'required|string|max:255',
             'model' => 'required|string|max:255',
             'api_key' => 'required|string',
+        ], [
+            'api_key.required' => 'API Key required.',
         ]);
 
         if (!$setting) {

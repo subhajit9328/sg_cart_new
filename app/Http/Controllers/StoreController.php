@@ -2,24 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use Illuminate\Http\Request;
 use App\Actions\LogActivity;
 use App\Actions\ManageOtp;
 use App\Actions\ResolveRelatedProducts;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\ProductStatus;
 use App\Models\Cart;
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\ValidationException;
+use SGCart\CrmTickets\Models\Ticket;
+use SGCart\Marketplace\Models\Seller;
 use SGCart\ProductVariants\Models\ProductVariant;
+use SGCart\RelatedProducts\Models\RelatedProduct;
+use SGCart\Reviews\Models\Review;
+use SGCart\Shipping\Models\ShippingRate;
+use SGCart\Shipping\Models\ShippingSetting;
 
 class StoreController extends Controller
 {
@@ -28,26 +36,36 @@ class StoreController extends Controller
      */
     public static function getProducts()
     {
-        $relations = ['category.parent', 'images', 'searchTerms'];
+        $relations = [
+            'category.parent.parent', 'category.children' => function ($query) {
+                $query->active();
+            }, 'images', 'searchTerms'
+        ];
         if (class_exists(ProductVariant::class)) {
             $relations[] = 'variants.color';
             $relations[] = 'variants.size';
         }
 
-        $query = Product::with($relations)->where('status', 'active');
+        $query = Product::with($relations)
+            ->where('status', 'active')
+            ->whereHas('category', function ($q) {
+                $q->active();
+        });
 
-        if (class_exists(\SGCart\Marketplace\Models\Seller::class)) {
+        if (class_exists(Seller::class)) {
             $query->where(function ($q) {
                 $q->whereNull('seller_id')
-                  ->orWhereHas('seller', function ($sub) {
-                      $sub->where('status', 'approved');
-                  });
+                    ->orWhereHas('seller', function ($sub) {
+                        $sub->where('status', 'approved');
+                    });
             });
         }
 
         return $query->get()->map(function ($p) {
             $catName = 'Fashion';
+            $subcatName = null;
             if ($p->category) {
+                $subcatName = $p->category->name;
                 $topParent = $p->category;
                 while ($topParent->parent) {
                     $topParent = $topParent->parent;
@@ -59,20 +77,23 @@ class StoreController extends Controller
             $sizes = [];
             $colors = [];
             if ($p->variants && $p->variants->isNotEmpty()) {
-                $colors = $p->variants->where('is_active', true)->map(fn ($v) => $v->color?->hex_code)->filter()->unique()->values()->toArray();
-                $sizes = $p->variants->where('is_active', true)->map(fn ($v) => $v->size?->code)->filter()->unique()->values()->toArray();
+                $colors = $p->variants->where('is_active', true)->map(fn($v
+                ) => $v->color?->hex_code)->filter()->unique()->values()->toArray();
+                $sizes = $p->variants->where('is_active', true)->map(fn($v
+                ) => $v->size?->code)->filter()->unique()->values()->toArray();
             } else {
-                if (isset($p->sizes) && ! empty($p->sizes)) {
+                if (isset($p->sizes) && !empty($p->sizes)) {
                     $sizes = is_array($p->sizes) ? $p->sizes : array_filter(array_map('trim', explode(',', $p->sizes)));
                 }
-                if (isset($p->colors) && ! empty($p->colors)) {
-                    $colors = is_array($p->colors) ? $p->colors : array_filter(array_map('trim', explode(',', $p->colors)));
+                if (isset($p->colors) && !empty($p->colors)) {
+                    $colors = is_array($p->colors) ? $p->colors : array_filter(array_map('trim',
+                        explode(',', $p->colors)));
                 }
             }
 
             $rating = 4.5;
-            if (class_exists(\SGCart\Reviews\Models\Review::class)) {
-                $avgRating = \SGCart\Reviews\Models\Review::where('product_id', $p->id)
+            if (class_exists(Review::class)) {
+                $avgRating = Review::where('product_id', $p->id)
                     ->where('status_id', 2)
                     ->avg('rating');
                 if (!is_null($avgRating)) {
@@ -85,6 +106,8 @@ class StoreController extends Controller
                 'slug' => $p->slug,
                 'name' => $p->name,
                 'cat' => $catName,
+                'subcat' => $subcatName,
+                'category_id' => $p->category_id,
                 'price' => $p->sale_price ?? $p->price,
                 'old' => $p->sale_price ? $p->price : null,
                 'rating' => $rating,
@@ -100,7 +123,8 @@ class StoreController extends Controller
                 'manufacturer' => $p->manufacturer ? $p->manufacturer->name : null,
                 'img' => $p->image ? Storage::url($p->image) : asset('images/no-image.svg'),
                 'images' => $p->images->isNotEmpty()
-                    ? $p->images->sortByDesc('is_default')->map(fn ($img) => Storage::url($img->image_path))->values()->toArray()
+                    ? $p->images->sortByDesc('is_default')->map(fn($img
+                    ) => Storage::url($img->image_path))->values()->toArray()
                     : [asset('images/no-image.svg')],
                 'meta_title' => $p->meta_title,
                 'meta_description' => $p->meta_description,
@@ -118,12 +142,14 @@ class StoreController extends Controller
         $products = collect(self::getProducts())->take(4);
         $categories = Category::parents()->active()->orderBy('sort_order')->take(5)->get();
         if ($categories->isEmpty()) {
-            $categories = collect(["Women's Clothing", "Men's Clothing", "Kids' Clothing", 'Accessories', 'Footwear'])->map(function($name, $index) {
+            $categories = collect([
+                "Women's Clothing", "Men's Clothing", "Kids' Clothing", 'Accessories', 'Footwear',
+            ])->map(function ($name, $index) {
                 return new Category([
                     'name' => $name,
-                    'slug' => \Illuminate\Support\Str::slug($name),
+                    'slug' => Str::slug($name),
                     'is_active' => true,
-                    'sort_order' => $index
+                    'sort_order' => $index,
                 ]);
             });
         }
@@ -144,6 +170,28 @@ class StoreController extends Controller
      */
     public function shop(Request $request)
     {
+        try {
+            $request->validate(['search' => 'nullable|string|max:150']);
+        } catch (ValidationException $e) {
+            session()->flash('error', $e->getMessage());
+
+            return redirect()->back()->withInput();
+        }
+
+        $search = $request->input('search');
+        $lastSearch = session('last_search');
+
+        $currentSearch = $search !== null ? trim($search) : '';
+        $lastSearch = $lastSearch !== null ? trim($lastSearch) : '';
+
+        session(['last_search' => $currentSearch]);
+        if ($currentSearch !== $lastSearch) {
+            return redirect()->route('store.shop', [
+                'search' => $currentSearch,
+                'price_max' => 100000,
+            ]);
+        }
+
         $baseProducts = collect(self::getProducts());
 
         // Apply Search filter first (since it is global)
@@ -158,23 +206,84 @@ class StoreController extends Controller
             $baseProducts = $baseProducts->filter(fn($p) => $p['price'] <= $maxPrice);
         }
 
-        // Get all category names from all products
-        $allCategories = collect(self::getProducts())->pluck('cat')->unique()->values()->toArray();
-        if (empty($allCategories)) {
-            $allCategories = ["Women's Clothing", "Men's Clothing", "Kids' Clothing", 'Accessories', 'Footwear', 'Sportswear', 'Winter Wear'];
-        }
+        // Build the hierarchical sidebar categories list
+        $sidebarCategoriesMap = [];
+        if ($request->filled('search')) {
+            $matchedCategoryIds = $baseProducts->pluck('category_id')->unique()->filter()->toArray();
 
+            $categories = Category::with('parent')->whereIn('id', $matchedCategoryIds)->get();
+
+            foreach ($categories as $cat) {
+                $topParent = $cat;
+                while ($topParent->parent_id && $topParent->parent) {
+                    $topParent = $topParent->parent;
+                }
+
+                $parentName = $topParent->name;
+                $parentId = $topParent->id;
+
+                if (!isset($sidebarCategoriesMap[$parentName])) {
+                    $sidebarCategoriesMap[$parentName] = [
+                        'name' => $parentName,
+                        'id' => $parentId,
+                        'children' => [],
+                    ];
+                }
+
+                if ($cat->id !== $parentId) {
+                    $sidebarCategoriesMap[$parentName]['children'][$cat->name] = [
+                        'name' => $cat->name,
+                        'id' => $cat->id,
+                    ];
+                }
+            }
+
+            foreach ($sidebarCategoriesMap as &$pCat) {
+                $pCat['children'] = array_values($pCat['children']);
+            }
+        } else {
+            $parents = Category::parents()->active()->take(5)->orderBy('sort_order')->get();
+            foreach ($parents as $parent) {
+                $children = $parent->children()->active()->orderBy('sort_order')->get();
+                $sidebarCategoriesMap[$parent->name] = [
+                    'name' => $parent->name,
+                    'id' => $parent->id,
+                    'children' => $children->map(fn($c) => ['name' => $c->name, 'id' => $c->id])->toArray(),
+                ];
+            }
+        }
+        $sidebarCategories = array_values($sidebarCategoriesMap);
         // Calculate counts based on search and price filters (before category filter is applied)
         $categoryCounts = [];
-        foreach ($allCategories as $cat) {
-            $categoryCounts[$cat] = $baseProducts->where('cat', $cat)->count();
+        foreach ($baseProducts as $p) {
+            $cat = $p['cat'];
+            $subcat = $p['subcat'];
+
+            if ($cat) {
+                $categoryCounts[$cat] = ($categoryCounts[$cat] ?? 0) + 1;
+            }
+            if ($subcat) {
+                $categoryCounts[$subcat] = ($categoryCounts[$subcat] ?? 0) + 1;
+            }
         }
 
         // Now apply Category filter for actual product listing
         $products = $baseProducts;
-        if ($request->filled('category')) {
-            $categories = (array) $request->input('category');
-            $products = $products->filter(fn($p) => in_array($p['cat'], $categories));
+        if ($request->filled('category') || $request->filled('sub_category')) {
+            $selectedCategories = (array) $request->input('category', []);
+            $selectedSubCategories = (array) $request->input('sub_category', []);
+
+            $products = $baseProducts->filter(function ($p) use ($selectedCategories, $selectedSubCategories) {
+                if (!empty($selectedCategories)) {
+                    return in_array($p['cat'], $selectedCategories);
+                }
+
+                if (!empty($selectedSubCategories)) {
+                    return in_array($p['subcat'], $selectedSubCategories);
+                }
+
+                return true;
+            });
         }
 
         // Sorting
@@ -196,16 +305,17 @@ class StoreController extends Controller
             $page,
             [
                 'path' => LengthAwarePaginator::resolveCurrentPath(),
-                'query' => $request->query()
+                'query' => $request->query(),
             ]
         );
 
         return view('store.shop', [
             'products' => $paginatedProducts,
-            'allCategories' => $allCategories,
+            'sidebarCategories' => $sidebarCategories,
             'categoryCounts' => $categoryCounts,
             'selectedCategories' => (array) $request->input('category', []),
-            'selectedPriceMax' => $request->input('price_max', 10000),
+            'selectedSubCategories' => (array) $request->input('sub_category', []),
+            'selectedPriceMax' => $request->input('price_max', 100000),
             'selectedSort' => $sort,
             'searchQuery' => $request->input('search'),
         ]);
@@ -219,7 +329,7 @@ class StoreController extends Controller
         $products = collect(self::getProducts());
         $product = $products->firstWhere('slug', $slug);
 
-        if (! $product) {
+        if (!$product) {
             abort(404);
         }
 
@@ -227,7 +337,7 @@ class StoreController extends Controller
         $productModel = Product::find($product['id']);
         $relatedIds = [];
 
-        if (class_exists(\SGCart\RelatedProducts\Models\RelatedProduct::class) && $productModel) {
+        if (class_exists(RelatedProduct::class) && $productModel) {
             // Package is installed: Fetch products related via the relationship
             $relatedIds = $productModel->relatedProducts()->where('status', 'active')->pluck('products.id')->toArray();
         }
@@ -245,6 +355,7 @@ class StoreController extends Controller
 
         if ($request->ajax() || $request->has('ajax')) {
             $reviewsData = $this->getProductReviews($product['id'], $request);
+
             return view('store.partials.reviews', compact('reviewsData'))->render();
         }
 
@@ -253,11 +364,19 @@ class StoreController extends Controller
         $approvedReviews = collect();
         $avgProductRating = 0;
         $totalReviewsCount = 0;
-        $count5 = 0; $count4 = 0; $count3 = 0; $count2 = 0; $count1 = 0;
-        $pct5 = 0; $pct4 = 0; $pct3 = 0; $pct2 = 0; $pct1 = 0;
+        $count5 = 0;
+        $count4 = 0;
+        $count3 = 0;
+        $count2 = 0;
+        $count1 = 0;
+        $pct5 = 0;
+        $pct4 = 0;
+        $pct3 = 0;
+        $pct2 = 0;
+        $pct1 = 0;
 
-        if (class_exists(\SGCart\Reviews\Models\Review::class)) {
-            $approvedReviews = \SGCart\Reviews\Models\Review::where('product_id', $product['id'])
+        if (class_exists(Review::class)) {
+            $approvedReviews = Review::where('product_id', $product['id'])
                 ->where('status_id', 2)
                 ->latest()
                 ->get();
@@ -291,22 +410,22 @@ class StoreController extends Controller
      */
     public function getProductReviews($productId, Request $request)
     {
-        if (!class_exists(\SGCart\Reviews\Models\Review::class)) {
+        if (!class_exists(Review::class)) {
             return [];
         }
 
         $filter = $request->input('review_filter', 'helpful');
         $page = (int) $request->input('review_page', 1);
 
-        $query = \SGCart\Reviews\Models\Review::with(['customer', 'images'])
+        $query = Review::with(['customer', 'images'])
             ->where('product_id', $productId)
             ->where('status_id', 2);
 
         // Apply filtration based on the captured URL param
         if ($filter === 'positive') {
-            $query->where('rating', '>=', 4);
+            $query->where('rating', '>=', 3);
         } elseif ($filter === 'negative') {
-            $query->where('rating', '<=', 3);
+            $query->where('rating', '<=', 2);
         }
 
         // Sorting
@@ -319,7 +438,6 @@ class StoreController extends Controller
 
         return $query->paginate(5, ['*'], 'review_page', $page);
     }
-
 
     /**
      * View cart page.
@@ -347,14 +465,15 @@ class StoreController extends Controller
         }
 
         $shippingCost = 0.0;
-        $hasShippingPackage = class_exists(\SGCart\Shipping\Models\ShippingRate::class);
+        $hasShippingPackage = class_exists(ShippingRate::class);
         if ($hasShippingPackage) {
-            $shippingRates = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+            $shippingRates = ShippingRate::where('is_active', true)
                 ->where('min_order_amount', '<=', $subtotal)
                 ->get();
 
             $cheapestRate = $shippingRates->map(function ($rate) use ($subtotal) {
                 $rate->calculated_cost = $rate->calculateCost($subtotal);
+
                 return $rate;
             })->sortBy('calculated_cost')->first();
 
@@ -362,15 +481,17 @@ class StoreController extends Controller
         }
 
         $selectionMode = 'user_choice';
-        if (class_exists(\SGCart\Shipping\Models\ShippingSetting::class)) {
-            $selectionMode = \SGCart\Shipping\Models\ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
+        if (class_exists(ShippingSetting::class)) {
+            $selectionMode = ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
         }
 
         // Only add shipping cost to cart total if not in user choice mode
         $effectiveShippingCost = ($selectionMode === 'user_choice') ? 0.0 : $shippingCost;
         $total = max(0, $subtotal + $tax - $discount + $effectiveShippingCost);
 
-        return view('store.cart', compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'shippingCost', 'selectionMode', 'hasShippingPackage'));
+        return view('store.cart',
+            compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'shippingCost', 'selectionMode',
+                'hasShippingPackage'));
     }
 
     /**
@@ -391,11 +512,11 @@ class StoreController extends Controller
         $color = $request->color;
 
         $product = Product::find($productId);
-        if (! $product || $product->status !== \App\Enums\ProductStatus::ACTIVE) {
+        if (!$product || $product->status !== ProductStatus::ACTIVE) {
             return redirect()->back()->with('error', 'Product not found.');
         }
 
-        if (class_exists(\SGCart\Marketplace\Models\Seller::class)) {
+        if (class_exists(Seller::class)) {
             $seller = $product->seller;
             if ($seller && $seller->status->value !== 'approved') {
                 return redirect()->back()->with('error', 'Product not found.');
@@ -420,7 +541,8 @@ class StoreController extends Controller
         $allowableAdd = $currentStock - $existingQty;
 
         if ($allowableAdd <= 0) {
-            return redirect()->route('store.cart')->with('warning', "Your cart already contains the maximum available stock ({$currentStock} items) for this product.");
+            return redirect()->route('store.cart')->with('warning',
+                "Your cart already contains the maximum available stock ({$currentStock} items) for this product.");
         }
 
         if ($quantity > $allowableAdd) {
@@ -444,7 +566,8 @@ class StoreController extends Controller
         }
 
         if ($wasCapped) {
-            return redirect()->route('store.cart')->with('warning', "Only {$currentStock} items are available in stock. We added {$qtyToAdd} items to your cart (bringing it to maximum available stock).");
+            return redirect()->route('store.cart')->with('warning',
+                "Only {$currentStock} items are available in stock. We added {$qtyToAdd} items to your cart (bringing it to maximum available stock).");
         }
 
         return redirect()->route('store.cart')->with('success', 'Product added to cart!');
@@ -499,7 +622,8 @@ class StoreController extends Controller
         }
 
         if ($wasLimited) {
-            return redirect()->route('store.cart')->with('warning', 'Some items were limited to the maximum available stock.');
+            return redirect()->route('store.cart')->with('warning',
+                'Some items were limited to the maximum available stock.');
         }
 
         return redirect()->route('store.cart')->with('success', 'Cart updated successfully.');
@@ -538,7 +662,7 @@ class StoreController extends Controller
      */
     public function checkout()
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to proceed to checkout.');
         }
 
@@ -579,19 +703,20 @@ class StoreController extends Controller
 
         $shippingRates = collect();
         $selectionMode = 'user_choice';
-        $hasShippingPackage = class_exists(\SGCart\Shipping\Models\ShippingRate::class);
+        $hasShippingPackage = class_exists(ShippingRate::class);
         if ($hasShippingPackage) {
-            $shippingRates = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+            $shippingRates = ShippingRate::where('is_active', true)
                 ->where('min_order_amount', '<=', $subtotal)
                 ->get();
         }
-        if (class_exists(\SGCart\Shipping\Models\ShippingSetting::class)) {
-            $selectionMode = \SGCart\Shipping\Models\ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
+        if (class_exists(ShippingSetting::class)) {
+            $selectionMode = ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
         }
 
         // Map and compute dynamically based on rate type
         $shippingRates = $shippingRates->map(function ($rate) use ($subtotal) {
             $rate->calculated_cost = (float) $rate->calculateCost($subtotal);
+
             return $rate;
         })->sortBy('calculated_cost');
 
@@ -603,7 +728,9 @@ class StoreController extends Controller
             $activeGateways = app('payment.manager')->getActiveGateways();
         }
 
-        return view('store.checkout', compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'addresses', 'shippingRates', 'shippingCost', 'selectionMode', 'hasShippingPackage', 'activeGateways'));
+        return view('store.checkout',
+            compact('cart', 'subtotal', 'tax', 'taxLabel', 'discount', 'total', 'addresses', 'shippingRates',
+                'shippingCost', 'selectionMode', 'hasShippingPackage', 'activeGateways'));
     }
 
     /**
@@ -611,7 +738,7 @@ class StoreController extends Controller
      */
     public function placeOrder(Request $request)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to proceed to checkout.');
         }
 
@@ -669,7 +796,7 @@ class StoreController extends Controller
 
         if ($request->filled('address_id')) {
             $savedAddress = auth('customer')->user()->addresses()->find($request->address_id);
-            if (! $savedAddress) {
+            if (!$savedAddress) {
                 return redirect()->back()->withErrors(['address_id' => 'Selected address is invalid.']);
             }
             $firstName = $savedAddress->first_name;
@@ -761,14 +888,15 @@ class StoreController extends Controller
         // Calculate shipping cost
         $shippingCost = 0.0;
         $shippingMethodName = null;
-        if (class_exists(\SGCart\Shipping\Models\ShippingRate::class)) {
+        if (class_exists(ShippingRate::class)) {
             $selectionMode = 'user_choice';
-            if (class_exists(\SGCart\Shipping\Models\ShippingSetting::class)) {
-                $selectionMode = \SGCart\Shipping\Models\ShippingSetting::getVal('shipping_selection_mode', 'user_choice');
+            if (class_exists(ShippingSetting::class)) {
+                $selectionMode = ShippingSetting::getVal('shipping_selection_mode',
+                    'user_choice');
             }
 
             if ($selectionMode === 'user_choice' && $request->filled('shipping_rate_id')) {
-                $shippingRate = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+                $shippingRate = ShippingRate::where('is_active', true)
                     ->where('min_order_amount', '<=', $subtotal)
                     ->find($request->shipping_rate_id);
                 if ($shippingRate) {
@@ -777,11 +905,12 @@ class StoreController extends Controller
                 }
             } else {
                 // Auto-select cheapest eligible rate
-                $eligibleRates = \SGCart\Shipping\Models\ShippingRate::where('is_active', true)
+                $eligibleRates = ShippingRate::where('is_active', true)
                     ->where('min_order_amount', '<=', $subtotal)
                     ->get();
                 $cheapestRate = $eligibleRates->map(function ($rate) use ($subtotal) {
                     $rate->calculated_cost = (float) $rate->calculateCost($subtotal);
+
                     return $rate;
                 })->sortBy('calculated_cost')->first();
 
@@ -794,7 +923,7 @@ class StoreController extends Controller
 
         $total = max(0, $subtotal + $tax - $discount + $shippingCost);
         // Generate dynamic unique order number
-        $orderNumber = 'SG' . date('ymd') . strtoupper(Str::random(4));
+        $orderNumber = 'SG'.date('ymd').strtoupper(Str::random(4));
 
         $paymentMethodName = 'Card';
         $gateway = null;
@@ -811,19 +940,20 @@ class StoreController extends Controller
         $order = null;
 
         if ($pendingOrderUlid) {
-            $order = \App\Models\Order::with('items')->where('ulid', $pendingOrderUlid)->first();
+            $order = Order::with('items')->where('ulid', $pendingOrderUlid)->first();
             if ($order) {
-                if ($order->payment_status === \App\Enums\PaymentStatus::PAID) {
+                if ($order->payment_status === PaymentStatus::PAID) {
                     $cartModel->items()->delete();
                     session()->forget('pending_checkout_order_id');
                     session()->forget('coupon_code');
                     session()->forget('coupon_discount');
+
                     return redirect()->route('store.success', ['order_id' => $order->order_number]);
                 }
 
                 // Check if cart matches
                 $cartMatches = false;
-                if ((float)$order->total === (float)$total && $order->items->count() === $cartModel->items->count()) {
+                if ((float) $order->total === (float) $total && $order->items->count() === $cartModel->items->count()) {
                     $cartMatches = true;
                     foreach ($cartModel->items as $cartItem) {
                         $orderItem = $order->items->where('product_id', $cartItem->product_id)
@@ -873,7 +1003,7 @@ class StoreController extends Controller
                 } else {
                     // Restock old order
                     foreach ($order->items as $oldItem) {
-                        $prod = \App\Models\Product::find($oldItem->product_id);
+                        $prod = Product::find($oldItem->product_id);
                         if ($prod) {
                             $prod->increment('stock', $oldItem->quantity);
                         }
@@ -889,7 +1019,7 @@ class StoreController extends Controller
         if (!$order) {
             $isNewOrder = true;
             // Create Order in Database
-            $order = \App\Models\Order::create([
+            $order = Order::create([
                 'order_number' => $orderNumber,
                 'customer_id' => auth('customer')->id(),
                 'session_id' => request()->session()->getId(),
@@ -921,7 +1051,7 @@ class StoreController extends Controller
                 'shipping_method' => $shippingMethodName,
                 'discount' => $discount,
                 'total' => $total,
-                'status' => \App\Enums\OrderStatus::NEW_ORDER,
+                'status' => OrderStatus::NEW_ORDER,
             ]);
         }
 
@@ -929,9 +1059,9 @@ class StoreController extends Controller
             $order->payments()->create([
                 'payment_method' => $paymentMethodName,
                 'amount' => $total,
-                'status' => \App\Enums\PaymentStatus::PAID,
+                'status' => PaymentStatus::PAID,
                 'card_name' => $request->card_name,
-                'card_number_masked' => '**** **** **** ' . substr(str_replace(' ', '', $request->card_num), -4),
+                'card_number_masked' => '**** **** **** '.substr(str_replace(' ', '', $request->card_num), -4),
             ]);
         } else {
             try {
@@ -939,7 +1069,7 @@ class StoreController extends Controller
             } catch (\Exception $e) {
                 // Restock items and delete the order
                 foreach ($order->items as $item) {
-                    $product = \App\Models\Product::find($item->product_id);
+                    $product = Product::find($item->product_id);
                     if ($product) {
                         $product->increment('stock', $item->quantity);
                     }
@@ -947,13 +1077,14 @@ class StoreController extends Controller
                 $order->items()->delete();
                 $order->delete();
                 session()->forget('pending_checkout_order_id');
-                return redirect()->back()->withInput()->with('error', 'Payment failed: ' . $e->getMessage());
+
+                return redirect()->back()->withInput()->with('error', 'Payment failed: '.$e->getMessage());
             }
 
             if (!$paymentResult['success']) {
                 // Restock items and delete the order
                 foreach ($order->items as $item) {
-                    $product = \App\Models\Product::find($item->product_id);
+                    $product = Product::find($item->product_id);
                     if ($product) {
                         $product->increment('stock', $item->quantity);
                     }
@@ -961,29 +1092,31 @@ class StoreController extends Controller
                 $order->items()->delete();
                 $order->delete();
                 session()->forget('pending_checkout_order_id');
-                return redirect()->back()->withInput()->with('error', $paymentResult['message'] ?? 'Payment transaction failed.');
+
+                return redirect()->back()->withInput()->with('error',
+                    $paymentResult['message'] ?? 'Payment transaction failed.');
             }
         }
 
         if ($isNewOrder) {
             // Create OrderItems in Database
-            foreach ($cartModel->items as $cartItem) {
-                $product = \App\Models\Product::find($cartItem->product_id);
+            foreach ($cart as $item) {
+                $product = Product::find($item['id']);
 
-                \App\Models\OrderItem::create([
+                OrderItem::create([
                     'order_id' => $order->id,
-                    'product_id' => $cartItem->product_id,
-                    'product_name' => $product ? $product->name : 'Unknown Product',
-                    'product_sku' => $product ? $product->sku : null,
-                    'price' => $product ? ($product->sale_price ?? $product->price) : 0,
-                    'quantity' => $cartItem->quantity,
-                    'size' => $cartItem->size,
-                    'color' => $cartItem->color,
+                    'product_id' => $item['id'],
+                    'product_name' => $item['name'] ?? ($product ? $product->name : 'Unknown Product'),
+                    'product_sku' => $item['sku'] ?? ($product ? $product->sku : null),
+                    'price' => $item['price'],
+                    'quantity' => $item['quantity'],
+                    'size' => $item['size'],
+                    'color' => $item['color'],
                 ]);
 
                 // Optional: decrement product stock
                 if ($product) {
-                    $product->decrement('stock', $cartItem->quantity);
+                    $product->decrement('stock', $item['quantity']);
                 }
             }
         }
@@ -1004,6 +1137,7 @@ class StoreController extends Controller
         }
 
         $redirectUrl = $redirectUrl ?? route('store.success', ['order_id' => $order->order_number]);
+
         return redirect($redirectUrl);
     }
 
@@ -1014,11 +1148,11 @@ class StoreController extends Controller
     {
         $orderId = $request->input('order_id', 'SGMOCKORDER');
 
-        $order = \App\Models\Order::where('order_number', $orderId)->first();
-        if ($order && $order->customer_id == auth('customer')->id()) {
-            if ($order->payment_status === \App\Enums\PaymentStatus::PAID) {
+        $order = Order::where('order_number', $orderId)->first();
+        if ($order && $order->customer_id === auth('customer')->id()) {
+            if ($order->payment_status === PaymentStatus::PAID) {
                 // Clear active cart since payment succeeded
-                $cartModel = \App\Models\Cart::getActiveCart();
+                $cartModel = Cart::getActiveCart();
                 if ($cartModel) {
                     $cartModel->items()->delete();
                 }
@@ -1036,11 +1170,11 @@ class StoreController extends Controller
      */
     public function account(Request $request, $tab = 'orders')
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to access your account.');
         }
 
-        $validTabs = ['orders', 'profile', 'address', 'wishlist', 'social-share'];
+        $validTabs = ['orders', 'profile', 'address', 'wishlist', 'social-share',notifications];
         $activeTab = in_array($tab, $validTabs) ? $tab : 'orders';
 
         // Load real orders from the database
@@ -1068,7 +1202,7 @@ class StoreController extends Controller
 
         $wishlistIds = session()->get('wishlist', []);
         $allProducts = self::getProducts();
-        $wishlist = array_filter($allProducts, fn ($p) => in_array($p['id'], $wishlistIds));
+        $wishlist = array_filter($allProducts, fn($p) => in_array($p['id'], $wishlistIds));
 
         $addresses = auth('customer')->user()->addresses;
 
@@ -1086,6 +1220,84 @@ class StoreController extends Controller
         }
 
         return view('store.account', compact('orders', 'wishlist', 'activeTab', 'addresses', 'socialPosts', 'followers', 'following'));
+        $notifications = [];
+        if ($activeTab === 'notifications') {
+            $notifications = auth('customer')->user()->notifications()->paginate(10)->withQueryString();
+        }
+
+        return view('store.account', compact('orders', 'wishlist', 'activeTab', 'addresses', 'notifications'));
+    }
+
+    /**
+     * Fetch latest notifications for the dropdown (JSON).
+     */
+    public function getNotificationsJson(Request $request)
+    {
+        if (!auth('customer')->check()) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
+        $customer = auth('customer')->user();
+        $notifications = $customer->notifications()->latest()->take(10)->get()->map(function ($notification) {
+            return [
+                'id' => $notification->id,
+                'title' => $notification->data['title'] ?? 'Notification',
+                'message' => $notification->data['message'] ?? '',
+                'url' => $notification->data['url'] ?? '#',
+                'type' => $notification->data['type'] ?? 'info',
+                'icon' => $notification->data['icon'] ?? 'fa-circle-info',
+                'created_at' => $notification->created_at->diffForHumans(),
+                'read_at' => $notification->read_at,
+            ];
+        });
+
+        return response()->json([
+            'unread_count' => $customer->unreadNotifications()->count(),
+            'notifications' => $notifications,
+        ]);
+    }
+
+    /**
+     * Mark a customer notification as read.
+     */
+    public function markNotificationRead(Request $request, $id)
+    {
+        if (!auth('customer')->check()) {
+            return $request->ajax()
+                ? response()->json(['error' => 'Unauthenticated'], 401)
+                : redirect()->route('store.login');
+        }
+
+        $notification = auth('customer')->user()->unreadNotifications()->where('id', $id)->first();
+        if ($notification) {
+            $notification->markAsRead();
+        }
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->back()->with('success', 'Notification marked as read.');
+    }
+
+    /**
+     * Mark all customer notifications as read.
+     */
+    public function markAllNotificationsRead(Request $request)
+    {
+        if (!auth('customer')->check()) {
+            return $request->ajax()
+                ? response()->json(['error' => 'Unauthenticated'], 401)
+                : redirect()->route('store.login');
+        }
+
+        auth('customer')->user()->unreadNotifications->markAsRead();
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->back()->with('success', 'All notifications marked as read.');
     }
 
     /**
@@ -1093,7 +1305,7 @@ class StoreController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to update your profile.');
         }
 
@@ -1126,8 +1338,8 @@ class StoreController extends Controller
         ];
         $messages = [];
 
-        $addingEmail = ! $customer->email;
-        $addingPhone = ! $customer->phone_no;
+        $addingEmail = !$customer->email;
+        $addingPhone = !$customer->phone_no;
 
         if ($addingEmail) {
             $rules['email'] = ['nullable', 'string', 'email', 'max:255', 'unique:customers,email'];
@@ -1145,11 +1357,13 @@ class StoreController extends Controller
                     }
                     if (!str_starts_with($value, '+')) {
                         $fail('The phone number must include a country code starting with +.');
+
                         return;
                     }
                     $digits = substr($value, 1);
                     if (!ctype_digit($digits)) {
                         $fail('The phone number must contain only digits after the + country code.');
+
                         return;
                     }
                     if (strlen($digits) < 7 || strlen($digits) > 15) {
@@ -1158,6 +1372,7 @@ class StoreController extends Controller
                         } else {
                             $fail('The phone number must be at least 7 digits.');
                         }
+
                         return;
                     }
                 },
@@ -1208,7 +1423,7 @@ class StoreController extends Controller
             $changes['phone_no'] = $customer->phone_no;
         }
 
-        if (! empty($changes)) {
+        if (!empty($changes)) {
             app(LogActivity::class)->capture(
                 description: 'Customer profile updated',
                 event: 'profile.update',
@@ -1220,11 +1435,13 @@ class StoreController extends Controller
         app(ManageOtp::class)->generate($customer, ManageOtp::REASON_PROFILE_UPDATE);
 
         if ($emailAdded) {
-            return redirect()->route('store.otp.verify')->with('success', 'Profile updated. Please verify your new email address.');
+            return redirect()->route('store.otp.verify')->with('success',
+                'Profile updated. Please verify your new email address.');
         }
 
         if ($phoneAdded) {
-            return redirect()->route('store.otp.verify')->with('success', 'Profile updated. Please verify your new phone number.');
+            return redirect()->route('store.otp.verify')->with('success',
+                'Profile updated. Please verify your new phone number.');
         }
 
         return redirect()->route('store.account', 'profile')->with('success', 'Profile details updated successfully!');
@@ -1260,7 +1477,7 @@ class StoreController extends Controller
      */
     public function guestWishlist()
     {
-        if (\Illuminate\Support\Facades\Auth::guard('customer')->check()) {
+        if (Auth::guard('customer')->check()) {
             return redirect()->route('store.account', 'wishlist');
         }
 
@@ -1352,24 +1569,21 @@ class StoreController extends Controller
                 }
             } elseif ($allWordsInName) {
                 $score = 75;
-            }
-            // 2. Check SKU
+            } // 2. Check SKU
             elseif (str_contains($sku, $query) || $allWordsInSku) {
                 if ($sku === $query) {
                     $score = 60;
                 } else {
                     $score = 50;
                 }
-            }
-            // 3. Check Category
+            } // 3. Check Category
             elseif (str_contains($cat, $query) || $allWordsInCat) {
                 if ($cat === $query) {
                     $score = 40;
                 } else {
                     $score = 30;
                 }
-            }
-            // 4. Check Search Terms / Tags
+            } // 4. Check Search Terms / Tags
             elseif ($tagMatch) {
                 $score = 20;
             } elseif ($allWordsInTags) {
@@ -1377,11 +1591,12 @@ class StoreController extends Controller
             }
 
             $p['_search_score'] = $score;
+
             return $p;
         })
-        ->filter(fn($p) => $p['_search_score'] > 0)
-        ->sortByDesc('_search_score')
-        ->values();
+            ->filter(fn($p) => $p['_search_score'] > 0)
+            ->sortByDesc('_search_score')
+            ->values();
     }
 
     /**
@@ -1389,6 +1604,15 @@ class StoreController extends Controller
      */
     public function searchLive(Request $request)
     {
+        try {
+            $request->validate(['q' => 'max:150']);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Search query is too long (maximum 150 characters).',
+                'errors' => $e->errors(),
+            ], 422);
+        }
         $query = strtolower($request->input('q', ''));
         if (empty($query)) {
             return response()->json([]);
@@ -1396,7 +1620,7 @@ class StoreController extends Controller
 
         $products = collect(self::getProducts());
         $results = self::prioritizeSearch($products, $query)
-            ->map(fn ($p) => [
+            ->map(fn($p) => [
                 'id' => $p['id'],
                 'name' => $p['name'],
                 'price' => (float) $p['price'],
@@ -1413,7 +1637,7 @@ class StoreController extends Controller
      */
     public function addAddress(Request $request)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to manage your addresses.');
         }
 
@@ -1489,7 +1713,7 @@ class StoreController extends Controller
      */
     public function deleteAddress(Request $request, $id)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to manage your addresses.');
         }
 
@@ -1522,7 +1746,7 @@ class StoreController extends Controller
      */
     public function updateAddress(Request $request, $id)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to manage your addresses.');
         }
 
@@ -1557,7 +1781,7 @@ class StoreController extends Controller
         $request->validate($rules);
 
         $address = auth('customer')->user()->addresses()->find($id);
-        if (! $address) {
+        if (!$address) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => 'Address not found.'], 404);
             }
@@ -1600,74 +1824,16 @@ class StoreController extends Controller
     }
 
     /**
-     * Get order details for modal view.
-     */
-    public function getOrderDetail($ulid)
-    {
-        if (! auth('customer')->check()) {
-            return response()->json(['success' => false, 'message' => 'Please log in to view order details.'], 401);
-        }
-
-        $order = auth('customer')->user()->orders()
-            ->with(['items.product'])
-            ->where('ulid', $ulid)
-            ->first();
-
-        if (! $order) {
-            return response()->json(['success' => false, 'message' => 'Order not found.'], 404);
-        }
-
-        // Format for JSON response
-        $items = [];
-        foreach ($order->items as $item) {
-            $items[] = [
-                'name' => $item->product_name,
-                'sku' => $item->product_sku,
-                'price' => (float) $item->price,
-                'quantity' => (int) $item->quantity,
-                'size' => $item->size,
-                'color' => $item->color,
-                'img' => $item->product && $item->product->image
-                    ? Storage::url($item->product->image)
-                    : asset('images/no-image.svg'),
-            ];
-        }
-
-        return response()->json([
-            'success' => true,
-            'order' => [
-                'order_number' => $order->order_number,
-                'date' => $order->created_at->format('M d, Y h:i A'),
-                'status' => $order->status->value ?? $order->status,
-                'payment_status' => $order->payment_status->value ?? $order->payment_status,
-                'payment_method' => $order->payment_method,
-                'card_number_masked' => $order->card_number_masked,
-                'recipient_name' => $order->first_name.' '.$order->last_name,
-                'address' => $order->address,
-                'city' => $order->city,
-                'state' => $order->state,
-                'zip' => $order->zip,
-                'country' => $order->country,
-                'subtotal' => (float) $order->subtotal,
-                'discount' => (float) $order->discount,
-                'tax' => (float) $order->tax,
-                'total' => (float) $order->total,
-                'items' => $items,
-            ],
-        ]);
-    }
-
-    /**
      * View a single order in a dedicated storefront page.
      */
     public function viewOrder($ulid)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to view order details.');
         }
 
         $relations = ['items.product'];
-        if (class_exists(\SGCart\CrmTickets\Models\Ticket::class)) {
+        if (class_exists(Ticket::class)) {
             $relations[] = 'tickets.status';
         }
 
@@ -1676,7 +1842,7 @@ class StoreController extends Controller
             ->where('ulid', $ulid)
             ->first();
 
-        if (! $order) {
+        if (!$order) {
             return redirect()->route('store.account', 'orders')->with('error', 'Order not found.');
         }
 
@@ -1688,7 +1854,7 @@ class StoreController extends Controller
      */
     public function downloadInvoice($ulid)
     {
-        if (! auth('customer')->check()) {
+        if (!auth('customer')->check()) {
             return redirect()->route('store.login')->with('error', 'Please log in to view/download invoices.');
         }
 
@@ -1697,7 +1863,7 @@ class StoreController extends Controller
             ->where('ulid', $ulid)
             ->first();
 
-        if (! $order) {
+        if (!$order) {
             return redirect()->route('store.account', 'orders')->with('error', 'Order not found.');
         }
 

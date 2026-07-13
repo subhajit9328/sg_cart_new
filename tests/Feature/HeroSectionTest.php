@@ -253,6 +253,183 @@ class HeroSectionTest extends TestCase
     }
 
     /**
+     * Test admin can upload three responsive images for a single slide.
+     */
+    public function test_admin_can_upload_responsive_images(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        if (class_exists(\Spatie\Permission\Models\Permission::class)) {
+            $admin->givePermissionTo('manage hero section');
+        }
+
+        $desktop = UploadedFile::fake()->image('desktop.jpg');
+        $tablet = UploadedFile::fake()->image('tablet.jpg');
+        $mobile = UploadedFile::fake()->image('mobile.jpg');
+
+        $response = $this->actingAs($admin)
+            ->post(route('admin.hero.settings.update'), [
+                'new_desktop' => [0 => $desktop],
+                'new_tablet' => [0 => $tablet],
+                'new_mobile' => [0 => $mobile],
+                'new_urls' => [0 => 'https://google.com'],
+                'sort_order' => [],
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertEquals(1, HeroImage::count());
+        $slide = HeroImage::first();
+        $this->assertEquals('https://google.com', $slide->url);
+        
+        Storage::disk('public')->assertExists($slide->image_desktop);
+        Storage::disk('public')->assertExists($slide->image_tablet);
+        Storage::disk('public')->assertExists($slide->image_mobile);
+        $this->assertEquals($slide->image_desktop, $slide->image_path);
+    }
+
+    /**
+     * Test admin can save a slide with only one image out of the three options.
+     */
+    public function test_admin_can_upload_single_responsive_image(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        if (class_exists(\Spatie\Permission\Models\Permission::class)) {
+            $admin->givePermissionTo('manage hero section');
+        }
+
+        $mobile = UploadedFile::fake()->image('mobile.jpg');
+
+        $response = $this->actingAs($admin)
+            ->post(route('admin.hero.settings.update'), [
+                'new_mobile' => [0 => $mobile],
+                'new_urls' => [0 => 'https://google.com'],
+                'sort_order' => [],
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertEquals(1, HeroImage::count());
+        $slide = HeroImage::first();
+        $this->assertNull($slide->image_desktop);
+        $this->assertNull($slide->image_tablet);
+        Storage::disk('public')->assertExists($slide->image_mobile);
+        $this->assertEquals($slide->image_mobile, $slide->image_path);
+    }
+
+    /**
+     * Test admin can replace responsive images on an existing slide.
+     */
+    public function test_admin_can_replace_responsive_images(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        if (class_exists(\Spatie\Permission\Models\Permission::class)) {
+            $admin->givePermissionTo('manage hero section');
+        }
+
+        // Pre-create slide with Desktop, Tablet, Mobile images
+        $desktopPath = Storage::disk('public')->putFile('hero', UploadedFile::fake()->image('old_desktop.jpg'));
+        $tabletPath = Storage::disk('public')->putFile('hero', UploadedFile::fake()->image('old_tablet.jpg'));
+        $mobilePath = Storage::disk('public')->putFile('hero', UploadedFile::fake()->image('old_mobile.jpg'));
+
+        $slide = HeroImage::create([
+            'image_desktop' => $desktopPath,
+            'image_tablet' => $tabletPath,
+            'image_mobile' => $mobilePath,
+            'image_path' => $desktopPath,
+            'sort_order' => 1,
+        ]);
+
+        Storage::disk('public')->assertExists($desktopPath);
+        Storage::disk('public')->assertExists($tabletPath);
+        Storage::disk('public')->assertExists($mobilePath);
+
+        $newTablet = UploadedFile::fake()->image('new_tablet.jpg');
+
+        $response = $this->actingAs($admin)
+            ->post(route('admin.hero.settings.update'), [
+                'replace_tablet' => [
+                    $slide->id => $newTablet
+                ],
+                'sort_order' => [
+                    $slide->id => 1
+                ],
+            ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $updated = HeroImage::findOrFail($slide->id);
+        Storage::disk('public')->assertExists($updated->image_desktop);
+        Storage::disk('public')->assertMissing($tabletPath);
+        Storage::disk('public')->assertExists($updated->image_tablet);
+        Storage::disk('public')->assertExists($updated->image_mobile);
+    }
+
+    /**
+     * Test deleting a slide deletes all device images associated with it.
+     */
+    public function test_deleting_slide_deletes_all_responsive_images(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::create([
+            'name' => 'Admin User',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        if (class_exists(\Spatie\Permission\Models\Permission::class)) {
+            $admin->givePermissionTo('manage hero section');
+        }
+
+        $desktopPath = Storage::disk('public')->putFile('hero', UploadedFile::fake()->image('desktop.jpg'));
+        $tabletPath = Storage::disk('public')->putFile('hero', UploadedFile::fake()->image('tablet.jpg'));
+        $mobilePath = Storage::disk('public')->putFile('hero', UploadedFile::fake()->image('mobile.jpg'));
+
+        $slide = HeroImage::create([
+            'image_desktop' => $desktopPath,
+            'image_tablet' => $tabletPath,
+            'image_mobile' => $mobilePath,
+            'image_path' => $desktopPath,
+            'sort_order' => 1,
+        ]);
+
+        Storage::disk('public')->assertExists($desktopPath);
+        Storage::disk('public')->assertExists($tabletPath);
+        Storage::disk('public')->assertExists($mobilePath);
+
+        $response = $this->actingAs($admin)
+            ->delete(route('admin.hero.settings.delete-image', $slide->id));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertEquals(0, HeroImage::count());
+        Storage::disk('public')->assertMissing($desktopPath);
+        Storage::disk('public')->assertMissing($tabletPath);
+        Storage::disk('public')->assertMissing($mobilePath);
+    }
+
+    /**
      * Test storefront home page variables load.
      */
     public function test_home_page_loads_hero_settings_variables(): void

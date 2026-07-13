@@ -8,7 +8,7 @@
         <h2 class="font-display font-extrabold text-2xl text-slate-800 text-center mb-2">Create Account</h2>
         <p class="text-xs text-slate-400 text-center mb-8">Join us to manage orders, addresses, and wishlist items.</p>
 
-        <form action="{{ route('store.register.submit') }}" method="POST" class="flex flex-col gap-4" novalidate>
+        <form id="register_form" action="{{ route('store.register.submit') }}" method="POST" class="flex flex-col gap-4" novalidate>
             @csrf
 
             <div class="flex flex-col gap-1">
@@ -52,7 +52,7 @@
 @section('scripts')
 <script>
 $(document).ready(function() {
-    const $form = $('form');
+    const $form = $('#register_form');
     const $name = $('#name');
     const $emailOrPhone = $('#email_or_phone');
     const $password = $('#password');

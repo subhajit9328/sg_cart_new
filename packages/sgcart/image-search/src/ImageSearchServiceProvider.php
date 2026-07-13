@@ -70,6 +70,8 @@ class ImageSearchServiceProvider extends ServiceProvider
                 __DIR__.'/../database/migrations/create_image_search_settings_table.php' => $this->getMigrationFileName('create_image_search_settings_table.php', 1),
             ], 'image-search-migrations');
         }
+
+        $this->autoInstall();
     }
 
     /**
@@ -82,5 +84,42 @@ class ImageSearchServiceProvider extends ServiceProvider
         $migrations = $this->app->make('files')->glob(database_path("migrations/*_{$baseName}.php"));
 
         return reset($migrations) ?: database_path("migrations/{$timestamp}_{$file}");
+    }
+
+    /**
+     * Programmatically seeds Spatie permissions for image search config.
+     */
+    protected function autoInstall(): void
+    {
+        try {
+            if ($this->app->runningInConsole()) {
+                $command = $_SERVER['argv'][1] ?? null;
+                if (in_array($command, [
+                    'image-search:uninstall',
+                    'migrate:rollback',
+                    'migrate:reset',
+                    'migrate:refresh',
+                ]) || (is_string($command) && str_contains($command, 'uninstall'))) {
+                    return;
+                }
+            }
+
+            // Seed Spatie manage permission for admin panel
+            if (class_exists(\Spatie\Permission\Models\Permission::class)) {
+                $permission = \Spatie\Permission\Models\Permission::firstOrCreate([
+                    'name' => 'manage image search config',
+                    'guard_name' => 'web'
+                ]);
+
+                $roles = \Spatie\Permission\Models\Role::whereIn('name', ['Super Admin', 'super-admin'])->get();
+                foreach ($roles as $role) {
+                    if (!$role->hasPermissionTo($permission)) {
+                        $role->givePermissionTo($permission);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Silence exceptions during early boot phase or when database is not ready
+        }
     }
 }

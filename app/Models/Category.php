@@ -64,6 +64,19 @@ class Category extends Model
         return $query->where('is_active', true);
     }
 
+    /**
+     * Scope a query to include the category and all its children.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int|string $parentId
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeChildrens($query, $parentId)
+    {
+        return $query->where('id', $parentId)->orWhere('parent_id', $parentId);
+    }
+
+
     protected static function boot(): void
     {
         parent::boot();

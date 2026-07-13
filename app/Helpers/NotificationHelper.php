@@ -60,6 +60,23 @@ class NotificationHelper
     }
 
     /**
+     * Dispatch notification to a specific Customer.
+     */
+    public static function sendToCustomer(
+        $customerOrId,
+        string $title,
+        string $message,
+        ?string $url = null,
+        string $type = 'info',
+        string $icon = 'fa-circle-info'
+    ): void {
+        $customer = $customerOrId instanceof \App\Models\Customer ? $customerOrId : \App\Models\Customer::find($customerOrId);
+        if ($customer) {
+            $customer->notify(new GenericNotification($title, $message, $url, $type, $icon));
+        }
+    }
+
+    /**
      * Mark a specific notification as read.
      */
     public static function markAsRead(string $notificationId): bool

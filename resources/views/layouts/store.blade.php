@@ -31,7 +31,11 @@
 <body class="storefront">
 
 @php
-    $navCategories = collect(App\Http\Controllers\StoreController::getProducts())->pluck('cat')->unique()->values();
+    $navCategories = \App\Models\Category::parents()
+                ->active()
+                ->orderBy('sort_order')
+                ->take(5)
+                ->pluck('name');
     $cartCount = \App\Models\Cart::getActiveCart()->items->sum('quantity');
 @endphp
 
@@ -156,7 +160,7 @@
 
 <header id="siteHeader">
     <!-- ROW 1: Main Header -->
-    <div class="header-main bg-[#0a0a0d] transition-all duration-300" id="headerMain">
+    <div class="header-main z-50 bg-[#0a0a0d] transition-all duration-300" id="headerMain">
         <div class="header-main-inner">
 
             <!-- Hamburger Menu Button (Mobile only) -->
@@ -176,7 +180,7 @@
                     <input type="text" name="search" id="navSearchInput"
                            placeholder="Search products, brands and more…"
                            autocomplete="off"
-                           value="{{ request('search') }}"
+                           value="{{ old('search', request('search')) }}"
                            class="header-search-input"/>
                     @if(request()->filled('category'))
                         @foreach((array)request('category') as $cat)
@@ -196,7 +200,7 @@
                         <i class="fa-solid fa-microphone"></i>
                     </button>
                     @if(class_exists(\SGCart\ImageSearch\ImageSearchServiceProvider::class) && config('image-search.is_active', true))
-                    <button type="button" class="header-search-camera-btn" id="cameraSearchBtn" title="Search by Image">
+                    <button type="button" class="header-search-camera-btn " id="cameraSearchBtn" title="Search by Image">
                         <i class="fa-solid fa-camera"></i>
                     </button>
                     <input type="file" id="cameraSearchInput" accept="image/*" style="display:none;" />
@@ -206,6 +210,10 @@
                     </button>
                 </form>
                 <div class="nav-search-dropdown" id="navSearchDropdown"></div>
+                <div class="search-tooltip" id="searchTooltip">
+                    Please enter a search term
+                    <div class="tooltip-arrow"></div>
+                </div>
             </div>
 
             <!-- Right Actions -->
@@ -214,6 +222,11 @@
                 <button type="button" id="themeToggleBtn" class="header-theme-btn" title="Toggle Dark/Light Mode">
                     <i class="fa-solid fa-moon header-theme-icon" id="themeIcon"></i>
                 </button>
+
+                <!-- Notifications -->
+                @auth('customer')
+                <x-notification-dropdown :user="true" />
+                @endauth
 
                 <!-- Wishlist -->
                 <a href="{{ Auth::guard('customer')->check() ? route('store.account', 'wishlist') : route('store.wishlist') }}" class="header-wishlist-btn" title="Wishlist">
@@ -254,7 +267,7 @@
     </div>
 
     <!-- ROW 2: Sub Navigation Bar -->
-    <div class="header-sub bg-[#0e0c12] transition-all duration-300" id="headerSub">
+    <div class="header-sub z-40 bg-[#0e0c12] transition-all duration-300" id="headerSub">
         <div class="header-sub-inner">
 
             <!-- Navigation Links -->
@@ -644,17 +657,29 @@
             }
 
             debounceTimer = setTimeout(() => {
+                let responseStatus;
                 fetch(`/search-live?q=${encodeURIComponent(query)}`, {
                     headers: {
+                        'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    responseStatus = response.status;
+                    return response.json();
+                })
                 .then(data => {
                     if (searchButton) {
                         searchButton.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i>';
                     }
-                    if (data.length === 0) {
+                    if (responseStatus === 422) {
+                        searchDropdown.innerHTML = `
+                            <div class="search-no-results">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500 mb-1"></i>
+                                <span>${data.message || 'Search query is too long.'}</span>
+                            </div>
+                        `;
+                    } else if (responseStatus !== 200 || !data || data.length === 0) {
                         searchDropdown.innerHTML = `
                             <div class="search-no-results">
                                 <i class="fa-solid fa-magnifying-glass mb-1"></i>
@@ -899,6 +924,49 @@
                     window.location.search = urlParams.toString();
                 } else {
                     searchInput.focus();
+                }
+            });
+        }
+    })();
+
+    // Search Form Submit Validation Feature
+    (function() {
+        const searchForm = document.getElementById('navSearchForm');
+        const searchInput = document.getElementById('navSearchInput');
+        const searchTooltip = document.getElementById('searchTooltip');
+
+        if (searchForm && searchInput) {
+            searchForm.addEventListener('submit', function(e) {
+                if (searchInput.value.trim() === '') {
+                    e.preventDefault();
+                    searchForm.classList.add('search-error');
+
+                    // Trigger shake animation
+                    searchForm.classList.remove('shake');
+                    void searchForm.offsetWidth; // Force reflow to reset CSS animation
+                    searchForm.classList.add('shake');
+
+                    if (searchTooltip) {
+                        searchTooltip.classList.add('show');
+                    }
+
+                    searchInput.focus();
+                }
+            });
+
+            const hideError = function() {
+                searchForm.classList.remove('search-error', 'shake');
+                if (searchTooltip) {
+                    searchTooltip.classList.remove('show');
+                }
+            };
+
+            searchInput.addEventListener('input', hideError);
+
+            document.addEventListener('click', function(e) {
+                const searchContainer = document.querySelector('.header-search-wrap');
+                if (searchContainer && !searchContainer.contains(e.target)) {
+                    hideError();
                 }
             });
         }

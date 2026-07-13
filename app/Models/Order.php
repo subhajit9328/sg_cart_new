@@ -66,7 +66,26 @@ class Order extends Model
      */
     public function getPaymentMethodAttribute()
     {
-        return $this->payments()->latest()->first()?->payment_method ?? 'None';
+        $latestPayment = $this->payments()->latest()->first();
+        if ($latestPayment) {
+            return $latestPayment->payment_method;
+        }
+
+        if (request() && request()->has('payment_method')) {
+            $pm = request()->input('payment_method');
+            if (app()->bound('payment.manager')) {
+                $gateway = app('payment.manager')->getGateway($pm);
+                if ($gateway) {
+                    return $gateway->getName();
+                }
+            }
+            if ($pm === 'cod') {
+                return 'Cash on Delivery';
+            }
+            return ucfirst($pm);
+        }
+
+        return 'None';
     }
 
     /**

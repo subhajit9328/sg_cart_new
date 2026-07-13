@@ -38,9 +38,9 @@
 
         <!-- Parent Category -->
         <div>
-            <x-select2 
-                name="parent_id" 
-                id="parent_id" 
+            <x-select2
+                name="parent_id"
+                id="parent_id"
                 label="Parent Category"
                 placeholder="— None (Top-level) —"
                 :options="$parents"
@@ -69,7 +69,7 @@
             <!-- Sort Order -->
             <div>
                 <label for="sort_order" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Sort Order</label>
-                <input type="number" name="sort_order" id="sort_order" value="{{ old('sort_order', 0) }}"
+                <input type="number" min="0" name="sort_order" id="sort_order" value="{{ old('sort_order', 0) }}"
                     class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
             </div>
 

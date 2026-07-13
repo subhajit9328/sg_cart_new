@@ -79,7 +79,7 @@
         {{-- ── Basic Info Section ── --}}
         <div class="space-y-4">
             <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">Basic Information</h3>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label for="name" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Product Name <span class="text-rose-600">*</span></label>
@@ -152,7 +152,7 @@
         {{-- ── Pricing & Inventory Section ── --}}
         <div class="space-y-4">
             <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">Pricing & Inventory</h3>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <label for="price" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Price (₹) <span class="text-rose-600">*</span></label>
@@ -202,7 +202,7 @@
                     <select name="status" id="status"
                         class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3 text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-blue-500 transition-all">
                         @foreach(['draft','active','inactive'] as $s)
-                            <option value="{{ $s }}" {{ old('status', $product->status) == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
+                            <option value="{{ $s }}" {{ old('status', $product->status->value) == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -222,26 +222,26 @@
             {{-- ── Product Image Section ── --}}
         <div class="space-y-4">
             <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">Product Images</h3>
-            
+
             <div class="p-5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 rounded-xl space-y-4">
                 <p class="text-xs text-slate-500 dark:text-slate-400">Manage product images below. Choose a default image using the radio button on the image card.</p>
-                
+
                 <div id="imageGallery" class="flex flex-wrap gap-4">
                     <!-- Existing Images -->
                     @if($product->images && $product->images->count() > 0)
                         @foreach($product->images as $img)
                             <div class="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm w-32 h-32 bg-slate-950 flex flex-col justify-between group">
                                 <img src="{{ Storage::url($img->image_path) }}" class="w-full h-full object-cover absolute inset-0">
-                                
+
                                 <!-- Delete Button -->
                                 <div class="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button type="button" onclick="showConfirm('Are you sure you want to delete this product image?', () => document.getElementById('deleteImageForm_{{ $img->id }}').submit(), 'Delete Image')" 
-                                        class="text-rose-500 hover:text-rose-700 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full p-1.5 transition-colors outline-none cursor-pointer flex items-center justify-center w-7 h-7 shadow-sm" 
+                                    <button type="button" onclick="showConfirm('Are you sure you want to delete this product image?', () => document.getElementById('deleteImageForm_{{ $img->id }}').submit(), 'Delete Image')"
+                                        class="text-rose-500 hover:text-rose-700 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full p-1.5 transition-colors outline-none cursor-pointer flex items-center justify-center w-7 h-7 shadow-sm"
                                         title="Delete Image">
                                         <i class="fa-solid fa-trash-can text-xs"></i>
                                     </button>
                                 </div>
-                                
+
                                 <!-- Default Selector -->
                                 <div class="absolute bottom-2 left-2 right-2 bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-lg p-1.5 flex items-center gap-1.5 shadow-sm z-10">
                                     <input type="radio" name="default_image" value="existing_{{ $img->id }}" id="radio_existing_{{ $img->id }}" {{ $img->is_default ? 'checked' : '' }} class="accent-blue-600 cursor-pointer">
@@ -250,7 +250,7 @@
                             </div>
                         @endforeach
                     @endif
-                    
+
                     <!-- Add Image Button Card -->
                     <div id="addImageCard" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-xl w-32 h-32 flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-slate-100/50 dark:hover:bg-slate-800/30 gap-1.5 group select-none" onclick="triggerAddImage()">
                         <i class="fa-solid fa-circle-plus text-2xl text-slate-400 dark:text-slate-600 group-hover:text-blue-500 transition-colors"></i>
@@ -258,7 +258,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div id="hiddenInputsContainer" class="hidden"></div>
         </div>
         </div> {{-- Close detailsTabContent --}}
@@ -267,7 +267,7 @@
             {{-- ── SEO Metadata Section ── --}}
             <div class="space-y-4">
                 <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">SEO Metadata</h3>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label for="meta_title" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Meta Title</label>
@@ -317,7 +317,7 @@
             <div class="space-y-4">
                 <h3 class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider pb-1 border-b border-slate-100 dark:border-slate-800">Related Products</h3>
                 <p class="text-xs text-slate-500 dark:text-slate-400">Search and select products below to link them as related products. They will appear as cards in the grid below.</p>
-                
+
                 <div>
                     <label for="related_product_search" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Search Products</label>
                     <select id="related_product_search" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3 text-sm text-slate-700 dark:text-slate-300 outline-none">
@@ -470,7 +470,7 @@
         <div class="space-y-6">
             <div>
                 <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Search tags are used to match this product on the storefront. The search order checks: 
+                    Search tags are used to match this product on the storefront. The search order checks:
                     <strong class="text-slate-800 dark:text-slate-200">Product Name &rarr; SKU &rarr; Category &rarr; Search Tags</strong>.
                 </p>
             </div>
@@ -490,7 +490,7 @@
             <div class="space-y-3">
                 <h4 class="text-sm font-bold text-slate-700 dark:text-slate-350">Add Tag Manually</h4>
                 <form id="addTagForm" class="flex gap-2">
-                    <input type="text" id="newTagInput" placeholder="e.g. navy blue shirt" required 
+                    <input type="text" id="newTagInput" placeholder="e.g. navy blue shirt" required
                         class="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 rounded-lg py-2 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100"/>
                     <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-slate-750 dark:hover:bg-slate-700 text-white rounded-lg font-semibold text-sm transition-all cursor-pointer border-none">
                         <i class="fa-solid fa-plus"></i> Add Tag
@@ -525,7 +525,7 @@ let uniqueIdCounter = 0;
 function triggerAddImage() {
     uniqueIdCounter++;
     const id = 'img_' + uniqueIdCounter;
-    
+
     // Create dynamic file input
     const input = document.createElement('input');
     input.type = 'file';
@@ -533,14 +533,14 @@ function triggerAddImage() {
     input.accept = 'image/*';
     input.id = 'input_' + id;
     input.className = 'hidden';
-    
+
     input.addEventListener('change', function() {
         if (this.files && this.files[0]) {
             const reader = new FileReader();
             reader.onload = e => {
                 const gallery = document.getElementById('imageGallery');
                 const addCard = document.getElementById('addImageCard');
-                
+
                 const cardHtml = `
                     <div class="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm w-32 h-32 bg-slate-950 flex flex-col justify-between group" id="preview_card_${id}">
                         <img src="${e.target.result}" class="w-full h-full object-cover absolute inset-0">
@@ -556,7 +556,7 @@ function triggerAddImage() {
                     </div>
                 `;
                 addCard.insertAdjacentHTML('beforebegin', cardHtml);
-                
+
                 // Automatically check if it's the first one added and no default is selected
                 const checkedRadio = document.querySelector('input[name="default_image"]:checked');
                 if (!checkedRadio) {
@@ -568,7 +568,7 @@ function triggerAddImage() {
             input.remove();
         }
     });
-    
+
     document.getElementById('hiddenInputsContainer').appendChild(input);
     input.click();
 }
@@ -576,7 +576,7 @@ function triggerAddImage() {
 function removeNewImage(id) {
     document.getElementById('preview_card_' + id).remove();
     document.getElementById('input_' + id).remove();
-    
+
     const checkedRadio = document.querySelector('input[name="default_image"]:checked');
     if (!checkedRadio) {
         const firstRadio = document.querySelector('input[name="default_image"]');
@@ -668,7 +668,7 @@ function removeNewImage(id) {
     window.loadVariantsGrid = function() {
         const $gridContainer = $('#variantsGridContainer');
         const loader = document.getElementById('variantsLoader');
-        
+
         loader.classList.remove('hidden');
         $gridContainer.empty();
 
@@ -723,7 +723,7 @@ function removeNewImage(id) {
                 const img = $(state.element).data('img');
                 const sku = $(state.element).data('sku');
                 const cat = $(state.element).data('cat');
-                
+
                 const $state = $(
                     `<div class="flex items-center gap-3">
                         <img src="${img}" class="w-8 h-8 rounded object-cover" />
@@ -754,25 +754,25 @@ function removeNewImage(id) {
                 const data = e.params.data;
                 const element = data.element;
                 if (!element) return;
-                
+
                 const id = parseInt(data.id);
                 const name = $(element).data('name');
                 const sku = $(element).data('sku');
                 const price = $(element).data('price');
                 const cat = $(element).data('cat');
                 const img = $(element).data('img');
-                
+
                 addRelatedProduct(id, { name, sku, price, cat, img });
-                
+
                 $(this).val('').trigger('change');
             });
 
             window.addRelatedProduct = function(id, data) {
                 if (selectedRelatedIds.has(id)) return;
                 selectedRelatedIds.add(id);
-                
+
                 updateHiddenRelatedSelect();
-                
+
                 const cardHtml = `
                     <div class="relative group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300" id="related_card_${id}">
                         <div class="aspect-square bg-slate-50 dark:bg-slate-900/50 relative overflow-hidden flex items-center justify-center">
@@ -847,7 +847,7 @@ function removeNewImage(id) {
 
             // Set Title Preview
             $('#seo-preview-title').text(metaTitle ? metaTitle : name);
-            
+
             // Set Slug/URL Preview
             $('#seo-preview-slug-text').text(slug);
 
@@ -880,7 +880,7 @@ function removeNewImage(id) {
         $('#name, #slug, #meta_title, #meta_description, #short_description, #description').on('input change', function() {
             updateSeoPreview();
         });
-        
+
         // Initialize SEO Preview
         updateSeoPreview();
 
@@ -1027,7 +1027,7 @@ function removeNewImage(id) {
                 </button>
             </div>
         `);
-        
+
         $('#generateTagsBtnEmpty').on('click', function() {
             $('#generateTagsBtn').click();
         });

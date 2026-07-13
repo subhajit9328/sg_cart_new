@@ -97,10 +97,17 @@ class ImageSearchController extends Controller
 
             // If keywords is empty and object_type is null then show no products found
             if (empty($keywords) && is_null($objectType)) {
-                $allCategories = collect(StoreController::getProducts())->pluck('cat')->unique()->values()->toArray();
-                if (empty($allCategories)) {
-                    $allCategories = ['Women', 'Men', 'Accessories', 'Footwear', 'Beauty'];
+                $parents = Category::parents()->active()->take(5)->orderBy('sort_order')->get();
+                $sidebarCategoriesMap = [];
+                foreach ($parents as $parent) {
+                    $children = $parent->children()->active()->orderBy('sort_order')->get();
+                    $sidebarCategoriesMap[$parent->name] = [
+                        'name' => $parent->name,
+                        'id' => $parent->id,
+                        'children' => $children->map(fn($c) => ['name' => $c->name, 'id' => $c->id])->toArray()
+                    ];
                 }
+                $sidebarCategories = array_values($sidebarCategoriesMap);
 
                 $paginatedProducts = new \Illuminate\Pagination\LengthAwarePaginator(
                     collect(),
@@ -115,9 +122,11 @@ class ImageSearchController extends Controller
 
                 return view('store.shop', [
                     'products' => $paginatedProducts,
-                    'allCategories' => $allCategories,
+                    'sidebarCategories' => $sidebarCategories,
+                    'categoryCounts' => [],
                     'selectedCategories' => (array) $request->input('category', []),
-                    'selectedPriceMax' => $request->input('price_max', 10000),
+                    'selectedSubCategories' => (array) $request->input('sub_category', []),
+                    'selectedPriceMax' => $request->input('price_max', 100000),
                     'selectedSort' => $request->input('sort', 'default'),
                     'searchQuery' => '',
                 ]);
@@ -234,20 +243,177 @@ class ImageSearchController extends Controller
             $matchedIds = $productQuery->pluck('id');
 
             // Get all products using the existing StoreController logic
-            $products = collect(StoreController::getProducts());
+            $baseProducts = collect(StoreController::getProducts());
 
             // Filter products to only include those matched by our query builder
-            $products = $products->filter(fn ($p) => $matchedIds->contains($p['id']));
+            $baseProducts = $baseProducts->filter(fn ($p) => $matchedIds->contains($p['id']));
 
-            // Apply categories and price filters if present in request (for sidebar filters on search results)
-            if ($request->filled('category')) {
-                $categories = (array) $request->input('category');
-                $products = $products->filter(fn ($p) => in_array($p['cat'], $categories));
-            }
-
+            // Apply Price filter next
             if ($request->filled('price_max')) {
                 $maxPrice = (float) $request->input('price_max');
-                $products = $products->filter(fn ($p) => $p['price'] <= $maxPrice);
+                $baseProducts = $baseProducts->filter(fn ($p) => $p['price'] <= $maxPrice);
+            }
+
+            // Build the hierarchical sidebar categories list based on search results
+            $matchedCategoryIds = $baseProducts->pluck('category_id')->unique()->filter()->toArray();
+
+            $categories = Category::with('parent')->whereIn('id', $matchedCategoryIds)->get();
+
+            $sidebarCategoriesMap = [];
+            foreach ($categories as $cat) {
+                $topParent = $cat;
+                while ($topParent->parent_id && $topParent->parent) {
+                    $topParent = $topParent->parent;
+                }
+
+                $parentName = $topParent->name;
+                $parentId = $topParent->id;
+
+                if (!isset($sidebarCategoriesMap[$parentName])) {
+                    $sidebarCategoriesMap[$parentName] = [
+                        'name' => $parentName,
+                        'id' => $parentId,
+                        'children' => []
+                    ];
+                }
+
+                if ($cat->id !== $parentId) {
+                    $sidebarCategoriesMap[$parentName]['children'][$cat->name] = [
+                        'name' => $cat->name,
+                        'id' => $cat->id
+                    ];
+                }
+            }
+
+            foreach ($sidebarCategoriesMap as &$pCat) {
+                $pCat['children'] = array_values($pCat['children']);
+            }
+            $sidebarCategories = array_values($sidebarCategoriesMap);
+
+            // Calculate counts based on search and price filters (before category filter is applied)
+            $categoryCounts = [];
+            foreach ($baseProducts as $p) {
+                $cat = $p['cat'];
+                $subcat = $p['subcat'];
+
+                if ($cat) {
+                    $categoryCounts[$cat] = ($categoryCounts[$cat] ?? 0) + 1;
+                }
+                if ($subcat) {
+                    $categoryCounts[$subcat] = ($categoryCounts[$subcat] ?? 0) + 1;
+                }
+            }
+
+            // Now apply Category filter for actual product listing
+            $products = $baseProducts;
+            if ($request->filled('category') || $request->filled('sub_category')) {
+                $selectedCategories = (array) $request->input('category', []);
+                $selectedSubCategories = (array) $request->input('sub_category', []);
+
+                $allCategories = Category::all();
+
+                $getDescendantNames = function ($catName) use (&$getDescendantNames, $allCategories) {
+                    $names = [$catName];
+                    $category = $allCategories->firstWhere('name', $catName);
+                    if ($category) {
+                        $children = $allCategories->where('parent_id', $category->id);
+                        foreach ($children as $child) {
+                            $names = array_merge($names, $getDescendantNames($child->name));
+                        }
+                    }
+                    return array_unique($names);
+                };
+
+                $matchedProductIds = [];
+
+                foreach ($selectedCategories as $catName) {
+                    $mapCat = $sidebarCategoriesMap[$catName] ?? null;
+                    if (!$mapCat) {
+                        $categoryModel = $allCategories->firstWhere('name', $catName);
+                        if ($categoryModel) {
+                            $mapCat = [
+                                'name' => $categoryModel->name,
+                                'id' => $categoryModel->id,
+                                'children' => $allCategories->where('parent_id', $categoryModel->id)
+                                    ->map(fn($c) => ['name' => $c->name, 'id' => $c->id])->toArray()
+                            ];
+                        }
+                    }
+
+                    if ($mapCat) {
+                        $descendants = $getDescendantNames($catName);
+                        $allSubcatNames = array_diff($descendants, [$catName]);
+                        $activeSubcats = array_intersect($selectedSubCategories, $allSubcatNames);
+
+                        if (!empty($activeSubcats)) {
+                            // Filter products to only those belonging to active subcategories and their descendants recursively
+                            $allowedNames = [];
+                            foreach ($activeSubcats as $subName) {
+                                $allowedNames = array_merge($allowedNames, $getDescendantNames($subName));
+                            }
+                            $allowedNames = array_unique($allowedNames);
+
+                            foreach ($baseProducts as $p) {
+                                $prodCat = $allCategories->firstWhere('id', $p['category_id']);
+                                $prodCatName = $prodCat ? $prodCat->name : null;
+                                if ($prodCatName && in_array($prodCatName, $allowedNames)) {
+                                    $matchedProductIds[] = $p['id'];
+                                }
+                            }
+                        } else {
+                            // Show all products of that category and its descendants recursively
+                            foreach ($baseProducts as $p) {
+                                $prodCat = $allCategories->firstWhere('id', $p['category_id']);
+                                $prodCatName = $prodCat ? $prodCat->name : null;
+                                if ($prodCatName && in_array($prodCatName, $descendants)) {
+                                    $matchedProductIds[] = $p['id'];
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Handle any selected subcategories whose parents are not in selected categories
+                $unparentedSubcats = [];
+                foreach ($selectedSubCategories as $subName) {
+                    $isParentSelected = false;
+                    $subcatModel = $allCategories->firstWhere('name', $subName);
+                    {
+                        $curr = $subcatModel;
+                        while ($curr && $curr->parent_id) {
+                            $parentModel = $allCategories->firstWhere('id', $curr->parent_id);
+                            if ($parentModel && in_array($parentModel->name, $selectedCategories)) {
+                                $isParentSelected = true;
+                                break;
+                            }
+                            $curr = $parentModel;
+                        }
+                    }
+                    if (!$isParentSelected) {
+                        $unparentedSubcats[] = $subName;
+                    }
+                }
+
+                if (!empty($unparentedSubcats)) {
+                    $allowedNames = [];
+                    foreach ($unparentedSubcats as $subName) {
+                        $allowedNames = array_merge($allowedNames, $getDescendantNames($subName));
+                    }
+                    $allowedNames = array_unique($allowedNames);
+
+                    foreach ($baseProducts as $p) {
+                        $prodCat = $allCategories->firstWhere('id', $p['category_id']);
+                        $prodCatName = $prodCat ? $prodCat->name : null;
+                        if ($prodCatName && in_array($prodCatName, $allowedNames)) {
+                            $matchedProductIds[] = $p['id'];
+                        }
+                    }
+                }
+
+                $matchedProductIds = array_unique($matchedProductIds);
+                $products = $baseProducts->filter(function ($p) use ($matchedProductIds) {
+                    return in_array($p['id'], $matchedProductIds);
+                });
             }
 
             $sort = $request->input('sort', 'default');
@@ -255,11 +421,6 @@ class ImageSearchController extends Controller
                 $products = $products->sortBy('price');
             } elseif ($sort === 'price_desc') {
                 $products = $products->sortByDesc('price');
-            }
-
-            $allCategories = collect(StoreController::getProducts())->pluck('cat')->unique()->values()->toArray();
-            if (empty($allCategories)) {
-                $allCategories = ['Women', 'Men', 'Accessories', 'Footwear', 'Beauty'];
             }
 
             // Pagination: 12 products per page
@@ -280,9 +441,11 @@ class ImageSearchController extends Controller
             // Return storefront shop view. Set searchQuery to empty string so search input field remains empty.
             return view('store.shop', [
                 'products' => $paginatedProducts,
-                'allCategories' => $allCategories,
+                'sidebarCategories' => $sidebarCategories,
+                'categoryCounts' => $categoryCounts,
                 'selectedCategories' => (array) $request->input('category', []),
-                'selectedPriceMax' => $request->input('price_max', 10000),
+                'selectedSubCategories' => (array) $request->input('sub_category', []),
+                'selectedPriceMax' => $request->input('price_max', 100000),
                 'selectedSort' => $sort,
                 'searchQuery' => '',
             ]);

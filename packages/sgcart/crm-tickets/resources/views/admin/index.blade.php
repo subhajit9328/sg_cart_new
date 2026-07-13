@@ -119,7 +119,7 @@
             </form>
 
             @if($tickets->isNotEmpty() && auth()->user()->can('manage tickets'))
-                <button type="button" onclick="toggleBulkSelect()" class="px-3 py-1.5 bg-white text-slate-650 border border-slate-200 hover:text-slate-900 rounded-lg text-xs font-bold cursor-pointer transition-colors flex items-center gap-1">
+                <button type="button" onclick="toggleBulkSelect()" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs cursor-pointer transition-colors flex items-center gap-1">
                     <i class="fa-solid fa-list-check text-xs"></i> Bulk Action
                 </button>
             @endif
@@ -239,7 +239,7 @@
                             <!-- Actions -->
                             <td class="py-4 px-5 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
-                                    <a href="{{ route('admin.tickets.show', $ticket->id) }}" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-850 hover:bg-blue-50 dark:hover:bg-blue-500/10 inline-flex items-center justify-center text-blue-600 dark:text-blue-400 transition-colors" title="View Ticket" style="text-decoration: none;">
+                                    <a href="{{ route('admin.tickets.show', $ticket->id) }}" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-500/10 inline-flex items-center justify-center text-blue-600 dark:text-blue-400 transition-colors" title="View Ticket" style="text-decoration: none;">
                                         <i class="fa-solid fa-eye text-xs"></i>
                                     </a>
                                     @can('manage tickets')
