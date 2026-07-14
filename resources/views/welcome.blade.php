@@ -548,6 +548,31 @@
             autoPlayInterval = setInterval(nextSlide, 5000);
         }
 
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function () {
+                clearInterval(autoPlayInterval);
+                showSlide(currentIndex - 1);
+                startAutoPlay();
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function () {
+                clearInterval(autoPlayInterval);
+                showSlide(currentIndex + 1);
+                startAutoPlay();
+            });
+        }
+
+        dots.forEach((dot) => {
+            dot.addEventListener('click', function () {
+                clearInterval(autoPlayInterval);
+                const index = parseInt(dot.getAttribute('data-index'));
+                showSlide(index);
+                startAutoPlay();
+            });
+        });
+
         // Initialize
         showSlide(0);
         startAutoPlay();
