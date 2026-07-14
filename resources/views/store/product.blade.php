@@ -138,11 +138,11 @@
                                 class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Save {{ round((1 - $product['price'] / $product['old']) * 100) }}%</span>
                         @endif
                     </div>
-                    <div>
+                    <div id="variantStockContainer">
                         @if(($product['stock'] ?? 0) > 0)
                             <span
                                 class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> In Stock ({{ $product['stock'] }} left)
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> In Stock ({{ $product['stock'] }})
                             </span>
                         @else
                             <span

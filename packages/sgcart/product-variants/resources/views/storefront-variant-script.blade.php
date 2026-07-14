@@ -86,6 +86,9 @@
     const originalThumbsHTML = thumbsContainer ? thumbsContainer.innerHTML : '';
     const originalThumbsDisplay = thumbsContainer ? thumbsContainer.style.display : 'none';
 
+    const stockContainer = document.getElementById('variantStockContainer');
+    const originalStockHTML = stockContainer ? stockContainer.innerHTML : '';
+
     // Helper to update thumbnail strip
     function updateThumbs(imgs) {
         if (!thumbsContainer) return;
@@ -274,8 +277,25 @@
                 originalSkuEl.textContent = originalSkuTxt;
             }
 
+            // ── Stock Badge ──
+            if (stockContainer) {
+                if (match.stock > 0) {
+                    stockContainer.innerHTML = `
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> In Stock (${match.stock})
+                        </span>
+                    `;
+                } else {
+                    stockContainer.innerHTML = `
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Out of Stock
+                        </span>
+                    `;
+                }
+            }
+
             // ── Stock / Add to Bag button ──
-            const addToBagBtn = document.querySelector('#purchaseForm button[type="submit"]');
+            const addToBagBtn = document.querySelector('button[form="purchaseForm"]');
             if (addToBagBtn) {
                 if (match.stock <= 0) {
                     addToBagBtn.disabled = true;
@@ -302,7 +322,11 @@
                 originalSkuEl.textContent = originalSkuTxt;
             }
 
-            const addToBagBtn = document.querySelector('#purchaseForm button[type="submit"]');
+            if (stockContainer) {
+                stockContainer.innerHTML = originalStockHTML;
+            }
+
+            const addToBagBtn = document.querySelector('button[form="purchaseForm"]');
             if (addToBagBtn) {
                 addToBagBtn.disabled  = false;
                 addToBagBtn.innerHTML = '<i class="fa-solid fa-bag-shopping"></i> Add To Cart';

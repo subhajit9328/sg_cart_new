@@ -335,6 +335,43 @@ class StoreController extends Controller
             abort(404);
         }
 
+        $isVariantsInstalled = class_exists(\SGCart\ProductVariants\Models\ProductVariant::class);
+        if ($isVariantsInstalled) {
+            $color = $request->query('color');
+            $size = $request->query('size');
+            if ($color || $size) {
+                $variantQuery = \SGCart\ProductVariants\Models\ProductVariant::where('product_id', $product['id'])
+                    ->where('is_active', true);
+
+                if (config('product-variants.features.color', true) && !empty($color)) {
+                    $colorModel = \SGCart\ProductVariants\Models\Color::where('hex_code', $color)->first();
+                    if ($colorModel) {
+                        $variantQuery->where('color_id', $colorModel->id);
+                    } else {
+                        $variantQuery->where('color_id', 0);
+                    }
+                } else {
+                    $variantQuery->whereNull('color_id');
+                }
+
+                if (config('product-variants.features.size', true) && !empty($size)) {
+                    $sizeModel = \SGCart\ProductVariants\Models\Size::where('code', $size)->first();
+                    if ($sizeModel) {
+                        $variantQuery->where('size_id', $sizeModel->id);
+                    } else {
+                        $variantQuery->where('size_id', 0);
+                    }
+                } else {
+                    $variantQuery->whereNull('size_id');
+                }
+
+                $variant = $variantQuery->first();
+                if ($variant && $variant->stock <= 0) {
+                    return redirect()->back()->with('error', 'Sorry, the selected variant is currently out of stock.');
+                }
+            }
+        }
+
         // Fetch related products (manually assigned via package or fallback logic: Name -> Category -> Search Tag)
         $productModel = Product::find($product['id']);
         $relatedIds = [];
@@ -527,8 +564,44 @@ class StoreController extends Controller
 
         $cartModel = Cart::getActiveCart();
 
+        $isVariantsInstalled = class_exists(\SGCart\ProductVariants\Models\ProductVariant::class);
+        $variant = null;
+
+        if ($isVariantsInstalled) {
+            $variantQuery = \SGCart\ProductVariants\Models\ProductVariant::where('product_id', $productId)
+                ->where('is_active', true);
+
+            if (config('product-variants.features.color', true) && !empty($color)) {
+                $colorModel = \SGCart\ProductVariants\Models\Color::where('hex_code', $color)->first();
+                if ($colorModel) {
+                    $variantQuery->where('color_id', $colorModel->id);
+                } else {
+                    $variantQuery->where('color_id', 0);
+                }
+            } else {
+                $variantQuery->whereNull('color_id');
+            }
+
+            if (config('product-variants.features.size', true) && !empty($size)) {
+                $sizeModel = \SGCart\ProductVariants\Models\Size::where('code', $size)->first();
+                if ($sizeModel) {
+                    $variantQuery->where('size_id', $sizeModel->id);
+                } else {
+                    $variantQuery->where('size_id', 0);
+                }
+            } else {
+                $variantQuery->whereNull('size_id');
+            }
+
+            $variant = $variantQuery->first();
+
+            if ($variant && $variant->stock <= 0) {
+                return redirect()->back()->with('error', 'Sorry, the selected variant is currently out of stock.');
+            }
+        }
+
         // Stock check
-        $currentStock = $product->stock ?? 0;
+        $currentStock = $variant ? $variant->stock : ($product->stock ?? 0);
         if ($currentStock <= 0) {
             return redirect()->back()->with('error', 'Sorry, this product is currently out of stock.');
         }

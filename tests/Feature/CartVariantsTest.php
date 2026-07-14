@@ -138,4 +138,75 @@ class CartVariantsTest extends TestCase
         $this->assertEquals('TSHIRT-RED-M', $orderItem->product_sku);
         $this->assertEquals(2, $orderItem->quantity);
     }
+
+    public function test_cart_variant_out_of_stock(): void
+    {
+        $hasVariants = class_exists(\SGCart\ProductVariants\Models\ProductVariant::class);
+        if (!$hasVariants) {
+            $this->markTestSkipped('ProductVariants package is not installed.');
+            return;
+        }
+
+        // Create Category
+        $category = Category::create([
+            'name' => 'Fashion',
+            'slug' => 'fashion',
+            'is_active' => true,
+        ]);
+
+        // Create Base Product
+        $product = Product::create([
+            'name' => 'T-Shirt',
+            'slug' => 't-shirt',
+            'sku' => 'TSHIRT-001',
+            'category_id' => $category->id,
+            'price' => 100.00,
+            'stock' => 50,
+            'status' => 'active',
+        ]);
+
+        // Create Color
+        $color = \SGCart\ProductVariants\Models\Color::create([
+            'name' => 'Blue',
+            'hex_code' => '#0000ff',
+        ]);
+
+        // Create Size
+        $size = \SGCart\ProductVariants\Models\Size::create([
+            'name' => 'Large',
+            'code' => 'L',
+        ]);
+
+        // Create Product Variant with 0 stock
+        $variant = \SGCart\ProductVariants\Models\ProductVariant::create([
+            'product_id' => $product->id,
+            'color_id' => $color->id,
+            'size_id' => $size->id,
+            'sku' => 'TSHIRT-BLUE-L',
+            'price' => 150.00,
+            'stock' => 0,
+            'is_active' => true,
+        ]);
+
+        // Try to add the variant to cart
+        $response = $this->post(route('store.cart.add'), [
+            'product_id' => $product->id,
+            'quantity' => 1,
+            'color' => '#0000ff',
+            'size' => 'L',
+        ]);
+
+        // Should restrict and redirect back with error
+        $response->assertSessionHas('error', 'Sorry, the selected variant is currently out of stock.');
+
+        // Test product detail page with out of stock variant selected in query parameters
+        $responseProduct = $this->get(route('store.product', [
+            'slug' => $product->slug,
+            'color' => '#0000ff',
+            'size' => 'L',
+        ]));
+        
+        // Should flash error
+        $responseProduct->assertSessionHas('error', 'Sorry, the selected variant is currently out of stock.');
+    }
 }
