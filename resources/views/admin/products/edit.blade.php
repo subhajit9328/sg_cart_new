@@ -218,8 +218,8 @@
                 <div>
                     <label for="dimensions" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Dimensions (L×W×H)</label>
                     <input type="text" name="dimensions" id="dimensions" value="{{ old('dimensions', $product->dimensions) }}" placeholder="e.g. 10x5x3 cm"
-                        pattern="\d+(\.\d+)?\s*[xX×]\s*\d+(\.\d+)?\s*[xX×]\s*\d+(\.\d+)?(\s*[a-zA-Z]+)?"
-                        title="Dimensions must be in the format LxWxH, optionally followed by a unit (e.g., 10x5x3 cm)"
+                        pattern="\d+(\.\d+)?(\s*[xX×*]\s*|\s+)\d+(\.\d+)?(\s*[xX×*]\s*|\s+)\d+(\.\d+)?(\s*[a-zA-Z]+)?"
+                        title="Dimensions must be in the format LxWxH (using x, *, or space as separator), optionally followed by a unit (e.g., 10x5x3 cm)"
                         class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100 @error('dimensions') border-rose-500 focus:border-rose-500 focus:ring-rose-500 @enderror">
                     <p id="dimensions-error" class="text-rose-500 text-xs mt-1.5 font-medium hidden"></p>
                     @error('dimensions') <p id="dimensions-server-error" class="text-rose-500 text-xs mt-1.5 font-medium">{{ $message }}</p> @enderror
@@ -762,9 +762,9 @@ function removeNewImage(id) {
                     dimensionsInput.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
                     return;
                 }
-                const regex = /^\d+(?:\.\d+)?\s*[xX×]\s*\d+(?:\.\d+)?\s*[xX×]\s*\d+(?:\.\d+)?(?:\s*[a-zA-Z]+)?$/;
+                const regex = /^\d+(?:\.\d+)?(?:\s*[xX×*]\s*|\s+)\d+(?:\.\d+)?(?:\s*[xX×*]\s*|\s+)\d+(?:\.\d+)?(?:\s*[a-zA-Z]+)?$/;
                 if (!regex.test(val)) {
-                    dimensionsError.textContent = 'Dimensions must be in the format LxWxH, optionally followed by a unit (e.g., 10x5x3 cm).';
+                    dimensionsError.textContent = 'Dimensions must be in the format LxWxH (using x, *, or space as separator), optionally followed by a unit (e.g., 10x5x3 cm).';
                     dimensionsError.classList.remove('hidden');
                     dimensionsInput.classList.add('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500');
                 } else {

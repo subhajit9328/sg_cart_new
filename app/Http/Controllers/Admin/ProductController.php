@@ -81,7 +81,7 @@ class ProductController extends Controller
             'min_stock'         => 'nullable|integer|min:0',
             'status'            => 'required|in:draft,active,inactive',
             'weight'            => ['nullable', 'string', 'regex:/^\d+(?:\.\d+)?\s*[a-zA-Z]+$/'],
-            'dimensions'        => ['nullable', 'string', 'regex:/^\d+(?:\.\d+)?\s*[xX×]\s*\d+(?:\.\d+)?\s*[xX×]\s*\d+(?:\.\d+)?(?:\s*[a-zA-Z]+)?$/'],
+            'dimensions'        => ['nullable', 'string', 'regex:/^\d+(?:\.\d+)?(?:\s*[xX×*]\s*|\s+)\d+(?:\.\d+)?(?:\s*[xX×*]\s*|\s+)\d+(?:\.\d+)?(?:\s*[a-zA-Z]+)?$/'],
             'product_images'    => 'nullable|array',
             'product_images.*'  => 'image|max:4096',
             'meta_title'        => 'nullable|string|max:255',
@@ -90,7 +90,7 @@ class ProductController extends Controller
         ], [
             'sale_price.lte'    => 'Invalid Pricing: The sale price must be equal to or lower than the regular price.',
             'weight.regex'      => 'The weight must be in the format of a number followed by a unit (e.g., 500g, 1.5kg).',
-            'dimensions.regex'  => 'The dimensions must be in the format LxWxH, optionally followed by a unit (e.g., 10x5x3 cm).',
+            'dimensions.regex'  => 'The dimensions must be in the format LxWxH (using x, *, or space as separator), optionally followed by a unit (e.g., 10x5x3 cm).',
         ]);
 
         $product = DB::transaction(function () use ($data, $request) {
@@ -156,7 +156,7 @@ class ProductController extends Controller
             'min_stock'         => 'nullable|integer|min:0',
             'status'            => 'required|in:draft,active,inactive',
             'weight'            => ['nullable', 'string', 'regex:/^\d+(?:\.\d+)?\s*[a-zA-Z]+$/'],
-            'dimensions'        => ['nullable', 'string', 'regex:/^\d+(?:\.\d+)?\s*[xX×]\s*\d+(?:\.\d+)?\s*[xX×]\s*\d+(?:\.\d+)?(?:\s*[a-zA-Z]+)?$/'],
+            'dimensions'        => ['nullable', 'string', 'regex:/^\d+(?:\.\d+)?(?:\s*[xX×*]\s*|\s+)\d+(?:\.\d+)?(?:\s*[xX×*]\s*|\s+)\d+(?:\.\d+)?(?:\s*[a-zA-Z]+)?$/'],
             'product_images'    => 'nullable|array',
             'product_images.*'  => 'image|max:4096',
             'meta_title'        => 'nullable|string|max:255',
@@ -165,7 +165,7 @@ class ProductController extends Controller
         ], [
             'sale_price.lte'    => 'Invalid Pricing: The sale price must be equal to or lower than the regular price.',
             'weight.regex'      => 'The weight must be in the format of a number followed by a unit (e.g., 500g, 1.5kg).',
-            'dimensions.regex'  => 'The dimensions must be in the format LxWxH, optionally followed by a unit (e.g., 10x5x3 cm).',
+            'dimensions.regex'  => 'The dimensions must be in the format LxWxH (using x, *, or space as separator), optionally followed by a unit (e.g., 10x5x3 cm).',
         ]);
 
         DB::transaction(function () use ($data, $request, $product) {

@@ -74,6 +74,35 @@ class ProductValidationTest extends TestCase
         ]);
     }
 
+    public function test_dimensions_validation_allows_asterisk_and_spaces_separators(): void
+    {
+        // 1. Test with asterisk separators
+        $responseAsterisk = $this->actingAs($this->admin)->post(route('admin.products.store'), [
+            'name' => 'Asterisk Product',
+            'sku' => 'SKU-AST-123',
+            'price' => 100.00,
+            'stock' => 10,
+            'status' => 'active',
+            'category_id' => $this->category->id,
+            'weight' => '1 kg',
+            'dimensions' => '10 * 5 * 3 cm',
+        ]);
+        $responseAsterisk->assertSessionHasNoErrors();
+
+        // 2. Test with pure spaces separators
+        $responseSpaces = $this->actingAs($this->admin)->post(route('admin.products.store'), [
+            'name' => 'Spaces Product',
+            'sku' => 'SKU-SPC-123',
+            'price' => 100.00,
+            'stock' => 10,
+            'status' => 'active',
+            'category_id' => $this->category->id,
+            'weight' => '1 kg',
+            'dimensions' => '10 5 3 cm',
+        ]);
+        $responseSpaces->assertSessionHasNoErrors();
+    }
+
     public function test_weight_and_dimensions_update_validation(): void
     {
         $product = Product::create([
