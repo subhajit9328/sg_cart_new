@@ -44,7 +44,7 @@
         </h2>
         <p class="text-xs text-slate-400 text-center mb-8">
                 We've sent a 6-digit verification code to <strong class="text-slate-600">{{$isEmail ? obfuscate_email($email) : obfuscate_mobile($email)}}</strong>.
-            <a class="block mt-3 text-accent font-bold" href="{{route('store.register', ['wrong_email_or_phone' => true])}}">Wrong {{$isEmail ? 'Email' : 'Phone No.'}} ?</a>
+            <a class="block mt-3 text-accent font-bold" href="{{ route('store.otp.cancel') }}">Wrong {{$isEmail ? 'Email' : 'Phone No.'}} ?</a>
         </p>
 
         @if(!$isEmail && config('app.test_mode'))

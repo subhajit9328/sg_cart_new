@@ -145,7 +145,6 @@
                 @if(!class_exists(\SGCart\CrmTickets\Providers\CrmTicketsServiceProvider::class))
                     <p class="px-3 pt-4 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 section-label">Support</p>
                 @endif
-                @includeIf('reviews::admin-menu')
             @endcan
 
             <!-- ============ 9.5. Analytics & Reports ============ -->
@@ -1041,7 +1040,7 @@
             });
 
             // 4. Toggle No Results placeholder
-            const hasVisibleItems = $('#sidebar nav > a.nav-link:visible').length > 0 || 
+            const hasVisibleItems = $('#sidebar nav > a.nav-link:visible').length > 0 ||
                                    $('#sidebar .nav-item-dropdown:visible').length > 0;
             $('#sidebarNoResults').toggleClass('hidden', hasVisibleItems);
         });

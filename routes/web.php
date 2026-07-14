@@ -50,6 +50,7 @@ Route::middleware('guest:customer')->group(function () {
 Route::get('/otp/verify', [AuthController::class, 'showOtpVerify'])->name('store.otp.verify');
 Route::post('/otp/verify', [AuthController::class, 'otpVerify'])->name('store.otp.verify.submit');
 Route::post('/otp/resend', [AuthController::class, 'otpResend'])->name('store.otp.resend');
+Route::get('/otp/cancel', [AuthController::class, 'cancelOtpVerification'])->name('store.otp.cancel');
 
 // Storefront Auth Routes for Authenticated Customers
 Route::middleware('auth:customer')->group(function () {

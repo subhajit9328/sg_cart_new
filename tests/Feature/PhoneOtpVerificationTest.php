@@ -132,4 +132,40 @@ class PhoneOtpVerificationTest extends TestCase
         $this->assertNull($customer->phone_verified_at);
         $this->assertTrue(Cache::has("customer_otp_{$customer->id}"));
     }
+
+    public function test_phone_profile_update_wrong_phone_cancels_verification()
+    {
+        $customer = Customer::create([
+            'name' => 'Jane Doe',
+            'email' => 'jane@example.com',
+            'password' => Hash::make('password123'),
+        ]);
+        $customer->email_verified_at = now();
+        $customer->save();
+
+        $this->actingAs($customer, 'customer');
+
+        // First add the phone number from profile
+        $response = $this->post(route('store.account.profile.update'), [
+            'first_name' => 'Jane',
+            'last_name' => 'Doe',
+            'phone_no' => '+1234567890',
+        ]);
+
+        $customer->refresh();
+        $this->assertEquals('+1234567890', $customer->phone_no);
+        $this->assertNull($customer->phone_verified_at);
+
+        // Click "Wrong Phone No." cancel route
+        $cancelResponse = $this->get(route('store.otp.cancel'));
+
+        // Assert redirect back to profile page
+        $cancelResponse->assertRedirect(route('store.account', 'profile'));
+        $cancelResponse->assertSessionHas('info', 'Phone number verification cancelled.');
+
+        // Verify the phone number was cleared (set to null) so they are not asked to verify OTP
+        $customer->refresh();
+        $this->assertNull($customer->phone_no);
+        $this->assertNull($customer->phone_verified_at);
+    }
 }

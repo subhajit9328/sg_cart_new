@@ -529,6 +529,34 @@ class AuthController extends Controller
     }
 
     /**
+     * Cancel OTP verification and handle redirect.
+     */
+    public function cancelOtpVerification(Request $request)
+    {
+        if (Auth::guard('customer')->check()) {
+            $customer = Auth::guard('customer')->user();
+
+            if ($customer->phone_no && ! $customer->phone_verified_at) {
+                $customer->phone_no = null;
+                $customer->save();
+
+                return redirect()->route('store.account', 'profile')->with('info', 'Phone number verification cancelled.');
+            }
+
+            if ($customer->email && ! $customer->email_verified_at) {
+                $customer->email = null;
+                $customer->save();
+
+                return redirect()->route('store.account', 'profile')->with('info', 'Email verification cancelled.');
+            }
+
+            return redirect()->route('store.account', 'profile');
+        }
+
+        return redirect()->route('store.register', ['wrong_email_or_phone' => true]);
+    }
+
+    /**
      * Log out storefront user.
      */
     public function storefrontLogout(Request $request)
