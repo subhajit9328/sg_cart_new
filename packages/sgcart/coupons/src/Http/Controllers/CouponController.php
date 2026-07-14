@@ -152,9 +152,10 @@ class CouponController extends Controller
 
         // Validate subtotal against coupon requirement
         if (config('coupons.features.min_cart_total', true)) {
-            $cart = session()->get('cart', []);
+            $cartModel = \App\Models\Cart::getActiveCart();
+            $cartItems = $cartModel->getFormattedItems();
             $subtotal = 0;
-            foreach ($cart as $item) {
+            foreach ($cartItems as $item) {
                 $subtotal += $item['price'] * $item['quantity'];
             }
 
