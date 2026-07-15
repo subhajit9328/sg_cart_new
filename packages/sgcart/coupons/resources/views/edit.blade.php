@@ -10,7 +10,13 @@
     </a>
     <div>
         <h1 class="font-display text-2xl font-bold">Edit Coupon</h1>
-        <p class="text-sm text-slate-400 mt-0.5">Admin / E-Commerce / Coupons / Edit / {{ $coupon->code }}</p>
+        <x-breadcrumbs :items="[
+            ['label' => 'Admin', 'url' => route('admin.dashboard')],
+            ['label' => 'E-Commerce'],
+            ['label' => 'Coupons', 'url' => route('admin.coupons.index')],
+            ['label' => 'Edit'],
+            ['label' => $coupon->code]
+        ]" />
     </div>
 </div>
 

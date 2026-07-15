@@ -155,59 +155,59 @@
 
     {{-- Hidden container for file inputs: must stay INSIDE the form so files are submitted --}}
     <div id="variantFileInputsContainer" class="hidden"></div>
-</form>
 
-<!-- Modal Wrapper Container (for modals rendered inline) -->
-<div id="variantModalsContainer">
-    @foreach($variants as $index => $v)
-    <div id="variantGalleryModal_{{ $index }}" class="variant-modal fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-2xl w-full mx-4 border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
-                <h3 class="font-semibold text-sm font-display">Manage Variant Images</h3>
-                <button type="button" onclick="closeVariantGalleryModal({{ $index }})" class="text-slate-400 hover:text-slate-600 bg-transparent border-none cursor-pointer p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-            <div class="p-6 space-y-6">
-                <p class="text-xs text-slate-400">
-                    Upload images specific to this variant. Shoppers will see these photos automatically when they select this color and size combination. Select a radio button to make an image default for this variant.
-                </p>
-                
-                <div class="flex flex-wrap gap-4" id="variant_image_gallery_{{ $index }}">
-                    <!-- Existing images -->
-                    @foreach($v->images as $img)
-                        <div class="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm w-32 h-32 bg-slate-950 flex flex-col justify-between group" id="variant_img_card_{{ $img->id }}">
-                            <img src="{{ Storage::url($img->image_path) }}" class="w-full h-full object-cover absolute inset-0">
-                            <div class="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button type="button" class="text-rose-500 hover:text-rose-700 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full p-1.5 transition-colors outline-none cursor-pointer flex items-center justify-center w-7 h-7 shadow-sm border-none" onclick="removeExistingVariantImage({{ $index }}, {{ $img->id }})">
-                                    <i class="fa-solid fa-trash-can text-xs"></i>
-                                </button>
-                            </div>
-                            <div class="absolute bottom-2 left-2 right-2 bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-lg p-1.5 flex items-center gap-1.5 shadow-sm z-10">
-                                <input type="radio" name="variants[{{ $index }}][default_image]" value="existing_{{ $img->id }}" id="radio_variant_existing_{{ $img->id }}" {{ $img->is_default ? 'checked' : '' }} class="accent-blue-600 cursor-pointer">
-                                <label for="radio_variant_existing_{{ $img->id }}" class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer select-none">Default</label>
-                            </div>
-                        </div>
-                    @endforeach
-                    
-                    <!-- Add Image Card -->
-                    <div id="addVariantImageCard_{{ $index }}" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-xl w-32 h-32 flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-slate-100/50 dark:hover:bg-slate-800/30 gap-1.5 group select-none" onclick="triggerAddVariantImage({{ $index }})">
-                        <i class="fa-solid fa-circle-plus text-2xl text-slate-400 dark:text-slate-600 group-hover:text-blue-500 transition-colors"></i>
-                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors">Add Photo</span>
-                    </div>
+    <!-- Modal Wrapper Container (for modals rendered inline) -->
+    <div id="variantModalsContainer">
+        @foreach($variants as $index => $v)
+        <div id="variantGalleryModal_{{ $index }}" class="variant-modal fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-2xl w-full mx-4 border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+                    <h3 class="font-semibold text-sm font-display">Manage Variant Images</h3>
+                    <button type="button" onclick="closeVariantGalleryModal({{ $index }})" class="text-slate-400 hover:text-slate-600 bg-transparent border-none cursor-pointer p-1">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
                 </div>
-
-                <div id="variant_hidden_inputs_{{ $index }}" class="hidden"></div>
-            </div>
-            <div class="px-5 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end">
-                <button type="button" onclick="closeVariantGalleryModal({{ $index }})" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors cursor-pointer border-none shadow-sm shadow-blue-600/10">
-                    Done
-                </button>
+                <div class="p-6 space-y-6">
+                    <p class="text-xs text-slate-400">
+                        Upload images specific to this variant. Shoppers will see these photos automatically when they select this color and size combination. Select a radio button to make an image default for this variant.
+                    </p>
+                    
+                    <div class="flex flex-wrap gap-4" id="variant_image_gallery_{{ $index }}">
+                        <!-- Existing images -->
+                        @foreach($v->images as $img)
+                            <div class="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm w-32 h-32 bg-slate-950 flex flex-col justify-between group" id="variant_img_card_{{ $img->id }}">
+                                <img src="{{ Storage::url($img->image_path) }}" class="w-full h-full object-cover absolute inset-0">
+                                <div class="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button type="button" class="text-rose-500 hover:text-rose-700 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full p-1.5 transition-colors outline-none cursor-pointer flex items-center justify-center w-7 h-7 shadow-sm border-none" onclick="removeExistingVariantImage({{ $index }}, {{ $img->id }})">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </button>
+                                </div>
+                                <div class="absolute bottom-2 left-2 right-2 bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-lg p-1.5 flex items-center gap-1.5 shadow-sm z-10">
+                                    <input type="radio" name="variants[{{ $index }}][default_image]" value="existing_{{ $img->id }}" id="radio_variant_existing_{{ $img->id }}" {{ $img->is_default ? 'checked' : '' }} class="accent-blue-600 cursor-pointer">
+                                    <label for="radio_variant_existing_{{ $img->id }}" class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer select-none">Default</label>
+                                </div>
+                            </div>
+                        @endforeach
+                        
+                        <!-- Add Image Card -->
+                        <div id="addVariantImageCard_{{ $index }}" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-xl w-32 h-32 flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-slate-100/50 dark:hover:bg-slate-800/30 gap-1.5 group select-none" onclick="triggerAddVariantImage({{ $index }})">
+                            <i class="fa-solid fa-circle-plus text-2xl text-slate-400 dark:text-slate-600 group-hover:text-blue-500 transition-colors"></i>
+                            <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors">Add Photo</span>
+                        </div>
+                    </div>
+    
+                    <div id="variant_hidden_inputs_{{ $index }}" class="hidden"></div>
+                </div>
+                <div class="px-5 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end">
+                    <button type="button" onclick="closeVariantGalleryModal({{ $index }})" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors cursor-pointer border-none shadow-sm shadow-blue-600/10">
+                        Done
+                    </button>
+                </div>
             </div>
         </div>
+        @endforeach
     </div>
-    @endforeach
-</div>
+</form>
 
 <!-- Quick Attribute Add Modal -->
 <div id="quickAttributeModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -218,21 +218,23 @@
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
         </div>
-        <form id="quickAttributeForm" onsubmit="saveQuickAttribute(event)" class="p-6 space-y-4">
+        <form id="quickAttributeForm" novalidate onsubmit="saveQuickAttribute(event)" class="p-6 space-y-4">
             <input type="hidden" id="quickAttrType" name="type">
             
             <div>
                 <label for="quickAttrName" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Name <span class="text-rose-600">*</span></label>
-                <input type="text" id="quickAttrName" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100">
+                <input type="text" id="quickAttrName" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 px-3.5 text-sm placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-slate-800 dark:text-slate-100">
+                <p id="quickAttrNameError" class="text-rose-500 text-xs mt-1.5 font-medium hidden"></p>
             </div>
 
             <!-- Contextual Field (Hex Code for Color, Code/Tag for Size) -->
             <div id="quickAttrExtraFieldWrapper">
                 <label id="quickAttrExtraLabel" for="quickAttrExtra" class="block text-slate-700 dark:text-slate-300 text-sm font-semibold mb-2">Hex Code <span class="text-rose-600">*</span></label>
                 <div class="flex gap-2">
-                    <input type="color" id="quickAttrColorPicker" oninput="document.getElementById('quickAttrExtra').value = this.value" class="w-10 h-10 border border-slate-200 dark:border-slate-700 rounded cursor-pointer p-0 bg-transparent">
-                    <input type="text" id="quickAttrExtra" required class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2 px-3 text-sm outline-none focus:border-blue-500 transition-all font-mono" placeholder="#ffffff">
+                    <input type="color" id="quickAttrColorPicker" oninput="document.getElementById('quickAttrExtra').value = this.value; if(window.clearFieldError) { clearFieldError('quickAttrExtra', 'quickAttrExtraError'); }" class="w-10 h-10 border border-slate-200 dark:border-slate-700 rounded cursor-pointer p-0 bg-transparent">
+                    <input type="text" id="quickAttrExtra" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2 px-3 text-sm outline-none focus:border-blue-500 transition-all font-mono" placeholder="#ffffff">
                 </div>
+                <p id="quickAttrExtraError" class="text-rose-500 text-xs mt-1.5 font-medium hidden"></p>
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
@@ -528,7 +530,34 @@
         }
     }
 
-    // Quick Attributes
+    // Quick Attributes validation helpers
+    function setFieldError(fieldId, errorId, message) {
+        const field = document.getElementById(fieldId);
+        const errorEl = document.getElementById(errorId);
+        if (field && errorEl) {
+            field.classList.remove('border-slate-200', 'dark:border-slate-700', 'focus:border-blue-500', 'focus:ring-blue-500', 'focus:ring-1');
+            field.classList.add('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500', 'focus:ring-1');
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+    }
+
+    window.clearFieldError = function(fieldId, errorId) {
+        const field = document.getElementById(fieldId);
+        const errorEl = document.getElementById(errorId);
+        if (field && errorEl) {
+            field.classList.remove('border-rose-500', 'focus:border-rose-500', 'focus:ring-rose-500', 'focus:ring-1');
+            field.classList.add('border-slate-200', 'dark:border-slate-700', 'focus:border-blue-500', 'focus:ring-blue-500');
+            errorEl.textContent = '';
+            errorEl.classList.add('hidden');
+        }
+    }
+
+    function resetQuickAttrValidation() {
+        window.clearFieldError('quickAttrName', 'quickAttrNameError');
+        window.clearFieldError('quickAttrExtra', 'quickAttrExtraError');
+    }
+
     function openQuickAttributeModal(type) {
         const modal = document.getElementById('quickAttributeModal');
         const title = document.getElementById('quickAttrTitle');
@@ -541,6 +570,7 @@
         formType.value = type;
         document.getElementById('quickAttrName').value = '';
         extraInput.value = '';
+        resetQuickAttrValidation();
 
         if (type === 'color') {
             title.textContent = 'Quick Add Color';
@@ -566,9 +596,42 @@
 
     function saveQuickAttribute(event) {
         event.preventDefault();
+        resetQuickAttrValidation();
+
         const type = document.getElementById('quickAttrType').value;
-        const name = document.getElementById('quickAttrName').value;
-        const extra = document.getElementById('quickAttrExtra').value;
+        const nameInput = document.getElementById('quickAttrName');
+        const extraInput = document.getElementById('quickAttrExtra');
+        
+        const name = nameInput.value.trim();
+        let extra = extraInput.value.trim();
+
+        if (type === 'color' && extra && !extra.startsWith('#')) {
+            extra = '#' + extra;
+            extraInput.value = extra;
+        }
+
+        let hasError = false;
+
+        if (!name) {
+            setFieldError('quickAttrName', 'quickAttrNameError', 'Name is required.');
+            hasError = true;
+        }
+
+        if (!extra) {
+            const extraMsg = type === 'color' ? 'Hex Code is required.' : 'Size Code is required.';
+            setFieldError('quickAttrExtra', 'quickAttrExtraError', extraMsg);
+            hasError = true;
+        } else if (type === 'color') {
+            const hexRegex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
+            if (!hexRegex.test(extra)) {
+                setFieldError('quickAttrExtra', 'quickAttrExtraError', 'Please enter a valid Hex Code (e.g. #ffffff).');
+                hasError = true;
+            }
+        }
+
+        if (hasError) {
+            return;
+        }
 
         const data = {
             _token: '{{ csrf_token() }}',
@@ -595,7 +658,21 @@
             },
             body: JSON.stringify(data)
         })
-        .then(res => res.json())
+        .then(res => {
+            if (res.status === 422) {
+                return res.json().then(errData => {
+                    throw errData;
+                });
+            }
+            if (!res.ok) {
+                return res.json().then(errData => {
+                    throw new Error(errData.message || 'Error occurred.');
+                }).catch(() => {
+                    throw new Error('Error occurred.');
+                });
+            }
+            return res.json();
+        })
         .then(res => {
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
@@ -636,8 +713,24 @@
         .catch(err => {
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
-            console.error(err);
-            showToast('Error connecting to the server.', 'error');
+            
+            if (err && err.errors) {
+                if (err.errors.name) {
+                    setFieldError('quickAttrName', 'quickAttrNameError', err.errors.name[0]);
+                }
+                if (err.errors.hex_code) {
+                    setFieldError('quickAttrExtra', 'quickAttrExtraError', err.errors.hex_code[0]);
+                }
+                if (err.errors.code) {
+                    setFieldError('quickAttrExtra', 'quickAttrExtraError', err.errors.code[0]);
+                }
+                if (err.message) {
+                    showToast(err.message, 'error');
+                }
+            } else {
+                console.error(err);
+                showToast(err.message || 'Error connecting to the server.', 'error');
+            }
         });
     }
 
@@ -789,6 +882,15 @@
                     validateVariants();
                 }
             });
+        }
+
+        const nameInput = document.getElementById('quickAttrName');
+        if (nameInput) {
+            nameInput.addEventListener('input', () => window.clearFieldError('quickAttrName', 'quickAttrNameError'));
+        }
+        const extraInput = document.getElementById('quickAttrExtra');
+        if (extraInput) {
+            extraInput.addEventListener('input', () => window.clearFieldError('quickAttrExtra', 'quickAttrExtraError'));
         }
     });
 </script>

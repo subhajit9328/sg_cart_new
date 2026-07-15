@@ -23,6 +23,17 @@ class InventoryServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../../resources/views', 'inventory');
 
+        // Customize validation attribute names for inventory quantity
+        if ($this->app->bound('translator')) {
+            $this->app->extend('translator', function ($translator) {
+                $translator->addLines([
+                    'validation.attributes.qty' => 'quantity',
+                    'validation.attributes.adjustments.*.qty' => 'quantity',
+                ], $translator->getLocale());
+                return $translator;
+            });
+        }
+
         $this->autoInstall();
         $this->registerStockObservers();
     }

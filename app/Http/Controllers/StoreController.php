@@ -1406,10 +1406,13 @@ class StoreController extends Controller
         }
 
         $rules = [
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'first_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-ZáéíóúýÁÉÍÓÚÝćĆńŃśŚźŹĺĹŕŔ\s\-\']+$/'],
+            'last_name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-ZáéíóúýÁÉÍÓÚÝćĆńŃśŚźŹĺĹŕŔ\s\-\']+$/'],
         ];
-        $messages = [];
+        $messages = [
+            'first_name.regex' => 'The first name contains invalid characters.',
+            'last_name.regex' => 'The last name contains invalid characters.',
+        ];
 
         $addingEmail = ! $customer->email;
         $addingPhone = ! $customer->phone_no;

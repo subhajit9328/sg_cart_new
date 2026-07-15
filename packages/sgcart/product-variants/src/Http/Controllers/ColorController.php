@@ -67,6 +67,10 @@ class ColorController extends Controller
 
     public function destroy(Color $color)
     {
+        if ($color->variants()->whereHas('product')->exists()) {
+            return redirect()->route('admin.colors.index')->with('error',
+                'Color swatch cannot be deleted because it is associated with a product variant.');
+        }
         $color->delete();
         return redirect()->route('admin.colors.index')->with('success', 'Color swatch deleted successfully.');
     }

@@ -93,7 +93,8 @@
 >
     @forelse($products as $product)
         @php
-            $hasActiveVariants = $hasVariants && $product->variants->where('is_active', true)->count() > 0;
+            $activeVariantsCount = $hasVariants ? $product->variants->where('is_active', true)->count() : 0;
+            $hasActiveVariants = $activeVariantsCount > 0;
         @endphp
         <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/15 transition-colors">
             <!-- Image -->
@@ -108,10 +109,13 @@
             </td>
             <!-- Name -->
             <td class="px-5 py-3.5 font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap text-sm" title="{{ $product->name }}">
-                {{ \Illuminate\Support\Str::limit($product->name, 25, '..') }}
+                {{ \Illuminate\Support\Str::limit($product->name, 25, '...') }}
                 @if($hasActiveVariants)
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-violet-50 dark:bg-violet-950/20 text-violet-650 dark:text-violet-400 border border-violet-200/20 ml-1.5">
+                    <span class="inline-flex items-center pl-1.5 pr-0.5 py-0.5 rounded-full text-[9px] font-bold bg-violet-50 dark:bg-violet-950/20 text-violet-650 dark:text-violet-400 border border-violet-200/20 ml-1.5">
                         <i class="fa-solid fa-tags text-[8px] mr-1"></i> Has Variants
+                        <span class="rounded-full px-1 ml-1 border border-violet-200">
+                            {{ $activeVariantsCount }}
+                        </span>
                     </span>
                 @endif
             </td>
@@ -144,9 +148,9 @@
             </td>
             <!-- Status -->
             <td class="px-5 py-3.5 whitespace-nowrap">
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold 
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold
                     {{ $product->status->value === 'active' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/20' :
-                      ($product->status->value === 'draft'  ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200/20' : 
+                      ($product->status->value === 'draft'  ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200/20' :
                       ($product->status->value === 'rejected' ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200/20' :
                       'bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-350 border border-slate-200/50')) }}">
                     {{ ucfirst($product->status->value) }}
@@ -155,7 +159,7 @@
             <!-- Actions -->
             <td class="px-5 py-3.5 text-right whitespace-nowrap">
                 @if($hasActiveVariants)
-                    <button type="button" 
+                    <button type="button"
                         onclick="openQuickAdjustModal('{{ $product->id }}', '{{ addslashes($product->name) }}', '{{ $product->stock }}', {{ json_encode($product->variants->where('is_active', true)->map(function($v) use ($product) {
                             $attrs = [];
                             if($v->color) $attrs[] = $v->color->name;
@@ -166,13 +170,13 @@
                                 'sku' => $v->sku ?: ($product->sku ?: '—'),
                                 'stock' => $v->stock
                             ];
-                        })->values()->toArray()) }})" 
+                        })->values()->toArray()) }})"
                         class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-800 text-blue-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs cursor-pointer border-none">
                         <i class="fa-solid fa-plus-minus text-[10px]"></i> Adjust
                     </button>
                 @else
-                    <button type="button" 
-                        onclick="openQuickAdjustModal('{{ $product->id }}', '{{ addslashes($product->name) }}', '{{ $product->stock }}', null)" 
+                    <button type="button"
+                        onclick="openQuickAdjustModal('{{ $product->id }}', '{{ addslashes($product->name) }}', '{{ $product->stock }}', null)"
                         class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-800 text-blue-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs cursor-pointer border-none">
                         <i class="fa-solid fa-plus-minus text-[10px]"></i> Adjust
                     </button>
@@ -269,7 +273,7 @@
     function showInlineError(message) {
         const errorSpan = document.getElementById('modalQtyError');
         const qtyInput = document.getElementById('modalQty');
-        
+
         if (message) {
             errorSpan.innerText = message;
             errorSpan.style.display = 'block';
@@ -284,7 +288,7 @@
     function openQuickAdjustModal(productId, itemName, currentStock, variantsJson) {
         document.getElementById('modalProductId').value = productId;
         document.getElementById('modalItemName').innerText = itemName;
-        
+
         const variantSelectorGroup = document.getElementById('modalVariantSelectorGroup');
         const variantSelect = document.getElementById('modalVariantSelect');
         const modalVariantId = document.getElementById('modalVariantId');
@@ -328,7 +332,7 @@
                     const stock = parseInt(selectedOpt.getAttribute('data-stock') || 0);
                     currentOldStockVal = stock;
                     oldStockDiv.innerText = stock;
-                    
+
                     qtyInput.disabled = false;
                     qtyInput.placeholder = "e.g. +15 or -5";
                     submitBtn.disabled = false;
@@ -354,24 +358,24 @@
             modalVariantId.value = '';
             currentOldStockVal = parseInt(currentStock || 0);
             oldStockDiv.innerText = currentOldStockVal;
-            
+
             qtyInput.disabled = false;
             qtyInput.placeholder = "e.g. +15 or -5";
             submitBtn.disabled = false;
             submitBtn.classList.remove('opacity-50', 'pointer-events-none');
-            
+
             setTimeout(() => {
                 qtyInput.focus();
                 qtyInput.select();
             }, 100);
         }
-        
+
         const modal = document.getElementById('quickAdjustModal');
         const container = document.getElementById('modalContainer');
-        
+
         modal.classList.remove('hidden');
         void modal.offsetWidth; // Force layout recalculation
-        
+
         container.classList.remove('scale-95', 'opacity-0');
         container.classList.add('scale-100', 'opacity-100');
     }
@@ -379,10 +383,10 @@
     function closeQuickAdjustModal() {
         const modal = document.getElementById('quickAdjustModal');
         const container = document.getElementById('modalContainer');
-        
+
         container.classList.remove('scale-100', 'opacity-100');
         container.classList.add('scale-95', 'opacity-0');
-        
+
         setTimeout(() => {
             modal.classList.add('hidden');
         }, 300);
@@ -392,16 +396,23 @@
         const qtyInput = document.getElementById('modalQty');
         const val = qtyInput.value.trim();
         const newStockDiv = document.getElementById('modalNewStock');
-        
-        if (val === '' || isNaN(val)) {
+
+        if (val === '') {
             newStockDiv.innerText = '—';
             newStockDiv.className = "bg-slate-50 dark:bg-slate-800 rounded-xl py-2 px-3.5 font-mono text-sm text-slate-400 dark:text-slate-500 font-bold border border-slate-200 dark:border-slate-700 text-center";
             showInlineError(null);
             return;
         }
-        
+
+        if (!/^[+-]?\d+$/.test(val)) {
+            newStockDiv.innerText = '—';
+            newStockDiv.className = "bg-slate-50 dark:bg-slate-800 rounded-xl py-2 px-3.5 font-mono text-sm text-slate-400 dark:text-slate-500 font-bold border border-slate-200 dark:border-slate-700 text-center";
+            showInlineError('Quantity must be an integer.');
+            return;
+        }
+
         const change = parseInt(val);
-        
+
         if (change === 0) {
             newStockDiv.innerText = '—';
             newStockDiv.className = "bg-slate-50 dark:bg-slate-800 rounded-xl py-2 px-3.5 font-mono text-sm text-slate-400 dark:text-slate-500 font-bold border border-slate-200 dark:border-slate-700 text-center";
@@ -410,17 +421,17 @@
         }
 
         const calculated = currentOldStockVal + change;
-        
+
         if (calculated < 0) {
             newStockDiv.innerText = `${calculated} (Invalid)`;
-            newStockDiv.className = "bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 text-rose-500 rounded-xl py-2 px-3.5 font-mono text-sm font-bold text-center";
+            newStockDiv.className = "bg-rose-50 dark:bg-rose-955/20 border border-rose-200 dark:border-rose-800 text-rose-500 rounded-xl py-2 px-3.5 font-mono text-sm font-bold text-center";
             showInlineError('Adjustment results in negative stock level.');
         } else {
             newStockDiv.innerText = calculated;
             if (change > 0) {
-                newStockDiv.className = "bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/30 text-emerald-600 dark:text-emerald-400 rounded-xl py-2 px-3.5 font-mono text-sm font-bold text-center";
+                newStockDiv.className = "bg-emerald-50 dark:bg-emerald-955/20 border border-emerald-200/30 text-emerald-600 dark:text-emerald-400 rounded-xl py-2 px-3.5 font-mono text-sm font-bold text-center";
             } else {
-                newStockDiv.className = "bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 text-rose-500 rounded-xl py-2 px-3.5 font-mono text-sm font-bold text-center";
+                newStockDiv.className = "bg-rose-50 dark:bg-rose-955/20 border border-rose-200 dark:border-rose-800 text-rose-500 rounded-xl py-2 px-3.5 font-mono text-sm font-bold text-center";
             }
             showInlineError(null);
         }
@@ -431,6 +442,15 @@
     // Modal Form Client-side Validation
     document.getElementById('modalAdjustForm').addEventListener('submit', function(e) {
         const qtyInput = document.getElementById('modalQty');
+        const val = qtyInput.value.trim();
+
+        if (val !== '' && !/^[+-]?\d+$/.test(val)) {
+            e.preventDefault();
+            showInlineError('Quantity must be an integer.');
+            qtyInput.focus();
+            return false;
+        }
+
         const qtyVal = parseInt(qtyInput.value || 0);
 
         if (qtyVal === 0) {

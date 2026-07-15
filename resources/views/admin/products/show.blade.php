@@ -291,7 +291,7 @@
         </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        @if($product->status === 'active')
+        @if($product->status->value === 'active')
             <a href="{{ route('store.product', $product->slug) }}" target="_blank" class="pv-btn-out">
                 <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px;color:#94a3b8;"></i>
                 Product Preview
@@ -475,7 +475,7 @@
                 </div>
             </div>
         </div>
-        
+
         @if($product->seller)
         <!-- Seller & Financials Grid -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">

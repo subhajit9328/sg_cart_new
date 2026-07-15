@@ -291,9 +291,13 @@
                         errorMsg = 'Cannot exceed 100 characters.';
                     }
                 } else if (name === 'phone' || name === 'alternate_phone' || name === 'billing_phone') {
-                    const phoneRegex = /^[+0-9\s()-]{7,20}$/;
+                    if (name === 'alternate_phone' && !value) {
+                        clearFieldError(input);
+                        return true;
+                    }
+                    const phoneRegex = /^[+0-9\s()-]{7,15}$/;
                     if (!phoneRegex.test(value)) {
-                        errorMsg = 'Please enter a valid phone number (7-20 digits/symbols).';
+                        errorMsg = 'Please enter a valid phone number (7-15 digits/symbols).';
                     }
                 } else if (name === 'zip' || name === 'billing_zip') {
                     const zipRegex = /^[a-zA-Z0-9\s-]{3,10}$/;

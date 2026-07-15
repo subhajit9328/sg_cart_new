@@ -82,13 +82,13 @@
             ]" />
         </div>
     </div>
-    
+
     <!-- Right Side Header Action Buttons (Centered and perfectly aligned) -->
     <div class="flex items-center gap-2 h-9">
         <a href="{{ route('admin.inventory.index') }}" class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold text-xs transition-all no-underline h-9 flex items-center justify-center">
             Cancel
         </a>
-        <button type="submit" form="bulkForm" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs transition-all shadow-md shadow-blue-600/10 cursor-pointer border-none h-9 flex items-center justify-center" id="submitBtn" disabled>
+        <button type="submit" form="bulkForm" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs transition-all shadow-md shadow-blue-600/10 cursor-pointer border-none h-9 flex items-center justify-center disabled:bg-slate-300 disabled:cursor-not-allowed disabled:shadow-none" id="submitBtn" disabled>
             Save Adjustments
         </button>
     </div>
@@ -113,7 +113,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
         <!-- Left Column: Search Box & Compact Product Table (Takes 3 cols) -->
         <div class="lg:col-span-3 space-y-4">
-            
+
             <!-- Autocomplete Search Input Above Table -->
             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm relative">
                 <label class="block text-slate-700 dark:text-slate-300 text-[10px] font-bold uppercase tracking-wider mb-2">Search Catalog to Add Items</label>
@@ -122,7 +122,7 @@
                         <i class="fa-solid fa-magnifying-glass text-xs"></i>
                     </span>
                     <input type="text" id="productSearchInput" autocomplete="off" placeholder="Type product name or SKU..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 pl-10 pr-10 text-xs placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-850 dark:text-slate-100 transition-all">
-                    
+
                     <!-- Search Spinner loader (Initially Hidden) -->
                     <i class="fa-solid fa-spinner animate-spin absolute right-3.5 top-3 text-slate-400 text-xs" id="searchSpinner" style="display: none;"></i>
 
@@ -259,7 +259,7 @@
             }
 
             items.forEach(item => {
-                const imgHTML = item.image 
+                const imgHTML = item.image
                     ? `<img src="${item.image}" class="w-9 h-9 object-cover rounded-lg border border-slate-100 bg-white">`
                     : `<div class="w-9 h-9 bg-slate-100 rounded-lg flex items-center justify-center text-[9px] text-slate-400 font-bold border border-slate-200">NO IMG</div>`;
                                const itemDiv = document.createElement('div');
@@ -326,7 +326,7 @@
             tr.id = `row_${item.id}`;
             tr.className = 'hover:bg-slate-50/50 dark:hover:bg-slate-800/15 transition-colors animate-fadeIn';
 
-            const imgHTML = item.image 
+            const imgHTML = item.image
                 ? `<img src="${item.image}" class="w-9 h-9 object-cover rounded-lg border border-slate-200 dark:border-slate-800 bg-white">`
                 : `<div class="w-9 h-9 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center text-[9px] text-slate-400 font-bold border border-slate-200 dark:border-slate-700/50">NO IMG</div>`;
 
@@ -374,7 +374,7 @@
             tr.innerHTML = `
                 <input type="hidden" name="adjustments[${rowIndex}][product_id]" value="${item.id}">
                 <input type="hidden" name="adjustments[${rowIndex}][variant_id]" id="variant_id_${rowIndex}" value="">
-                
+
                 <td class="px-4 py-3">
                     <div class="flex items-center gap-3">
                         ${imgHTML}
@@ -393,7 +393,7 @@
                         class="w-20 text-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg py-1 px-1.5 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-100 font-mono font-bold qty-input">
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap">
-                    <input type="text" name="adjustments[${rowIndex}][reason]" placeholder="Fallback to global..." 
+                    <input type="text" name="adjustments[${rowIndex}][reason]" placeholder="Fallback to global..."
                         class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 rounded-lg py-1.5 px-3 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-850 dark:text-slate-100">
                 </td>
                 <td class="px-4 py-3 text-right whitespace-nowrap">
@@ -435,11 +435,11 @@
                     allowClear: false,
                     width: '100%'
                 });
-                
+
                 $select.on('change', function() {
                     updateRowVariant(this, curRowIndex);
                 });
-                
+
                 $select.select2('open');
             } else {
                 qtyInput.focus();
@@ -469,10 +469,11 @@
         bulkForm.addEventListener('submit', function(e) {
             const globalReason = document.getElementById('reasonInput').value.trim();
             const rows = document.querySelectorAll('#adjustTableBody tr:not(#emptyStateRow)');
-            
+
             let missingReason = false;
             let invalidStockValue = false;
             let missingVariantSelection = false;
+            let hasDecimalError = false;
 
             rows.forEach(row => {
                 const variantSelect = row.querySelector('.variant-select');
@@ -485,32 +486,50 @@
 
                 const qtyInput = row.querySelector('.qty-input');
                 if (qtyInput && !qtyInput.disabled) {
-                    const qtyVal = parseInt(qtyInput.value || 0);
-                    
-                    // Check if item has non-zero adjustment change
-                    if (qtyVal !== 0) {
-                        const rowReasonInput = row.querySelector('input[name*="[reason]"]');
-                        const rowReason = rowReasonInput.value.trim();
+                    const val = qtyInput.value.trim();
+                    if (val !== '' && !/^[+-]?\d+$/.test(val)) {
+                        hasDecimalError = true;
+                        qtyInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+                    } else {
+                        const qtyVal = parseInt(val || 0);
 
-                        // If neither row reason nor global reason is provided
-                        if (!rowReason && !globalReason) {
-                            missingReason = true;
-                            rowReasonInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
-                        } else {
-                            rowReasonInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
-                        }
+                        // Check if item has non-zero adjustment change
+                        if (qtyVal !== 0) {
+                            const rowReasonInput = row.querySelector('input[name*="[reason]"]');
+                            const rowReason = rowReasonInput.value.trim();
 
-                        // Check if adjustment makes stock negative
-                        const currentStock = parseInt(qtyInput.getAttribute('data-current') || 0);
-                        if (currentStock + qtyVal < 0) {
-                            invalidStockValue = true;
-                            qtyInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+                            // If neither row reason nor global reason is provided
+                            if (!rowReason && !globalReason) {
+                                missingReason = true;
+                                rowReasonInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+                            } else {
+                                rowReasonInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+                            }
+
+                            // Check if adjustment makes stock negative
+                            const currentStock = parseInt(qtyInput.getAttribute('data-current') || 0);
+                            if (currentStock + qtyVal < 0) {
+                                invalidStockValue = true;
+                                qtyInput.classList.add('border-rose-500', 'ring-1', 'ring-rose-500');
+                            } else {
+                                qtyInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
+                            }
                         } else {
                             qtyInput.classList.remove('border-rose-500', 'ring-1', 'ring-rose-500');
                         }
                     }
                 }
             });
+
+            if (hasDecimalError) {
+                e.preventDefault();
+                if (window.showToast) {
+                    showToast('Quantity must be an integer (whole number). Decimals are not allowed.', 'error');
+                } else {
+                    alert('Quantity must be an integer (whole number). Decimals are not allowed.');
+                }
+                return false;
+            }
 
             if (missingVariantSelection) {
                 e.preventDefault();
@@ -552,7 +571,7 @@
                 if (!e.defaultPrevented) {
                     submitBtn.disabled = true;
                     submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1.5"></i> Saving...`;
-                    
+
                     const cancelBtn = document.querySelector('a[href="{{ route("admin.inventory.index") }}"]');
                     if (cancelBtn) {
                         cancelBtn.classList.add('pointer-events-none', 'opacity-50');
@@ -570,13 +589,26 @@
 
         if (!stockDisplaySpan) return;
 
-        if (val === '' || isNaN(val) || parseInt(val) === 0) {
+        if (val === '') {
             stockDisplaySpan.innerHTML = isVariantSelectSelected ? currentStock : '—';
             inputEl.className = inputEl.className.replace(/\b(border-emerald-500|border-rose-500)\b/g, '').trim();
             return;
         }
 
+        if (!/^[+-]?\d+$/.test(val)) {
+            stockDisplaySpan.innerHTML = isVariantSelectSelected ? currentStock : '—';
+            inputEl.className = inputEl.className.replace(/\b(border-emerald-500)\b/g, '').trim() + ' border-rose-500';
+            return;
+        }
+
         const change = parseInt(val);
+        
+        if (change === 0) {
+            stockDisplaySpan.innerHTML = isVariantSelectSelected ? currentStock : '—';
+            inputEl.className = inputEl.className.replace(/\b(border-emerald-500|border-rose-500)\b/g, '').trim();
+            return;
+        }
+
         const calculated = currentStock + change;
 
         if (calculated < 0) {
@@ -586,7 +618,7 @@
             const colorClass = change > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
             const arrowClass = change > 0 ? 'text-emerald-500' : 'text-rose-500';
             stockDisplaySpan.innerHTML = `<span class="text-slate-400 dark:text-slate-500 font-normal">${currentStock}</span> <i class="fa-solid fa-arrow-right text-[10px] ${arrowClass} mx-1"></i><span class="${colorClass} font-extrabold">${calculated}</span>`;
-            
+
             const borderClass = change > 0 ? 'border-emerald-500' : 'border-rose-500';
             inputEl.className = inputEl.className.replace(/\b(border-emerald-500|border-rose-500)\b/g, '').trim() + ' ' + borderClass;
         }
@@ -603,23 +635,23 @@
             const stock = parseInt(selectedOpt.getAttribute('data-stock') || 0);
             const sku = selectedOpt.getAttribute('data-sku') || '';
             const defaultSku = skuSpan.getAttribute('data-default-sku') || '—';
-            
+
             variantIdInput.value = selectEl.value;
             skuSpan.innerText = 'SKU: ' + (sku && sku.trim() !== '' && sku !== 'null' ? sku : defaultSku);
             oldStockSpan.innerText = stock;
-            
+
             qtyInput.disabled = false;
             qtyInput.placeholder = "e.g. +10 or -5";
             qtyInput.setAttribute('data-current', stock);
             qtyInput.focus();
-            
+
             calculateRowNewStock(qtyInput, rIndex);
         } else {
             variantIdInput.value = '';
             const defaultSku = skuSpan.getAttribute('data-default-sku') || '—';
             skuSpan.innerText = 'SKU: ' + defaultSku;
             oldStockSpan.innerText = '—';
-            
+
             qtyInput.value = '0';
             qtyInput.disabled = true;
             qtyInput.placeholder = "Select variant";

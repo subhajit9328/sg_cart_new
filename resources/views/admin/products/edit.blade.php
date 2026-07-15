@@ -21,7 +21,7 @@
         </div>
     </div>
     <div class="w-full sm:w-auto">
-        @if($product->status === 'active')
+        @if($product->status->value === 'active')
             <a href="{{ route('store.product', $product->slug) }}" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-semibold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm">
                 <i class="fa-solid fa-eye text-slate-500 dark:text-slate-400"></i>
                 <span>Preview Product</span>

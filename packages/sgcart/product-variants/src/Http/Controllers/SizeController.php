@@ -13,8 +13,8 @@ class SizeController extends Controller
         $query = Size::with('seller');
 
         if ($search = $request->input('search')) {
-            $query->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('code', 'like', '%' . $search . '%');
+            $query->where('name', 'like', '%'.$search.'%')
+                ->orWhere('code', 'like', '%'.$search.'%');
         }
 
         $sortBy = $request->input('sort_by');
@@ -39,7 +39,7 @@ class SizeController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:sizes,name',
             'code' => 'required|string|unique:sizes,code|max:10',
         ]);
 
@@ -56,8 +56,8 @@ class SizeController extends Controller
     public function update(Request $request, Size $size)
     {
         $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:10|unique:sizes,code,' . $size->id,
+            'name' => 'required|string|max:255|unique:sizes,name,'.$size->id,
+            'code' => 'required|string|max:10|unique:sizes,code,'.$size->id,
         ]);
 
         $size->update($data);
@@ -67,6 +67,10 @@ class SizeController extends Controller
 
     public function destroy(Size $size)
     {
+        if ($size->variants()->whereHas('product')->exists()) {
+            return redirect()->route('admin.sizes.index')->with('error',
+                'Size label cannot be deleted because it is associated with a product variant.');
+        }
         $size->delete();
         return redirect()->route('admin.sizes.index')->with('success', 'Size label deleted successfully.');
     }
