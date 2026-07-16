@@ -58,7 +58,7 @@
                         @endif
                     </div>
                 </div>                <!-- Gateway Form Details (Main Settings Form) -->
-                <form action="{{ route('admin.payments.settings.update') }}" method="POST" id="config-form-{{ $gateway->getId() }}" class="p-5 flex-1 flex flex-col gap-4">
+                <form action="{{ route('admin.payments.settings.update') }}" method="POST" id="config-form-{{ $gateway->getId() }}" class="p-5 flex-1 flex flex-col gap-4" navalidate>
                     @csrf
                     <input type="hidden" name="gateway_id" value="{{ $gateway->getId() }}">
                     @if($isEnabled)
@@ -99,19 +99,19 @@
                                             $isRequired = !empty($field['required']);
                                         @endphp
                                         <div>
-                                            <label class="block text-[9px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">
+                                            <label for="config-{{ $gateway->getId() }}-{{ $key }}" class="block text-[9px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">
                                                 {{ $field['label'] }} @if($isRequired)<span class="text-rose-500">*</span>@endif
                                             </label>
                                             @if($field['type'] === 'textarea')
-                                                <textarea name="settings[{{ $gateway->getId() }}][config][{{ $key }}]" rows="2" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 shadow-2xs resize-none" {{ $isRequired ? 'required' : '' }}>{{ $value }}</textarea>
+                                                <textarea id="config-{{ $gateway->getId() }}-{{ $key }}" name="settings[{{ $gateway->getId() }}][config][{{ $key }}]" rows="2" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 shadow-2xs resize-none" {{ $isRequired ? 'required' : '' }}>{{ $value }}</textarea>
                                             @elseif($field['type'] === 'select')
-                                                <select name="settings[{{ $gateway->getId() }}][config][{{ $key }}]" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 shadow-2xs" {{ $isRequired ? 'required' : '' }}>
+                                                <select id="config-{{ $gateway->getId() }}-{{ $key }}" name="settings[{{ $gateway->getId() }}][config][{{ $key }}]" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 shadow-2xs" {{ $isRequired ? 'required' : '' }}>
                                                     @foreach($field['options'] as $optVal => $optLabel)
                                                         <option value="{{ $optVal }}" {{ $value == $optVal ? 'selected' : '' }}>{{ $optLabel }}</option>
                                                     @endforeach
                                                 </select>
                                             @else
-                                                <input type="{{ $field['type'] }}" name="settings[{{ $gateway->getId() }}][config][{{ $key }}]" value="{{ $value }}" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 shadow-2xs" {{ $isRequired ? 'required' : '' }}>
+                                                <input id="config-{{ $gateway->getId() }}-{{ $key }}" type="{{ $field['type'] }}" name="settings[{{ $gateway->getId() }}][config][{{ $key }}]" value="{{ $value }}" class="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-100 shadow-2xs" {{ $isRequired ? 'required' : '' }}>
                                             @endif
                                         </div>
                                     @endforeach
@@ -163,27 +163,56 @@
     document.addEventListener('DOMContentLoaded', function () {
         const forms = document.querySelectorAll('form');
         forms.forEach(form => {
-            form.addEventListener('submit', function () {
-                let submitBtn = null;
-                if (form.id) {
-                    submitBtn = document.querySelector(`button[form="${form.id}"]`);
-                }
-                if (!submitBtn) {
-                    submitBtn = form.querySelector('button[type="submit"]');
-                }
-
-                if (submitBtn) {
-                    submitBtn.disabled = true;
-                    submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
-
-                    const icon = submitBtn.querySelector('i');
-                    if (icon) {
-                        submitBtn.dataset.originalIconClass = icon.className;
-                        icon.className = 'fa-solid fa-spinner animate-spin text-xs';
-                    } else {
-                        submitBtn.insertAdjacentHTML('afterbegin', '<i class="fa-solid fa-spinner animate-spin text-xs mr-1.5 tmp-spinner"></i>');
+            form.addEventListener('submit', function (e) {
+                // If it fails browser validation, open details immediately
+                if (!form.checkValidity()) {
+                    const invalidInput = form.querySelector(':invalid');
+                    if (invalidInput) {
+                        const details = invalidInput.closest('details');
+                        if (details) {
+                            details.open = true;
+                        }
                     }
                 }
+
+                setTimeout(() => {
+                    if (e.defaultPrevented) {
+                        // Also open details if jQuery validation marked any field invalid
+                        const invalidInput = form.querySelector('.border-rose-500, :invalid');
+                        if (invalidInput) {
+                            const details = invalidInput.closest('details');
+                            if (details) {
+                                details.open = true;
+                            }
+                        }
+                        return;
+                    }
+
+                    let submitBtn = null;
+                    if (form.id) {
+                        submitBtn = document.querySelector(`button[form="${form.id}"]`);
+                    }
+                    if (!submitBtn) {
+                        submitBtn = form.querySelector('button[type="submit"]');
+                    }
+
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+
+                        const icon = submitBtn.querySelector('i');
+                        if (icon) {
+                            if (!icon.classList.contains('fa-spinner')) {
+                                submitBtn.dataset.originalIconClass = icon.className;
+                                icon.className = 'fa-solid fa-spinner animate-spin text-xs';
+                            }
+                        } else {
+                            if (!submitBtn.querySelector('.tmp-spinner')) {
+                                submitBtn.insertAdjacentHTML('afterbegin', '<i class="fa-solid fa-spinner animate-spin text-xs mr-1.5 tmp-spinner"></i>');
+                            }
+                        }
+                    }
+                }, 0);
             });
         });
     });

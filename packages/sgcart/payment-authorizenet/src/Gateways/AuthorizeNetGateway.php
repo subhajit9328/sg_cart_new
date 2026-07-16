@@ -19,7 +19,7 @@ class AuthorizeNetGateway implements PaymentGatewayInterface
     {
         return PaymentMethod::query()
             ->where('id', $this->getId())
-            ->value('name');
+            ->value('name') ?? 'Authorize.Net';
     }
 
     public function getDescription(): string
