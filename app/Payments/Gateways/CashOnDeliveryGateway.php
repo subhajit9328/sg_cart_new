@@ -2,6 +2,7 @@
 
 namespace App\Payments\Gateways;
 
+use App\Models\PaymentMethod;
 use App\Payments\Contracts\PaymentGatewayInterface;
 use Illuminate\Http\Request;
 use App\Models\Order;
@@ -16,7 +17,9 @@ class CashOnDeliveryGateway implements PaymentGatewayInterface
 
     public function getName(): string
     {
-        return 'Cash on Delivery';
+        return PaymentMethod::query()
+            ->where('id', $this->getId())
+            ->value('name');
     }
 
     public function getDescription(): string

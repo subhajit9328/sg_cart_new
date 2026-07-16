@@ -23,7 +23,7 @@ class InventoryController extends Controller
 
         if ($search) {
             $query->where(fn($sq) => $sq->where('name', 'like', "%{$search}%")
-                                          ->orWhere('sku', 'like', "%{$search}%"));
+                ->orWhere('sku', 'like', "%{$search}%"));
         }
 
         if ($hasVariants) {
@@ -49,7 +49,7 @@ class InventoryController extends Controller
                 $q->where('is_active', true);
             });
         }
-        
+
         $baseTotal = $baseQuery->count();
         $baseInStock = (clone $baseQuery)->whereColumn('stock', '>', 'min_stock')->count();
         $baseLowStock = (clone $baseQuery)->where('stock', '>', 0)->whereColumn('stock', '<=', 'min_stock')->count();
@@ -64,7 +64,8 @@ class InventoryController extends Controller
             $variantQuery = \SGCart\ProductVariants\Models\ProductVariant::where('is_active', true);
             $variantTotal = $variantQuery->count();
             $variantInStock = (clone $variantQuery)->whereColumn('stock', '>', 'min_stock')->count();
-            $variantLowStock = (clone $variantQuery)->where('stock', '>', 0)->whereColumn('stock', '<=', 'min_stock')->count();
+            $variantLowStock = (clone $variantQuery)->where('stock', '>', 0)->whereColumn('stock', '<=',
+                'min_stock')->count();
             $variantOutOfStock = (clone $variantQuery)->where('stock', '<=', 0)->count();
         }
 
@@ -74,11 +75,11 @@ class InventoryController extends Controller
         $outOfStockItems = $baseOutOfStock + $variantOutOfStock;
 
         return view('inventory::index', compact(
-            'products', 
-            'hasVariants', 
-            'totalItems', 
-            'inStockItems', 
-            'lowStockItems', 
+            'products',
+            'hasVariants',
+            'totalItems',
+            'inStockItems',
+            'lowStockItems',
             'outOfStockItems'
         ));
     }
@@ -94,14 +95,14 @@ class InventoryController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('reason', 'like', "%{$search}%")
-                  ->orWhere('action', 'like', "%{$search}%")
-                  ->orWhereHas('product', function ($pQuery) use ($search) {
-                      $pQuery->where('name', 'like', "%{$search}%")
-                             ->orWhere('sku', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('user', function ($uQuery) use ($search) {
-                      $uQuery->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('action', 'like', "%{$search}%")
+                    ->orWhereHas('product', function ($pQuery) use ($search) {
+                        $pQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('sku', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('user', function ($uQuery) use ($search) {
+                        $uQuery->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -145,7 +146,7 @@ class InventoryController extends Controller
         }
 
         $hasVariants = class_exists(\SGCart\ProductVariants\Models\ProductVariant::class);
-        
+
         $relations = ['category'];
         if ($hasVariants) {
             $relations[] = 'variants.color';
@@ -153,13 +154,13 @@ class InventoryController extends Controller
         }
 
         $products = Product::where('status', 'active')
-            ->where(function($query) use ($q, $hasVariants) {
+            ->where(function ($query) use ($q, $hasVariants) {
                 $query->where('name', 'like', "%{$q}%")
-                      ->orWhere('sku', 'like', "%{$q}%");
+                    ->orWhere('sku', 'like', "%{$q}%");
                 if ($hasVariants) {
-                    $query->orWhereHas('variants', function($subQuery) use ($q) {
+                    $query->orWhereHas('variants', function ($subQuery) use ($q) {
                         $subQuery->where('is_active', true)
-                                 ->where('sku', 'like', "%{$q}%");
+                            ->where('sku', 'like', "%{$q}%");
                     });
                 }
             })
@@ -171,13 +172,17 @@ class InventoryController extends Controller
 
         foreach ($products as $p) {
             $hasActiveVariants = $hasVariants && $p->variants->where('is_active', true)->count() > 0;
-            
+
             $variantsArray = [];
             if ($hasActiveVariants) {
                 foreach ($p->variants->where('is_active', true) as $v) {
                     $attrs = [];
-                    if ($v->color) $attrs[] = $v->color->name;
-                    if ($v->size) $attrs[] = $v->size->code;
+                    if ($v->color) {
+                        $attrs[] = $v->color->name;
+                    }
+                    if ($v->size) {
+                        $attrs[] = $v->size->code;
+                    }
                     $variantsArray[] = [
                         'id' => $v->id,
                         'name' => implode(' / ', $attrs) ?: 'Default Variant',
@@ -218,12 +223,18 @@ class InventoryController extends Controller
             ->map(function ($v) {
                 $colorName = $v->color->name ?? '';
                 $sizeCode = $v->size->code ?? '';
-                $label = "SKU: " . ($v->sku ?: ($v->product->sku ?? 'N/A'));
+                $label = "SKU: ".($v->sku ?: ($v->product->sku ?? 'N/A'));
                 if ($colorName || $sizeCode) {
                     $label .= " (";
-                    if ($colorName) $label .= "Color: " . $colorName;
-                    if ($colorName && $sizeCode) $label .= ", ";
-                    if ($sizeCode) $label .= "Size: " . $sizeCode;
+                    if ($colorName) {
+                        $label .= "Color: ".$colorName;
+                    }
+                    if ($colorName && $sizeCode) {
+                        $label .= ", ";
+                    }
+                    if ($sizeCode) {
+                        $label .= "Size: ".$sizeCode;
+                    }
                     $label .= ")";
                 }
                 return [
@@ -253,7 +264,13 @@ class InventoryController extends Controller
                 'adjustments.*.qty' => 'required|integer',
                 'adjustments.*.reason' => 'nullable|string|max:255',
                 'reason' => 'nullable|string|max:255',
-            ]);
+            ],
+                [
+                    'adjustments.*.qty.required' => 'You must enter a quantity for every item.',
+                ], [
+                    'adjustments.*.qty' => 'quantity',
+                ]
+            );
 
             $globalReason = $request->input('reason');
             $adjustments = $request->input('adjustments');
@@ -269,7 +286,7 @@ class InventoryController extends Controller
 
                         $productId = $adj['product_id'];
                         $variantId = !empty($adj['variant_id']) ? $adj['variant_id'] : null;
-                        
+
                         // Select row reason or fallback to global reason
                         $rowReason = !empty($adj['reason']) ? $adj['reason'] : $globalReason;
 
@@ -345,7 +362,8 @@ class InventoryController extends Controller
                 return redirect()->route('admin.inventory.index')->with('info', 'No stock changes were submitted.');
             }
 
-            return redirect()->route('admin.inventory.index')->with('success', "Successfully adjusted stock levels for {$appliedCount} items.");
+            return redirect()->route('admin.inventory.index')->with('success',
+                "Successfully adjusted stock levels for {$appliedCount} items.");
         }
 
         // 2. Handle Single Row Modal Adjustment
@@ -354,7 +372,14 @@ class InventoryController extends Controller
             'variant_id' => 'nullable',
             'qty' => 'required|integer|not_in:0',
             'reason' => 'required|string|max:255',
-        ]);
+        ],
+            [
+                'qty.not_in' => 'The quantity adjustment cannot be zero.',
+            ],
+            [
+                'qty' => 'quantity',
+            ],
+        );
 
         $productId = $request->input('product_id');
         $variantId = $request->input('variant_id') ?: null;

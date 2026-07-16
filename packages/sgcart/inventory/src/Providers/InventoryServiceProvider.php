@@ -23,17 +23,6 @@ class InventoryServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
         $this->loadViewsFrom(__DIR__.'/../../resources/views', 'inventory');
 
-        // Customize validation attribute names for inventory quantity
-        if ($this->app->bound('translator')) {
-            $this->app->extend('translator', function ($translator) {
-                $translator->addLines([
-                    'validation.attributes.qty' => 'quantity',
-                    'validation.attributes.adjustments.*.qty' => 'quantity',
-                ], $translator->getLocale());
-                return $translator;
-            });
-        }
-
         $this->autoInstall();
         $this->registerStockObservers();
     }
@@ -47,7 +36,7 @@ class InventoryServiceProvider extends ServiceProvider
                     '--force' => true
                 ]);
             }
-            
+
             // Seed permission if Spatie exists
             if (class_exists(\Spatie\Permission\Models\Permission::class) && Schema::hasTable('permissions')) {
                 $permission = \Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'manage inventory', 'guard_name' => 'web']);
@@ -69,9 +58,9 @@ class InventoryServiceProvider extends ServiceProvider
                 $order = $orderItem->order;
                 $quantity = $orderItem->quantity;
                 $productId = $orderItem->product_id;
-                
+
                 $variant = $this->findVariant($productId, $orderItem->color, $orderItem->size);
-                
+
                 if ($variant) {
                     $before = $variant->stock;
                     $variant->decrement('stock', $quantity);
@@ -249,7 +238,7 @@ class InventoryServiceProvider extends ServiceProvider
             $totalStock = \SGCart\ProductVariants\Models\ProductVariant::where('product_id', $productId)
                 ->where('is_active', true)
                 ->sum('stock');
-            
+
             $product->stock = $totalStock;
             $product->save();
         }

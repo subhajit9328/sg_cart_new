@@ -433,18 +433,20 @@
         modal.innerHTML = `
             <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-800 transform scale-95 opacity-0 transition-all duration-300 popup-content">
                 <div class="flex justify-between items-start mb-4">
-                    <h3 class="text-lg font-bold text-ink dark:text-white font-display">${title}</h3>
+                    <h3 class="text-lg font-bold text-ink dark:text-white font-display modal-title"></h3>
                     <button class="modal-close text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer border-none bg-transparent outline-none focus:outline-none">
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
                 </div>
-                <p class="text-sm text-stone dark:text-slate-400 mb-6 leading-relaxed">${text}</p>
+                <p class="text-sm text-stone dark:text-slate-400 mb-6 leading-relaxed modal-text"></p>
                 <div class="flex justify-end gap-3">
                     <button class="modal-cancel border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-colors bg-transparent" style="text-transform: none;">Cancel</button>
                     <button class="modal-confirm ${confirmBtnClass} px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer" style="text-transform: none;">${confirmText}</button>
                 </div>
             </div>
         `;
+        modal.querySelector('.modal-title').textContent = title;
+        modal.querySelector('.modal-text').textContent = text;
         document.body.appendChild(modal);
 
         // Trigger scale-in transition
@@ -660,6 +662,15 @@
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(value.trim())) {
                     showError($input, `Please enter a valid email address.`);
+                    return false;
+                }
+            }
+
+            // URL format validation (allowing template placeholders like {tracking_number})
+            if (type === 'url' && value && value.trim() !== '') {
+                const urlRegex = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
+                if (!urlRegex.test(value.trim())) {
+                    showError($input, `Please enter a valid URL (starting with http:// or https://).`);
                     return false;
                 }
             }

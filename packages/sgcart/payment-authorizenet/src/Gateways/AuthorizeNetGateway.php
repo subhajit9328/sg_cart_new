@@ -2,6 +2,7 @@
 
 namespace SGCart\AuthorizeNet\Gateways;
 
+use App\Models\PaymentMethod;
 use App\Payments\Contracts\PaymentGatewayInterface;
 use Illuminate\Http\Request;
 use App\Models\Order;
@@ -16,7 +17,9 @@ class AuthorizeNetGateway implements PaymentGatewayInterface
 
     public function getName(): string
     {
-        return 'Authorize.Net';
+        return PaymentMethod::query()
+            ->where('id', $this->getId())
+            ->value('name');
     }
 
     public function getDescription(): string

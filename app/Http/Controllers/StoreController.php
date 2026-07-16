@@ -49,8 +49,11 @@ class StoreController extends Controller
 
         $query = Product::with($relations)
             ->where('status', 'active')
-            ->whereHas('category', function ($q) {
-                $q->active();
+            ->where(function ($q) {
+                $q->whereNull('category_id')
+                  ->orWhereHas('category', function ($sub) {
+                      $sub->active();
+                  });
             });
 
         if (class_exists(Seller::class)) {
@@ -63,7 +66,7 @@ class StoreController extends Controller
         }
 
         return $query->get()->map(function ($p) {
-            $catName = 'Fashion';
+            $catName = 'Uncategorized';
             $subcatName = null;
             if ($p->category) {
                 $subcatName = $p->category->name;

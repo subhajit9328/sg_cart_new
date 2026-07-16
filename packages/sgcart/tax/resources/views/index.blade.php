@@ -89,8 +89,8 @@
                         <a href="{{ route('admin.tax.edit', $rate->id) }}" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors" title="Edit Tax Rate">
                             <i class="fa-solid fa-pen text-slate-500 dark:text-slate-400 text-xs"></i>
                         </a>
-                        
-                        <button onclick="openDeleteModal('{{ $rate->id }}', '{{ $rate->name }}')" class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center transition-colors" title="Delete Tax Rate">
+
+                        <button onclick='openDeleteModal(@json($rate->id), @json($rate->name))' class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center transition-colors" title="Delete Tax Rate">
                             <i class="fa-solid fa-trash text-rose-500 text-xs"></i>
                         </button>
                     </div>
@@ -114,10 +114,10 @@
         </div>
         <form action="{{ route('admin.tax.settings.update') }}" method="POST" class="p-5 space-y-4">
             @csrf
-            
+
             <div class="space-y-3">
                 <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Calculation Mode</span>
-                
+
                 <!-- Option 1: Single Standard -->
                 <div class="border rounded-xl p-3.5 cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all relative overflow-hidden config-card {{ $calculationMode === 'single_standard' ? 'border-blue-600 dark:border-blue-500 bg-blue-50/10 dark:bg-blue-500/5 ring-1 ring-blue-500' : 'border-slate-200 dark:border-slate-800 bg-transparent' }}" onclick="toggleConfig(this)">
                     <div class="flex items-start gap-3">

@@ -106,7 +106,7 @@
                             <i class="fa-solid fa-pen text-slate-500 dark:text-slate-400 text-xs"></i>
                         </a>
 
-                        <button onclick="openDeleteModal('{{ $coupon->id }}', '{{ $coupon->code }}')"
+                        <button onclick='openDeleteModal(@json($coupon->id),@json($coupon->code))'
                                 class="w-8 h-8 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center justify-center transition-colors"
                                 title="Delete Coupon">
                             <i class="fa-solid fa-trash text-rose-500 text-xs"></i>

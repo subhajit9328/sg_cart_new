@@ -19,7 +19,9 @@ class RazorpayGateway implements PaymentGatewayInterface
 
     public function getName(): string
     {
-        return 'Razorpay';
+        return PaymentMethod::query()
+            ->where('id', $this->getId())
+            ->value('name');
     }
 
     public function getDescription(): string
