@@ -19,7 +19,7 @@ class CashOnDeliveryGateway implements PaymentGatewayInterface
     {
         return PaymentMethod::query()
             ->where('id', $this->getId())
-            ->value('name');
+            ->value('name') ?? 'Cash on Delivery';
     }
 
     public function getDescription(): string

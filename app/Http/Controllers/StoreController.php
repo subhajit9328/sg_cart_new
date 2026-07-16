@@ -288,6 +288,10 @@ class StoreController extends Controller
                 $matchesCategory = $hasCategories && in_array($p['cat'], $selectedCategories);
                 $matchesSubCategory = $hasSubCategories && in_array($p['subcat'], $selectedSubCategories);
 
+                if ($hasCategories && $hasSubCategories) {
+                    return $matchesCategory && $matchesSubCategory;
+                }
+
                 return $matchesCategory || $matchesSubCategory;
             });
         }

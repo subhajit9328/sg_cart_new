@@ -487,7 +487,7 @@ class ReportingTest extends TestCase
             'sku' => 'IPHONE15',
             'price' => 1000.00,
             'stock' => 100,
-            'status' => 'published',
+            'status' => 'active',
         ]);
         $productB = \App\Models\Product::create([
             'name' => 'Classic Sneakers',
@@ -495,7 +495,7 @@ class ReportingTest extends TestCase
             'sku' => 'SNEAKERS',
             'price' => 100.00,
             'stock' => 100,
-            'status' => 'published',
+            'status' => 'active',
         ]);
 
         $orderA = Order::factory()->create([
@@ -550,7 +550,7 @@ class ReportingTest extends TestCase
             'sku' => 'A-SKU',
             'price' => 100.00,
             'stock' => 100,
-            'status' => 'published',
+            'status' => 'active',
         ]);
         $productB = \App\Models\Product::create([
             'name' => 'B',
@@ -558,7 +558,7 @@ class ReportingTest extends TestCase
             'sku' => 'B-SKU',
             'price' => 200.00,
             'stock' => 100,
-            'status' => 'published',
+            'status' => 'active',
         ]);
 
         $orderA = Order::factory()->create([
@@ -665,7 +665,7 @@ class ReportingTest extends TestCase
             'sku' => 'DUMMY1',
             'price' => 10.00,
             'stock' => 100,
-            'status' => 'published',
+            'status' => 'active',
         ]);
 
         $product2 = \App\Models\Product::create([
@@ -674,7 +674,7 @@ class ReportingTest extends TestCase
             'sku' => 'DUMMY2',
             'price' => 10.00,
             'stock' => 100,
-            'status' => 'published',
+            'status' => 'active',
         ]);
 
         // Customer 1: 1 order of 100, 2 reviews
@@ -806,7 +806,7 @@ class ReportingTest extends TestCase
             'sku' => 'DUMMY',
             'price' => 10.00,
             'stock' => 100,
-            'status' => 'published',
+            'status' => 'active',
         ]);
 
         $cartId1 = \Illuminate\Support\Facades\DB::table('carts')->insertGetId([
